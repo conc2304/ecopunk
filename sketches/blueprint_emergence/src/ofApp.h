@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "GridSystem.h"
 #include "AnnotationRenderer.h"
+#include "BEComposition.h"
 
 class ofApp : public ofBaseApp{
 
@@ -26,15 +27,11 @@ class ofApp : public ofBaseApp{
 		void gotMessage(ofMessage msg) override;
 
 	private:
-		void rollZoneVariant();
+		void drawOccupancyDebug() const;
 
 		GridSystem grid;
 		AnnotationRenderer annotations;
+		BEComposition composition;
 
-		float blankPhaseStart = 0;
-		bool zoneALight = false;
-
-		float dividerProgress = 0;
-		float gridAlpha = 0;
-		bool labelShown = false;
+		bool showOccupancyDebug = false;
 };
