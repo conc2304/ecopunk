@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-               BuildableName = "EcopunkVideoCollage.app"
-               BlueprintName = "EcopunkVideoCollage"
-               ReferencedContainer = "container:EcopunkVideoCollage.xcodeproj">
+               BuildableName = "blueprint_emergence.app"
+               BlueprintName = "blueprint_emergence"
+               ReferencedContainer = "container:blueprint_emergence.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -31,9 +31,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "EcopunkVideoCollage.app"
-            BlueprintName = "EcopunkVideoCollage"
-            ReferencedContainer = "container:EcopunkVideoCollage.xcodeproj">
+            BuildableName = "blueprint_emergence.app"
+            BlueprintName = "blueprint_emergence"
+            ReferencedContainer = "container:blueprint_emergence.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -54,9 +54,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "EcopunkVideoCollage.app"
-            BlueprintName = "EcopunkVideoCollage"
-            ReferencedContainer = "container:EcopunkVideoCollage.xcodeproj">
+            BuildableName = "blueprint_emergence.app"
+            BlueprintName = "blueprint_emergence"
+            ReferencedContainer = "container:blueprint_emergence.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
       <EnvironmentVariables>
@@ -88,9 +88,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E4B69B5A0A3A1756003C02F2"
-            BuildableName = "EcopunkVideoCollage.app"
-            BlueprintName = "EcopunkVideoCollage"
-            ReferencedContainer = "container:EcopunkVideoCollage.xcodeproj">
+            BuildableName = "blueprint_emergence.app"
+            BlueprintName = "blueprint_emergence"
+            ReferencedContainer = "container:blueprint_emergence.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

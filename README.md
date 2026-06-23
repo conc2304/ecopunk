@@ -1,22 +1,29 @@
 # EcopunkVideoCollage
 
-openFrameworks app. macOS dev, **Raspberry Pi 3B** deployment target.
+Multi-sketch openFrameworks monorepo. macOS dev, **Raspberry Pi 3B**
+deployment target.
 
-Scaffolded from the stock openFrameworks `emptyExample` template (not the
-`projectGenerator` GUI/CLI) on 2026-06-22.
+```text
+shared/src/             # code shared by every sketch (GridSystem, AnnotationRenderer,
+                         # Settings.h color tokens), pulled in via PROJECT_EXTERNAL_SOURCE_PATHS
+sketches/
+  blueprint_emergence/   # first sketch — generative archival/specimen animation system
+                         # see docs/blueprint_emergence_engineering_plan.md
+```
+
+Each sketch under `sketches/<name>/` is generated with OF's `projectGenerator`
+CLI (`projectGenerator -o <of_root> -s ../../shared/src sketches/<name>`) so
+relative paths to the OF root and to `shared/src` are computed correctly.
 
 ## Build
 
 ```bash
-# macOS
+cd sketches/blueprint_emergence
 make Release -j4
 make RunRelease
 ```
 
-Or open `EcopunkVideoCollage.xcodeproj` in Xcode and build the
-**EcopunkVideoCollage** target.
-
-**Addons:** none yet — add via `addons.make` (one addon name per line).
+Or open `sketches/blueprint_emergence/blueprint_emergence.xcodeproj` in Xcode.
 
 ## Deploy target
 
