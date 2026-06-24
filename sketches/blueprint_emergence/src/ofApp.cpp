@@ -7,14 +7,44 @@ void ofApp::setup(){
 
 	grid.setup(GRID_COLS, GRID_ROWS, CANVAS_W, CANVAS_H);
 	annotations.setup(&grid, DIVIDER_COL, CANVAS_W, CANVAS_H);
+	annotations.loadCodeFont(CODE_FONT_PATH, SIZE_CODE);
+	annotations.setMeasurementLineTiming(MLINE_DRAW_SPEED, MLINE_FADE_DELAY, MLINE_FADE_OPACITY);
+	annotations.setCodeTextTiming(CODE_TEXT_INTERVAL_MIN, CODE_TEXT_INTERVAL_MAX, CODE_TEXT_OPACITY_MIN, CODE_TEXT_OPACITY_MAX);
+	annotations.setCodeFragments(loadCodeFragments());
 
-	composition.setupBE(&grid, CANVAS_W, CANVAS_H, DIVIDER_COL);
+	Fragment::loadFragmentShader("shaders/fragmentEffects.vert", "shaders/fragmentEffects.frag");
+	videoSampler.setup(MEDIA_PATH);
+
+	composition.setupBE(&grid, &videoSampler, CANVAS_W, CANVAS_H, DIVIDER_COL);
+	composition.setOnFragmentPlaced([this](Fragment* newFrag, Fragment* nearest){
+		annotations.onFragmentPlaced(newFrag, nearest);
+	});
+	composition.setOnCycleStart([this](){
+		videoSampler.cancelPending(); // drop in-flight captures before fragments.clear() destroys their targets
+		videoSampler.selectVideoForCycle();
+		annotations.reset();
+	});
 	composition.startCycle();
 }
 
 //--------------------------------------------------------------
+std::vector<std::string> ofApp::loadCodeFragments() const{
+	std::vector<std::string> lines;
+	ofBuffer buffer = ofBufferFromFile("codefragments.txt");
+	for(const auto& line : buffer.getLines()){
+		if(!line.empty()){
+			lines.push_back(line);
+		}
+	}
+	return lines;
+}
+
+//--------------------------------------------------------------
 void ofApp::update(){
-	composition.update(ofGetLastFrameTime());
+	float dt = ofGetLastFrameTime();
+	videoSampler.update();
+	composition.update(dt);
+	annotations.update(dt);
 }
 
 //--------------------------------------------------------------
@@ -54,6 +84,9 @@ void ofApp::draw(){
 	for(const auto& fragment : composition.getFragments()){
 		fragment->draw();
 	}
+
+	annotations.drawMeasurementLines();
+	annotations.drawCodeText();
 
 	annotations.drawGrid(gridAlpha);
 	annotations.drawDivider(dividerProgress);

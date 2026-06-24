@@ -28,9 +28,11 @@ class ofApp : public ofBaseApp{
 
 	private:
 		void drawOccupancyDebug() const;
+		std::vector<std::string> loadCodeFragments() const;
 
 		GridSystem grid;
 		AnnotationRenderer annotations;
+		VideoSampler videoSampler;
 		BEComposition composition;
 
 		bool showOccupancyDebug = false;

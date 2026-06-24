@@ -45,6 +45,7 @@ class CompositionBase {
 		const std::vector<std::unique_ptr<Fragment>>& getFragments() const { return fragments; }
 
 		void setOnFragmentPlaced(std::function<void(Fragment*, Fragment*)> cb){ onFragmentPlaced = std::move(cb); }
+		void setOnCycleStart(std::function<void()> cb){ onCycleStartCb = std::move(cb); }
 
 	protected:
 		// Implemented by the sketch subclass: try to place one new fragment
@@ -90,4 +91,5 @@ class CompositionBase {
 		int cycleSeed = 0;
 		std::vector<DissolveEntry> dissolveSchedule;
 		std::function<void(Fragment*, Fragment*)> onFragmentPlaced;
+		std::function<void()> onCycleStartCb;
 };

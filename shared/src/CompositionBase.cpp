@@ -32,6 +32,10 @@ void CompositionBase::startCycle(){
 	phaseElapsed = 0;
 
 	onCycleStart();
+
+	if(onCycleStartCb){
+		onCycleStartCb();
+	}
 }
 
 bool CompositionBase::allFragmentsDead() const{
@@ -79,10 +83,9 @@ void CompositionBase::update(float dt){
 		case CyclePhase::PLACEMENT:
 			placementTimer -= dt;
 			if(placementTimer <= 0.0f){
-				bool placed = attemptPlacement();
-				if(!placed || static_cast<int>(fragments.size()) >= timing.maxFragments){
-					beginDissolve();
-					break;
+				bool atCap = static_cast<int>(fragments.size()) >= timing.maxFragments;
+				if(!atCap){
+					attemptPlacement(); // return value ignored; canvas-full → just wait for timer
 				}
 				placementTimer = randRangeF(timing.placementIntervalMin, timing.placementIntervalMax);
 			}
@@ -99,12 +102,13 @@ void CompositionBase::update(float dt){
 		case CyclePhase::DENSITY:
 			placementTimer -= dt;
 			if(placementTimer <= 0.0f){
-				bool placed = attemptPlacement();
-				if(!placed || static_cast<int>(fragments.size()) >= timing.maxFragments){
-					beginDissolve();
-					break;
+				bool atCap = static_cast<int>(fragments.size()) >= timing.maxFragments;
+				if(!atCap){
+					bool placed = attemptPlacement();
+					if(placed){
+						fragments.back()->enterDrifting();
+					}
 				}
-				fragments.back()->enterDrifting(); // newcomers in DENSITY drift once they settle, too
 				placementTimer = timing.placementIntervalDense;
 			}
 			if(phaseElapsed >= timing.densityDuration){

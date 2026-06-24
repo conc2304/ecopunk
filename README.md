@@ -25,6 +25,32 @@ make RunRelease
 
 Or open `sketches/blueprint_emergence/blueprint_emergence.xcodeproj` in Xcode.
 
+## Media
+
+Drop source footage here, per sketch:
+
+```text
+sketches/blueprint_emergence/bin/data/media/
+```
+
+Format (see `docs/blueprint_emergence_engineering_plan.md` §05):
+
+| Property | Requirement |
+|---|---|
+| Container | MP4 (`.mp4`) |
+| Codec | H.264, Baseline or Main profile |
+| Resolution | 720p max; 540p preferred for multi-video |
+| Frame rate | 24 or 30fps source |
+| Duration | Minimum 30s |
+| Audio | Stripped or muted |
+| Color space | sRGB, no HDR/Log |
+
+Files dropped in `media/` are gitignored (the folder itself is tracked via
+`.gitkeep`, the contents are not) — no size limit worries from committing
+footage by accident. Not consumed by the app yet: `VideoSampler` (engineering
+Phase 3) is what actually reads this folder; until then it's just a chosen,
+documented drop point.
+
 ## Deploy target
 
 Raspberry Pi 3B (quad-core Cortex-A53, 1GB RAM, VideoCore IV GPU) — notably

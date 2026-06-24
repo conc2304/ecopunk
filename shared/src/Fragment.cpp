@@ -2,20 +2,40 @@
 #include "ofGraphics.h"
 #include "ofUtils.h"
 #include "ofMath.h"
+#include "ofLog.h"
+#include "ofAppRunner.h"
 
-void Fragment::setup(const ofRectangle& bounds_, const ofColor& placeholderColor_, float phaseOffset_, float arrivalDuration_,
-	glm::vec2 driftAmp_, glm::vec2 driftFreq_){
+ofShader Fragment::fragmentShader;
+bool Fragment::fragmentShaderReady = false;
 
-	bounds = bounds_;
-	placeholderColor = placeholderColor_;
-	phaseOffset = phaseOffset_;
-	arrivalDuration = arrivalDuration_;
-	driftAmp = driftAmp_;
-	driftFreq = driftFreq_;
+void Fragment::loadFragmentShader(const std::string& vertPath, const std::string& fragPath){
+	fragmentShaderReady = fragmentShader.load(vertPath, fragPath);
+	if(!fragmentShaderReady){
+		ofLogError("Fragment") << "failed to load fragmentEffects shader (" << vertPath << ", " << fragPath << ")";
+	}
+}
 
-	state = State::ARRIVING;
+void Fragment::setup(const Params& p){
+	bounds               = p.bounds;
+	placeholderColor     = p.placeholderColor;
+	phaseOffset          = p.phaseOffset;
+	arrivalDuration      = p.arrivalDuration;
+	driftAmp             = p.driftAmp;
+	driftFreq            = p.driftFreq;
+	desaturateRampDuration = p.desaturateRampDuration;
+	desaturateMax        = p.desaturateMax;
+	circularMask         = p.circularMask;
+	maskRadius           = p.maskRadius;
+
+	state        = State::ARRIVING;
 	stateElapsed = 0;
-	opacity = 1.0f;
+	opacity      = 1.0f;
+	driftOffset  = glm::vec2(0, 0);
+}
+
+void Fragment::setVideoSource(const ofTexture* tex, ofRectangle crop){
+	videoTexture = tex;
+	videoCrop    = crop;
 }
 
 void Fragment::enterDrifting(){
@@ -94,7 +114,43 @@ void Fragment::drawArrival(float t) const{
 	drawStable();
 }
 
-void Fragment::drawStable() const{
+void Fragment::drawMaskedFill(float radius) const{
 	glm::vec2 pos = getDrawPosition();
-	ofDrawRectangle(pos.x, pos.y, bounds.width, bounds.height);
+
+	if(!hasTexture()){
+		ofDrawRectangle(pos.x, pos.y, bounds.width, bounds.height);
+		return;
+	}
+
+	ofSetColor(255, 255 * opacity);
+
+	float desaturateAmount = (state == State::DRIFTING)
+		? ofClamp(stateElapsed / desaturateRampDuration, 0.0f, 1.0f) * desaturateMax
+		: 0.0f;
+
+	if(fragmentShaderReady){
+		fragmentShader.begin();
+		fragmentShader.setUniform1f("desaturateAmount", desaturateAmount);
+		if(circularMask && radius > 0.0f){
+			glm::vec2 center = pos + glm::vec2(bounds.width * 0.5f, bounds.height * 0.5f);
+			float windowH = ofGetWindowHeight();
+			fragmentShader.setUniform1f("circleMask", 1.0f);
+			fragmentShader.setUniform2f("maskCenterPx", center.x, windowH - center.y);
+			fragmentShader.setUniform1f("maskRadiusPx", radius);
+		} else {
+			fragmentShader.setUniform1f("circleMask", 0.0f);
+			fragmentShader.setUniform2f("maskCenterPx", 0.0f, 0.0f);
+			fragmentShader.setUniform1f("maskRadiusPx", 0.0f);
+		}
+		videoTexture->drawSubsection(pos.x, pos.y, bounds.width, bounds.height,
+			videoCrop.x, videoCrop.y, videoCrop.width, videoCrop.height);
+		fragmentShader.end();
+	} else {
+		videoTexture->drawSubsection(pos.x, pos.y, bounds.width, bounds.height,
+			videoCrop.x, videoCrop.y, videoCrop.width, videoCrop.height);
+	}
+}
+
+void Fragment::drawStable() const{
+	drawMaskedFill(maskRadius);
 }

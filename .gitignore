@@ -1,9 +1,14 @@
-# Compiled binary, build intermediates
-bin/*
-obj/
+# Compiled binaries, build intermediates — any sketch under sketches/<name>/
+**/bin/*
+**/obj/
 .DS_Store
 
 # Keep bin/data/ present on a fresh clone even though it's otherwise empty
-!bin/data
-bin/data/*
-!bin/data/.gitkeep
+!**/bin/data
+**/bin/data/*
+!**/bin/data/.gitkeep
+
+# Keep bin/data/media/ present too, but not any video files dropped into it
+!**/bin/data/media
+**/bin/data/media/*
+!**/bin/data/media/.gitkeep
