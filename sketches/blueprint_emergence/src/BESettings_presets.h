@@ -2,256 +2,254 @@
 #include "../../../shared/src/Settings.h"
 
 // -----------------------------------------------------------------------------
-// BESettings preset toggle
+// BE Settings Presets
 // -----------------------------------------------------------------------------
 //
-// Existing code should continue to use the same setting names, for example:
+// To switch presets in code, change BE_SETTINGS_PRESET below.
 //
+// All public setting variable names are preserved. Existing code can keep using:
 //   CYCLE_DURATION_MIN
 //   PLACEMENT_INTERVAL_MIN
 //   DENSITY_DURATION
 //   SCAN_REVEAL_DURATION
+//   etc.
 //
-// Those names now map to the currently selected preset.
+// Those names now map to the values of the selected preset.
 //
-// To switch presets, change only this line:
-//
+// Example:
 //   constexpr BEPreset BE_SETTINGS_PRESET = BEPreset::Default;
-//
-// or:
-//
 //   constexpr BEPreset BE_SETTINGS_PRESET = BEPreset::SlowCinematic;
 //
 // -----------------------------------------------------------------------------
 
 enum class BEPreset {
-	Default,
-	SlowCinematic
+    Default,
+    SlowCinematic
 };
 
-// Active preset toggle.
+// Toggle this value to switch the whole composition timing preset.
 constexpr BEPreset BE_SETTINGS_PRESET = BEPreset::SlowCinematic;
 
 struct BEPresetValues {
-	// Cycle timing
-	float CYCLE_DURATION_MIN;
-	float CYCLE_DURATION_MAX;
-	float PLACEMENT_INTERVAL_MIN;
-	float PLACEMENT_INTERVAL_MAX;
-	float PLACEMENT_INTERVAL_DENSE;
-	float DISSOLVE_FADE_MIN;
-	float DISSOLVE_FADE_MAX;
-	float DIVIDER_DRAW_DURATION;
-	float GRID_FADEIN_DURATION;
+    // Cycle timing
+    float CYCLE_DURATION_MIN;
+    float CYCLE_DURATION_MAX;
+    float PLACEMENT_INTERVAL_MIN;
+    float PLACEMENT_INTERVAL_MAX;
+    float PLACEMENT_INTERVAL_DENSE;
+    float DISSOLVE_FADE_MIN;
+    float DISSOLVE_FADE_MAX;
+    float DIVIDER_DRAW_DURATION;
+    float GRID_FADEIN_DURATION;
 
-	// Composition cycle stage durations
-	float BLANK_DURATION;
-	float DENSITY_DURATION;
-	float DISSOLVE_DURATION;
-	float RESET_HOLD_DURATION;
+    // Composition cycle stage durations
+    float BLANK_DURATION;
+    float DENSITY_DURATION;
+    float DISSOLVE_DURATION;
+    float RESET_HOLD_DURATION;
 
-	// Fragments
-	int MAX_FRAGMENTS;
-	int PLACEMENT_MAX_ATTEMPTS;
-	float DESATURATE_MAX;
-	float DESATURATE_RAMP_DURATION;
+    // Fragments
+    int MAX_FRAGMENTS;
+    int PLACEMENT_MAX_ATTEMPTS;
+    float DESATURATE_MAX;
+    float DESATURATE_RAMP_DURATION;
 
-	// Placement scoring weights
-	float PLACEMENT_SCORE_W_CENTER;
-	float PLACEMENT_SCORE_W_PROXIMITY;
-	float PLACEMENT_SCORE_W_ZONE;
-	float PLACEMENT_SCORE_JITTER;
+    // Placement scoring weights
+    float PLACEMENT_SCORE_W_CENTER;
+    float PLACEMENT_SCORE_W_PROXIMITY;
+    float PLACEMENT_SCORE_W_ZONE;
+    float PLACEMENT_SCORE_JITTER;
 
-	// Drift
-	float DRIFT_AMP_X;
-	float DRIFT_AMP_Y;
-	float DRIFT_FREQ_X;
-	float DRIFT_FREQ_Y;
+    // Drift
+    float DRIFT_AMP_X;
+    float DRIFT_AMP_Y;
+    float DRIFT_FREQ_X;
+    float DRIFT_FREQ_Y;
 
-	// Arrival animations
-	float SCAN_REVEAL_DURATION;
-	float BORDER_DRAW_DURATION;
-	float IRIS_OPEN_DURATION;
-	float SLIDE_IN_DURATION;
-	float AFTERIMAGE_FADE_DURATION;
+    // Arrival animations
+    float SCAN_REVEAL_DURATION;
+    float BORDER_DRAW_DURATION;
+    float IRIS_OPEN_DURATION;
+    float SLIDE_IN_DURATION;
+    float AFTERIMAGE_FADE_DURATION;
 
-	// Measurement lines
-	float MLINE_DRAW_SPEED;
-	float MLINE_FADE_OPACITY;
-	float MLINE_FADE_DELAY;
+    // Measurement lines
+    float MLINE_DRAW_SPEED;
+    float MLINE_FADE_OPACITY;
+    float MLINE_FADE_DELAY;
 
-	// Typography
-	int SIZE_LABEL;
-	int SIZE_CODE;
-	int SIZE_ANNOTATION;
+    // Typography
+    int SIZE_LABEL;
+    int SIZE_CODE;
+    int SIZE_ANNOTATION;
 
-	// Code text overlay
-	float CODE_TEXT_INTERVAL_MIN;
-	float CODE_TEXT_INTERVAL_MAX;
-	float CODE_TEXT_OPACITY_MIN;
-	float CODE_TEXT_OPACITY_MAX;
+    // Code text overlay
+    float CODE_TEXT_INTERVAL_MIN;
+    float CODE_TEXT_INTERVAL_MAX;
+    float CODE_TEXT_OPACITY_MIN;
+    float CODE_TEXT_OPACITY_MAX;
 
-	// Circle fragment
-	float CIRCLE_DIAMETER_MIN_CELLS;
-	float CIRCLE_DIAMETER_MAX_CELLS;
-	float CIRCLE_REGION_CENTER_X;
-	float CIRCLE_REGION_CENTER_Y;
-	float CIRCLE_REGION_SIZE;
-	float CIRCLE_TRIGGER_MIN_FRACTION;
-	float CIRCLE_TRIGGER_MAX_FRACTION;
-	int CIRCLE_PLACEMENT_MAX_ATTEMPTS;
-	float IRIS_OPEN_LEAD_FRACTION;
-	float GHOST_RING_SCALE;
+    // Circle fragment
+    float CIRCLE_DIAMETER_MIN_CELLS;
+    float CIRCLE_DIAMETER_MAX_CELLS;
+    float CIRCLE_REGION_CENTER_X;
+    float CIRCLE_REGION_CENTER_Y;
+    float CIRCLE_REGION_SIZE;
+    float CIRCLE_TRIGGER_MIN_FRACTION;
+    float CIRCLE_TRIGGER_MAX_FRACTION;
+    int CIRCLE_PLACEMENT_MAX_ATTEMPTS;
+    float IRIS_OPEN_LEAD_FRACTION;
+    float GHOST_RING_SCALE;
 };
 
 constexpr BEPresetValues BE_DEFAULT_PRESET = {
-	// Cycle timing
-	90.0f, // CYCLE_DURATION_MIN
-	180.0f, // CYCLE_DURATION_MAX
-	1.0f, // PLACEMENT_INTERVAL_MIN
-	4.0f, // PLACEMENT_INTERVAL_MAX
-	6.0f, // PLACEMENT_INTERVAL_DENSE
-	8.0f, // DISSOLVE_FADE_MIN
-	12.0f, // DISSOLVE_FADE_MAX
-	3.0f, // DIVIDER_DRAW_DURATION
-	2.0f, // GRID_FADEIN_DURATION
+    // Cycle timing
+    90.0f,   // CYCLE_DURATION_MIN
+    180.0f,  // CYCLE_DURATION_MAX
+    1.0f,    // PLACEMENT_INTERVAL_MIN
+    4.0f,    // PLACEMENT_INTERVAL_MAX
+    6.0f,    // PLACEMENT_INTERVAL_DENSE
+    8.0f,    // DISSOLVE_FADE_MIN
+    12.0f,   // DISSOLVE_FADE_MAX
+    3.0f,    // DIVIDER_DRAW_DURATION
+    2.0f,    // GRID_FADEIN_DURATION
 
-	// Composition cycle stage durations
-	8.0f, // BLANK_DURATION
-	30.0f, // DENSITY_DURATION
-	30.0f, // DISSOLVE_DURATION
-	2.0f, // RESET_HOLD_DURATION
+    // Composition cycle stage durations
+    8.0f,    // BLANK_DURATION
+    30.0f,   // DENSITY_DURATION
+    30.0f,   // DISSOLVE_DURATION
+    2.0f,    // RESET_HOLD_DURATION
 
-	// Fragments
-	18, // MAX_FRAGMENTS
-	50, // PLACEMENT_MAX_ATTEMPTS
-	0.40f, // DESATURATE_MAX
-	30.0f, // DESATURATE_RAMP_DURATION
+    // Fragments
+    18,      // MAX_FRAGMENTS
+    50,      // PLACEMENT_MAX_ATTEMPTS
+    0.40f,   // DESATURATE_MAX
+    30.0f,   // DESATURATE_RAMP_DURATION
 
-	// Placement scoring weights
-	1.0f, // PLACEMENT_SCORE_W_CENTER
-	1.0f, // PLACEMENT_SCORE_W_PROXIMITY
-	0.5f, // PLACEMENT_SCORE_W_ZONE
-	0.2f, // PLACEMENT_SCORE_JITTER
+    // Placement scoring weights
+    1.0f,    // PLACEMENT_SCORE_W_CENTER
+    1.0f,    // PLACEMENT_SCORE_W_PROXIMITY
+    0.5f,    // PLACEMENT_SCORE_W_ZONE
+    0.2f,    // PLACEMENT_SCORE_JITTER
 
-	// Drift
-	6.0f, // DRIFT_AMP_X
-	4.0f, // DRIFT_AMP_Y
-	0.25f, // DRIFT_FREQ_X
-	0.18f, // DRIFT_FREQ_Y
+    // Drift
+    6.0f,    // DRIFT_AMP_X
+    4.0f,    // DRIFT_AMP_Y
+    0.25f,   // DRIFT_FREQ_X
+    0.18f,   // DRIFT_FREQ_Y
 
-	// Arrival animations
-	0.8f, // SCAN_REVEAL_DURATION
-	0.3f, // BORDER_DRAW_DURATION
-	1.0f, // IRIS_OPEN_DURATION
-	0.6f, // SLIDE_IN_DURATION
-	2.0f, // AFTERIMAGE_FADE_DURATION
+    // Arrival animations
+    0.8f,    // SCAN_REVEAL_DURATION
+    0.3f,    // BORDER_DRAW_DURATION
+    1.0f,    // IRIS_OPEN_DURATION
+    0.6f,    // SLIDE_IN_DURATION
+    2.0f,    // AFTERIMAGE_FADE_DURATION
 
-	// Measurement lines
-	400.0f, // MLINE_DRAW_SPEED
-	0.20f, // MLINE_FADE_OPACITY
-	4.0f, // MLINE_FADE_DELAY
+    // Measurement lines
+    400.0f,  // MLINE_DRAW_SPEED
+    0.20f,   // MLINE_FADE_OPACITY
+    4.0f,    // MLINE_FADE_DELAY
 
-	// Typography
-	14, // SIZE_LABEL
-	16, // SIZE_CODE
-	9, // SIZE_ANNOTATION
+    // Typography
+    14,      // SIZE_LABEL
+    16,      // SIZE_CODE
+    9,       // SIZE_ANNOTATION
 
-	// Code text overlay
-	3.0f, // CODE_TEXT_INTERVAL_MIN
-	8.0f, // CODE_TEXT_INTERVAL_MAX
-	0.50f, // CODE_TEXT_OPACITY_MIN
-	0.70f, // CODE_TEXT_OPACITY_MAX
+    // Code text overlay
+    3.0f,    // CODE_TEXT_INTERVAL_MIN
+    8.0f,    // CODE_TEXT_INTERVAL_MAX
+    0.50f,   // CODE_TEXT_OPACITY_MIN
+    0.70f,   // CODE_TEXT_OPACITY_MAX
 
-	// Circle fragment
-	3.5f, // CIRCLE_DIAMETER_MIN_CELLS
-	4.5f, // CIRCLE_DIAMETER_MAX_CELLS
-	320.0f, // CIRCLE_REGION_CENTER_X
-	360.0f, // CIRCLE_REGION_CENTER_Y
-	200.0f, // CIRCLE_REGION_SIZE
-	0.50f, // CIRCLE_TRIGGER_MIN_FRACTION
-	0.65f, // CIRCLE_TRIGGER_MAX_FRACTION
-	20, // CIRCLE_PLACEMENT_MAX_ATTEMPTS
-	0.10f, // IRIS_OPEN_LEAD_FRACTION
-	1.15f // GHOST_RING_SCALE
+    // Circle fragment
+    3.5f,    // CIRCLE_DIAMETER_MIN_CELLS
+    4.5f,    // CIRCLE_DIAMETER_MAX_CELLS
+    320.0f,  // CIRCLE_REGION_CENTER_X
+    360.0f,  // CIRCLE_REGION_CENTER_Y
+    200.0f,  // CIRCLE_REGION_SIZE
+    0.50f,   // CIRCLE_TRIGGER_MIN_FRACTION
+    0.65f,   // CIRCLE_TRIGGER_MAX_FRACTION
+    20,      // CIRCLE_PLACEMENT_MAX_ATTEMPTS
+    0.10f,   // IRIS_OPEN_LEAD_FRACTION
+    1.15f    // GHOST_RING_SCALE
 };
 
 constexpr BEPresetValues BE_SLOW_CINEMATIC_PRESET = {
-	// Cycle timing
-	180.0f, // CYCLE_DURATION_MIN
-	300.0f, // CYCLE_DURATION_MAX
-	4.0f, // PLACEMENT_INTERVAL_MIN
-	10.0f, // PLACEMENT_INTERVAL_MAX
-	10.0f, // PLACEMENT_INTERVAL_DENSE
-	14.0f, // DISSOLVE_FADE_MIN
-	22.0f, // DISSOLVE_FADE_MAX
-	6.0f, // DIVIDER_DRAW_DURATION
-	4.0f, // GRID_FADEIN_DURATION
+    // Cycle timing
+    180.0f,  // CYCLE_DURATION_MIN
+    300.0f,  // CYCLE_DURATION_MAX
+    4.0f,    // PLACEMENT_INTERVAL_MIN
+    10.0f,   // PLACEMENT_INTERVAL_MAX
+    10.0f,   // PLACEMENT_INTERVAL_DENSE
+    14.0f,   // DISSOLVE_FADE_MIN
+    22.0f,   // DISSOLVE_FADE_MAX
+    6.0f,    // DIVIDER_DRAW_DURATION
+    4.0f,    // GRID_FADEIN_DURATION
 
-	// Composition cycle stage durations
-	8.0f, // BLANK_DURATION
-	60.0f, // DENSITY_DURATION
-	45.0f, // DISSOLVE_DURATION
-	3.0f, // RESET_HOLD_DURATION
+    // Composition cycle stage durations
+    8.0f,    // BLANK_DURATION
+    60.0f,   // DENSITY_DURATION
+    45.0f,   // DISSOLVE_DURATION
+    3.0f,    // RESET_HOLD_DURATION
 
-	// Fragments
-	18, // MAX_FRAGMENTS
-	50, // PLACEMENT_MAX_ATTEMPTS
-	0.40f, // DESATURATE_MAX
-	60.0f, // DESATURATE_RAMP_DURATION
+    // Fragments
+    18,      // MAX_FRAGMENTS
+    50,      // PLACEMENT_MAX_ATTEMPTS
+    0.40f,   // DESATURATE_MAX
+    60.0f,   // DESATURATE_RAMP_DURATION
 
-	// Placement scoring weights
-	1.0f, // PLACEMENT_SCORE_W_CENTER
-	1.0f, // PLACEMENT_SCORE_W_PROXIMITY
-	0.5f, // PLACEMENT_SCORE_W_ZONE
-	0.2f, // PLACEMENT_SCORE_JITTER
+    // Placement scoring weights
+    1.0f,    // PLACEMENT_SCORE_W_CENTER
+    1.0f,    // PLACEMENT_SCORE_W_PROXIMITY
+    0.5f,    // PLACEMENT_SCORE_W_ZONE
+    0.2f,    // PLACEMENT_SCORE_JITTER
 
-	// Drift
-	4.0f, // DRIFT_AMP_X
-	3.0f, // DRIFT_AMP_Y
-	0.10f, // DRIFT_FREQ_X
-	0.08f, // DRIFT_FREQ_Y
+    // Drift
+    4.0f,    // DRIFT_AMP_X
+    3.0f,    // DRIFT_AMP_Y
+    0.10f,   // DRIFT_FREQ_X
+    0.08f,   // DRIFT_FREQ_Y
 
-	// Arrival animations
-	2.0f, // SCAN_REVEAL_DURATION
-	0.8f, // BORDER_DRAW_DURATION
-	2.5f, // IRIS_OPEN_DURATION
-	1.6f, // SLIDE_IN_DURATION
-	4.0f, // AFTERIMAGE_FADE_DURATION
+    // Arrival animations
+    2.0f,    // SCAN_REVEAL_DURATION
+    0.8f,    // BORDER_DRAW_DURATION
+    2.5f,    // IRIS_OPEN_DURATION
+    1.6f,    // SLIDE_IN_DURATION
+    4.0f,    // AFTERIMAGE_FADE_DURATION
 
-	// Measurement lines
-	180.0f, // MLINE_DRAW_SPEED
-	0.20f, // MLINE_FADE_OPACITY
-	8.0f, // MLINE_FADE_DELAY
+    // Measurement lines
+    180.0f,  // MLINE_DRAW_SPEED
+    0.20f,   // MLINE_FADE_OPACITY
+    8.0f,    // MLINE_FADE_DELAY
 
-	// Typography
-	14, // SIZE_LABEL
-	16, // SIZE_CODE
-	9, // SIZE_ANNOTATION
+    // Typography
+    14,      // SIZE_LABEL
+    16,      // SIZE_CODE
+    9,       // SIZE_ANNOTATION
 
-	// Code text overlay
-	8.0f, // CODE_TEXT_INTERVAL_MIN
-	16.0f, // CODE_TEXT_INTERVAL_MAX
-	0.50f, // CODE_TEXT_OPACITY_MIN
-	0.70f, // CODE_TEXT_OPACITY_MAX
+    // Code text overlay
+    8.0f,    // CODE_TEXT_INTERVAL_MIN
+    16.0f,   // CODE_TEXT_INTERVAL_MAX
+    0.50f,   // CODE_TEXT_OPACITY_MIN
+    0.70f,   // CODE_TEXT_OPACITY_MAX
 
-	// Circle fragment
-	3.5f, // CIRCLE_DIAMETER_MIN_CELLS
-	4.5f, // CIRCLE_DIAMETER_MAX_CELLS
-	320.0f, // CIRCLE_REGION_CENTER_X
-	360.0f, // CIRCLE_REGION_CENTER_Y
-	200.0f, // CIRCLE_REGION_SIZE
-	0.50f, // CIRCLE_TRIGGER_MIN_FRACTION
-	0.65f, // CIRCLE_TRIGGER_MAX_FRACTION
-	20, // CIRCLE_PLACEMENT_MAX_ATTEMPTS
-	0.10f, // IRIS_OPEN_LEAD_FRACTION
-	1.15f // GHOST_RING_SCALE
+    // Circle fragment
+    3.5f,    // CIRCLE_DIAMETER_MIN_CELLS
+    4.5f,    // CIRCLE_DIAMETER_MAX_CELLS
+    320.0f,  // CIRCLE_REGION_CENTER_X
+    360.0f,  // CIRCLE_REGION_CENTER_Y
+    200.0f,  // CIRCLE_REGION_SIZE
+    0.50f,   // CIRCLE_TRIGGER_MIN_FRACTION
+    0.65f,   // CIRCLE_TRIGGER_MAX_FRACTION
+    20,      // CIRCLE_PLACEMENT_MAX_ATTEMPTS
+    0.10f,   // IRIS_OPEN_LEAD_FRACTION
+    1.15f    // GHOST_RING_SCALE
 };
 
 constexpr BEPresetValues getBEPresetValues(BEPreset preset) {
-	return preset == BEPreset::SlowCinematic
-		? BE_SLOW_CINEMATIC_PRESET
-		: BE_DEFAULT_PRESET;
+    return preset == BEPreset::SlowCinematic
+        ? BE_SLOW_CINEMATIC_PRESET
+        : BE_DEFAULT_PRESET;
 }
 
 constexpr BEPresetValues BE_VALUES = getBEPresetValues(BE_SETTINGS_PRESET);

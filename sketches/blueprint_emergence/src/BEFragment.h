@@ -1,29 +1,33 @@
 #pragma once
 
 #include "Fragment.h"
+#include "glm/vec2.hpp"
 
-enum class GeometryType { RECT, SLIVER, SQUARE, CIRCLE };
+// If your project already defines GeometryType somewhere else, keep that one
+// and remove this enum from this header. In the original Blueprint Emergence
+// layout, BEFragment.h is the natural place for it.
+enum class GeometryType {
+	RECT,
+	CIRCLE,
+	SLIVER,
+	SQUARE
+};
 
-// Blueprint Emergence's geometry-specific arrival animations (§04): scan
-// reveal for RECT/SQUARE, slide-in (with a fading afterimage) for SLIVER,
-// iris-open (growing fill + leading outline) for CIRCLE.
 class BEFragment : public Fragment {
-	public:
-		// params.arrivalDuration is overridden internally based on geometryType.
-		// params.circularMask / maskRadius should be set by the caller for CIRCLE.
-		void setupBE(Fragment::Params params, GeometryType geometryType, int canvasW, int canvasH);
+public:
+	void setupBE(Fragment::Params params, GeometryType geometryType_, int canvasW, int canvasH);
 
-	protected:
-		void drawArrival(float t) const override;
-		void drawStable() const override;
+protected:
+	void drawArrival(float t) const override;
+	void drawStable() const override;
 
-	private:
-		void drawScanReveal(float elapsedSeconds) const;   // RECT & SQUARE
-		void drawSlideIn(float elapsedSeconds) const;       // SLIVER
-		void drawIrisOpen(float elapsedSeconds) const;      // CIRCLE
-		void drawClockwiseBorder(glm::vec2 pos, float w, float h, float t) const;
+private:
+	void drawScanReveal(float elapsed) const;
+	void drawClockwiseBorder(glm::vec2 pos, float w, float h, float t) const;
+	void drawSlideIn(float elapsed) const;
+	void drawIrisOpen(float elapsed) const;
 
-		GeometryType geometryType = GeometryType::RECT;
-		glm::vec2    slideStartPos{0, 0};
-		float        targetRadius = 0.0f; // CIRCLE only: final radius, saved for ghost ring + drawStable
+	GeometryType geometryType = GeometryType::RECT;
+	glm::vec2 slideStartPos { 0, 0 };
+	float targetRadius = 0.0f;
 };
