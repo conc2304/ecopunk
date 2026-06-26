@@ -1,0 +1,47 @@
+#pragma once
+#include "ofMain.h"
+#include "Quadrant.h"
+#include "ShaderLibrary.h"
+#include "TriggerBus.h"
+#include "LFOBank.h"
+#include <array>
+#include <vector>
+#include <string>
+
+class QuadrantManager {
+public:
+    void setup(ShaderLibrary* lib);
+    void update(float dt, const CrosshairState& state,
+                const LFOBank& lfo, ofTexture& rdTex, ofTexture& gridTex,
+                ofTexture& motionTex);
+    void draw(ofTexture& videoTex, glm::vec2 videoSize);
+    void drawHUD();
+    void setVideoBrightness(float b) { videoBrightness = b; }
+    void onTrigger(const TriggerEvent& e);
+
+private:
+    std::array<Quadrant, 4> quads;
+
+    std::vector<std::string> shaderPool = {
+        "desaturate", "invert", "recolor", "threshold",
+        "dither", "solarize", "scanlines", "channelshift", "motion_effect"
+    };
+
+    enum class CyclePhase { PLAYING, SILENCING, READY };
+
+    struct CycleState {
+        CyclePhase               phase      = CyclePhase::READY;
+        float                    silenceAcc = 0.f;
+        float                    silenceDur = 0.f;
+        std::string              lastShader;
+        std::vector<std::string> deck;       // shuffled queue — pop from back
+    };
+    std::array<CycleState, 4> cycleStates;
+
+    bool  velHighActive    = false;
+    float videoBrightness  = 0.5f;  // updated each frame from ofApp
+
+    void        kickRandomShader(int quadId);
+    std::string pickNextShader(int quadId);
+    float       computeSilenceDuration(int quadId);
+};

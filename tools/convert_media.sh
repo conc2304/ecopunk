@@ -225,8 +225,9 @@ process_file() {
 # ---------- entry point -------------------------------------------------------
 
 if [[ $# -eq 0 ]]; then
-    echo "Usage: $(basename "$0") <file> [file ...]"
+    echo "Usage: $(basename "$0") <file|dir> [file|dir ...]"
     echo ""
+    echo "Accepts individual files or directories (searched recursively for video files)."
     echo "Converts video to EcopunkVideoCollage spec and places it in:"
     echo "  $MEDIA_DIR"
     exit 1
@@ -239,8 +240,36 @@ fi
 
 mkdir -p "$MEDIA_DIR"
 
+# Expand each argument: directories → their contained video files
+VIDEO_EXTS="mp4|mov|mkv|avi|webm|m4v|mts|m2ts|wmv|flv|mpg|mpeg"
+
+collect_files() {
+    local arg="$1"
+    if [[ -f "$arg" ]]; then
+        echo "$arg"
+    elif [[ -d "$arg" ]]; then
+        find "$arg" -type f | grep -iE "\.(${VIDEO_EXTS})$" | sort
+    else
+        err "'$arg' is not a file or directory — skipping"
+    fi
+}
+
+all_files=()
+for arg in "$@"; do
+    while IFS= read -r f; do
+        [[ -n "$f" ]] && all_files+=("$f")
+    done < <(collect_files "$arg")
+done
+
+if [[ ${#all_files[@]} -eq 0 ]]; then
+    err "No video files found in the provided arguments."
+    exit 1
+fi
+
+info "Found ${#all_files[@]} file(s) to process."
+
 fail_count=0
-for f in "$@"; do
+for f in "${all_files[@]}"; do
     process_file "$f" || (( fail_count++ )) || true
 done
 
