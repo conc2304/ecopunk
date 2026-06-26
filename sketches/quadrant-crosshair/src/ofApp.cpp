@@ -40,6 +40,8 @@ void ofApp::setup() {
         if (e.id == TriggerID::CORNER_NEAR && e.active)  rdFeedBump = 0.012f;
         if (e.id == TriggerID::CORNER_NEAR && !e.active) rdFeedBump = 0.f;
     });
+
+    hud.setup(triggerBus, crosshair, lfo, quadrants, motionEx);
 }
 
 void ofApp::update() {
@@ -113,6 +115,9 @@ void ofApp::update() {
     quadrants.setVideoBrightness(steeringBrightness);
     quadrants.update(dt, cs, lfo, rd.getTexture(), grid.getTexture(),
                      motionEx.getMotionTexture());
+
+    // 8. HUD
+    hud.update(dt);
 }
 
 void ofApp::draw() {
@@ -129,11 +134,11 @@ void ofApp::draw() {
     motionEx.getMotionTexture().draw(0, 0, ofGetWidth(), ofGetHeight());
     ofDisableAlphaBlending();
 
-    // Layer 3: crosshair — always on top
-    crosshair.draw();
+    // Layer 3: HUD (toggle with H) — drawn before crosshair so crosshair stays on top
+    if (showHUD) hud.draw();
 
-    // Layer 4: debug HUD (toggle with H)
-    if (showHUD) quadrants.drawHUD();
+    // Layer 4: crosshair — always on top
+    crosshair.draw();
 }
 
 void ofApp::keyPressed(int key) {

@@ -10,6 +10,7 @@
 #include "LFOBank.h"
 #include "GridState.h"
 #include "MotionExtraction.h"
+#include "HudManager.h"
 
 class ofApp : public ofBaseApp {
 public:
@@ -38,6 +39,8 @@ private:
     // Motion trigger state
     float motionStillTimer    = 0.f;   // time spent below low-motion threshold
     float motionRampAlpha     = 55.f;  // overlay alpha target, ramps on onset
+
+    HudManager hud;
 
     static float sampleBrightness(const ofPixels& px);
 };

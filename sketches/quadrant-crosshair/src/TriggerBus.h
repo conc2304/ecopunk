@@ -57,7 +57,7 @@ private:
     static constexpr float LOW_SECS     =   3.0f;
     static constexpr float CENTER_ZONE  =  80.f;
     static constexpr float CORNER_ZONE  = 150.f;
-    static constexpr float DWELL_MOVE   =   5.f;
-    static constexpr float DWELL_SECS   =   8.0f;
+    static constexpr float DWELL_MOVE   =  25.f;
+    static constexpr float DWELL_SECS   =   6.0f;
     static constexpr float COOLDOWN_SEC =   1.5f;
 };

@@ -40,10 +40,10 @@ float QuadrantManager::computeSilenceDuration(int quadId) {
             silentCount++;
     }
 
-    float dur = ofRandom(3.f, 5.f);
+    float dur = ofRandom(9.f, 15.f);
 
     if (silentCount < 2 && ofRandom(1.f) < 0.20f)
-        dur = ofRandom(20.f, 40.f);
+        dur = ofRandom(60.f, 120.f);
 
     return dur;
 }
@@ -86,27 +86,31 @@ std::string QuadrantManager::pickNextShader(int quadId) {
     return chosen;
 }
 
+std::pair<float,float> QuadrantManager::chooseDitherParams() {
+    float arc = 0.45f, px = 4.f;
+    for (int attempt = 0; attempt < 5; attempt++) {
+        arc = ofRandom(0.15f, 0.85f);
+        px  = ofRandom(2.f, 10.f);
+        // Risk peaks when arc ≈ 0.5 (max pixelation) and video is bright
+        float peakProx = 1.f - 2.f * std::abs(arc - 0.5f);
+        float risk     = peakProx * (px / 10.f) * videoBrightness;
+        if (risk < 0.45f || attempt == 4) break;
+    }
+    return { arc, px };
+}
+
 void QuadrantManager::kickRandomShader(int quadId) {
     if (shaderPool.empty()) return;
 
     std::string chosen = pickNextShader(quadId);
     cycleStates[quadId].lastShader = chosen;
 
-    float fade  = ofRandom(5.f,  10.f);
-    float dwell = ofRandom(18.f, 24.f);
+    float fade  = ofRandom(15.f, 30.f);
+    float dwell = ofRandom(54.f, 72.f);
     quads[quadId].pushShader(chosen, fade, dwell);
 
     if (chosen == "dither") {
-        float arc = 0.45f, px = 4.f;
-        for (int attempt = 0; attempt < 5; attempt++) {
-            arc = ofRandom(0.15f, 0.85f);
-            px  = ofRandom(2.f, 10.f);
-            // Whiteout risk peaks when arc is near 0.5 (max pixelation phase)
-            // and the video is bright. peakProx: 0 at arc edges, 1 at arc centre.
-            float peakProx = 1.f - 2.f * std::abs(arc - 0.5f);
-            float risk     = peakProx * (px / 10.f) * videoBrightness;
-            if (risk < 0.45f || attempt == 4) break;
-        }
+        auto [arc, px] = chooseDitherParams();
         quads[quadId].setDitherParams(arc, px);
     }
 }
@@ -215,34 +219,57 @@ void QuadrantManager::onTrigger(const TriggerEvent& e) {
                 int qid = (e.quadrantHint >= 0 && e.quadrantHint < 4)
                           ? edgeToQuad[e.quadrantHint] : 0;
                 quads[qid].setShift(e.intensity * 0.008f);
+                quads[qid].clearShaders(0.3f);
                 quads[qid].pushShader("invert", 0.6f, 3.f);
             }
             break;
 
         case TriggerID::VELOCITY_LOW:
-            if (!velHighActive)
+            if (!velHighActive) {
+                quads[3].clearShaders(0.4f);
                 quads[3].pushShader("dither", 1.0f, 5.f);
+                auto [arc, px] = chooseDitherParams();
+                quads[3].setDitherParams(arc, px);
+            }
             break;
 
         case TriggerID::QUADRANT_CENTER:
             if (e.active && !velHighActive) {
-                for (auto& q : quads)
+                for (auto& q : quads) {
+                    q.clearShaders(0.3f);
                     q.pushShader("invert", 0.3f, 0.5f);
+                }
             }
             break;
 
         case TriggerID::CORNER_NEAR:
             if (e.active && !velHighActive && e.quadrantHint >= 0) {
                 quads[e.quadrantHint].setTint({ 1.0f, 0.5f, 0.1f });
+                quads[e.quadrantHint].clearShaders(0.4f);
                 quads[e.quadrantHint].pushShader("recolor", 0.8f, 4.f);
             }
             break;
 
         case TriggerID::DWELL:
             if (e.active && !velHighActive) {
-                for (auto& q : quads)
+                for (auto& q : quads) {
+                    q.clearShaders(0.5f);
                     q.pushShader("solarize", 2.0f, 8.f);
+                }
             }
             break;
     }
+}
+
+QuadrantManager::QuadrantTelemetry QuadrantManager::getTelemetry(int q) const {
+    QuadrantTelemetry t;
+    const auto& cs = cycleStates[q];
+    switch (cs.phase) {
+        case CyclePhase::PLAYING:   t.phase = "ONLINE";      break;
+        case CyclePhase::SILENCING: t.phase = "QUIET PHASE"; break;
+        case CyclePhase::READY:     t.phase = "STANDBY";     break;
+    }
+    t.activeShader  = quads[q].activeShaderName();
+    t.dwellProgress = quads[q].primaryDwellProgress();
+    return t;
 }

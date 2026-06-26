@@ -40,6 +40,18 @@ public:
         return true;
     }
 
+    std::string activeShaderName() const {
+        for (const auto& slot : slots)
+            if (!slot.isIdle()) return slot.name;
+        return "";
+    }
+
+    float primaryDwellProgress() const {
+        if (!slots[0].isIdle() && slots[0].dwellDur > 0.f)
+            return ofClamp(slots[0].dwellAcc / slots[0].dwellDur, 0.f, 1.f);
+        return 0.f;
+    }
+
     void setTint(glm::vec3 t)        { tint           = t; }
     void setThreshold(float t)       { threshold       = t; }
     void setShift(float s)           { shift           = s; }

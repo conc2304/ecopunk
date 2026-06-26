@@ -5,6 +5,7 @@
 #include "TriggerBus.h"
 #include "LFOBank.h"
 #include <array>
+#include <utility>
 #include <vector>
 #include <string>
 
@@ -18,6 +19,13 @@ public:
     void drawHUD();
     void setVideoBrightness(float b) { videoBrightness = b; }
     void onTrigger(const TriggerEvent& e);
+
+    struct QuadrantTelemetry {
+        std::string phase;        // "ONLINE", "QUIET PHASE", "STANDBY"
+        std::string activeShader; // current shader name, or ""
+        float dwellProgress;      // 0–1
+    };
+    QuadrantTelemetry getTelemetry(int quadId) const;
 
 private:
     std::array<Quadrant, 4> quads;
@@ -41,7 +49,8 @@ private:
     bool  velHighActive    = false;
     float videoBrightness  = 0.5f;  // updated each frame from ofApp
 
-    void        kickRandomShader(int quadId);
-    std::string pickNextShader(int quadId);
-    float       computeSilenceDuration(int quadId);
+    void                    kickRandomShader(int quadId);
+    std::string             pickNextShader(int quadId);
+    float                   computeSilenceDuration(int quadId);
+    std::pair<float,float>  chooseDitherParams();
 };
