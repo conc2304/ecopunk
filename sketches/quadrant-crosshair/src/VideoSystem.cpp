@@ -39,15 +39,60 @@ void VideoSystem::loadFile(int index) {
     player.play();
     fileIndex     = index;
     transitioning = false;
+    _fileChanged  = true;
+
+    if (!shaderReady) {
+        adjustShader.load("shaders/vert.glsl", "shaders/video_adjust.glsl");
+        shaderReady = true;
+    }
+    allocateAdjustFbo();
+}
+
+void VideoSystem::allocateAdjustFbo() {
+    int w = (int)player.getWidth();
+    int h = (int)player.getHeight();
+    if (w <= 0 || h <= 0) return;
+    if (fboAdjusted.isAllocated() &&
+        (int)fboAdjusted.getWidth() == w &&
+        (int)fboAdjusted.getHeight() == h) return;
+
+    ofFbo::Settings s;
+    s.width          = w;
+    s.height         = h;
+    s.internalformat = GL_RGB;
+    s.useDepth       = false;
+    fboAdjusted.allocate(s);
+    fboAdjusted.begin(); ofClear(0, 0, 0, 255); fboAdjusted.end();
+}
+
+void VideoSystem::processAdjustment() {
+    if (!shaderReady || !fboAdjusted.isAllocated()) return;
+    fboAdjusted.begin();
+    adjustShader.begin();
+    adjustShader.setUniformTexture("tex",        player.getTexture(), 0);
+    adjustShader.setUniform1f("saturation",      adjSaturation);
+    adjustShader.setUniform1f("contrast",        adjContrast);
+    adjustShader.setUniform1f("brightness",      adjBrightness);
+    ofSetColor(255);
+    player.getTexture().draw(0, 0, fboAdjusted.getWidth(), fboAdjusted.getHeight());
+    adjustShader.end();
+    fboAdjusted.end();
 }
 
 void VideoSystem::update() {
     player.update();
+    if (player.isFrameNew()) {
+        allocateAdjustFbo();
+        processAdjustment();
+    }
     if (!transitioning && player.getIsMovieDone())
         nextFile();
 }
 
-ofTexture& VideoSystem::getTexture() { return player.getTexture(); }
+ofTexture& VideoSystem::getTexture() {
+    if (fboAdjusted.isAllocated()) return fboAdjusted.getTexture();
+    return player.getTexture();
+}
 glm::vec2  VideoSystem::getVideoSize() const {
     return { (float)player.getWidth(), (float)player.getHeight() };
 }

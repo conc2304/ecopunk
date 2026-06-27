@@ -145,6 +145,24 @@ void QuadrantManager::update(float dt, const CrosshairState& state,
         q.update(dt, cx, cy);
     }
 
+    // ── Deferred / staggered effects ─────────────────────────────────────────
+    for (auto& p : pending) p.delay -= dt;
+    pending.erase(
+        std::remove_if(pending.begin(), pending.end(), [&](PendingEffect& p) {
+            if (p.delay <= 0.f) {
+                TriggerEvent e;
+                e.id            = p.triggerId;
+                e.active        = p.triggerActive;
+                e.intensity     = p.intensity;
+                e.quadrantHint  = p.quadrantHint;
+                applyTriggerToQuad(p.quadId, e);
+                return true;
+            }
+            return false;
+        }),
+        pending.end()
+    );
+
     if (velHighActive) return;
 
     for (int i = 0; i < 4; i++) {
@@ -191,21 +209,81 @@ void QuadrantManager::drawHUD() {
     }
 }
 
+// ── Staggered quad selection ──────────────────────────────────────────────────
+
+std::vector<int> QuadrantManager::selectQuads(int primary) {
+    int p = (primary >= 0 && primary < 4) ? primary : (int)ofRandom(4);
+    std::vector<int> sel = { p };
+    for (int q = 0; q < 4; q++) {
+        if (q == p) continue;
+        if (ofRandom(1.f) < 0.33f) sel.push_back(q);
+    }
+    return sel;
+}
+
+void QuadrantManager::scheduleEffect(const std::vector<int>& quads, const TriggerEvent& e) {
+    float delay = 0.f;
+    for (int i = 0; i < (int)quads.size(); i++) {
+        pending.push_back({ delay, quads[i], e.id, e.active, e.intensity, e.quadrantHint });
+        if (i + 1 < (int)quads.size())
+            delay += ofRandom(0.1f, 0.5f);
+    }
+}
+
+void QuadrantManager::applyTriggerToQuad(int qid, const TriggerEvent& e) {
+    switch (e.id) {
+        case TriggerID::VELOCITY_HIGH:
+            quads[qid].clearShaders(0.4f);
+            quads[qid].setThreshold(0.5f);
+            quads[qid].pushShader("threshold", 0.4f, 999.f);
+            break;
+
+        case TriggerID::EDGE_PROXIMITY:
+            quads[qid].setShift(e.intensity * 0.008f);
+            quads[qid].clearShaders(0.3f);
+            quads[qid].pushShader("invert", 0.6f, 3.f);
+            break;
+
+        case TriggerID::VELOCITY_LOW: {
+            quads[qid].clearShaders(0.4f);
+            quads[qid].pushShader("dither", 1.0f, 5.f);
+            auto [arc, px] = chooseDitherParams();
+            quads[qid].setDitherParams(arc, px);
+            break;
+        }
+
+        case TriggerID::QUADRANT_CENTER:
+            quads[qid].clearShaders(0.3f);
+            quads[qid].pushShader("invert", 0.3f, 0.5f);
+            break;
+
+        case TriggerID::CORNER_NEAR:
+            quads[qid].setTint({ 1.0f, 0.5f, 0.1f });
+            quads[qid].clearShaders(0.4f);
+            quads[qid].pushShader("recolor", 0.8f, 4.f);
+            break;
+
+        case TriggerID::DWELL:
+            quads[qid].clearShaders(0.5f);
+            quads[qid].pushShader("solarize", 2.0f, 8.f);
+            break;
+    }
+}
+
 void QuadrantManager::onTrigger(const TriggerEvent& e) {
     switch (e.id) {
 
         case TriggerID::VELOCITY_HIGH:
             velHighActive = e.active;
             if (e.active) {
-                for (auto& q : quads) {
-                    q.clearShaders(0.4f);
-                    q.setThreshold(0.5f);
-                    q.pushShader("threshold", 0.4f, 999.f);
-                }
+                int primary = (e.quadrantHint >= 0 && e.quadrantHint < 4)
+                              ? e.quadrantHint : (int)ofRandom(4);
+                scheduleEffect(selectQuads(primary), e);
             } else {
+                // Deactivation: flush pending, clear all quads immediately
+                pending.clear();
                 for (int i = 0; i < 4; i++) {
                     quads[i].clearShaders(0.8f);
-                    // Let threshold fade out, then resume organic cycle after a short breath
                     cycleStates[i].phase      = CyclePhase::SILENCING;
                     cycleStates[i].silenceAcc = 0.f;
                     cycleStates[i].silenceDur = ofRandom(3.f, 6.f);
@@ -216,47 +294,32 @@ void QuadrantManager::onTrigger(const TriggerEvent& e) {
         case TriggerID::EDGE_PROXIMITY:
             if (e.active) {
                 static const int edgeToQuad[4] = { 0, 1, 3, 2 };
-                int qid = (e.quadrantHint >= 0 && e.quadrantHint < 4)
-                          ? edgeToQuad[e.quadrantHint] : 0;
-                quads[qid].setShift(e.intensity * 0.008f);
-                quads[qid].clearShaders(0.3f);
-                quads[qid].pushShader("invert", 0.6f, 3.f);
+                int primary = (e.quadrantHint >= 0 && e.quadrantHint < 4)
+                              ? edgeToQuad[e.quadrantHint] : 0;
+                TriggerEvent mapped = e;
+                mapped.quadrantHint = primary;
+                scheduleEffect(selectQuads(primary), mapped);
             }
             break;
 
         case TriggerID::VELOCITY_LOW:
-            if (!velHighActive) {
-                quads[3].clearShaders(0.4f);
-                quads[3].pushShader("dither", 1.0f, 5.f);
-                auto [arc, px] = chooseDitherParams();
-                quads[3].setDitherParams(arc, px);
-            }
+            if (!velHighActive)
+                scheduleEffect(selectQuads(-1), e);   // random primary
             break;
 
         case TriggerID::QUADRANT_CENTER:
-            if (e.active && !velHighActive) {
-                for (auto& q : quads) {
-                    q.clearShaders(0.3f);
-                    q.pushShader("invert", 0.3f, 0.5f);
-                }
-            }
+            if (e.active && !velHighActive)
+                scheduleEffect(selectQuads(-1), e);   // random primary
             break;
 
         case TriggerID::CORNER_NEAR:
-            if (e.active && !velHighActive && e.quadrantHint >= 0) {
-                quads[e.quadrantHint].setTint({ 1.0f, 0.5f, 0.1f });
-                quads[e.quadrantHint].clearShaders(0.4f);
-                quads[e.quadrantHint].pushShader("recolor", 0.8f, 4.f);
-            }
+            if (e.active && !velHighActive && e.quadrantHint >= 0)
+                scheduleEffect(selectQuads(e.quadrantHint), e);
             break;
 
         case TriggerID::DWELL:
-            if (e.active && !velHighActive) {
-                for (auto& q : quads) {
-                    q.clearShaders(0.5f);
-                    q.pushShader("solarize", 2.0f, 8.f);
-                }
-            }
+            if (e.active && !velHighActive)
+                scheduleEffect(selectQuads(-1), e);   // random primary
             break;
     }
 }

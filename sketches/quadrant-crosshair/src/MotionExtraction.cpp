@@ -54,9 +54,11 @@ void MotionExtraction::updateExtract(ofTexture& videoTex, float sensitivity) {
     extractShader.begin();
     extractShader.setUniformTexture("currentFrame", videoTex,            0);
     extractShader.setUniformTexture("accumFrame",   getAccumTexture(),   1);
-    extractShader.setUniform1f("sensitivity", sensitivity);
-    extractShader.setUniform1f("neutralGrey", 0.5f);
-    extractShader.setUniform1i("outputMode",  outputMode);
+    extractShader.setUniform1f("sensitivity",  sensitivity);
+    extractShader.setUniform1f("neutralGrey",  extractNeutralGrey);
+    extractShader.setUniform1f("boost",        extractBoost);
+    extractShader.setUniform1f("gamma",        extractGamma);
+    extractShader.setUniform1i("outputMode",   outputMode);
     ofSetColor(255);
     videoTex.draw(0, 0, ofGetWidth(), ofGetHeight());
     extractShader.end();

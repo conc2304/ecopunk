@@ -18,6 +18,7 @@ public:
     void draw(ofTexture& videoTex, glm::vec2 videoSize);
     void drawHUD();
     void setVideoBrightness(float b) { videoBrightness = b; }
+    void resetErosion() { for (auto& q : quads) q.resetErosion(); }
     void onTrigger(const TriggerEvent& e);
 
     struct QuadrantTelemetry {
@@ -49,6 +50,19 @@ private:
     bool  velHighActive    = false;
     float videoBrightness  = 0.5f;  // updated each frame from ofApp
 
+    struct PendingEffect {
+        float        delay;
+        int          quadId;
+        TriggerID    triggerId;
+        bool         triggerActive;
+        float        intensity;
+        int          quadrantHint;
+    };
+    std::vector<PendingEffect> pending;
+
+    std::vector<int>           selectQuads(int primary);
+    void                       scheduleEffect(const std::vector<int>& quads, const TriggerEvent& e);
+    void                       applyTriggerToQuad(int quadId, const TriggerEvent& e);
     void                    kickRandomShader(int quadId);
     std::string             pickNextShader(int quadId);
     float                   computeSilenceDuration(int quadId);

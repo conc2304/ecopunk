@@ -32,6 +32,7 @@ public:
 
     bool pushShader(const std::string& name, float fadeSecs = 1.2f, float dwellSecs = 6.f);
     void clearShaders(float fadeSecs = 1.2f);
+    void resetErosion();
     void drawDebugHUD(const std::string& phaseStr) const;
 
     bool allSlotsIdle() const {
@@ -88,8 +89,8 @@ private:
     // Erosion / residue layer
     ofFbo      fbo_read, fbo_write;
     bool       erosionReady = false;
-    float      decayRate    = 0.95f;
-    float      videoAlpha   = 0.15f;
+    float      decayRate    = 0.97f;
+    float      videoAlpha   = 0.03f;
     ofTexture* rdTex        = nullptr;
     ofTexture* gridTex      = nullptr;
     ofTexture* motionTex    = nullptr;

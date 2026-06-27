@@ -51,6 +51,7 @@ void ofApp::update() {
 
     // 1. Source systems
     video.update();
+    if (video.fileChanged()) quadrants.resetErosion();
     lfo.update(dt);
 
     // 2. Video CPU sampling + motion extraction

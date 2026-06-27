@@ -27,6 +27,9 @@ void DebugMode::setup(ShaderLibrary* lib, VideoSystem* vid, MotionExtraction* mo
 void DebugMode::update() {
     video->update();
     if (video->isFrameNew()) {
+        motionEx->extractNeutralGrey = pMotionNeutralGrey;
+        motionEx->extractBoost       = pMotionBoost;
+        motionEx->extractGamma       = pMotionGamma;
         motionEx->update(video->getTexture(), pMotionDecay, pMotionSensitivity);
         motionEx->setOutputMode((int)pMotionMode);
     }
@@ -80,10 +83,17 @@ std::vector<DebugParam> DebugMode::buildParams() {
             p.push_back({ "alpha",         &pAlpha,         0.05f,  0.f, 1.f  });
             break;
         case 8: // motion_effect
-            p.push_back({ "alpha",       &pAlpha,             0.05f, 0.f,  1.f });
-            p.push_back({ "decay",       &pMotionDecay,       0.005f, 0.85f, 0.999f });
-            p.push_back({ "sensitivity", &pMotionSensitivity, 0.5f,  1.0f, 12.0f  });
-            p.push_back({ "outputMode",  &pMotionMode,        1.0f,  0.0f, 2.0f   });
+            // ── Composite layer ───────────────────────────────────────────
+            p.push_back({ "alpha",          &pAlpha,             0.05f,  0.f,   1.f    });
+            p.push_back({ "blendMode",      &pEffectBlendMode,   1.0f,   0.0f,  2.0f   }); // 0=mix 1=add 2=screen
+            p.push_back({ "effectGamma",    &pEffectMotionGamma, 0.1f,   0.2f,  4.0f   });
+            // ── Extraction layer ──────────────────────────────────────────
+            p.push_back({ "outputMode",     &pMotionMode,        1.0f,   0.0f,  2.0f   }); // 0=luma 1=chroma 2=signed
+            p.push_back({ "sensitivity",    &pMotionSensitivity, 0.5f,   0.5f, 16.0f   });
+            p.push_back({ "boost",          &pMotionBoost,       0.25f,  0.1f,  6.0f   });
+            p.push_back({ "neutralGrey",    &pMotionNeutralGrey, 0.05f,  0.0f,  1.0f   });
+            p.push_back({ "extractGamma",   &pMotionGamma,       0.1f,   0.2f,  4.0f   });
+            p.push_back({ "decay",          &pMotionDecay,       0.005f, 0.85f, 0.999f });
             break;
         default:
             break;
@@ -119,8 +129,11 @@ void DebugMode::drawShaderFullScreen() {
         sh.setUniform1f("alpha", pAlpha);
     }
 
-    if (name == "motion_effect")
+    if (name == "motion_effect") {
         sh.setUniformTexture("motionTex", motionEx->getMotionTexture(), 4);
+        sh.setUniform1f("motionGamma", pEffectMotionGamma);
+        sh.setUniform1i("blendMode",   (int)pEffectBlendMode);
+    }
     if (name == "recolor")
         sh.setUniform3f("tint", glm::vec3(pTintR, pTintG, pTintB));
     if (name == "threshold")

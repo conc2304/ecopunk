@@ -3,6 +3,8 @@ uniform sampler2D currentFrame;
 uniform sampler2D accumFrame;
 uniform float     sensitivity;
 uniform float     neutralGrey;
+uniform float     boost;        // multiplier on diff magnitude (default 1.0)
+uniform float     gamma;        // power curve on output    (default 1.0)
 uniform int       outputMode;
 varying vec2 vTexCoord;
 
@@ -11,7 +13,7 @@ void main() {
     vec3 accum   = texture2D(accumFrame,   vTexCoord).rgb;
 
     vec3  diff = current - accum;
-    float mag  = length(diff) * sensitivity;
+    float mag  = length(diff) * sensitivity * boost;
 
     vec3 outColor;
 
@@ -32,11 +34,14 @@ void main() {
         vec3  cool = vec3(0.16, 0.38, 0.62);
         vec3  mid  = vec3(neutralGrey);
         if (signed_mag > 0.0) {
-            outColor = mix(mid, warm, clamp(signed_mag * sensitivity, 0.0, 1.0));
+            outColor = mix(mid, warm, clamp(signed_mag * sensitivity * boost, 0.0, 1.0));
         } else {
-            outColor = mix(mid, cool, clamp(-signed_mag * sensitivity, 0.0, 1.0));
+            outColor = mix(mid, cool, clamp(-signed_mag * sensitivity * boost, 0.0, 1.0));
         }
     }
+
+    // Gamma curve (1.0 = linear, <1 = brighter, >1 = darker/higher contrast)
+    outColor = pow(clamp(outColor, 0.001, 1.0), vec3(gamma));
 
     gl_FragColor = vec4(outColor, 1.0);
 }

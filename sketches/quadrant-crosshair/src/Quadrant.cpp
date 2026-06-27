@@ -131,7 +131,7 @@ void Quadrant::draw(ofTexture& videoTex, glm::vec2 videoSize) {
         (GLint)region.height
     );
 
-    // Erosion FBO as base layer
+    // Layer 1: Erosion FBO — ghost/accumulation base
     if (erosionReady) {
         ofPushMatrix();
         ofTranslate(lastCx, lastCy);
@@ -140,11 +140,18 @@ void Quadrant::draw(ofTexture& videoTex, glm::vec2 videoSize) {
         ofSetColor(255);
         fbo_read.getTexture().draw(rx, ry, rw, rh);
         ofPopMatrix();
-    } else {
-        drawWithEffect(videoTex, videoSize, "passthrough", 1.0f, lastCx, lastCy);
     }
 
-    // Effect shader slots on top
+    // Layer 2: Raw video — same transform as shaders, sits cleanly between ghost and effect
+    ofPushMatrix();
+    ofTranslate(lastCx, lastCy);
+    ofScale(currentScale);
+    ofTranslate(-lastCx, -lastCy);
+    ofSetColor(255);
+    videoTex.draw(cropOffX, cropOffY, videoSize.x, videoSize.y);
+    ofPopMatrix();
+
+    // Layer 3: Shader effects alpha-fade in over the raw video
     ofEnableAlphaBlending();
     for (auto& slot : slots) {
         if (!slot.isIdle() && slot.drawnAlpha > 0.f)
@@ -219,6 +226,8 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
         if (rdTex)     sh.setUniformTexture("rdState",   *rdTex,     2);
         if (gridTex)   sh.setUniformTexture("gridState", *gridTex,   3);
         if (motionTex) sh.setUniformTexture("motionTex", *motionTex, 4);
+        sh.setUniform1f("motionGamma", 1.0f);
+        sh.setUniform1i("blendMode",   0);
         bindUniforms(sh);
     }
 
@@ -295,6 +304,11 @@ void Quadrant::drawDebugHUD(const std::string& phaseStr) const {
       + "  px:"  + ofToString((int)maxPixelation),
         tx, ty
     );
+}
+
+void Quadrant::resetErosion() {
+    fbo_read.begin();  ofClear(0, 0, 0, 255); fbo_read.end();
+    fbo_write.begin(); ofClear(0, 0, 0, 255); fbo_write.end();
 }
 
 void Quadrant::setDitherParams(float arc, float px) {

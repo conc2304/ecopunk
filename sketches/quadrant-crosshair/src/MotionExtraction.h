@@ -10,10 +10,15 @@ public:
     ofTexture& getMotionTexture();
     ofTexture& getAccumTexture();
 
-    int   getOutputMode()    const { return outputMode; }
+    int   getOutputMode()      const { return outputMode; }
     float getMotionEnergy()    const { return motionEnergy; }
     float getMotionCentroidX() const { return motionCentroidX; }
     float getMotionCentroidY() const { return motionCentroidY; }
+
+    // ── Extraction tuning dials ───────────────────────────────────────────
+    float extractNeutralGrey = 0.5f;   // baseline grey for modes 0 + 2
+    float extractBoost       = 1.0f;   // multiplier on diff magnitude
+    float extractGamma       = 1.0f;   // power curve on extraction output
 
     static constexpr int ACCUM_W = 160;
     static constexpr int ACCUM_H = 90;

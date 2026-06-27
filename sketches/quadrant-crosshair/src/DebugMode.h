@@ -42,9 +42,16 @@ private:
     float pTintG           = 0.78f;
     float pTintB           = 0.25f;
     // motion_effect controls (fed into MotionExtraction::update each frame)
-    float pMotionDecay     = 0.95f;
+    float pMotionDecay       = 0.95f;
     float pMotionSensitivity = 4.0f;
-    float pMotionMode      = 0.0f;   // 0/1/2 stored as float for param system
+    float pMotionMode        = 0.0f;   // 0/1/2 stored as float for param system
+    // extraction tuning
+    float pMotionNeutralGrey = 0.5f;
+    float pMotionBoost       = 1.0f;
+    float pMotionGamma       = 1.0f;
+    // composite tuning
+    float pEffectBlendMode   = 0.0f;   // 0/1/2 stored as float
+    float pEffectMotionGamma = 1.0f;
 
     struct TriggerSim {
         TriggerID   id;
