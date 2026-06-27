@@ -15,14 +15,17 @@
 #
 # For each file the script:
 #   1. Probes the file and decides the minimum ffmpeg operation needed.
-#   2. Writes the result to sketches/blueprint_emergence/bin/data/media/.
+#   2. Writes the result to sketches/quadrant-crosshair/bin/data/media/
+#      (override with OUTPUT_DIR env var).
 #   3. Deletes the original (unless it was already in the media folder).
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-MEDIA_DIR="$REPO_ROOT/sketches/blueprint_emergence/bin/data/media"
+# Override with OUTPUT_DIR env var to target a different sketch:
+#   OUTPUT_DIR=/path/to/media ./tools/convert_media.sh <files>
+MEDIA_DIR="${OUTPUT_DIR:-$REPO_ROOT/sketches/quadrant-crosshair/bin/data/media}"
 
 RED='\033[0;31m'
 YLW='\033[0;33m'
@@ -205,6 +208,7 @@ process_file() {
             -level:v 3.1 \
             -preset slow \
             -crf 20 \
+            -g 24 -keyint_min 24 \
             -pix_fmt yuv420p \
             -an \
             -movflags +faststart \

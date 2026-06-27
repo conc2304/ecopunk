@@ -6,6 +6,7 @@
 #include "LFOBank.h"
 #include "QuadrantManager.h"
 #include "MotionExtraction.h"
+#include "NatureCopy.h"
 #include <vector>
 
 class HudManager {
@@ -14,6 +15,12 @@ public:
                QuadrantManager&, MotionExtraction&);
     void update(float dt);
     void draw();
+
+    // ── In-code dials ──────────────────────────────────────────────────
+    bool showBioGauge   = false;   // motion energy ring (top-center left)
+    bool showDwellGauge = false;   // dwell semi-circle (top-center right)
+
+    void onVideoFileChanged(const std::string& basename);
 
 private:
     // Pool index → widget mapping
@@ -37,8 +44,16 @@ private:
     QuadrantManager*  quadMgr      = nullptr;
     MotionExtraction* motionEx     = nullptr;
 
-    hud::HudTheme baseTheme;
-    float         time = 0.f;
+    hud::HudTheme    baseTheme;
+    float            time = 0.f;
+
+    // Stored so label can be swapped on file change without losing style/units
+    hud::GaugeOptions motionGaugeOpts_;
+    hud::GaugeOptions dwellGaugeOpts_;
+    // Stored so labelOverride can be swapped without losing other reticle settings
+    hud::ReticleOptions reticleOpts_;
+
+    NatureCopy currentCopy_;
 
     // ── Rotating slot system ──────────────────────────────────────────────
     struct HudSlot {

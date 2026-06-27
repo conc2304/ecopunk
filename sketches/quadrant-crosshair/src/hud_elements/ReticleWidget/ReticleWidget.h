@@ -8,6 +8,8 @@ struct ReticleOptions {
     int targetCount = 5;
     bool showLabels = true;
     bool randomTargets = true;
+    // When non-empty, overrides the built-in label table. Cycled modulo size.
+    std::vector<std::string> labelOverride;
 };
 
 class ReticleWidget : public HudWidget {

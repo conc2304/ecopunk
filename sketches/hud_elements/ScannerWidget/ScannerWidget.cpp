@@ -15,6 +15,10 @@ void ScannerWidget::draw() {
 
     frame.draw(bounds, theme.colors, theme.frame, time);
 
+    ofSetColor(255, 255, 255, static_cast<int>(255 * 0.20f * motion.opacity));
+    ofFill();
+    ofDrawRectangle(bounds.rect());
+
     ofVec2f c = bounds.center();
     float r = bounds.minDim() * 0.38f;
     float alpha = motion.opacity;

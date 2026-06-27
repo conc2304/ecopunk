@@ -18,6 +18,12 @@ public:
     void update(float dt) override;
     void draw() override;
 
+    // ── In-code dials ──────────────────────────────────────────────────
+    float scaleMultiplier = 1.25f;   // 0.5 = half size, 2.0 = double
+    float globalOpacity   = 1.0f;   // 0–1 master alpha multiplier
+    float lineWidthScale  = 1.0f;   // line thickness multiplier
+    float hueShift        = 0.0f;   // hue rotation in degrees (0–360)
+
 private:
     ScannerOptions options;
     HudFrameRenderer frame;

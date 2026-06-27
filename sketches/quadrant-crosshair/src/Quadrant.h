@@ -79,7 +79,6 @@ public:
     void setDecay(float d)           { decayRate       = d; }
     void setMaxPixelation(float m)   { maxPixelation   = m; }
     void setDitherParams(float arc, float px);
-    void setRDTexture(ofTexture& t)          { rdTex            = &t; }
     void setGridTexture(ofTexture& t)        { gridTex          = &t; }
     void setMotionTexture(ofTexture& t)      { motionTex        = &t; }
     void setMotionDelayedTexture(ofTexture& t) { motionDelayedTex = &t; }
@@ -113,7 +112,6 @@ private:
     bool       erosionReady = false;
     float      decayRate    = 0.97f;
     float      videoAlpha   = 0.03f;
-    ofTexture* rdTex            = nullptr;
     ofTexture* gridTex          = nullptr;
     ofTexture* motionTex        = nullptr;
     ofTexture* motionDelayedTex = nullptr;

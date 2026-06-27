@@ -1,3 +1,4 @@
+#version 120
 uniform sampler2D tex;
 uniform float brightness;  // additive offset, e.g. -0.10
 uniform float contrast;    // multiplier pivoted at 0.5, e.g. 1.10

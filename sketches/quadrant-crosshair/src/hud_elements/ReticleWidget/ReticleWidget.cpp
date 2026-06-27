@@ -7,14 +7,16 @@ void ReticleWidget::setup() { rebuild(); }
 void ReticleWidget::randomize(int seed) { HudWidget::randomize(seed); rebuild(); }
 
 void ReticleWidget::rebuild() {
-    static std::vector<std::string> labels = {"CANOPY", "FLOW", "SPORE", "ROOT", "SIGNAL", "WATER"};
+    static const std::vector<std::string> kDefaultLabels = {"CANOPY", "FLOW", "SPORE", "ROOT", "SIGNAL", "WATER"};
+    const std::vector<std::string>& labels =
+        options.labelOverride.empty() ? kDefaultLabels : options.labelOverride;
     targets.clear();
     for (int i = 0; i < options.targetCount; ++i) {
         Target t;
         t.p = {ofRandom(0.15f, 0.85f), ofRandom(0.18f, 0.82f)};
         t.phase = ofRandom(TWO_PI);
         t.size = ofRandom(0.06f, 0.14f);
-        t.label = labels[i % labels.size()];
+        t.label = labels[i % (int)labels.size()];
         targets.push_back(t);
     }
 }

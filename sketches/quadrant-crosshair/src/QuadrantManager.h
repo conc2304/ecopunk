@@ -13,7 +13,7 @@ class QuadrantManager {
 public:
     void setup(ShaderLibrary* lib);
     void update(float dt, const CrosshairState& state,
-                const LFOBank& lfo, ofTexture& rdTex, ofTexture& gridTex,
+                const LFOBank& lfo, ofTexture& gridTex,
                 ofTexture& motionTex, ofTexture& motionDelayedTex);
     void draw(ofTexture& videoTex, glm::vec2 videoSize);
     void drawHUD();
@@ -33,7 +33,10 @@ private:
 
     std::vector<std::string> shaderPool = {
         "desaturate", "invert", "recolor", "threshold",
-        "dither", "solarize", "scanlines", "channelshift", "motion_effect"
+        "dither", "solarize", "scanlines", "channelshift", "motion_effect",
+        // nature pack (temporal_trails excluded — needs per-quadrant FBO)
+        "bioluminescence", "caustics", "chromatic_aberration", "edge_glow",
+        "ink_outlines", "pixel_drift", "pixel_sorting", "water_refraction"
     };
 
     enum class CyclePhase { PLAYING, SILENCING, READY };

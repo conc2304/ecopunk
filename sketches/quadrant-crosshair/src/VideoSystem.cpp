@@ -41,18 +41,22 @@ void VideoSystem::loadFile(int index) {
     player.setLoopState(OF_LOOP_NONE);
     player.setVolume(0);
     player.play();
-    fileIndex      = index;
-    transitioning  = false;
-    _fileChanged   = true;
-    loopCount      = 0;
-    playingForward = true;
+    fileIndex     = index;
+    transitioning = false;
+    _fileChanged  = true;
+    // Store bare basename (no path, no extension) for category classification
+    size_t slash = files[index].rfind('/');
+    std::string base = (slash == std::string::npos) ? files[index] : files[index].substr(slash + 1);
+    size_t dot = base.rfind('.');
+    currentFilename_ = (dot != std::string::npos) ? base.substr(0, dot) : base;
+    loopCount     = 0;
     pickTargetLoops();
 
-    if (!shaderReady) {
-        adjustShader.load("shaders/vert.glsl", "shaders/video_adjust.glsl");
-        shaderReady = true;
-    }
+#ifndef PLATFORM_PI
+    if (!shaderReady)
+        shaderReady = adjustShader.load("shaders/vert.glsl", "shaders/video_adjust.glsl");
     allocateAdjustFbo();
+#endif
 }
 
 void VideoSystem::allocateAdjustFbo() {
@@ -88,48 +92,31 @@ void VideoSystem::processAdjustment() {
 
 void VideoSystem::update() {
     player.update();
+#ifndef PLATFORM_PI
     if (player.isFrameNew()) {
         allocateAdjustFbo();
         processAdjustment();
     }
+#endif
     if (transitioning) return;
 
-    float pos = player.getPosition();
-    bool hitEnd   = player.getIsMovieDone() || pos >= 0.998f;
-    bool hitStart = !playingForward && pos <= 0.002f;
-
-    if (pingPong) {
-        if (playingForward && hitEnd) {
-            // reverse
-            player.setSpeed(-1.0f);
-            playingForward = false;
-        } else if (hitStart) {
-            loopCount++;
-            if (loopCount >= targetLoops) {
-                loopCount = 0;
-                playingForward = true;
-                nextFile();
-            } else {
-                player.setSpeed(1.0f);
-                playingForward = true;
-            }
-        }
-    } else {
-        if (hitEnd) {
-            loopCount++;
-            if (loopCount >= targetLoops) {
-                loopCount = 0;
-                nextFile();
-            } else {
-                player.setPosition(0.0f);
-                player.play();
-            }
+    bool hitEnd = player.getIsMovieDone() || player.getPosition() >= 0.998f;
+    if (hitEnd) {
+        loopCount++;
+        if (loopCount >= targetLoops) {
+            loopCount = 0;
+            nextFile();
+        } else {
+            player.setPosition(0.0f);
+            player.play();
         }
     }
 }
 
 ofTexture& VideoSystem::getTexture() {
+#ifndef PLATFORM_PI
     if (fboAdjusted.isAllocated()) return fboAdjusted.getTexture();
+#endif
     return player.getTexture();
 }
 glm::vec2  VideoSystem::getVideoSize() const {

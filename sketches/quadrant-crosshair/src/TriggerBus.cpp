@@ -53,7 +53,10 @@ void TriggerBus::checkVelocity(const CrosshairState& s) {
     bool low = velLowAccum > LOW_SECS;
     if (low != velLowActive) {
         velLowActive = low;
-        fire({ TriggerID::VELOCITY_LOW, low, 1.f, 3 });
+        if (cooldowns[TriggerID::VELOCITY_LOW] <= 0.f) {
+            fire({ TriggerID::VELOCITY_LOW, low, 1.f, 3 });
+            cooldowns[TriggerID::VELOCITY_LOW] = VELOCITY_LOW_CD;
+        }
     }
 }
 

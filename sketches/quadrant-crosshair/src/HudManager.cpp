@@ -186,28 +186,26 @@ void HudManager::setup(TriggerBus& tb, CrosshairSystem& ch, LFOBank& lfoRef,
     scanner.setOptions(sOpts);
     scanner.setup();
 
-    // Pool 3 — Motion gauge
-    hud::GaugeOptions mgOpts;
-    mgOpts.style     = hud::GaugeStyle::Ring;
-    mgOpts.label     = "BIO SIGNAL";
-    mgOpts.units     = "%";
-    mgOpts.showValue = true;
-    mgOpts.value     = 0.f;
+    // Pool 3 — Motion gauge (store opts as member so label can be swapped later)
+    motionGaugeOpts_.style     = hud::GaugeStyle::Ring;
+    motionGaugeOpts_.label     = "BIO SIGNAL";
+    motionGaugeOpts_.units     = "%";
+    motionGaugeOpts_.showValue = true;
+    motionGaugeOpts_.value     = 0.f;
     motionGauge.setBounds(W * 0.5f - 135.f, 10.f, 110.f, 110.f);
     motionGauge.setTheme(themedAt(0.55f));
-    motionGauge.setOptions(mgOpts);
+    motionGauge.setOptions(motionGaugeOpts_);
     motionGauge.setup();
 
-    // Pool 4 — Dwell gauge
-    hud::GaugeOptions dgOpts;
-    dgOpts.style     = hud::GaugeStyle::SemiCircle;
-    dgOpts.label     = "DWELL";
-    dgOpts.units     = "%";
-    dgOpts.showValue = true;
-    dgOpts.value     = 0.f;
+    // Pool 4 — Dwell gauge (store opts as member so label can be swapped later)
+    dwellGaugeOpts_.style     = hud::GaugeStyle::SemiCircle;
+    dwellGaugeOpts_.label     = "DWELL";
+    dwellGaugeOpts_.units     = "%";
+    dwellGaugeOpts_.showValue = true;
+    dwellGaugeOpts_.value     = 0.f;
     dwellGauge.setBounds(W * 0.5f + 25.f, 10.f, 110.f, 110.f);
     dwellGauge.setTheme(themedAt(0.55f));
-    dwellGauge.setOptions(dgOpts);
+    dwellGauge.setOptions(dwellGaugeOpts_);
     dwellGauge.setup();
 
     // Always-on — Telemetry cards (one per quadrant)
@@ -226,14 +224,13 @@ void HudManager::setup(TriggerBus& tb, CrosshairSystem& ch, LFOBank& lfoRef,
         quadCards[q].setup();
     }
 
-    // Pool 5 — Reticles
-    hud::ReticleOptions rOpts;
-    rOpts.targetCount   = 4;
-    rOpts.showLabels    = true;
-    rOpts.randomTargets = true;
+    // Pool 5 — Reticles (store opts as member so labelOverride can be swapped later)
+    reticleOpts_.targetCount   = 4;
+    reticleOpts_.showLabels    = true;
+    reticleOpts_.randomTargets = true;
     reticles.setBounds(0, 0, W, H);
     reticles.setTheme(themedAt(0.f));
-    reticles.setOptions(rOpts);
+    reticles.setOptions(reticleOpts_);
     reticles.setup();
 
     // Pool 6 — FlowField
@@ -247,10 +244,27 @@ void HudManager::setup(TriggerBus& tb, CrosshairSystem& ch, LFOBank& lfoRef,
     flowField.setOptions(ffOpts);
     flowField.setup();
 
+    // Seed with NATURE fallback copy until first file-change notification arrives
+    currentCopy_ = getCopyForCategory(NatureCategory::NATURE);
+
     // Kick off both slots
     refillDeck();
     popNextToSlot(0);
     popNextToSlot(1);
+}
+
+// ── Nature copy ───────────────────────────────────────────────────────────────
+
+void HudManager::onVideoFileChanged(const std::string& basename) {
+    currentCopy_ = getCopyForCategory(classifyFilename(basename));
+
+    motionGaugeOpts_.label = currentCopy_.motionGaugeLabel;
+    dwellGaugeOpts_.label  = currentCopy_.dwellGaugeLabel;
+    motionGauge.setOptions(motionGaugeOpts_);
+    dwellGauge.setOptions(dwellGaugeOpts_);
+
+    reticleOpts_.labelOverride = currentCopy_.reticleLabels;
+    reticles.setOptions(reticleOpts_);
 }
 
 // ── Update helpers ────────────────────────────────────────────────────────────
@@ -284,7 +298,7 @@ void HudManager::updateTelemetryCards() {
         quadCards[q].setPosition(base.x + driftX, base.y + driftY);
 
         hud::DataCardOptions opts;
-        opts.title         = "FIELD 0" + ofToString(q);
+        opts.title         = currentCopy_.cardTitles[q];
         opts.value         = tel.phase;
         opts.subtitle      = tel.activeShader.empty() ? "---" : tel.activeShader;
         opts.meter         = tel.dwellProgress;
@@ -304,15 +318,20 @@ void HudManager::update(float dt) {
     updateTelemetryCards();
 
     // Live gauge values
-    float energy = ofClamp(motionEx->getMotionEnergy() / 0.25f, 0.f, 1.f);
-    motionGauge.setValue(energy);
-
-    float maxDwell = 0.f;
-    for (int q = 0; q < 4; q++) {
-        auto tel = quadMgr->getTelemetry(q);
-        maxDwell = std::max(maxDwell, tel.dwellProgress);
+    if (showBioGauge) {
+        float energy = ofClamp(motionEx->getMotionEnergy() / 0.25f, 0.f, 1.f);
+        motionGauge.setValue(energy);
+        motionGauge.update(dt);
     }
-    dwellGauge.setValue(maxDwell);
+    if (showDwellGauge) {
+        float maxDwell = 0.f;
+        for (int q = 0; q < 4; q++) {
+            auto tel = quadMgr->getTelemetry(q);
+            maxDwell = std::max(maxDwell, tel.dwellProgress);
+        }
+        dwellGauge.setValue(maxDwell);
+        dwellGauge.update(dt);
+    }
 
     // LFO → motion settings (keeps all widgets animated even when off-screen)
     hud::MotionSettings m;
@@ -332,8 +351,6 @@ void HudManager::update(float dt) {
     hexGrid.update(dt);
     network.update(dt);
     scanner.update(dt);
-    motionGauge.update(dt);
-    dwellGauge.update(dt);
     for (int q = 0; q < 4; q++) quadCards[q].update(dt);
     reticles.update(dt);
     flowField.update(dt);
@@ -344,8 +361,8 @@ void HudManager::update(float dt) {
 void HudManager::draw() {
     // Always-on elements
     scanner.draw();
-    motionGauge.draw();
-    dwellGauge.draw();
+    if (showBioGauge)   motionGauge.draw();
+    if (showDwellGauge) dwellGauge.draw();
     for (int q = 0; q < 4; q++)
         quadCards[q].draw();
 

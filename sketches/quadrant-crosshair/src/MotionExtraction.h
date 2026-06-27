@@ -38,8 +38,11 @@ public:
     static constexpr int ACCUM_W = 160;
     static constexpr int ACCUM_H = 90;
 
-    // Keep this modest. Each slot is one low-res FBO.
+#ifdef PLATFORM_PI
+    static constexpr int MAX_HISTORY_FRAMES = 15;
+#else
     static constexpr int MAX_HISTORY_FRAMES = 60;
+#endif
 
 private:
     ofFbo    fboAccumA, fboAccumB;
@@ -66,8 +69,9 @@ private:
     // Accum snapshot diff for motion energy — updated every N frames so the
     // slowly-changing accum accumulates enough change to survive 8-bit rounding.
     ofPixels prevAccumPixels;
-    bool     prevAccumSet        = false;
+    bool     prevAccumSet         = false;
     int      prevAccumSnapshotAge = 0;
+    int      sampleThrottleCount  = 0;
     static constexpr int ENERGY_SNAPSHOT_INTERVAL = 8;
 
     void allocateHistory();

@@ -21,8 +21,13 @@ void MotionExtraction::setup() {
     fboAccumB.end();
 
     ofFbo::Settings extractSettings;
-    extractSettings.width          = ofGetWidth();
-    extractSettings.height         = ofGetHeight();
+#ifdef PLATFORM_PI
+    extractSettings.width  = std::min(ofGetWidth(),  640);
+    extractSettings.height = std::min(ofGetHeight(), 360);
+#else
+    extractSettings.width  = ofGetWidth();
+    extractSettings.height = ofGetHeight();
+#endif
     extractSettings.internalformat = GL_RGB;
     extractSettings.useDepth       = false;
     extractSettings.useStencil     = false;
@@ -168,6 +173,9 @@ void MotionExtraction::updateFrameHistory(ofTexture& videoTex) {
 }
 
 void MotionExtraction::sampleControlValues() {
+#ifdef PLATFORM_PI
+    if (++sampleThrottleCount % 2 != 0) return;
+#endif
     ofFbo& accumFbo = pingPong ? fboAccumB : fboAccumA;
 
     ofPixels current;

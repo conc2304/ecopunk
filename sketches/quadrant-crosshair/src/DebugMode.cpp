@@ -4,7 +4,11 @@
 
 const std::vector<std::string> DebugMode::SHADER_NAMES = {
     "desaturate", "invert", "recolor", "threshold",
-    "dither", "solarize", "scanlines", "channelshift", "motion_effect"
+    "dither", "solarize", "scanlines", "channelshift", "motion_effect",
+    // nature pack
+    "bioluminescence", "caustics", "chromatic_aberration", "edge_glow",
+    "ink_outlines", "pixel_drift", "pixel_sorting", "temporal_trails",
+    "water_refraction"
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -96,6 +100,57 @@ std::vector<DebugParam> DebugMode::buildParams() {
             p.push_back({ "extractGamma",   &pMotionGamma,       0.1f,   0.2f,  4.0f   });
             p.push_back({ "decay",          &pMotionDecay,       0.005f, 0.85f, 0.999f });
             break;
+        case 9: // bioluminescence
+            p.push_back({ "threshold",     &pBioThreshold,   0.05f, 0.05f, 0.8f  });
+            p.push_back({ "intensity",     &pBioIntensity,   0.1f,  0.0f,  3.0f  });
+            p.push_back({ "glowColor.r",   &pBioColorR,      0.05f, 0.0f,  1.0f  });
+            p.push_back({ "glowColor.g",   &pBioColorG,      0.05f, 0.0f,  1.0f  });
+            p.push_back({ "glowColor.b",   &pBioColorB,      0.05f, 0.0f,  1.0f  });
+            break;
+        case 10: // caustics
+            p.push_back({ "scale",         &pCausticsScale,     0.005f, 0.005f, 0.1f  });
+            p.push_back({ "intensity",     &pCausticsIntensity, 0.05f,  0.0f,   1.0f  });
+            p.push_back({ "causticColor.r",&pCausticsColorR,    0.05f,  0.0f,   1.0f  });
+            p.push_back({ "causticColor.g",&pCausticsColorG,    0.05f,  0.0f,   1.0f  });
+            p.push_back({ "causticColor.b",&pCausticsColorB,    0.05f,  0.0f,   1.0f  });
+            break;
+        case 11: // chromatic_aberration
+            p.push_back({ "amount",        &pChromAmount,  0.1f,  0.0f,  6.0f  });
+            p.push_back({ "radial",        &pChromRadial,  0.05f, 0.0f,  1.0f  });
+            break;
+        case 12: // edge_glow
+            p.push_back({ "edgeStrength",  &pEdgeStrength, 0.1f,  0.0f,  5.0f  });
+            p.push_back({ "glowStrength",  &pGlowStrength, 0.1f,  0.0f,  4.0f  });
+            p.push_back({ "glowColor.r",   &pGlowColorR,   0.05f, 0.0f,  1.0f  });
+            p.push_back({ "glowColor.g",   &pGlowColorG,   0.05f, 0.0f,  1.0f  });
+            p.push_back({ "glowColor.b",   &pGlowColorB,   0.05f, 0.0f,  1.0f  });
+            break;
+        case 13: // ink_outlines
+            p.push_back({ "threshold",     &pInkThreshold,    0.01f, 0.01f, 0.5f   });
+            p.push_back({ "inkStrength",   &pInkStrength,     0.05f, 0.0f,  1.0f   });
+            p.push_back({ "posterizeLvls", &pPosterizeLevels, 1.0f,  2.0f,  16.0f  });
+            break;
+        case 14: // pixel_drift
+            p.push_back({ "amount",        &pDriftAmount,  0.5f,  0.0f,  20.0f  });
+            p.push_back({ "scale",         &pDriftScale,   0.005f,0.005f,0.1f   });
+            p.push_back({ "speed",         &pDriftSpeed,   0.1f,  0.0f,  4.0f   });
+            break;
+        case 15: // pixel_sorting
+            p.push_back({ "threshold",     &pSortThreshold,  0.05f, 0.0f,  1.0f  });
+            p.push_back({ "rangePx",       &pSortRangePx,    1.0f,  1.0f,  48.0f });
+            p.push_back({ "direction",     &pSortDirection,  1.0f,  0.0f,  1.0f  }); // 0=H 1=V
+            p.push_back({ "intensity",     &pSortIntensity,  0.05f, 0.0f,  1.0f  });
+            break;
+        case 16: // temporal_trails
+            p.push_back({ "decay",         &pTrailDecay,         0.005f, 0.5f,  0.99f });
+            p.push_back({ "currentWeight", &pTrailCurrentWeight, 0.05f,  0.05f, 0.9f  });
+            p.push_back({ "brighten",      &pTrailBrighten,      0.01f,  0.9f,  1.5f  });
+            break;
+        case 17: // water_refraction
+            p.push_back({ "amplitude",     &pWaterAmplitude,  0.5f,   0.0f,  20.0f  });
+            p.push_back({ "frequency",     &pWaterFrequency,  0.002f, 0.001f,0.08f  });
+            p.push_back({ "speed",         &pWaterSpeed,      0.1f,   0.0f,  4.0f   });
+            break;
         default:
             break;
     }
@@ -118,7 +173,8 @@ void DebugMode::drawShaderFullScreen() {
 
     ofShader& sh = shaderLib->get(name);
     sh.begin();
-    sh.setUniformTexture("tex", video->getTexture(), 0);
+    sh.setUniformTexture("tex",  video->getTexture(), 0);  // legacy shaders
+    sh.setUniformTexture("tex0", video->getTexture(), 0);  // nature pack shaders
     sh.setUniform2f("resolution", W, H);
 
     if (name == "dither") {
@@ -143,6 +199,86 @@ void DebugMode::drawShaderFullScreen() {
         sh.setUniform1f("threshold", pThreshold);
     if (name == "channelshift")
         sh.setUniform1f("shift", pShift);
+
+    // nature pack uniforms
+    float t = ofGetElapsedTimef();
+    if (name == "bioluminescence") {
+        sh.setUniform1f("time",      t);
+        sh.setUniform1f("threshold", pBioThreshold);
+        sh.setUniform1f("intensity", pBioIntensity);
+        sh.setUniform3f("glowColor", glm::vec3(pBioColorR, pBioColorG, pBioColorB));
+    }
+    if (name == "caustics") {
+        sh.setUniform1f("time",         t);
+        sh.setUniform1f("scale",        pCausticsScale);
+        sh.setUniform1f("intensity",    pCausticsIntensity);
+        sh.setUniform3f("causticColor", glm::vec3(pCausticsColorR, pCausticsColorG, pCausticsColorB));
+    }
+    if (name == "chromatic_aberration") {
+        sh.setUniform1f("amount", pChromAmount);
+        sh.setUniform1f("radial", pChromRadial);
+    }
+    if (name == "edge_glow") {
+        sh.setUniform1f("edgeStrength", pEdgeStrength);
+        sh.setUniform1f("glowStrength", pGlowStrength);
+        sh.setUniform3f("glowColor",    glm::vec3(pGlowColorR, pGlowColorG, pGlowColorB));
+    }
+    if (name == "ink_outlines") {
+        sh.setUniform1f("threshold",      pInkThreshold);
+        sh.setUniform1f("inkStrength",    pInkStrength);
+        sh.setUniform1f("posterizeLevels",pPosterizeLevels);
+    }
+    if (name == "pixel_drift") {
+        sh.setUniform1f("time",   t);
+        sh.setUniform1f("amount", pDriftAmount);
+        sh.setUniform1f("scale",  pDriftScale);
+        sh.setUniform1f("speed",  pDriftSpeed);
+    }
+    if (name == "pixel_sorting") {
+        sh.setUniform1f("threshold", pSortThreshold);
+        sh.setUniform1f("rangePx",   pSortRangePx);
+        sh.setUniform1f("direction", pSortDirection);
+        sh.setUniform1f("intensity", pSortIntensity);
+    }
+    if (name == "water_refraction") {
+        sh.setUniform1f("time",      t);
+        sh.setUniform1f("amplitude", pWaterAmplitude);
+        sh.setUniform1f("frequency", pWaterFrequency);
+        sh.setUniform1f("speed",     pWaterSpeed);
+    }
+
+    // temporal_trails needs its own ping-pong draw path
+    if (name == "temporal_trails") {
+        bool needsAlloc = !trailPrevFbo.isAllocated()
+                       || trailPrevFbo.getWidth()  != W
+                       || trailPrevFbo.getHeight() != H;
+        if (needsAlloc) {
+            trailPrevFbo.allocate(W, H, GL_RGB);
+            trailOutFbo.allocate(W, H, GL_RGB);
+            trailPrevFbo.begin(); ofClear(0); trailPrevFbo.end();
+        }
+        sh.setUniformTexture("currentTex",  video->getTexture(), 0);
+        sh.setUniformTexture("previousTex", trailPrevFbo.getTexture(), 1);
+        sh.setUniform1f("decay",         pTrailDecay);
+        sh.setUniform1f("currentWeight", pTrailCurrentWeight);
+        sh.setUniform1f("brighten",      pTrailBrighten);
+        // render shader into trailOutFbo, then blit to screen and swap
+        trailOutFbo.begin();
+        ofClear(0);
+        ofSetColor(255);
+        video->getTexture().draw(0, 0, W, H);
+        trailOutFbo.end();
+        sh.end();
+        ofSetColor(255);
+        trailOutFbo.draw(0, 0, W, H);
+        // update prev for next frame
+        trailPrevFbo.begin();
+        ofClear(0);
+        trailOutFbo.draw(0, 0, W, H);
+        trailPrevFbo.end();
+        ofDisableAlphaBlending();
+        return;
+    }
 
     ofSetColor(255);
     video->getTexture().draw(0, 0, W, H);

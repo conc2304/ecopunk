@@ -208,6 +208,7 @@ void CrosshairSystem::draw() {
 
 	// 3. Halo — lagged circle, 8% opacity
 	ofPushStyle();
+	ofSetCircleResolution(128);
 	ofNoFill();
 	ofSetColor(crosshairColor.r, crosshairColor.g, crosshairColor.b, 20);
 	ofSetLineWidth(3.f);

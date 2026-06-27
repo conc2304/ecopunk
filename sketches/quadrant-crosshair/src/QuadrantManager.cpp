@@ -131,7 +131,7 @@ void QuadrantManager::kickRandomShader(int quadId) {
 // ── Update ────────────────────────────────────────────────────────────────────
 
 void QuadrantManager::update(float dt, const CrosshairState& state,
-                              const LFOBank& lfo, ofTexture& rdTex, ofTexture& gridTex,
+                              const LFOBank& lfo, ofTexture& gridTex,
                               ofTexture& motionTex, ofTexture& motionDelayedTex) {
     float W  = ofGetWidth(),  H  = ofGetHeight();
     float cx = state.cx,      cy = state.cy;
@@ -152,7 +152,6 @@ void QuadrantManager::update(float dt, const CrosshairState& state,
     float decayRate = ofMap(lfo.get(LFO_GRID_DECAY), -1, 1, 0.92f, 0.98f);
     for (auto& q : quads) {
         q.setDecay(decayRate);
-        q.setRDTexture(rdTex);
         q.setGridTexture(gridTex);
         q.setMotionTexture(motionTex);
         q.setMotionDelayedTexture(motionDelayedTex);

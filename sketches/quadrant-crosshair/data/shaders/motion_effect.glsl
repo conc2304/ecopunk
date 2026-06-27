@@ -31,14 +31,11 @@ void main() {
 
     vec3 result;
     if (blendMode == 1) {
-        // Additive: motion brightens the original
         result = clamp(original + motion * alpha, 0.0, 1.0);
     } else if (blendMode == 2) {
-        // Screen: 1 - (1-a)(1-b)
         vec3 screened = 1.0 - (1.0 - original) * (1.0 - motion);
         result = mix(original, screened, alpha);
     } else {
-        // Mix (default)
         result = mix(original, motion, alpha);
     }
 

@@ -6,7 +6,6 @@
 #include "QuadrantManager.h"
 #include "VideoSystem.h"
 #include "ShaderLibrary.h"
-#include "ReactionDiffusion.h"
 #include "LFOBank.h"
 #include "GridState.h"
 #include "MotionExtraction.h"
@@ -23,7 +22,6 @@ private:
     ShaderLibrary   shaders;
     VideoSystem     video;
     LFOBank         lfo;
-    ReactionDiffusion rd;
     GridState       grid;
     CrosshairSystem crosshair;
     TriggerBus      triggerBus;
@@ -31,7 +29,6 @@ private:
     MotionExtraction motionEx;
 
     float steeringBrightness  = 0.5f;
-    float rdFeedBump          = 0.f;
     int   motionOverlayAlpha  = 55;
     bool  showHUD             = true;
     DebugMode debug;

@@ -13,16 +13,16 @@ public:
 
     const ofPixels& getPixels()    const { return player.getPixels(); }
     bool            isFrameNew()   const { return player.isFrameNew(); }
-    bool            fileChanged()        { bool v = _fileChanged; _fileChanged = false; return v; }
+    bool            fileChanged()              { bool v = _fileChanged; _fileChanged = false; return v; }
+    const std::string& getCurrentFilename() const { return currentFilename_; }
 
     // ── In-code dials ──────────────────────────────────────────────────────
-    float adjSaturation =  1.15f;   // +15% saturation
+    float adjSaturation =  1.18f;   // +18% saturation
     float adjContrast   =  1.10f;   // +10% contrast
-    float adjBrightness = -0.10f;   // -10% brightness
+    float adjBrightness = -0.18f;   // -18% brightness
 
     int   loopMin  = 3;     // min play-throughs before advancing to next file
     int   loopMax  = 5;     // max play-throughs
-    bool  pingPong = false; // palindrome playback (note: H.264 reverse costs more CPU)
 
 private:
     ofVideoPlayer            player;
@@ -32,12 +32,12 @@ private:
     int                      playlistPos  = 0;
     bool                     transitioning  = false;
     bool                     _fileChanged   = false;
+    std::string              currentFilename_;
     ofFbo                    fboAdjusted;
     ofShader                 adjustShader;
     bool                     shaderReady    = false;
     int                      loopCount      = 0;
     int                      targetLoops    = 3;
-    bool                     playingForward = true;
     void allocateAdjustFbo();
     void processAdjustment();
     void loadFile(int index);

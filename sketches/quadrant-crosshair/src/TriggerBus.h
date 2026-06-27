@@ -53,8 +53,9 @@ private:
 
     static constexpr float EDGE_ZONE    = 100.f;
     static constexpr float HIGH_THRESH  =   4.0f;
-    static constexpr float LOW_THRESH   =   0.8f;
-    static constexpr float LOW_SECS     =   3.0f;
+    static constexpr float LOW_THRESH         =  0.8f;
+    static constexpr float LOW_SECS           =  3.0f;
+    static constexpr float VELOCITY_LOW_CD    = 45.0f; // seconds between dither triggers
     static constexpr float CENTER_ZONE  =  80.f;
     static constexpr float CORNER_ZONE  = 150.f;
     static constexpr float DWELL_MOVE   =  25.f;

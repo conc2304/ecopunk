@@ -224,7 +224,8 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
     if (useShader) {
         ofShader& sh = shaderLib->get(effect);
         sh.begin();
-        sh.setUniformTexture("tex", tex, 0);
+        sh.setUniformTexture("tex",  tex, 0);  // legacy shaders
+        sh.setUniformTexture("tex0", tex, 0);  // nature pack shaders
         sh.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
         if (effect == "dither") {
             // arc and px are frozen per-slot at push time; only opacity follows the lifecycle
@@ -234,7 +235,6 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
         } else {
             sh.setUniform1f("alpha", alpha);
         }
-        if (rdTex)            sh.setUniformTexture("rdState",          *rdTex,            2);
         if (gridTex)          sh.setUniformTexture("gridState",        *gridTex,          3);
         if (motionTex)        sh.setUniformTexture("motionTex",        *motionTex,        4);
         if (motionDelayedTex) sh.setUniformTexture("motionDelayedTex", *motionDelayedTex, 5);
@@ -242,6 +242,52 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
         sh.setUniform1i("blendMode",        0);
         sh.setUniform1i("motionSourceMode", motionSourceMode);
         bindUniforms(sh);
+
+        // nature pack uniforms — set after bindUniforms so specific values override generics
+        if (effect == "bioluminescence") {
+            sh.setUniform1f("time",      timeAccum);
+            sh.setUniform1f("threshold", 0.3f);
+            sh.setUniform1f("intensity", 1.2f);
+            sh.setUniform3f("glowColor", glm::vec3(0.1f, 1.0f, 0.75f));
+        }
+        if (effect == "caustics") {
+            sh.setUniform1f("time",         timeAccum);
+            sh.setUniform1f("scale",        0.03f);
+            sh.setUniform1f("intensity",    0.6f);
+            sh.setUniform3f("causticColor", glm::vec3(0.65f, 0.95f, 1.0f));
+        }
+        if (effect == "chromatic_aberration") {
+            sh.setUniform1f("amount", 2.0f);
+            sh.setUniform1f("radial", 0.5f);
+        }
+        if (effect == "edge_glow") {
+            sh.setUniform1f("edgeStrength", 1.5f);
+            sh.setUniform1f("glowStrength", 1.2f);
+            sh.setUniform3f("glowColor",    glm::vec3(0.3f, 1.0f, 0.55f));
+        }
+        if (effect == "ink_outlines") {
+            sh.setUniform1f("threshold",       0.15f);
+            sh.setUniform1f("inkStrength",     0.8f);
+            sh.setUniform1f("posterizeLevels", 6.0f);
+        }
+        if (effect == "pixel_drift") {
+            sh.setUniform1f("time",   timeAccum);
+            sh.setUniform1f("amount", 6.0f);
+            sh.setUniform1f("scale",  0.03f);
+            sh.setUniform1f("speed",  0.5f);
+        }
+        if (effect == "pixel_sorting") {
+            sh.setUniform1f("rangePx",   12.0f);
+            sh.setUniform1f("direction", 0.0f);
+            sh.setUniform1f("intensity", 1.0f);
+            // threshold is LFO-driven via bindUniforms
+        }
+        if (effect == "water_refraction") {
+            sh.setUniform1f("time",      timeAccum);
+            sh.setUniform1f("amplitude", 6.0f);
+            sh.setUniform1f("frequency", 0.02f);
+            sh.setUniform1f("speed",     1.0f);
+        }
     }
 
     ofPushMatrix();

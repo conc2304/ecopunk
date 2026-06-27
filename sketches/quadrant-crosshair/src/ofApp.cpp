@@ -14,7 +14,6 @@ void ofApp::setup() {
     video.setup(ofToDataPath("media", true));
 #endif
     lfo.setup();
-    rd.setup();
     grid.setup();
     crosshair.setup();
     triggerBus.setup();
@@ -35,12 +34,6 @@ void ofApp::setup() {
             crosshair.setBloomFill(e.active ? 1.f : 0.f, 2.0f);
     });
 
-    // TriggerBus → RD feed bump on CORNER_NEAR
-    triggerBus.addListener([this](const TriggerEvent& e) {
-        if (e.id == TriggerID::CORNER_NEAR && e.active)  rdFeedBump = 0.012f;
-        if (e.id == TriggerID::CORNER_NEAR && !e.active) rdFeedBump = 0.f;
-    });
-
     hud.setup(triggerBus, crosshair, lfo, quadrants, motionEx);
 }
 
@@ -51,7 +44,10 @@ void ofApp::update() {
 
     // 1. Source systems
     video.update();
-    if (video.fileChanged()) quadrants.resetErosion();
+    if (video.fileChanged()) {
+        quadrants.resetErosion();
+        hud.onVideoFileChanged(video.getCurrentFilename());
+    }
     lfo.update(dt);
 
     // 2. Video CPU sampling + motion extraction
@@ -101,23 +97,18 @@ void ofApp::update() {
     // 4. Triggers
     triggerBus.update(crosshair.getState(), dt);
 
-    // 5. Reaction-diffusion — feed/kill driven by LFOs + trigger bump
-    float feed = 0.055f + ofMap(lfo.get(LFO_RD_FEED), -1, 1, -0.008f, 0.008f) + rdFeedBump;
-    float kill = 0.062f + ofMap(lfo.get(LFO_RD_KILL), -1, 1, -0.006f, 0.006f);
-    rd.update(feed, kill);
-
-    // 6. Grid
+    // 5. Grid
     float decayRate = ofMap(lfo.get(LFO_GRID_DECAY), -1, 1, 0.96f, 0.995f);
     CrosshairState cs = crosshair.getState();
     grid.update(cs.cx, cs.cy, dt, decayRate);
     grid.uploadTexture();
 
-    // 7. Quadrants
+    // 6. Quadrants
     quadrants.setVideoBrightness(steeringBrightness);
-    quadrants.update(dt, cs, lfo, rd.getTexture(), grid.getTexture(),
+    quadrants.update(dt, cs, lfo, grid.getTexture(),
                      motionEx.getMotionTexture(), motionEx.getDelayedMotionTexture());
 
-    // 8. HUD
+    // 7. HUD
     hud.update(dt);
 }
 
@@ -148,7 +139,6 @@ void ofApp::keyPressed(int key) {
 
     if (key >= '1' && key <= '5') crosshair.setPreset(key - '1');
     if (key == OF_KEY_TAB)        crosshair.nextPreset();
-    if (key == 'r' || key == 'R') rd.setup();
     if (key == 'n' || key == 'N') video.nextFile();
     if (key == 'f' || key == 'F') ofToggleFullscreen();
     if (key == '[') motionOverlayAlpha = ofClamp(motionOverlayAlpha - 10, 0, 255);
@@ -162,7 +152,11 @@ float ofApp::sampleBrightness(const ofPixels& px) {
     int   W   = px.getWidth(), H = px.getHeight();
     float sum = 0.f;
     int   n   = 0;
+#ifdef PLATFORM_PI
+    const int STEP = 64;
+#else
     const int STEP = 16;
+#endif
     for (int y = 0; y < H; y += STEP) {
         for (int x = 0; x < W; x += STEP) {
             auto c = px.getColor(x, y);

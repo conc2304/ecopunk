@@ -37,7 +37,7 @@ public:
 	CrosshairState getState() const { return state; }
 	int getCurrentPreset() const { return presetIndex; }
 
-	bool showGhost = false;
+	bool showGhost = true;
 
 private:
 	std::vector<CrosshairPreset> presets;
