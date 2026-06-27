@@ -15,6 +15,8 @@ void CrosshairSystem::setup() {
 	posHistory.fill({ 640.f, 360.f });
 	haloPos = { 640.f, 360.f };
 	ghostPos = { 640.f, 360.f };
+	state.cx = 640.f; state.cy = 360.f;
+	prevState = state;
 }
 
 void CrosshairSystem::update(float dt, const LFOBank & lfo) {
@@ -46,7 +48,7 @@ void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 	// Line width: speed + LFO pulse
 	float speedNorm = ofMap(state.speed, 0, HIGH_THRESH, 0.f, 1.f, true);
 	float pulse = ofMap(lfo.get(LFO_CROSSHAIR_PULSE), -1, 1, 0.f, 1.f);
-	lineWidth = ofLerp(6.0f, 12.0f, speedNorm * 0.7f + pulse * 0.3f);
+	lineWidth = ofLerp(4.0f, 12.0f, speedNorm * 0.7f + pulse * 0.3f);
 
 	// Motion attractor: biases position toward active region, noise remains dominant
 	if (attractForce > 0.001f) {
@@ -208,7 +210,7 @@ void CrosshairSystem::draw() {
 	ofPushStyle();
 	ofNoFill();
 	ofSetColor(crosshairColor.r, crosshairColor.g, crosshairColor.b, 20);
-	ofSetLineWidth(1.f);
+	ofSetLineWidth(3.f);
 	ofDrawCircle(haloPos.x, haloPos.y, 200.f);
 	ofPopStyle();
 

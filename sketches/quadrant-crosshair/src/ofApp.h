@@ -33,7 +33,7 @@ private:
     float steeringBrightness  = 0.5f;
     float rdFeedBump          = 0.f;
     int   motionOverlayAlpha  = 55;
-    bool  showHUD             = false;
+    bool  showHUD             = true;
     DebugMode debug;
 
     // Motion trigger state

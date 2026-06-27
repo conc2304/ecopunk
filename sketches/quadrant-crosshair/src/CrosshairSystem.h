@@ -19,7 +19,7 @@ struct CrosshairState {
 
 class CrosshairSystem {
 public:
-	static constexpr float HIGH_THRESH = 4.0f;
+	static constexpr float HIGH_THRESH = 1.5f;
 	static constexpr int GHOST_LAG = 72; // 3 seconds at 24fps
 	static constexpr int HISTORY_SIZE = 96; // 4 seconds at 24fps
 

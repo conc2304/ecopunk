@@ -115,7 +115,7 @@ void ofApp::update() {
     // 7. Quadrants
     quadrants.setVideoBrightness(steeringBrightness);
     quadrants.update(dt, cs, lfo, rd.getTexture(), grid.getTexture(),
-                     motionEx.getMotionTexture());
+                     motionEx.getMotionTexture(), motionEx.getDelayedMotionTexture());
 
     // 8. HUD
     hud.update(dt);

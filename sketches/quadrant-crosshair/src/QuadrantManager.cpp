@@ -15,6 +15,11 @@ void QuadrantManager::setup(ShaderLibrary* lib) {
     quads[2].setScaleConfig(0.50f, 0.70f, 100.f);
     quads[3].setScaleConfig(1.80f, 2.40f, 150.f);
 
+    for (int i = 0; i < 4; i++) {
+        scaleChangeAcc[i] = 0.f;
+        scaleChangeDur[i] = ofRandom(90.f, 180.f);
+    }
+
     // Pre-shuffle an independent deck for each quadrant
     float staggerBase[4] = { 0.f, 12.f, 24.f, 36.f };
     for (int i = 0; i < 4; i++) {
@@ -86,6 +91,14 @@ std::string QuadrantManager::pickNextShader(int quadId) {
     return chosen;
 }
 
+std::pair<float,float> QuadrantManager::pickScaleRange() {
+    float center = ofRandom(0.45f, 2.40f);
+    float spread = ofRandom(0.15f, 0.55f);
+    float mn     = std::max(0.30f, center - spread * 0.5f);
+    float mx     = std::min(2.80f, center + spread * 0.5f);
+    return { mn, mx };
+}
+
 std::pair<float,float> QuadrantManager::chooseDitherParams() {
     float arc = 0.45f, px = 4.f;
     for (int attempt = 0; attempt < 5; attempt++) {
@@ -119,7 +132,7 @@ void QuadrantManager::kickRandomShader(int quadId) {
 
 void QuadrantManager::update(float dt, const CrosshairState& state,
                               const LFOBank& lfo, ofTexture& rdTex, ofTexture& gridTex,
-                              ofTexture& motionTex) {
+                              ofTexture& motionTex, ofTexture& motionDelayedTex) {
     float W  = ofGetWidth(),  H  = ofGetHeight();
     float cx = state.cx,      cy = state.cy;
 
@@ -142,6 +155,7 @@ void QuadrantManager::update(float dt, const CrosshairState& state,
         q.setRDTexture(rdTex);
         q.setGridTexture(gridTex);
         q.setMotionTexture(motionTex);
+        q.setMotionDelayedTexture(motionDelayedTex);
         q.update(dt, cx, cy);
     }
 
@@ -163,6 +177,20 @@ void QuadrantManager::update(float dt, const CrosshairState& state,
         pending.end()
     );
 
+    // ── Scale personality rotation ─────────────────────────────────────────────
+    for (int i = 0; i < 4; i++) {
+        scaleChangeAcc[i] += dt;
+        if (scaleChangeAcc[i] >= scaleChangeDur[i]) {
+            auto [sMin, sMax] = pickScaleRange();
+            quads[i].setScaleTarget(sMin, sMax);
+            scaleChangeAcc[i] = 0.f;
+            scaleChangeDur[i] = ofRandom(90.f, 180.f);
+            ofLogNotice("QM") << "Q" << i << " scale target -> ["
+                              << ofToString(sMin, 2) << ", " << ofToString(sMax, 2) << "]"
+                              << "  next in " << (int)scaleChangeDur[i] << "s";
+        }
+    }
+
     if (velHighActive) return;
 
     for (int i = 0; i < 4; i++) {
@@ -171,9 +199,21 @@ void QuadrantManager::update(float dt, const CrosshairState& state,
         switch (cs.phase) {
             case CyclePhase::PLAYING:
                 if (quads[i].allSlotsIdle()) {
-                    cs.phase      = CyclePhase::SILENCING;
-                    cs.silenceAcc = 0.f;
-                    cs.silenceDur = computeSilenceDuration(i);
+                    if (cs.resumePending) {
+                        float resumeDwell = std::max(cs.savedDwellRemain, 5.f);
+                        quads[i].pushShader(cs.savedShader, 0.8f, resumeDwell);
+                        if (cs.savedShader == "dither") {
+                            auto [arc, px] = chooseDitherParams();
+                            quads[i].setDitherParams(arc, px);
+                        }
+                        ofLogNotice("QM") << "Q" << i << " resuming '" << cs.savedShader << "' (" << resumeDwell << "s)";
+                        cs.resumePending = false;
+                        cs.savedShader   = "";
+                    } else {
+                        cs.phase      = CyclePhase::SILENCING;
+                        cs.silenceAcc = 0.f;
+                        cs.silenceDur = computeSilenceDuration(i);
+                    }
                 }
                 break;
 
@@ -231,20 +271,34 @@ void QuadrantManager::scheduleEffect(const std::vector<int>& quads, const Trigge
 }
 
 void QuadrantManager::applyTriggerToQuad(int qid, const TriggerEvent& e) {
+    // Snapshot the actively playing shader so it can resume after the trigger effect
+    if (cycleStates[qid].phase == CyclePhase::PLAYING && !cycleStates[qid].resumePending) {
+        std::string name; float rem;
+        if (quads[qid].getActivePlaying(name, rem)) {
+            cycleStates[qid].savedShader      = name;
+            cycleStates[qid].savedDwellRemain = rem;
+            cycleStates[qid].resumePending    = true;
+            ofLogNotice("QM") << "Q" << qid << " saved '" << name << "' (" << rem << "s rem) for resume";
+        }
+    }
+
     switch (e.id) {
         case TriggerID::VELOCITY_HIGH:
+            ofLogNotice("QM") << "Q" << qid << " VELOCITY_HIGH -> threshold";
             quads[qid].clearShaders(0.4f);
             quads[qid].setThreshold(0.5f);
             quads[qid].pushShader("threshold", 0.4f, 999.f);
             break;
 
         case TriggerID::EDGE_PROXIMITY:
+            ofLogNotice("QM") << "Q" << qid << " EDGE_PROXIMITY -> invert (intensity=" << e.intensity << ")";
             quads[qid].setShift(e.intensity * 0.008f);
             quads[qid].clearShaders(0.3f);
             quads[qid].pushShader("invert", 0.6f, 3.f);
             break;
 
         case TriggerID::VELOCITY_LOW: {
+            ofLogNotice("QM") << "Q" << qid << " VELOCITY_LOW -> dither";
             quads[qid].clearShaders(0.4f);
             quads[qid].pushShader("dither", 1.0f, 5.f);
             auto [arc, px] = chooseDitherParams();
@@ -253,17 +307,20 @@ void QuadrantManager::applyTriggerToQuad(int qid, const TriggerEvent& e) {
         }
 
         case TriggerID::QUADRANT_CENTER:
+            ofLogNotice("QM") << "Q" << qid << " QUADRANT_CENTER -> invert";
             quads[qid].clearShaders(0.3f);
             quads[qid].pushShader("invert", 0.3f, 0.5f);
             break;
 
         case TriggerID::CORNER_NEAR:
+            ofLogNotice("QM") << "Q" << qid << " CORNER_NEAR -> recolor";
             quads[qid].setTint({ 1.0f, 0.5f, 0.1f });
             quads[qid].clearShaders(0.4f);
             quads[qid].pushShader("recolor", 0.8f, 4.f);
             break;
 
         case TriggerID::DWELL:
+            ofLogNotice("QM") << "Q" << qid << " DWELL -> solarize";
             quads[qid].clearShaders(0.5f);
             quads[qid].pushShader("solarize", 2.0f, 8.f);
             break;
@@ -280,13 +337,18 @@ void QuadrantManager::onTrigger(const TriggerEvent& e) {
                               ? e.quadrantHint : (int)ofRandom(4);
                 scheduleEffect(selectQuads(primary), e);
             } else {
-                // Deactivation: flush pending, clear all quads immediately
+                // Deactivation: flush pending, clear all quads
                 pending.clear();
                 for (int i = 0; i < 4; i++) {
                     quads[i].clearShaders(0.8f);
-                    cycleStates[i].phase      = CyclePhase::SILENCING;
-                    cycleStates[i].silenceAcc = 0.f;
-                    cycleStates[i].silenceDur = ofRandom(3.f, 6.f);
+                    if (cycleStates[i].resumePending) {
+                        // Resume the interrupted shader once the fade-out clears
+                        cycleStates[i].phase = CyclePhase::PLAYING;
+                    } else {
+                        cycleStates[i].phase      = CyclePhase::SILENCING;
+                        cycleStates[i].silenceAcc = 0.f;
+                        cycleStates[i].silenceDur = ofRandom(3.f, 6.f);
+                    }
                 }
             }
             break;

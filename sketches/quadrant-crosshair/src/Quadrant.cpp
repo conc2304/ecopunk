@@ -23,8 +23,15 @@ void Quadrant::setup(int id_, ofRectangle region_, ShaderLibrary* lib_) {
 void Quadrant::setScaleConfig(float min, float max, float seed) {
     scaleMin       = min;
     scaleMax       = max;
+    targetScaleMin = min;
+    targetScaleMax = max;
     scaleNoiseSeed = seed;
     currentScale   = (min + max) * 0.5f;
+}
+
+void Quadrant::setScaleTarget(float min, float max) {
+    targetScaleMin = min;
+    targetScaleMax = max;
 }
 
 void Quadrant::updateSlot(ShaderSlot& slot, float dt) {
@@ -80,6 +87,9 @@ void Quadrant::update(float dt, float cx, float cy) {
 
     timeAccum += dt;
     float t = timeAccum;
+
+    scaleMin += (targetScaleMin - scaleMin) * 0.5f * dt;
+    scaleMax += (targetScaleMax - scaleMax) * 0.5f * dt;
 
     currentScale = ofMap(
         ofNoise(t * 0.03f + scaleNoiseSeed),
@@ -155,7 +165,7 @@ void Quadrant::draw(ofTexture& videoTex, glm::vec2 videoSize) {
     ofEnableAlphaBlending();
     for (auto& slot : slots) {
         if (!slot.isIdle() && slot.drawnAlpha > 0.f)
-            drawWithEffect(videoTex, videoSize, slot.name, slot.drawnAlpha, lastCx, lastCy);
+            drawWithEffect(videoTex, videoSize, slot.name, slot.drawnAlpha, lastCx, lastCy, slot.ditherArc, slot.ditherPx);
     }
     ofDisableAlphaBlending();
 
@@ -207,7 +217,8 @@ void Quadrant::clearShaders(float fadeSecs) {
 
 void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
                                const std::string& effect, float alpha,
-                               float cx, float cy) {
+                               float cx, float cy,
+                               float ditherArc, float ditherPx) {
     bool useShader = (effect != "passthrough" && shaderLib->has(effect));
 
     if (useShader) {
@@ -216,18 +227,20 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
         sh.setUniformTexture("tex", tex, 0);
         sh.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
         if (effect == "dither") {
-            // alpha = fixed arc position for this run; opacity = lifecycle fade
+            // arc and px are frozen per-slot at push time; only opacity follows the lifecycle
             sh.setUniform1f("alpha",         ditherArc);
             sh.setUniform1f("opacity",       alpha);
             sh.setUniform1f("maxPixelation", ditherPx);
         } else {
             sh.setUniform1f("alpha", alpha);
         }
-        if (rdTex)     sh.setUniformTexture("rdState",   *rdTex,     2);
-        if (gridTex)   sh.setUniformTexture("gridState", *gridTex,   3);
-        if (motionTex) sh.setUniformTexture("motionTex", *motionTex, 4);
-        sh.setUniform1f("motionGamma", 1.0f);
-        sh.setUniform1i("blendMode",   0);
+        if (rdTex)            sh.setUniformTexture("rdState",          *rdTex,            2);
+        if (gridTex)          sh.setUniformTexture("gridState",        *gridTex,          3);
+        if (motionTex)        sh.setUniformTexture("motionTex",        *motionTex,        4);
+        if (motionDelayedTex) sh.setUniformTexture("motionDelayedTex", *motionDelayedTex, 5);
+        sh.setUniform1f("motionGamma",      1.0f);
+        sh.setUniform1i("blendMode",        0);
+        sh.setUniform1i("motionSourceMode", motionSourceMode);
         bindUniforms(sh);
     }
 
@@ -312,8 +325,15 @@ void Quadrant::resetErosion() {
 }
 
 void Quadrant::setDitherParams(float arc, float px) {
-    ditherArc = arc;
-    ditherPx  = px;
+    using State = ShaderSlot::State;
+    for (auto& slot : slots) {
+        if (slot.name == "dither" &&
+            (slot.state == State::FADE_IN || slot.state == State::ACTIVE)) {
+            slot.ditherArc = arc;
+            slot.ditherPx  = px;
+            return;
+        }
+    }
 }
 
 void Quadrant::bindUniforms(ofShader& sh) {

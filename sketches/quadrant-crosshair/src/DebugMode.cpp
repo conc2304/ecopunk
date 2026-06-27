@@ -87,8 +87,9 @@ std::vector<DebugParam> DebugMode::buildParams() {
             p.push_back({ "alpha",          &pAlpha,             0.05f,  0.f,   1.f    });
             p.push_back({ "blendMode",      &pEffectBlendMode,   1.0f,   0.0f,  2.0f   }); // 0=mix 1=add 2=screen
             p.push_back({ "effectGamma",    &pEffectMotionGamma, 0.1f,   0.2f,  4.0f   });
+            p.push_back({ "motionSource",   &pMotionSourceMode,  1.0f,   0.0f,  2.0f   }); // 0=accum 1=delayed 2=blend
             // ── Extraction layer ──────────────────────────────────────────
-            p.push_back({ "outputMode",     &pMotionMode,        1.0f,   0.0f,  2.0f   }); // 0=luma 1=chroma 2=signed
+            p.push_back({ "outputMode",     &pMotionMode,        1.0f,   0.0f,  4.0f   }); // 0=luma 1=chroma 2=signed 3=raw 4=ref
             p.push_back({ "sensitivity",    &pMotionSensitivity, 0.5f,   0.5f, 16.0f   });
             p.push_back({ "boost",          &pMotionBoost,       0.25f,  0.1f,  6.0f   });
             p.push_back({ "neutralGrey",    &pMotionNeutralGrey, 0.05f,  0.0f,  1.0f   });
@@ -130,9 +131,11 @@ void DebugMode::drawShaderFullScreen() {
     }
 
     if (name == "motion_effect") {
-        sh.setUniformTexture("motionTex", motionEx->getMotionTexture(), 4);
-        sh.setUniform1f("motionGamma", pEffectMotionGamma);
-        sh.setUniform1i("blendMode",   (int)pEffectBlendMode);
+        sh.setUniformTexture("motionTex",        motionEx->getMotionTexture(),        4);
+        sh.setUniformTexture("motionDelayedTex", motionEx->getDelayedMotionTexture(), 5);
+        sh.setUniform1f("motionGamma",      pEffectMotionGamma);
+        sh.setUniform1i("blendMode",        (int)pEffectBlendMode);
+        sh.setUniform1i("motionSourceMode", (int)pMotionSourceMode);
     }
     if (name == "recolor")
         sh.setUniform3f("tint", glm::vec3(pTintR, pTintG, pTintB));

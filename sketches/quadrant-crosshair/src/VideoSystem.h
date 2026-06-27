@@ -20,6 +20,10 @@ public:
     float adjContrast   =  1.10f;   // +10% contrast
     float adjBrightness = -0.10f;   // -10% brightness
 
+    int   loopMin  = 3;     // min play-throughs before advancing to next file
+    int   loopMax  = 5;     // max play-throughs
+    bool  pingPong = false; // palindrome playback (note: H.264 reverse costs more CPU)
+
 private:
     ofVideoPlayer            player;
     std::vector<std::string> files;
@@ -31,8 +35,12 @@ private:
     ofFbo                    fboAdjusted;
     ofShader                 adjustShader;
     bool                     shaderReady    = false;
+    int                      loopCount      = 0;
+    int                      targetLoops    = 3;
+    bool                     playingForward = true;
     void allocateAdjustFbo();
     void processAdjustment();
     void loadFile(int index);
     void buildPlaylist();
+    void pickTargetLoops();
 };

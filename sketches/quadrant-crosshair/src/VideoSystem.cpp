@@ -30,6 +30,10 @@ void VideoSystem::buildPlaylist() {
     playlistPos = 0;
 }
 
+void VideoSystem::pickTargetLoops() {
+    targetLoops = loopMin + (int)ofRandom((float)(loopMax - loopMin + 1));
+}
+
 void VideoSystem::loadFile(int index) {
     player.stop();
     player.close();
@@ -37,9 +41,12 @@ void VideoSystem::loadFile(int index) {
     player.setLoopState(OF_LOOP_NONE);
     player.setVolume(0);
     player.play();
-    fileIndex     = index;
-    transitioning = false;
-    _fileChanged  = true;
+    fileIndex      = index;
+    transitioning  = false;
+    _fileChanged   = true;
+    loopCount      = 0;
+    playingForward = true;
+    pickTargetLoops();
 
     if (!shaderReady) {
         adjustShader.load("shaders/vert.glsl", "shaders/video_adjust.glsl");
@@ -85,8 +92,40 @@ void VideoSystem::update() {
         allocateAdjustFbo();
         processAdjustment();
     }
-    if (!transitioning && player.getIsMovieDone())
-        nextFile();
+    if (transitioning) return;
+
+    float pos = player.getPosition();
+    bool hitEnd   = player.getIsMovieDone() || pos >= 0.998f;
+    bool hitStart = !playingForward && pos <= 0.002f;
+
+    if (pingPong) {
+        if (playingForward && hitEnd) {
+            // reverse
+            player.setSpeed(-1.0f);
+            playingForward = false;
+        } else if (hitStart) {
+            loopCount++;
+            if (loopCount >= targetLoops) {
+                loopCount = 0;
+                playingForward = true;
+                nextFile();
+            } else {
+                player.setSpeed(1.0f);
+                playingForward = true;
+            }
+        }
+    } else {
+        if (hitEnd) {
+            loopCount++;
+            if (loopCount >= targetLoops) {
+                loopCount = 0;
+                nextFile();
+            } else {
+                player.setPosition(0.0f);
+                player.play();
+            }
+        }
+    }
 }
 
 ofTexture& VideoSystem::getTexture() {

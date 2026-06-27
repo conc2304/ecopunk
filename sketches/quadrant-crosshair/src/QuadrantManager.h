@@ -14,7 +14,7 @@ public:
     void setup(ShaderLibrary* lib);
     void update(float dt, const CrosshairState& state,
                 const LFOBank& lfo, ofTexture& rdTex, ofTexture& gridTex,
-                ofTexture& motionTex);
+                ofTexture& motionTex, ofTexture& motionDelayedTex);
     void draw(ofTexture& videoTex, glm::vec2 videoSize);
     void drawHUD();
     void setVideoBrightness(float b) { videoBrightness = b; }
@@ -39,11 +39,14 @@ private:
     enum class CyclePhase { PLAYING, SILENCING, READY };
 
     struct CycleState {
-        CyclePhase               phase      = CyclePhase::READY;
-        float                    silenceAcc = 0.f;
-        float                    silenceDur = 0.f;
+        CyclePhase               phase            = CyclePhase::READY;
+        float                    silenceAcc       = 0.f;
+        float                    silenceDur       = 0.f;
         std::string              lastShader;
-        std::vector<std::string> deck;       // shuffled queue — pop from back
+        std::vector<std::string> deck;             // shuffled queue — pop from back
+        std::string              savedShader;      // shader interrupted by a trigger
+        float                    savedDwellRemain = 0.f;
+        bool                     resumePending    = false;
     };
     std::array<CycleState, 4> cycleStates;
 
@@ -60,6 +63,9 @@ private:
     };
     std::vector<PendingEffect> pending;
 
+    std::array<float, 4>       scaleChangeAcc = {};
+    std::array<float, 4>       scaleChangeDur = {};
+
     std::vector<int>           selectQuads(int primary);
     void                       scheduleEffect(const std::vector<int>& quads, const TriggerEvent& e);
     void                       applyTriggerToQuad(int quadId, const TriggerEvent& e);
@@ -67,4 +73,5 @@ private:
     std::string             pickNextShader(int quadId);
     float                   computeSilenceDuration(int quadId);
     std::pair<float,float>  chooseDitherParams();
+    std::pair<float,float>  pickScaleRange();
 };

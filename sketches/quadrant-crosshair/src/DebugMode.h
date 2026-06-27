@@ -52,6 +52,7 @@ private:
     // composite tuning
     float pEffectBlendMode   = 0.0f;   // 0/1/2 stored as float
     float pEffectMotionGamma = 1.0f;
+    float pMotionSourceMode  = 0.0f;   // 0=accum  1=delayed  2=blend
 
     struct TriggerSim {
         TriggerID   id;
