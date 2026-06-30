@@ -9,8 +9,8 @@ void Quadrant::setup(int id_, ofRectangle region_, ShaderLibrary* lib_) {
     lastCy    = region.y + region.height * 0.5f;
 
     ofFbo::Settings s;
-    s.width          = 640;
-    s.height         = 360;
+    s.width          = (int)ofGetWidth();
+    s.height         = (int)ofGetHeight();
     s.internalformat = GL_RGBA;
     s.useDepth       = false;
     fbo_read.allocate(s);
@@ -96,18 +96,23 @@ void Quadrant::update(float dt, float cx, float cy) {
         0, 1, scaleMin, scaleMax
     );
 
-    morphOffX = ofMap(ofNoise(t * 0.018f + id * 9.1f),         0, 1, -25.f,  25.f);
-    morphOffY = ofMap(ofNoise(t * 0.018f + id * 9.1f + 77.f),  0, 1, -25.f,  25.f);
-    morphW    = ofMap(ofNoise(t * 0.012f + id * 6.3f + 155.f), 0, 1, -50.f,  50.f);
-    morphH    = ofMap(ofNoise(t * 0.012f + id * 6.3f + 233.f), 0, 1, -50.f,  50.f);
-    cropOffX  = ofMap(ofNoise(t * 0.022f + id * 4.7f + 311.f), 0, 1, -70.f,  70.f);
-    cropOffY  = ofMap(ofNoise(t * 0.022f + id * 4.7f + 389.f), 0, 1, -70.f,  70.f);
+    float wScale = ofGetWidth()  / 1280.f;
+    float hScale = ofGetHeight() / 720.f;
+    morphOffX = ofMap(ofNoise(t * 0.018f + id * 9.1f),         0, 1, -25.f * wScale,  25.f * wScale);
+    morphOffY = ofMap(ofNoise(t * 0.018f + id * 9.1f + 77.f),  0, 1, -25.f * hScale,  25.f * hScale);
+    morphW    = ofMap(ofNoise(t * 0.012f + id * 6.3f + 155.f), 0, 1, -50.f * wScale,  50.f * wScale);
+    morphH    = ofMap(ofNoise(t * 0.012f + id * 6.3f + 233.f), 0, 1, -50.f * hScale,  50.f * hScale);
+    cropOffX  = ofMap(ofNoise(t * 0.022f + id * 4.7f + 311.f), 0, 1, -70.f * wScale,  70.f * wScale);
+    cropOffY  = ofMap(ofNoise(t * 0.022f + id * 4.7f + 389.f), 0, 1, -70.f * hScale,  70.f * hScale);
 
     for (auto& slot : slots)
         updateSlot(slot, dt);
 }
 
 void Quadrant::draw(ofTexture& videoTex, glm::vec2 videoSize) {
+    // Guard: zero-width/height scissor rects cause GL errors on VideoCore IV
+    if (region.width < 2.f || region.height < 2.f) return;
+
     float rx = region.x + morphOffX;
     float ry = region.y + morphOffY;
     float rw = std::max(region.width  + morphW, 1.f);
@@ -228,10 +233,12 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
         sh.setUniformTexture("tex0", tex, 0);  // nature pack shaders
         sh.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
         if (effect == "dither") {
-            // arc and px are frozen per-slot at push time; only opacity follows the lifecycle
+            // arc and px are frozen per-slot at push time; only opacity follows the lifecycle.
+            // ditherPx is stored in reference pixels (1280px width); scale to actual screen pixels.
+            float wScale = ofGetWidth() / 1280.f;
             sh.setUniform1f("alpha",         ditherArc);
             sh.setUniform1f("opacity",       alpha);
-            sh.setUniform1f("maxPixelation", ditherPx);
+            sh.setUniform1f("maxPixelation", ditherPx * wScale);
         } else {
             sh.setUniform1f("alpha", alpha);
         }
@@ -249,12 +256,6 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
             sh.setUniform1f("threshold", 0.3f);
             sh.setUniform1f("intensity", 1.2f);
             sh.setUniform3f("glowColor", glm::vec3(0.1f, 1.0f, 0.75f));
-        }
-        if (effect == "caustics") {
-            sh.setUniform1f("time",         timeAccum);
-            sh.setUniform1f("scale",        0.03f);
-            sh.setUniform1f("intensity",    0.6f);
-            sh.setUniform3f("causticColor", glm::vec3(0.65f, 0.95f, 1.0f));
         }
         if (effect == "chromatic_aberration") {
             sh.setUniform1f("amount", 2.0f);
@@ -287,6 +288,19 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
             sh.setUniform1f("amplitude", 6.0f);
             sh.setUniform1f("frequency", 0.02f);
             sh.setUniform1f("speed",     1.0f);
+        }
+        if (effect == "ascii_solarpunk") {
+            sh.setUniform1f("cellSize",            12.0f);
+            sh.setUniform1f("thresholdMin",         0.55f);
+            sh.setUniform1f("thresholdMax",         1.0f);
+            sh.setUniform1i("thresholdMode",        1);     // aboveMin
+            sh.setUniform1f("opacity",              1.0f);
+            sh.setUniform1f("contrast",             1.15f);
+            sh.setUniform1f("bias",                 0.0f);
+            sh.setUniform1f("softness",             0.03f);
+            sh.setUniform1i("asciiColorMode",       0);     // sampled source color
+            sh.setUniform1i("asciiInvertMono",      0);
+            sh.setUniform1i("asciiBackgroundMode",  0);     // original image
         }
     }
 
@@ -366,6 +380,18 @@ void Quadrant::drawDebugHUD(const std::string& phaseStr) const {
 }
 
 void Quadrant::resetErosion() {
+    fbo_read.begin();  ofClear(0, 0, 0, 255); fbo_read.end();
+    fbo_write.begin(); ofClear(0, 0, 0, 255); fbo_write.end();
+}
+
+void Quadrant::resize(int w, int h) {
+    ofFbo::Settings s;
+    s.width          = w;
+    s.height         = h;
+    s.internalformat = GL_RGBA;
+    s.useDepth       = false;
+    fbo_read.allocate(s);
+    fbo_write.allocate(s);
     fbo_read.begin();  ofClear(0, 0, 0, 255); fbo_read.end();
     fbo_write.begin(); ofClear(0, 0, 0, 255); fbo_write.end();
 }

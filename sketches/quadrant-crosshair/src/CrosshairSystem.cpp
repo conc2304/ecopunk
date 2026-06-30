@@ -12,15 +12,15 @@ void CrosshairSystem::setup() {
 	presetIndex = 0;
 	noiseT = ofRandom(0, 1000);
 
-	posHistory.fill({ 640.f, 360.f });
 	haloPos = { 640.f, 360.f };
-	ghostPos = { 640.f, 360.f };
 	state.cx = 640.f; state.cy = 360.f;
 	prevState = state;
 }
 
 void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 	const CrosshairPreset & p = presets[presetIndex];
+
+	// Noise always advances to maintain continuity even when not driving position
 	noiseT += dt;
 
 	float nx = ofNoise(noiseT * p.freqA + seedXA) * p.ampA
@@ -28,19 +28,39 @@ void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 	float ny = ofNoise(noiseT * p.freqA + seedYA) * p.ampA
 		+ ofNoise(noiseT * p.freqB + seedYB) * p.ampB;
 
-	prevState = state;
 	float W = ofGetWidth(), H = ofGetHeight();
-	state.cx = ofMap(nx, 0, 1, p.margin, W - p.margin);
-	state.cy = ofMap(ny, 0, 1, p.margin, H - p.margin);
-	state.vx = state.cx - prevState.cx;
-	state.vy = state.cy - prevState.cy;
+	glm::vec2 noisePos = {
+		ofMap(nx, 0, 1, p.margin, W - p.margin),
+		ofMap(ny, 0, 1, p.margin, H - p.margin)
+	};
+
+	prevState = state;
+
+	if (expansionActive) {
+		state.cx  = expansionPos.x;
+		state.cy  = expansionPos.y;
+		resuming  = false;
+		resumeLerp = 0.f;
+	} else if (resuming) {
+		// Blend from return position back into noise over 2 seconds
+		resumeLerp = ofClamp(resumeLerp + dt * 0.5f, 0.f, 1.f);
+		state.cx = ofLerp(state.cx, noisePos.x, resumeLerp);
+		state.cy = ofLerp(state.cy, noisePos.y, resumeLerp);
+		if (resumeLerp >= 1.f) resuming = false;
+	} else {
+		state.cx = noisePos.x;
+		state.cy = noisePos.y;
+		// Motion attractor: only bias when noise drives position
+		if (attractForce > 0.001f) {
+			state.cx = ofLerp(state.cx, attractX, attractForce * ATTRACT_LERP);
+			state.cy = ofLerp(state.cy, attractY, attractForce * ATTRACT_LERP);
+		}
+	}
+
+	state.vx    = state.cx - prevState.cx;
+	state.vy    = state.cy - prevState.cy;
 	state.speed = sqrtf(state.vx * state.vx + state.vy * state.vy);
 	state.chWidth = lineWidth;
-
-	// Ghost ring buffer
-	posHistory[historyHead % HISTORY_SIZE] = { state.cx, state.cy };
-	historyHead++;
-	ghostPos = posHistory[(historyHead - GHOST_LAG + HISTORY_SIZE) % HISTORY_SIZE];
 
 	// Halo lags behind crosshair
 	haloPos = haloPos + (glm::vec2(state.cx, state.cy) - haloPos) * 0.04f;
@@ -50,14 +70,19 @@ void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 	float pulse = ofMap(lfo.get(LFO_CROSSHAIR_PULSE), -1, 1, 0.f, 1.f);
 	lineWidth = ofLerp(4.0f, 12.0f, speedNorm * 0.7f + pulse * 0.3f);
 
-	// Motion attractor: biases position toward active region, noise remains dominant
-	if (attractForce > 0.001f) {
-		state.cx = ofLerp(state.cx, attractX, attractForce * ATTRACT_LERP);
-		state.cy = ofLerp(state.cy, attractY, attractForce * ATTRACT_LERP);
-	}
-
 	// Bloom animation
 	bloomRadius = ofLerp(bloomRadius, bloomTarget, 0.15f);
+}
+
+void CrosshairSystem::setExpansionControl(bool active, glm::vec2 pos) {
+	expansionActive = active;
+	expansionPos    = pos;
+}
+
+void CrosshairSystem::beginResume() {
+	expansionActive = false;
+	resuming        = true;
+	resumeLerp      = 0.f;
 }
 
 void CrosshairSystem::sampleColor(const ofPixels & px, float cx, float cy) {
@@ -140,7 +165,7 @@ void CrosshairSystem::drawGradientArms(float cx, float cy, float opacH, float op
 	ofDisableAlphaBlending();
 }
 
-void CrosshairSystem::drawDashArms(float cx, float cy, float speed) {
+void CrosshairSystem::drawDashArms(float cx, float cy, float speed, float uiFadeAlpha) {
 	float W = ofGetWidth(), H = ofGetHeight();
 	float T = lineWidth * 0.5f;
 	float dash = 12.f;
@@ -149,7 +174,7 @@ void CrosshairSystem::drawDashArms(float cx, float cy, float speed) {
 
 	ofMesh mesh;
 	mesh.setMode(OF_PRIMITIVE_TRIANGLES);
-	ofColor col(crosshairColor.r, crosshairColor.g, crosshairColor.b, 200);
+	ofColor col(crosshairColor.r, crosshairColor.g, crosshairColor.b, (int)(200 * uiFadeAlpha));
 
 	// Horizontal: left then right of cx
 	for (float x = 0.f; x < cx; x += step) {
@@ -177,48 +202,35 @@ void CrosshairSystem::drawDashArms(float cx, float cy, float speed) {
 
 // ─── draw() ──────────────────────────────────────────────────────────────────
 
-void CrosshairSystem::draw() {
+void CrosshairSystem::draw(float uiFadeAlpha) {
+	if (uiFadeAlpha <= 0.01f) return;
+
 	float cx = state.cx, cy = state.cy;
 
 	ofEnableAlphaBlending();
 
 	// 1. Arms (gradient or dashed)
 	if (state.speed > HIGH_THRESH) {
-		drawDashArms(cx, cy, state.speed);
+		drawDashArms(cx, cy, state.speed, uiFadeAlpha);
 	} else {
-		float opacH = ofMap(1.f, -1.f, 1.f, 0.35f, 1.0f); // neutral until LFO wired per-draw
+		float opacH = ofMap(1.f, -1.f, 1.f, 0.35f, 1.0f);
 		float opacV = opacH;
-		drawGradientArms(cx, cy, opacH, opacV);
+		drawGradientArms(cx, cy, opacH * uiFadeAlpha, opacV * uiFadeAlpha);
 	}
 
-	// 2. Ghost arms — same mesh at ghostPos, 18% opacity
-	if (showGhost) {
-		float T = std::max(lineWidth * 0.1f, 1.0f);  // 20% of main width, min 2px total
-		float W = ofGetWidth(), H = ofGetHeight();
-		ofColor zero(crosshairColor.r, crosshairColor.g, crosshairColor.b, 0);
-		ofColor ghost(crosshairColor.r, crosshairColor.g, crosshairColor.b, 46);
-		ofMesh gm;
-		gm.setMode(OF_PRIMITIVE_TRIANGLES);
-		addArmQuad(gm, { 0.f, ghostPos.y }, { ghostPos.x, ghostPos.y }, T, zero, ghost);
-		addArmQuad(gm, { ghostPos.x, ghostPos.y }, { W, ghostPos.y }, T, ghost, zero);
-		addArmQuad(gm, { ghostPos.x, 0.f }, { ghostPos.x, ghostPos.y }, T, zero, ghost);
-		addArmQuad(gm, { ghostPos.x, ghostPos.y }, { ghostPos.x, H }, T, ghost, zero);
-		gm.draw();
-	}
-
-	// 3. Halo — lagged circle, 8% opacity
+	// 2. Halo — lagged circle, scaled by uiFadeAlpha
 	ofPushStyle();
 	ofSetCircleResolution(128);
 	ofNoFill();
-	ofSetColor(crosshairColor.r, crosshairColor.g, crosshairColor.b, 20);
+	ofSetColor(crosshairColor.r, crosshairColor.g, crosshairColor.b, (int)(20 * uiFadeAlpha));
 	ofSetLineWidth(3.f);
 	ofDrawCircle(haloPos.x, haloPos.y, 200.f);
 	ofPopStyle();
 
-	// 4. Intersection bloom
+	// 3. Intersection bloom — scaled by uiFadeAlpha
 	ofPushStyle();
 	ofColor bloomCol(crosshairColor.r, crosshairColor.g, crosshairColor.b,
-		(int)(125 + bloomFill * 165));
+		(int)((125 + bloomFill * 165) * uiFadeAlpha));
 	ofSetColor(bloomCol);
 	if (bloomFill > 0.05f)
 		ofFill();
@@ -228,7 +240,7 @@ void CrosshairSystem::draw() {
 	ofDrawCircle(cx, cy, bloomRadius);
 	ofPopStyle();
 
-	// Reset bloom target to resting state each frame; callers must re-set each frame if sustained
+	// Reset bloom target to resting state; callers must re-set each frame if sustained
 	bloomTarget = 4.f;
 
 	ofDisableAlphaBlending();

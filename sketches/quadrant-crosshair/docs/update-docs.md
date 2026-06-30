@@ -1,255 +1,136 @@
 QUADRANT CROSSHAIR
 
-openFrameworks Implementation Handoff — v2.0
+openFrameworks system reference — current implementation
 
-Raspberry Pi 3B / oF 0.12.x / 1280×720 @ 24fps
+Target platform: Raspberry Pi 3B (Raspberry Pi OS 64-bit, VideoCore IV, GLSL ES 1.0/GLSL 120), with a macOS development path gated by `PLATFORM_PI` conditionals throughout the source. Render target 1280×720 @ 24fps, HDMI output, no UI chrome. Input media is a folder of `.mp4` files (H.264) scanned at startup. Build system: standard oF project Makefile, C++17. No addons.make — core openFrameworks only, plus the self-contained `hud_elements/` widget library checked into `src/`.
 
-FieldValueDocument typeImplementation Handoff — build directly from this documentTargetopenFrameworks code generation agentPlatformRaspberry Pi 3B, Raspberry Pi OS 64-bitOF versionopenFrameworks 0.12.xRender target1280×720 @ 24fps, HDMI output, no UIInput media/home/pi/blueprint/media/\*.mp4 (H.264, scanned at startup)LanguageC++17Shader languageGLSL ES 1.0 (VideoCore IV — no exceptions)Build systemStandard oF project MakefilePrevious versionv1.0 — superseded by this document
-
-Frame budget (41.67ms at 24fps)
-
-All estimates from agent feasibility report. Do not exceed this budget.
-
-SystemEstimated costVideo decode (VPU hardware)~2ms4 quadrant shader passes at 1280×720~16–24ms6 FBO switches (4 erosion + 2 RD)~5–6msGray-Scott GLSL ping-pong pass~1–2msCrosshair + CPU logic + LFOs~3msVideo brightness sampling~0.3msEstimated total28–36msHeadroom5–13ms
-
-⚠ Quadrant fragment shaders must remain single-texture reads. No multi-tap in quadrant shaders. Multi-tap is only permitted in the Gray-Scott and erosion shaders which run at 160×90 and 640×360 respectively.
+This document describes the sketch as it exists in source today. The source of truth is `src/` and `data/shaders/`; keep this file in sync with that code, not the other way around.
 
 01 — PROJECT FILE STRUCTURE
 
-Every file listed here must be created. Do not merge classes.
-
-FileClassNotessrc/ofApp.h/.cppofAppOwns all subsystems.src/CrosshairSystem.h/.cppCrosshairSystemPerlin motion, presets, crosshair draw.src/TriggerBus.h/.cppTriggerBusEvaluates crosshair state, fires events.src/Quadrant.h/.cppQuadrantRegion, effect, blend, erosion FBO.src/QuadrantManager.h/.cppQuadrantManagerOwns 4 Quadrant instances, handles triggers.src/VideoSystem.h/.cppVideoSystemSingle ofVideoPlayer + getPixels() access.src/ShaderLibrary.h/.cppShaderLibraryLoads + owns all ofShader instances.src/ReactionDiffusion.h/.cppReactionDiffusionGray-Scott GLSL ping-pong, 160×90.src/LFOBank.h/.cppLFOBank12 independent sin/cos oscillator lanes.src/GridState.h/.cppGridState24×18 CPU float array, uploads as texture.data/shaders/vert.glslshared vertexUsed by all effect shaders.data/shaders/desaturate.glsleffectdata/shaders/invert.glsleffectdata/shaders/recolor.glsleffectdata/shaders/threshold.glsleffectdata/shaders/dither.glsleffectdata/shaders/solarize.glsleffectdata/shaders/scanlines.glsleffectdata/shaders/channelshift.glsleffectdata/shaders/rd_step.glslGray-Scott stepPing-pong compute pass.data/shaders/erosion.glslerosion/residuePer-quadrant decay accumulation.
+| File | Class | Notes |
+|---|---|---|
+| src/ofApp.h/.cpp | ofApp | Owns every subsystem, drives the frame loop. |
+| src/CrosshairSystem.h/.cpp | CrosshairSystem | Perlin-noise cursor motion, presets, color sampling, crosshair draw. |
+| src/TriggerBus.h/.cpp | TriggerBus | Evaluates crosshair state each frame, fires spatial/velocity/dwell events. |
+| src/Quadrant.h/.cpp | Quadrant | One screen region: erosion/residue FBO, two-slot shader crossfade, scale/morph wobble. |
+| src/QuadrantManager.h/.cpp | QuadrantManager | Owns the 4 Quadrant instances, runs the per-quadrant shader-cycling state machine, routes triggers. |
+| src/VideoSystem.h/.cpp | VideoSystem | Single ofVideoPlayer, playlist sequencing, brightness/contrast/saturation adjustment pass. |
+| src/ShaderLibrary.h/.cpp | ShaderLibrary | Loads and owns all named ofShader instances. |
+| src/LFOBank.h/.cpp | LFOBank | 12 independent sin oscillator lanes. |
+| src/GridState.h/.cpp | GridState | 24×18 CPU float array of crosshair-proximity history, uploaded as a texture. |
+| src/MotionExtraction.h/.cpp | MotionExtraction | GPU motion-difference extraction (accumulation-based and delayed-frame), drives crosshair attraction and a screen overlay. |
+| src/ExpansionDirector.h/.cpp | ExpansionDirector | Periodic finite-state sequence that sends the crosshair into a corner and holds one quadrant fullscreen. |
+| src/DebugMode.h/.cpp | DebugMode | Fullscreen shader preview/tuning mode with live parameter adjustment and trigger simulation. |
+| src/HudManager.h/.cpp | HudManager | Telemetry/visualization overlay built from the hud_elements widget set. |
+| src/NatureCopy.h | — | Classifies a video filename into a nature category and returns matching HUD copy (card titles, gauge labels, reticle labels). |
+| src/hud_elements/ | hud:: namespace | Self-contained, reusable vector-based HUD widget library (Scanner, NodeNetwork, FlowField, Contour, Gauge, DataCard, HexGrid, Reticle). See its own README.md. |
+| data/shaders/vert.glsl | shared vertex | Used by every effect shader. |
+| data/shaders/desaturate.glsl, invert.glsl, recolor.glsl, threshold.glsl, dither.glsl, solarize.glsl, scanlines.glsl, channelshift.glsl | effect shaders | Core per-quadrant effect pool. |
+| data/shaders/erosion.glsl | residue/decay | Per-quadrant accumulation-and-decay pass. |
+| data/shaders/motion_extract.glsl, motion_accum.glsl, motion_effect.glsl | motion pipeline | Used by MotionExtraction and by the `motion_effect` quadrant shader. |
+| data/shaders/ascii_threshold_solarpunk.glsl | effect shader | ASCII-style threshold effect, loaded as `ascii_solarpunk`. |
+| data/shaders/video_adjust.glsl | post-process | Brightness/contrast/saturation pass applied to the video texture (desktop dev path only). |
+| data/shaders/of_nature_shader_pack_glsl/*.glsl | effect pack | bioluminescence, chromatic_aberration, edge_glow, ink_outlines, pixel_drift, pixel_sorting, temporal_trails, water_refraction — loaded into the shader library; `temporal_trails` is excluded from the quadrant shader pool (would need its own per-quadrant FBO). |
 
 02 — CROSSHAIR SYSTEM
 
-2.1 Motion — unchanged from v1.0
+2.1 Motion and presets
 
-Two-octave layered Perlin noise drives (cx, cy). Five named presets. See v1.0 for full CrosshairSystem.h, setup(), update(), and preset switching code — no changes to motion architecture.
+Two-octave layered Perlin noise drives `(cx, cy)`. Five named presets:
 
-Preset table for reference:
+| Preset | freqA | freqB | ampA | ampB | margin |
+|---|---|---|---|---|---|
+| DRIFT | 0.04 | 0.009 | 0.60 | 0.35 | 120px |
+| SCAN | 0.07 | 0.020 | 0.75 | 0.22 | 80px |
+| HUNT | 0.12 | 0.035 | 0.85 | 0.15 | 60px |
+| NERVOUS | 0.18 | 0.004 | 0.45 | 0.55 | 80px |
+| ORBIT | 0.05 | 0.051 | 0.70 | 0.30 | 100px |
 
-PresetfreqAfreqBampAampBmarginDRIFT0.040.0090.600.35120pxSCAN0.070.0200.750.2280pxHUNT0.120.0350.850.1560pxNERVOUS0.180.0040.450.5580pxORBIT0.050.0510.700.30100px
+Cycle presets with number keys 1–5 or TAB (see §14).
+
+Two things can override the noise-driven position:
+- **Motion attractor** — `setMotionAttractor(x, y, energy)` biases the noise position toward the video's motion centroid (from MotionExtraction), capped so noise always dominates (bias force maps `energy` in `[0.02, 0.25]` to `[0, 0.35]`).
+- **Expansion control** — while an `ExpansionDirector` sequence is active, `setExpansionControl(true, pos)` hands position control entirely to the director; `beginResume()` blends back into noise-driven motion over ~2 seconds once the sequence ends.
+
+`CrosshairState` (`cx, cy, vx, vy, speed, chWidth`) is recomputed every frame in `update(dt, lfo)` and read by `TriggerBus`, `QuadrantManager`, and `HudManager`.
 
 2.2 Crosshair color — sampled from video
 
-The crosshair color is not fixed. It is sampled from a blurred cross-section of the video frame centered on (cx, cy). Computed in update() using ofVideoPlayer::getPixels() — no GPU stall on Pi 3B (agent confirmed: GStreamer backend keeps a CPU-side pixel buffer).
+The crosshair color is sampled from a blurred horizontal+vertical strip of the video frame centered on `(cx, cy)`, then smoothed toward that target:
 
-cpp// In CrosshairSystem::update(), after receiving video pixels:
+```cpp
 void CrosshairSystem::sampleColor(const ofPixels& px, float cx, float cy) {
-int W = px.getWidth(), H = px.getHeight();
-float r = 0, g = 0, b = 0;
-int count = 0;
-const int HALF = 40; // sample 80px strip centered on cx/cy
-const int STEP = 4; // every 4th pixel — enough for a blur average
+    int W = px.getWidth(), H = px.getHeight();
+    float r = 0, g = 0, b = 0;
+    int count = 0;
+    const int HALF = 40;  // 80px strip centered on cx/cy
+    const int STEP = 4;   // every 4th pixel
 
-    // Horizontal strip at cy
     int sy = ofClamp((int)cy, 0, H - 1);
-    for (int x = ofClamp((int)cx - HALF, 0, W-1);
-             x < ofClamp((int)cx + HALF, 0, W-1); x += STEP) {
+    for (int x = ofClamp((int)cx - HALF, 0, W-1); x < ofClamp((int)cx + HALF, 0, W-1); x += STEP) {
         auto c = px.getColor(x, sy);
         r += c.r; g += c.g; b += c.b; count++;
     }
-    // Vertical strip at cx
     int sx = ofClamp((int)cx, 0, W - 1);
-    for (int y = ofClamp((int)cy - HALF, 0, H-1);
-             y < ofClamp((int)cy + HALF, 0, H-1); y += STEP) {
+    for (int y = ofClamp((int)cy - HALF, 0, H-1); y < ofClamp((int)cy + HALF, 0, H-1); y += STEP) {
         auto c = px.getColor(sx, y);
         r += c.r; g += c.g; b += c.b; count++;
     }
-    if (count > 0) {
-        sampledColor.set(r / count, g / count, b / count);
-    }
-    // Smooth toward new value — prevents flicker
+    if (count > 0) sampledColor.set(r / count, g / count, b / count);
     crosshairColor = crosshairColor.getLerped(sampledColor, 0.08f);
-
 }
+```
 
-crosshairColor is an ofColor member updated each frame. Skip sampling if !video.isFrameNew() — reuse previous value.
+Called from `ofApp::update()` only when `video.isFrameNew()` — no GPU stall, reuses the previous color otherwise.
 
-2.3 Crosshair draw — full specification
+2.3 Crosshair draw
 
-All crosshair elements drawn in CrosshairSystem::draw(). Draw order: gradient arms → ghost crosshair → halo → intersection circle. Crosshair is always drawn last in ofApp::draw(), on top of all quadrant content.
+Draw order in `CrosshairSystem::draw(uiFadeAlpha)`: arms (gradient or dashed) → halo → intersection bloom. The crosshair is drawn last in `ofApp::draw()`, on top of quadrants and HUD. `uiFadeAlpha` (driven by `ExpansionDirector`) scales every element's opacity and fully skips the draw below `0.01`.
 
-Gradient arms
+**Gradient arms** — brightest at `(cx, cy)`, fading to zero at the canvas edges. Built as triangle-strip quads via a shared `addArmQuad()` helper (4 calls: left-horizontal, right-horizontal, top-vertical, bottom-vertical):
 
-The crosshair color is brightest at (cx, cy) and fades to zero opacity at canvas edges. Implemented with ofMesh (two quads, one per arm) with per-vertex color alpha.
-
-cppvoid CrosshairSystem::drawGradientArms(float cx, float cy) {
-float W = ofGetWidth(), H = ofGetHeight();
-ofColor col = crosshairColor;
-ofColor zero = ofColor(col.r, col.g, col.b, 0);
-ofColor peak = ofColor(col.r, col.g, col.b, 200);
-
-    ofMesh mesh;
-    mesh.setMode(OF_PRIMITIVE_TRIANGLES);
-    const float T = lineWidth * 0.5f;  // half-thickness
-
-    // Horizontal arm: left segment (edge → cx)
-    mesh.addColor(zero); mesh.addVertex({ 0,      cy - T, 0 });
-    mesh.addColor(zero); mesh.addVertex({ 0,      cy + T, 0 });
-    mesh.addColor(peak); mesh.addVertex({ cx,     cy + T, 0 });
-    mesh.addColor(peak); mesh.addVertex({ cx,     cy - T, 0 });
-    mesh.addTriangle(0,1,2); mesh.addTriangle(0,2,3);
-
-    // Horizontal arm: right segment (cx → edge)
-    mesh.addColor(peak); mesh.addVertex({ cx,     cy - T, 0 });
-    mesh.addColor(peak); mesh.addVertex({ cx,     cy + T, 0 });
-    mesh.addColor(zero); mesh.addVertex({ W,      cy + T, 0 });
-    mesh.addColor(zero); mesh.addVertex({ W,      cy - T, 0 });
-    mesh.addTriangle(4,5,6); mesh.addTriangle(4,6,7);
-
-    // Vertical arm: top segment (edge → cy)
-    mesh.addColor(zero); mesh.addVertex({ cx - T, 0,  0 });
-    mesh.addColor(zero); mesh.addVertex({ cx + T, 0,  0 });
-    mesh.addColor(peak); mesh.addVertex({ cx + T, cy, 0 });
-    mesh.addColor(peak); mesh.addVertex({ cx - T, cy, 0 });
-    mesh.addTriangle(8,9,10); mesh.addTriangle(8,10,11);
-
-    // Vertical arm: bottom segment (cy → edge)
-    mesh.addColor(peak); mesh.addVertex({ cx - T, cy, 0 });
-    mesh.addColor(peak); mesh.addVertex({ cx + T, cy, 0 });
-    mesh.addColor(zero); mesh.addVertex({ cx + T, H,  0 });
-    mesh.addColor(zero); mesh.addVertex({ cx - T, H,  0 });
-    mesh.addTriangle(12,13,14); mesh.addTriangle(12,14,15);
-
-    ofEnableAlphaBlending();
-    mesh.draw();
-    ofDisableAlphaBlending();
-
+```cpp
+void CrosshairSystem::addArmQuad(ofMesh& mesh, glm::vec2 a, glm::vec2 b, float T, ofColor ca, ofColor cb) {
+    glm::vec2 perp = glm::normalize(b - a);
+    glm::vec2 side = { -perp.y * T, perp.x * T };
+    int base = mesh.getNumVertices();
+    mesh.addColor(ca); mesh.addVertex({ a.x - side.x, a.y - side.y, 0.f });
+    mesh.addColor(ca); mesh.addVertex({ a.x + side.x, a.y + side.y, 0.f });
+    mesh.addColor(cb); mesh.addVertex({ b.x + side.x, b.y + side.y, 0.f });
+    mesh.addColor(cb); mesh.addVertex({ b.x - side.x, b.y - side.y, 0.f });
+    mesh.addTriangle(base, base+1, base+2);
+    mesh.addTriangle(base, base+2, base+3);
 }
+```
 
-Variable line thickness
+Thickness is driven entirely through the mesh half-thickness `T = lineWidth * 0.5f` — there is no `ofSetLineWidth()` call for the arms. `lineWidth` is updated each frame as a blend of crosshair speed and the `LFO_CROSSHAIR_PULSE` lane: `lineWidth = ofLerp(4.0f, 12.0f, speedNorm*0.7f + pulse*0.3f)`.
 
-lineWidth is a float member driven by two sources added together:
+**Dashed arms** — at `state.speed > HIGH_THRESH` (1.5 px/frame), the gradient arms are replaced by `drawDashArms()`, which builds short mesh quad segments with a gap that widens with speed (`dash = 12px`, `gap` mapped from `[4, 20]px` over `speed ∈ [HIGH_THRESH, 4×HIGH_THRESH]`). No `ofSetLineStipple()` is used anywhere in the file.
 
-cpp// In update():
-float speedNorm = ofMap(state.speed, 0, HIGH_THRESH, 0, 1, true);
-float pulse = lfoBank.get(LFO_CROSSHAIR_PULSE); // slow sine, 0–1
-lineWidth = ofLerp(1.0f, 4.0f, speedNorm _ 0.7f + pulse _ 0.3f);
+**Halo** — a faint circle of radius 200px at `haloPos`, which lags the crosshair via `haloPos += (cursorPos - haloPos) * 0.04f`. Drawn with `ofNoFill()`, alpha `20 * uiFadeAlpha`, line width 3.
 
-⚠ Agent to confirm: does ofSetLineWidth() on VideoCore IV accept float values, or is it clamped to integers? If clamped, use the ofMesh quad approach above exclusively and drive width through T only — do not call ofSetLineWidth() for gradient arms since they are already mesh-based.
+**Intersection bloom** — a circle at `(cx, cy)` whose radius eases toward `bloomTarget` (`bloomRadius = ofLerp(bloomRadius, bloomTarget, 0.15f)`) and whose target resets to a resting `4.0f` at the end of every `draw()` call, so each call to `triggerBloom(targetRadius, ...)` produces one outward pulse. `setBloomFill(target, ...)` sets fill opacity directly (the fill ramps visually only insofar as `bloomFill` itself is changed gradually by the caller — `TriggerBus`/`ofApp` currently set it immediately on DWELL activate/deactivate). Fill alpha is `(int)((125 + bloomFill*165) * uiFadeAlpha)`.
 
-Ghost crosshair
-
-A ring buffer stores the last 96 (cx, cy) positions (4 seconds at 24fps). The ghost is drawn at the position from GHOST_LAG frames ago at 18% opacity using the same crosshairColor but dimmed.
-
-cpp// In CrosshairSystem.h:
-static constexpr int GHOST_LAG = 72; // 3 seconds
-static constexpr int HISTORY_SIZE = 96; // 4 seconds
-std::array<glm::vec2, HISTORY_SIZE> posHistory;
-int historyHead = 0;
-
-// In update():
-posHistory[historyHead % HISTORY_SIZE] = { state.cx, state.cy };
-historyHead++;
-
-// Ghost position:
-glm::vec2 ghostPos = posHistory[(historyHead - GHOST_LAG + HISTORY_SIZE) % HISTORY_SIZE];
-
-// In draw():
-ofColor ghostCol = ofColor(crosshairColor.r, crosshairColor.g,
-crosshairColor.b, 46); // ~18% of 255
-// Draw ghost arms at ghostPos using same gradient mesh, scaled to ghostCol
-
-Halo
-
-A faint circle at radius 200px centered on (cx, cy), following with a slight positional lag via lerp. Drawn at 8% opacity.
-
-cpp// In update():
-haloPos = haloPos + (glm::vec2(state.cx, state.cy) - haloPos) \* 0.04f;
-
-// In draw():
-ofPushStyle();
-ofNoFill();
-ofSetColor(crosshairColor.r, crosshairColor.g, crosshairColor.b, 20);
-ofSetLineWidth(1.0f);
-ofDrawCircle(haloPos.x, haloPos.y, 200.f);
-ofPopStyle();
-
-Intersection bloom
-
-The registration circle at (cx, cy) has two states driven by TriggerBus:
-
-VELOCITY_HIGH active: radius pulses outward to 24px then contracts back to 4px over 0.4s
-DWELL active: circle fills solid (opacity ramps from 0 to 180 over 2s), then dissolves when dwell resolves
-
-cpp// In CrosshairSystem.h:
-float bloomRadius = 4.f;
-float bloomFill = 0.f; // 0 = outline only, 1 = solid fill
-float bloomTarget = 4.f;
-
-// In update():
-bloomRadius = ofLerp(bloomRadius, bloomTarget, 0.15f);
-
-// In draw():
-ofPushStyle();
-ofSetColor(crosshairColor.r, crosshairColor.g, crosshairColor.b,
-(int)(90 + bloomFill \* 165));
-if (bloomFill > 0.05f) ofFill(); else ofNoFill();
-ofDrawCircle(state.cx, state.cy, bloomRadius);
-ofPopStyle();
-
-Signal-break dashes at high velocity
-
-At VELOCITY_HIGH, the gradient arms are replaced with dashed segments. Gap length scales with speed.
-
-⚠ Agent to confirm: is ofSetLineStipple() available in oF 0.12.x on Pi 3B VideoCore IV? If not, implement as an ofMesh of short quad segments with computed gaps. Gap count and length driven by state.speed. If ofSetLineStipple() is available, prefer it over mesh for simplicity.
-
-Independent arm opacity
-
-Horizontal and vertical arms have separate opacity multipliers driven by independent LFO lanes, never reaching zero.
-
-cppfloat opacH = ofMap(lfoBank.get(LFO_ARM_H), -1, 1, 0.35f, 1.0f);
-float opacV = ofMap(lfoBank.get(LFO_ARM_V), -1, 1, 0.35f, 1.0f);
-// Apply as alpha scale to peak vertex color when building gradient mesh
+Independent horizontal/vertical arm opacity (separate LFO-driven multipliers per axis, as in earlier designs) is not present in the current `draw()` — both arms currently share one opacity value derived from a fixed map, not per-axis LFO lanes (`LFO_ARM_H`/`LFO_ARM_V` exist in `LFOBank` but are not read by `CrosshairSystem` today).
 
 03 — LFO BANK
 
-12 independent oscillator lanes. All computed in update(). Negligible cost: ~0.6ms (agent confirmed).
+12 independent oscillator lanes, computed once per frame in `update(dt)`.
 
-3.1 LFOBank.h
-
-cpp#pragma once
-#include "ofMain.h"
-#include <array>
-
+```cpp
 enum LFOIndex {
-LFO_CROSSHAIR_PULSE = 0, // crosshair line thickness pulse
-LFO_ARM_H, // horizontal arm opacity
-LFO_ARM_V, // vertical arm opacity
-LFO_THRESH_Q0, // threshold uniform, quadrant TL
-LFO_THRESH_Q1, // threshold uniform, quadrant TR
-LFO_SHIFT_Q2, // channel shift amount, quadrant BL
-LFO_TINT_HUE, // recolor tint hue rotation
-LFO_DITHER_SCALE, // dither density modulation
-LFO_SCAN_DARK, // scanline darkness modulation
-LFO_RD_FEED, // Gray-Scott feed rate drift
-LFO_RD_KILL, // Gray-Scott kill rate drift
-LFO_GRID_DECAY, // hidden grid decay rate
-LFO_COUNT = 12
+    LFO_CROSSHAIR_PULSE = 0, LFO_ARM_H, LFO_ARM_V,
+    LFO_THRESH_Q0, LFO_THRESH_Q1, LFO_SHIFT_Q2,
+    LFO_TINT_HUE, LFO_DITHER_SCALE, LFO_SCAN_DARK,
+    LFO_RD_FEED, LFO_RD_KILL, LFO_GRID_DECAY,
+    LFO_COUNT = 12
 };
+```
 
-class LFOBank {
-public:
-void setup();
-void update(float dt);
-float get(int index) const; // returns -1 to 1
-
-private:
-struct Lane {
-float freq; // Hz
-float phase; // radians
-float value; // current output
-};
-std::array<Lane, LFO_COUNT> lanes;
-float timeAccum = 0.f;
-};
-
-3.2 LFOBank.cpp
-
-cppvoid LFOBank::setup() {
-// Frequencies chosen to avoid harmonic relationships — prevents sync
-lanes = {{
+```cpp
+void LFOBank::setup() {
+    lanes = {{
         { 0.031f, 0.00f, 0 },  // LFO_CROSSHAIR_PULSE  ~32s cycle
         { 0.047f, 1.10f, 0 },  // LFO_ARM_H            ~21s
         { 0.053f, 2.30f, 0 },  // LFO_ARM_V            ~19s
@@ -264,486 +145,221 @@ lanes = {{
         { 0.017f, 3.10f, 0 },  // LFO_GRID_DECAY       ~59s
     }};
 }
-
 void LFOBank::update(float dt) {
-timeAccum += dt;
-for (auto& lane : lanes) {
-lane.value = sinf(timeAccum _ lane.freq _ TWO_PI + lane.phase);
+    timeAccum += dt;
+    for (auto& lane : lanes) lane.value = sinf(timeAccum * lane.freq * TWO_PI + lane.phase);
 }
-}
-
 float LFOBank::get(int index) const { return lanes[index].value; }
+```
 
-04 — REACTION-DIFFUSION SYSTEM
+`get(index)` returns `[-1, 1]`. In active use today: `LFO_CROSSHAIR_PULSE` (crosshair thickness), `LFO_THRESH_Q0`/`LFO_THRESH_Q1` (per-quadrant threshold uniform), `LFO_SHIFT_Q2` (channel-shift amount), `LFO_TINT_HUE` (recolor tint rotation), `LFO_GRID_DECAY` (both `GridState` decay and per-quadrant erosion decay). `LFO_ARM_H`/`LFO_ARM_V`/`LFO_DITHER_SCALE`/`LFO_SCAN_DARK`/`LFO_RD_FEED`/`LFO_RD_KILL` are computed every frame but not currently read by any consumer.
 
-Gray-Scott model running at 160×90 via GLSL ES 1.0 FBO ping-pong. Agent confirmed cost: ~1–2ms/frame. Result used as a control surface — it drives effect parameters, it is not rendered directly.
+04 — HIDDEN GRID STATE
 
-4.1 ReactionDiffusion.h
+A 24×18 grid of float values on the CPU tracks how often the crosshair has passed through each region; it decays over time and uploads as a small luminance texture that quadrant shaders can sample for spatial modulation.
 
-cpp#pragma once
-#include "ofMain.h"
-
-class ReactionDiffusion {
-public:
-void setup();
-void update(float feedRate, float killRate); // rates driven by LFOs
-ofTexture& getTexture(); // returns current RD state as texture
-
-    static constexpr int RD_W = 160;
-    static constexpr int RD_H = 90;
-
-private:
-ofFbo fboA, fboB;
-bool pingPong = false;
-ofShader rdShader;
-ofMesh fullscreenQuad;
-
-    void buildQuad();
-
-};
-
-4.2 ReactionDiffusion.cpp
-
-cppvoid ReactionDiffusion::setup() {
-ofFbo::Settings s;
-s.width = RD_W;
-s.height = RD_H;
-s.internalformat = GL_RGBA;
-s.useDepth = false;
-fboA.allocate(s);
-fboB.allocate(s);
-
-    // Seed fboA with initial state: U=1 everywhere, V=0 except center patch
-    fboA.begin();
-    ofClear(255, 0, 0, 255);  // R=U=1, G=V=0
-    ofSetColor(0, 255, 0);
-    ofDrawRectangle(RD_W/2 - 8, RD_H/2 - 8, 16, 16);  // V seed patch
-    fboA.end();
-
-    rdShader.load("shaders/vert.glsl", "shaders/rd_step.glsl");
-    buildQuad();
-
-}
-
-void ReactionDiffusion::update(float feedRate, float killRate) {
-ofFbo& src = pingPong ? fboB : fboA;
-ofFbo& dst = pingPong ? fboA : fboB;
-
-    dst.begin();
-    rdShader.begin();
-    rdShader.setUniformTexture("rdState", src.getTexture(), 0);
-    rdShader.setUniform2f("resolution", RD_W, RD_H);
-    rdShader.setUniform1f("feedRate", feedRate);
-    rdShader.setUniform1f("killRate", killRate);
-    fullscreenQuad.draw();
-    rdShader.end();
-    dst.end();
-
-    pingPong = !pingPong;
-
-}
-
-ofTexture& ReactionDiffusion::getTexture() {
-return pingPong ? fboA.getTexture() : fboB.getTexture();
-}
-
-4.3 data/shaders/rd_step.glsl
-
-glsluniform sampler2D rdState;
-uniform vec2 resolution;
-uniform float feedRate; // nominal 0.055, drifts ±0.008 via LFO
-uniform float killRate; // nominal 0.062, drifts ±0.006 via LFO
-
-varying vec2 vTexCoord;
-
-void main() {
-vec2 texel = 1.0 / resolution;
-
-    vec4 center = texture2D(rdState, vTexCoord);
-    float U = center.r;
-    float V = center.g;
-
-    // 5-tap Laplacian
-    float lapU =
-        texture2D(rdState, vTexCoord + vec2( texel.x, 0)).r +
-        texture2D(rdState, vTexCoord + vec2(-texel.x, 0)).r +
-        texture2D(rdState, vTexCoord + vec2(0,  texel.y)).r +
-        texture2D(rdState, vTexCoord + vec2(0, -texel.y)).r -
-        4.0 * U;
-    float lapV =
-        texture2D(rdState, vTexCoord + vec2( texel.x, 0)).g +
-        texture2D(rdState, vTexCoord + vec2(-texel.x, 0)).g +
-        texture2D(rdState, vTexCoord + vec2(0,  texel.y)).g +
-        texture2D(rdState, vTexCoord + vec2(0, -texel.y)).g -
-        4.0 * V;
-
-    float Du = 1.0;
-    float Dv = 0.5;
-    float reaction = U * V * V;
-
-    float newU = U + (Du * lapU - reaction + feedRate * (1.0 - U)) * 0.5;
-    float newV = V + (Dv * lapV + reaction - (killRate + feedRate) * V) * 0.5;
-
-    newU = clamp(newU, 0.0, 1.0);
-    newV = clamp(newV, 0.0, 1.0);
-
-    gl_FragColor = vec4(newU, newV, 0.0, 1.0);
-
-}
-
-4.4 How RD drives the scene
-
-The RD texture is sampled in update() — not in shaders — to extract scalar control values. Sample the RD CPU-side once per frame by reading getTexture() via a tiny ofFbo blit to a 1×1 FBO (average), or sample a fixed set of 4–6 known pixel positions as proxy values.
-
-RD sample pointDrivesCenter pixel V channelOverall threshold uniform for quadrant TLTop-left V channelDither density scaleTop-right V channelRecolor tint hue offsetBottom-left V channelChannel shift amountBottom-right V channelScanline darknessCenter U channelGrid decay rate
-
-⚠ Agent to determine cheapest RD readback method at 160×90. Options: (a) 1×1 blit FBO average, (b) sparse glReadPixels on the 160×90 FBO, (c) CPU-side pass on the raw FBO pixel data. Pick whichever avoids a full pipeline stall on VideoCore IV.
-
-05 — QUADRANT EROSION / RESIDUE LAYER
-
-Each quadrant accumulates a ghost of its recent video content in a persistent FBO. Older content decays slowly. The video is never fully replaced — it layers. Agent confirmed FBO content persists across frames on Pi 3B with no CPU copy needed.
-
-5.1 Architecture
-
-Each Quadrant owns two ofFbo instances at half resolution (640×360):
-
-fbo_read — previous frame's accumulated state (input)
-fbo_write — current frame's output (draw into, then swap)
-
-Each frame:
-
-Bind fbo_write
-Draw fbo_read content through the erosion shader (applies decay)
-Draw current video frame on top at low opacity (~0.15)
-Swap fbo_read / fbo_write
-Render fbo_read to screen as the quadrant's base layer, then apply effect shader on top
-
-5.2 data/shaders/erosion.glsl
-
-glsluniform sampler2D accumulated; // previous frame FBO
-uniform sampler2D videoFrame; // current video texture
-uniform float decayRate; // 0.92–0.98, driven by LFO_GRID_DECAY
-uniform float videoAlpha; // 0.10–0.20, how strongly new frame writes in
-
-varying vec2 vTexCoord;
-
-void main() {
-vec4 history = texture2D(accumulated, vTexCoord);
-vec4 current = texture2D(videoFrame, vTexCoord);
-
-    // Decay history, add new frame
-    vec4 result = history * decayRate + current * videoAlpha;
-    gl_FragColor = clamp(result, 0.0, 1.0);
-
-}
-
-decayRate nominal value: 0.95. LFO modulation range: 0.92–0.98. At 0.95 a given frame's contribution halves in ~14 frames (~0.6 seconds at 24fps). At 0.98 it halves in ~35 frames (~1.4 seconds). This gives the composition geological layering — the image builds history.
-
-videoAlpha nominal: 0.15. Range: 0.10–0.20. Driven by LFO on a long cycle.
-
-06 — HIDDEN GRID STATE
-
-A 24×18 grid (432 cells) of float values lives on the CPU. Each cell tracks accumulated local crosshair proximity — how often the crosshair has passed through that region. Values feed back into rendering as a subtle spatial modulation. Agent confirmed this is the right approach: CPU array + small texture upload, ~0.2ms total.
-
-6.1 GridState.h
-
-cpp#pragma once
-#include "ofMain.h"
-#include <array>
-
+```cpp
 class GridState {
 public:
-static constexpr int COLS = 24;
-static constexpr int ROWS = 18;
-
+    static constexpr int COLS = 24, ROWS = 18;
     void setup();
     void update(float cx, float cy, float dt, float decayRate);
     void uploadTexture();
-    ofTexture& getTexture() { return gridTex; }
-
-    float get(int col, int row) const { return grid[row * COLS + col]; }
-
+    ofTexture& getTexture();
 private:
-std::array<float, COLS \* ROWS> grid;
-ofTexture gridTex;
+    std::array<float, COLS*ROWS> grid;
+    ofTexture gridTex;
 };
+```
 
-6.2 GridState.cpp
-
-cppvoid GridState::setup() {
-grid.fill(0.f);
-gridTex.allocate(COLS, ROWS, GL_LUMINANCE);
-}
-
+```cpp
 void GridState::update(float cx, float cy, float dt, float decayRate) {
-float W = ofGetWidth(), H = ofGetHeight();
-int col = (int)ofMap(cx, 0, W, 0, COLS - 1, true);
-int row = (int)ofMap(cy, 0, H, 0, ROWS - 1, true);
-
-    // Increment cell under crosshair
-    grid[row * COLS + col] = ofClamp(grid[row * COLS + col] + dt * 0.5f, 0, 1);
-
-    // Decay all cells
+    int col = (int)ofMap(cx, 0, ofGetWidth(),  0, COLS-1, true);
+    int row = (int)ofMap(cy, 0, ofGetHeight(), 0, ROWS-1, true);
+    grid[row*COLS+col] = ofClamp(grid[row*COLS+col] + dt*0.5f, 0.f, 1.f);
     for (auto& v : grid) v *= (1.f - dt * (1.f - decayRate));
-
 }
+```
 
-void GridState::uploadTexture() {
-// Convert float [0,1] to uint8 for GL_LUMINANCE upload
-std::array<uint8_t, COLS _ ROWS> bytes;
-for (int i = 0; i < (int)grid.size(); i++)
-bytes[i] = (uint8_t)(grid[i] _ 255.f);
-gridTex.loadData(bytes.data(), COLS, ROWS, GL_LUMINANCE);
+`decayRate` is mapped from `LFO_GRID_DECAY` to `[0.92, 0.98]` in `QuadrantManager::update()` and to `[0.96, 0.995]` in `ofApp::update()` for the grid's own decay — two independent decay-rate ranges feeding the same LFO lane. The texture is uploaded once per frame and bound to quadrant shaders as `gridState` (texture unit 3) when the shader's uniform block includes it.
+
+05 — TRIGGER BUS
+
+A generic listener/event-bus pattern over `CrosshairState`. Six trigger types:
+
+```cpp
+enum class TriggerID { EDGE_PROXIMITY, VELOCITY_HIGH, VELOCITY_LOW, QUADRANT_CENTER, CORNER_NEAR, DWELL };
+```
+
+| Trigger | Condition | Key constants |
+|---|---|---|
+| EDGE_PROXIMITY | crosshair within EDGE_ZONE of any screen edge | EDGE_ZONE = 100px |
+| VELOCITY_HIGH | speed > HIGH_THRESH | HIGH_THRESH = 4.0 px/frame |
+| VELOCITY_LOW | speed < LOW_THRESH sustained for LOW_SECS | LOW_THRESH = 0.8, LOW_SECS = 3.0s, cooldown 45s between fires |
+| QUADRANT_CENTER | within CENTER_ZONE of screen center on both axes | CENTER_ZONE = 80px |
+| CORNER_NEAR | within CORNER_ZONE of any corner | CORNER_ZONE = 150px |
+| DWELL | total movement over a DWELL_SECS window stays below DWELL_MOVE | DWELL_SECS = 6.0s, DWELL_MOVE = 25px |
+
+Each check fires only on activation/deactivation edges, with a `quadrantHint`/`intensity` payload. `clearAll()` force-deactivates everything (called by `ofApp` around `ExpansionDirector` transitions so QuadrantManager state doesn't go stale while the director owns the crosshair). Note `CrosshairSystem::HIGH_THRESH` (1.5, used for arm-thickness mapping) and `TriggerBus::HIGH_THRESH` (4.0, used for the VELOCITY_HIGH trigger) are separate constants in separate classes.
+
+06 — VIDEO SYSTEM
+
+Single `ofVideoPlayer` instance, always — a hard Pi 3B constraint, never relaxed.
+
+- Scans `.mp4` files from the media path at `setup()`, builds a shuffled playlist (`buildPlaylist()`), and avoids repeating the seam file between playlist cycles.
+- Each file loops `loopMin`–`loopMax` times (random target via `pickTargetLoops()`) before `nextFile()` advances the playlist.
+- `getPixels()`/`isFrameNew()` exposed for CPU-side sampling (crosshair color, brightness steering, motion extraction source).
+- On desktop builds (`#ifndef PLATFORM_PI`) a brightness/contrast/saturation correction pass runs through `video_adjust.glsl` into an `ofFbo`, and `getTexture()` returns that adjusted texture; on Pi, `getTexture()` returns the raw player texture directly (no adjustment pass).
+- Media path: `/home/pi/blueprint/media` on Pi, `ofToDataPath("media", true)` elsewhere.
+
+`ofApp::sampleBrightness()` computes overall scene brightness via a strided CPU scan (every 64px on Pi, every 16px on desktop) and feeds it to `QuadrantManager::setVideoBrightness()`, which factors into dither-parameter risk scoring (see §08).
+
+07 — SHADER LIBRARY
+
+A name → `ofShader` registry; every shader pairs with the same `vert.glsl`.
+
+```cpp
+void ShaderLibrary::setup() {
+    load("desaturate", "shaders/desaturate.glsl");
+    load("invert", "shaders/invert.glsl");
+    load("recolor", "shaders/recolor.glsl");
+    load("threshold", "shaders/threshold.glsl");
+    load("dither", "shaders/dither.glsl");
+    load("solarize", "shaders/solarize.glsl");
+    load("scanlines", "shaders/scanlines.glsl");
+    load("channelshift", "shaders/channelshift.glsl");
+    load("motion_effect", "shaders/motion_effect.glsl");
+    load("ascii_solarpunk", "shaders/ascii_threshold_solarpunk.glsl");
+    // nature pack
+    load("bioluminescence", "of_nature_shader_pack_glsl/bioluminescence.glsl");
+    load("chromatic_aberration", "of_nature_shader_pack_glsl/chromatic_aberration.glsl");
+    load("edge_glow", "of_nature_shader_pack_glsl/edge_glow.glsl");
+    load("ink_outlines", "of_nature_shader_pack_glsl/ink_outlines.glsl");
+    load("pixel_drift", "of_nature_shader_pack_glsl/pixel_drift.glsl");
+    load("pixel_sorting", "of_nature_shader_pack_glsl/pixel_sorting.glsl");
+    load("temporal_trails", "of_nature_shader_pack_glsl/temporal_trails.glsl");
+    load("water_refraction", "of_nature_shader_pack_glsl/water_refraction.glsl");
 }
+```
 
-GridState::update() is called each frame with decayRate driven by LFO_GRID_DECAY (mapped to 0.96–0.995). uploadTexture() called once per frame in update(). The grid texture is passed as a uniform to quadrant shaders that want spatial modulation — currently threshold.glsl and recolor.glsl sample it to modulate their effect intensity per screen region.
+`get(name)` returns a reference; `has(name)` guards optional lookups. `erosion.glsl` is loaded directly by `Quadrant::setup()` via the same library instance.
 
-07 — VIDEO SYSTEM
+08 — QUADRANT + QUADRANT MANAGER
 
-No structural changes from v1.0. One addition: getPixels() access for crosshair color sampling and brightness-based steering.
+**Dynamic regions.** The four quadrant rectangles are *not* static screen halves — every frame, `QuadrantManager::update()` redefines all four regions by splitting the canvas at the live crosshair position:
 
-⚠ ONE ofVideoPlayer instance at all times. Hard Pi 3B constraint. Never instantiate a second player.
+```cpp
+quads[0].region = { 0,  0,  cx,     cy     };  // TL
+quads[1].region = { cx, 0,  W - cx, cy     };  // TR
+quads[2].region = { 0,  cy, cx,     H - cy };  // BL
+quads[3].region = { cx, cy, W - cx, H - cy };  // BR
+```
 
-cpp// Added to VideoSystem.h:
-const ofPixels& getPixels() const { return player.getPixels(); }
-bool isFrameNew() const { return player.isFrameNew(); }
+This is the source of the sketch's name: the crosshair *is* the quadrant divider.
 
-Caller pattern:
+**Erosion / residue layer.** Each `Quadrant` owns a ping-ponged pair of full-canvas-sized FBOs (`fbo_read`/`fbo_write`). Every frame, the previous accumulated state is decayed and blended with a low-opacity copy of the current video frame, then the FBOs are swapped (`std::swap(fbo_read, fbo_write)`):
 
-cpp// In ofApp::update(), after video.update():
-if (video.isFrameNew()) {
-crosshair.sampleColor(video.getPixels(), state.cx, state.cy);
-steeringBrightness = sampleBrightness(video.getPixels());
+```glsl
+uniform sampler2D accumulated;  // previous frame FBO
+uniform sampler2D videoFrame;   // current video texture
+uniform float decayRate;        // ~0.97 nominal, LFO_GRID_DECAY-driven
+uniform float videoAlpha;       // ~0.03 nominal
+varying vec2 vTexCoord;
+void main() {
+    vec4 history = texture2D(accumulated, vTexCoord);
+    vec4 current = texture2D(videoFrame,  vTexCoord);
+    gl_FragColor = clamp(history * decayRate + current * videoAlpha, 0.0, 1.0);
 }
+```
 
-Brightness sampling for crosshair steering (agent confirmed ~0.3ms, no GPU stall):
+Draw order per quadrant, inside a `glScissor` clip to the quadrant's exact (un-morphed) region: erosion FBO (ghost/accumulation base) → raw video (same scale/translate transform) → active shader slot(s) alpha-blended on top.
 
-cppfloat sampleBrightness(const ofPixels& px) {
-int W = px.getWidth(), H = px.getHeight();
-float brightness = 0;
-int count = 0;
-const int STEP = 16;
-for (int y = 0; y < H; y += STEP)
-for (int x = 0; x < W; x += STEP) {
-auto c = px.getColor(x, y);
-brightness += 0.299f*c.r + 0.587f*c.g + 0.114f*c.b;
-count++;
-}
-return brightness / (count * 255.f); // 0–1
-}
+**Per-quadrant shader cycling.** Each `Quadrant` has two `ShaderSlot`s (IDLE/FADE_IN/ACTIVE/FADE_OUT) so one effect can crossfade into the next. `QuadrantManager` drives each quadrant through an independent `PLAYING → SILENCING → READY` cycle: on READY it pops a shader name from a per-quadrant shuffled "deck" (refilled from the shared 17-entry `shaderPool` when empty), skipping any shader currently playing in another quadrant so effects stay visually distributed. Dwell time per shader is randomized (54–72s), fade time randomized (15–30s), and silence gaps are normally 9–15s with a 20% chance of a long 60–120s gap (suppressed if 2+ other quadrants are already silent, so the composition never goes fully dark).
 
-08 — SHADER LIBRARY
+**Scale personality.** Each quadrant has its own baseline zoom range (`Q0: 0.80–1.00`, `Q1: 1.20–1.60`, `Q2: 0.50–0.70`, `Q3: 1.80–2.40`), which slowly drifts toward a freshly-randomized target range every 90–180s.
 
-Add two new shaders to ShaderLibrary::setup() alongside the existing eight:
+**Morph wobble.** Per-quadrant Perlin noise also offsets draw position/size/crop by a few pixels (`morphOffX/Y`, `morphW/H`, `cropOffX/Y`) for a subtle living-frame effect; the scissor clip itself stays locked to the un-morphed region so quadrant boundaries stay flush with the crosshair lines.
 
-cppload("rd_step", "shaders/rd_step.glsl");
-load("erosion", "shaders/erosion.glsl");
+**Trigger → effect mapping** (`applyTriggerToQuad`): VELOCITY_HIGH forces `threshold` with an indefinite dwell (held until the trigger deactivates); EDGE_PROXIMITY → `invert` (intensity-scaled channel shift) for 3s; VELOCITY_LOW → `dither` for 5s; QUADRANT_CENTER → brief `invert` (0.5s); CORNER_NEAR → `recolor` tinted orange for 4s; DWELL → `solarize` for 8s. Before overriding, the manager snapshots whatever shader was actively playing so it can resume after the trigger effect clears. `QuadrantManager::onTrigger()` decides which quadrants a trigger affects — usually the hinted quadrant plus each other quadrant with 33% independent probability, staggered with a small random delay per quadrant (`scheduleEffect`/`pending`).
 
-All other shader source unchanged from v1.0. Full GLSL source for all eight effect shaders is in v1.0 — do not re-implement, copy verbatim.
+**Expansion contraction crossfade.** When `ExpansionDirector` returns from HOLD, `QuadrantManager::beginContraction(quadrantID)` starts a 3-second crossfade where a fullscreen copy of the expanded quadrant's content fades out while its normal scissored quarter-view fades back in underneath.
 
-09 — TRIGGER BUS
+**Shader uniforms.** `Quadrant::drawWithEffect()` binds `tex`/`tex0` (video), `resolution`, `alpha`/`opacity`, optionally `gridState` (unit 3), `motionTex`/`motionDelayedTex` (units 4/5, `motionGamma`, `blendMode`, `motionSourceMode`), plus generic `tint`/`threshold`/`shift` via `bindUniforms()`. Nature-pack and `ascii_solarpunk` shaders additionally receive their own hardcoded parameter sets (e.g. `bioluminescence` gets `time`/`threshold`/`intensity`/`glowColor`).
 
-No changes to trigger detection logic from v1.0. Three additions:
+09 — MOTION EXTRACTION
 
-Crosshair bloom reactions — CrosshairSystem registers directly as a TriggerBus listener:
+GPU motion-difference pipeline running off a 160×90 accumulation buffer, independent of the quadrant erosion system. Two reference modes feed `motion_extract.glsl`:
 
-cpptriggerBus.addListener([this](const TriggerEvent& e) {
-if (e.id == TriggerID::VELOCITY_HIGH && e.active) {
-crosshair.triggerBloom(24.f, 0.4f); // radius, duration
-}
-if (e.id == TriggerID::DWELL) {
-crosshair.setBloomFill(e.active ? 1.f : 0.f, 2.0f);
-}
-});
+- **Accumulation-based** (`fboMotion`) — compares the current frame against a slow exponential-decay accumulation (`motion_accum.glsl`, ping-ponged), used for the fullscreen motion overlay.
+- **Delayed-frame** (`fboMotionDelayed`) — compares the current frame against a ring buffer of recent low-res frames (`MAX_HISTORY_FRAMES`: 15 on Pi, 60 on desktop), used as quadrant shader variety via `motion_effect.glsl`.
 
-Signal-break dash state — CrosshairSystem reads velHighActive directly from CrosshairState::speed — no new trigger needed. Dash rendering activates when state.speed > HIGH_THRESH.
+CPU-side control values (`motionEnergy`, `motionCentroidX/Y`) are sampled every frame (every other frame on Pi) from a `readToPixels()` snapshot diff of the accumulation buffer, throttled and re-snapshotted every 8 samples to survive 8-bit rounding. `ofApp::update()` uses `motionEnergy` to: bias the crosshair attractor, switch `MotionExtraction`'s output mode (LUMA_GLOW / CHROMA_PRESERVE / SIGNED_FIELD) based on energy thresholds, and ramp the fullscreen motion-overlay alpha on motion onset.
 
-RD feed/kill rate perturbation on CORNER_NEAR — when CORNER_NEAR fires, briefly push feedRate up by 0.012 for 3 seconds, creating a visible RD reaction surge that slowly settles. Implemented in ofApp::onTrigger().
+10 — EXPANSION DIRECTOR
 
-10 — ofApp — FULL WIRING
+A periodic finite-state sequence (`IDLE → TRAVEL_OUT → HOLD → TRAVEL_BACK → IDLE`) that sends the crosshair to a corner and holds one quadrant essentially fullscreen for a while, then returns. Auto-fires every 120–300s in IDLE, or can be fired manually (`E` = random quadrant, `F1`–`F4` = specific quadrant). Travel duration paces itself off the crosshair's last known speed, clamped to 6–20s; hold duration is randomized 60–90s. UI elements (crosshair, HUD) fade out over the last 10% of travel-out and fade back in over the first 40% of travel-back, via `getUIFadeAlpha()`. `ofApp` wires state transitions to `TriggerBus::clearAll()` (on entering/leaving a sequence) and `QuadrantManager::beginContraction()` (on HOLD → TRAVEL_BACK).
 
-10.1 ofApp.h
+11 — DEBUG MODE
 
-cpp#pragma once
-#include "ofMain.h"
-#include "CrosshairSystem.h"
-#include "TriggerBus.h"
-#include "QuadrantManager.h"
-#include "VideoSystem.h"
-#include "ShaderLibrary.h"
-#include "ReactionDiffusion.h"
-#include "LFOBank.h"
-#include "GridState.h"
+Toggled with `D`. Fullscreen single-shader preview with a live parameter panel: cycle through every shader in the library, adjust shader-specific float parameters (coarse/fine step), and simulate any of the six `TriggerBus` events on demand without needing the crosshair to actually produce them. Owns its own per-shader parameter storage so values persist across shader switches, plus a private ping-pong FBO pair for previewing `temporal_trails` in isolation (the only place that shader currently runs, since it's excluded from the live quadrant pool).
 
-class ofApp : public ofBaseApp {
-public:
-void setup();
-void update();
-void draw();
-void keyPressed(int key);
+12 — HUD + NATURE COPY
 
-private:
-ShaderLibrary shaders;
-VideoSystem video;
-LFOBank lfo;
-ReactionDiffusion rd;
-GridState grid;
-CrosshairSystem crosshair;
-TriggerBus triggerBus;
-QuadrantManager quadrants;
+`HudManager` runs a rotating two-slot system (same FADE_IN/ACTIVE/FADE_OUT pattern as quadrant shader slots) that cycles a subset of `hud_elements` widgets (Contours, HexGrid, NodeNetwork, Reticles, FlowField) on screen, while a `ScannerWidget`, two `GaugeWidget`s (motion energy, dwell), and four `DataCardWidget`s (one per quadrant) stay always-visible. `NatureCopy.h` classifies the current video's filename (keyword match against six categories — HYDRO, TERRA, FLORAL, IGNIS, FAUNA, AETHER, with a NATURE fallback) and supplies matching card titles/gauge labels/reticle labels, swapped in via `HudManager::onVideoFileChanged()` whenever `VideoSystem` advances to a new file. The whole HUD fades with `ExpansionDirector`'s UI alpha and can be toggled with `H`.
 
-    float steeringBrightness = 0.5f;
-    float rdFeedBump = 0.f;   // additional feed rate from CORNER_NEAR trigger
+13 — ofApp WIRING
 
-};
+13.1 Members
 
-10.2 ofApp.cpp — setup()
+```cpp
+ShaderLibrary    shaders;
+VideoSystem      video;
+LFOBank          lfo;
+GridState        grid;
+CrosshairSystem  crosshair;
+TriggerBus       triggerBus;
+QuadrantManager  quadrants;
+MotionExtraction motionEx;
+ExpansionDirector expansionDirector;
+DebugMode        debug;
+HudManager       hud;
+```
 
-cppvoid ofApp::setup() {
-ofSetFrameRate(24);
-ofSetVerticalSync(true);
-ofBackground(13, 13, 13);
-ofHideCursor();
+13.2 setup()
 
-    shaders.setup();
-    video.setup("/home/pi/blueprint/media");
-    lfo.setup();
-    rd.setup();
-    grid.setup();
-    crosshair.setup();
-    triggerBus.setup();
-    quadrants.setup(&shaders);
+Loads shaders, opens the video player, sets up every subsystem, wires three `TriggerBus` listeners (→ QuadrantManager, → CrosshairSystem bloom, and implicitly → DebugMode's own trigger simulation), and hands HudManager references to the systems it visualizes.
 
-    // Wire TriggerBus → QuadrantManager
-    triggerBus.addListener([this](const TriggerEvent& e) {
-        quadrants.onTrigger(e);
-    });
+13.3 update() — order matters
 
-    // Wire TriggerBus → CrosshairSystem (bloom)
-    triggerBus.addListener([this](const TriggerEvent& e) {
-        if (e.id == TriggerID::VELOCITY_HIGH && e.active)
-            crosshair.triggerBloom(24.f, 0.4f);
-        if (e.id == TriggerID::DWELL)
-            crosshair.setBloomFill(e.active ? 1.f : 0.f, 2.0f);
-    });
+1. `video.update()`; on file change, reset every quadrant's erosion FBOs and notify the HUD.
+2. `lfo.update(dt)`.
+3. If a new video frame arrived: sample crosshair color, sample scene brightness, run `MotionExtraction::update()`, feed the motion centroid to the crosshair attractor, and switch motion output mode / ramp overlay alpha based on motion energy.
+4. `crosshair.update(dt, lfo)`.
+5. `expansionDirector.update(...)`, then react to its state transitions (hand crosshair control to/from the director, clear triggers, begin quadrant contraction).
+6. `triggerBus.update(...)` — suppressed while an expansion sequence is active.
+7. `grid.update(...)` + `grid.uploadTexture()`.
+8. `quadrants.update(dt, state, lfo, gridTex, motionTex, motionDelayedTex)`.
+9. `hud.update(dt)`.
 
-    // Wire TriggerBus → RD feed bump
-    triggerBus.addListener([this](const TriggerEvent& e) {
-        if (e.id == TriggerID::CORNER_NEAR && e.active)
-            rdFeedBump = 0.012f;
-        if (e.id == TriggerID::CORNER_NEAR && !e.active)
-            rdFeedBump = 0.f;
-    });
+13.4 draw()
 
-}
+`debug.draw()` short-circuits everything else when debug mode is active. Otherwise: background clear → motion overlay (behind, if toggled) → quadrants (erosion + effects + contraction crossfade) → motion overlay (on top, default) → HUD (if shown) → crosshair (always last, on top of everything).
 
-10.3 ofApp.cpp — update()
+14 — KEY MAP
 
-cppvoid ofApp::update() {
-float dt = ofGetLastFrameTime();
+| Key | Action |
+|---|---|
+| 1–5 | Set crosshair preset (1=DRIFT, 2=SCAN, 3=HUNT, 4=NERVOUS, 5=ORBIT) |
+| TAB | Cycle to next crosshair preset |
+| N | Load next video file |
+| F | Toggle fullscreen |
+| [ / ] | Decrease / increase motion overlay alpha |
+| O | Toggle motion overlay behind vs. on top of quadrants |
+| M | Cycle motion extraction output mode |
+| H | Toggle HUD visibility |
+| D | Toggle debug mode |
+| E | Trigger an expansion sequence to a random quadrant |
+| F1–F4 | Trigger an expansion sequence to a specific quadrant |
+| ESC | Quit |
 
-    // 1. Source systems
-    video.update();
-    lfo.update(dt);
-
-    // 2. Sample video CPU-side (no GPU stall — GStreamer keeps CPU buffer)
-    if (video.isFrameNew()) {
-        crosshair.sampleColor(video.getPixels(), crosshair.getState().cx,
-                                                  crosshair.getState().cy);
-        steeringBrightness = sampleBrightness(video.getPixels());
-    }
-
-    // 3. Crosshair motion
-    crosshair.update(dt, steeringBrightness);
-
-    // 4. Triggers
-    triggerBus.update(crosshair.getState(), dt);
-
-    // 5. RD — feed/kill driven by LFOs + trigger bumps
-    float feed = 0.055f + ofMap(lfo.get(LFO_RD_FEED), -1, 1, -0.008f, 0.008f) + rdFeedBump;
-    float kill = 0.062f + ofMap(lfo.get(LFO_RD_KILL), -1, 1, -0.006f, 0.006f);
-    rd.update(feed, kill);
-
-    // 6. Grid
-    float decayRate = ofMap(lfo.get(LFO_GRID_DECAY), -1, 1, 0.96f, 0.995f);
-    grid.update(crosshair.getState().cx, crosshair.getState().cy, dt, decayRate);
-    grid.uploadTexture();
-
-    // 7. Quadrants — pass LFO values for per-parameter modulation
-    quadrants.update(dt, crosshair.getState(), lfo, rd.getTexture(), grid.getTexture());
-
-}
-
-10.4 ofApp.cpp — draw()
-
-cppvoid ofApp::draw() {
-ofBackground(13, 13, 13);
-// Quadrants draw their erosion FBOs + effect shaders internally
-quadrants.draw(video.getTexture(), video.getVideoSize());
-// Crosshair always on top
-crosshair.draw();
-}
-
-10.5 Key map
-
-KeyAction1–5Set crosshair preset (1=DRIFT, 2=SCAN, 3=HUNT, 4=NERVOUS, 5=ORBIT)TABCycle to next crosshair presetRRe-seed reaction-diffusion (reset RD FBOs to initial state)NLoad next video fileFToggle fullscreenESCQuit
-
-11 — QUADRANT MANAGER — LFO + RD integration
-
-QuadrantManager::update() now receives the LFOBank, RD texture, and grid texture and distributes LFO values to each quadrant's effect uniforms each frame. This replaces the static uniform values from v1.0.
-
-cppvoid QuadrantManager::update(float dt, const CrosshairState& state,
-const LFOBank& lfo,
-ofTexture& rdTex, ofTexture& gridTex) {
-// Distribute LFO values to quadrant effect parameters
-quads[0].setThreshold(ofMap(lfo.get(LFO_THRESH_Q0), -1, 1, 0.3f, 0.7f));
-quads[1].setThreshold(ofMap(lfo.get(LFO_THRESH_Q1), -1, 1, 0.3f, 0.7f));
-quads[2].setShift(ofMap(lfo.get(LFO_SHIFT_Q2), -1, 1, 0.002f, 0.008f));
-
-    // Tint hue rotation via LFO — convert hue offset to RGB tint
-    float hue = ofMap(lfo.get(LFO_TINT_HUE), -1, 1, 0.f, 360.f);
-    ofColor tintColor = ofColor::fromHsb(hue, 200, 255);
-    quads[2].setTint({ tintColor.r/255.f, tintColor.g/255.f, tintColor.b/255.f });
-
-    // Pass RD and grid textures to quadrants for use in shaders
-    for (auto& q : quads) {
-        q.setRDTexture(rdTex);
-        q.setGridTexture(gridTex);
-        q.update(dt, state.cx, state.cy);
-    }
-
-}
-
-12 — PERFORMANCE RULES
-
-All rules from v1.0 remain in force. Additions and amendments for v2.0:
-
-RuleRationaledraw() contains GL calls onlyUnchanged.One ofVideoPlayer at all timesUnchanged.Shaders compiled at startup onlyUnchanged.glScissor for quadrant clipUnchanged.Quadrant shaders: single-texture reads onlyMulti-tap reserved for RD (160×90) and erosion (640×360) only.FBO switches: max 6 per frameEach switch costs ~0.5–1ms on VideoCore IV. Do not add FBOs without cutting elsewhere.getPixels() only when isFrameNew()GStreamer buffer is valid and no-cost, but only call when new frame is available.RD runs every frameAt 1–2ms per pass this is affordable. Do not skip frames — the simulation loses continuity.Grid upload: once per frame in update()loadData() on a 24×18 texture is ~0.1ms. No batching needed.ofSwap(fbo_read, fbo_write) not pointer swapUse oF's swap utility to avoid reallocating FBO objects.
-
-12.1 Benchmark checklist
-
-Run each scenario on Pi 3B. Record fps. All must sustain ≥ 24fps for 60 seconds.
-
-Baseline: four quadrants, passthrough, no new systems → expect ≥ 30fps
-Add LFOBank + GridState: should be negligible change
-Add ReactionDiffusion ping-pong: expect ~2ms addition, still ≥ 24fps
-Add four erosion FBOs: expect ~5–6ms addition — this is the critical test
-Full system, all effects active, all LFO modulation live → must sustain 24fps
-Full system + VELOCITY_HIGH trigger active (most expensive crosshair state) → must sustain 24fps
-Full system running 5 minutes continuous → no memory growth, no fps degradation
-
-12.2 Fallback strategy if FBO budget is exceeded
-
-If four erosion FBOs + two RD FBOs cannot sustain 24fps:
-
-First cut: reduce erosion FBOs from 640×360 to 320×180 — halves VRAM cost and switch overhead
-Second cut: share one erosion FBO across all four quadrants (single full-canvas residue layer instead of per-quadrant)
-Third cut: run RD every other frame (step the simulation at 12fps, render at 24fps) — RD continuity is maintained, cost halved
-
-Do not cut the RD system entirely — it is the primary procedural complexity driver.
-
-13 — OPEN QUESTIONS FOR AGENT (resolve during build)
-
-#QuestionDecisionQ1Does ofSetLineWidth() accept float values on Pi 3B VideoCore IV, or is it clamped to integers?If clamped: drive all crosshair thickness through ofMesh quad T value only.Q2Is ofSetLineStipple() available in oF 0.12.x on Pi?If yes: use for signal-break dashes. If no: implement as ofMesh short quad segments.Q3Cheapest RD readback method — 1×1 blit FBO, sparse glReadPixels on 160×90 FBO, or CPU pass on raw pixel data?Pick whichever avoids full pipeline stall. Document measured cost.Q4Does ofVideoPlayer::getPixels() return a valid buffer before the first isFrameNew() fires?If not: guard all getPixels() calls behind a hasFirstFrame bool.Q5Does ofSwap(ofFbo, ofFbo) work correctly in oF 0.12.x or must we use pointer/reference swap manually?Document which pattern is used.
-
-— QUADRANT CROSSHAIR / IMPLEMENTATION HANDOFF v2.0 / SUPERSEDES v1.0 — BUILD FROM THIS DOCUMENT —
+Debug mode has its own key layer (shader navigation, parameter adjustment, trigger simulation) — see `docs/keybindings.md`.

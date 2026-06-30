@@ -358,32 +358,35 @@ void HudManager::update(float dt) {
 
 // ── Draw ──────────────────────────────────────────────────────────────────────
 
-void HudManager::draw() {
-    // Always-on elements
-    scanner.draw();
-    if (showBioGauge)   motionGauge.draw();
-    if (showDwellGauge) dwellGauge.draw();
-    for (int q = 0; q < 4; q++)
-        quadCards[q].draw();
+void HudManager::draw(float expansionFade) {
+    if (expansionFade <= 0.01f) return;
 
-    // Rotating slots — at most 2 non-card, non-scanner elements visible at once
+    // Always-on elements — theme alpha scaled by expansionFade
+    scanner.setTheme(themedAt(0.45f * expansionFade)); scanner.draw();
+    if (showBioGauge)   { motionGauge.setTheme(themedAt(0.55f * expansionFade)); motionGauge.draw(); }
+    if (showDwellGauge) { dwellGauge.setTheme(themedAt(0.55f * expansionFade));  dwellGauge.draw();  }
+    for (int q = 0; q < 4; q++) {
+        quadCards[q].setTheme(themedAt(0.55f * expansionFade));
+        quadCards[q].draw();
+    }
+
+    // Rotating slots — drawnAlpha scaled by expansionFade
     for (auto& slot : slots)
-        drawElement(slot.elemIdx, slot.drawnAlpha);
+        drawElement(slot.elemIdx, slot.drawnAlpha * expansionFade);
 
     ofEnableAlphaBlending();
 
-    // Bottom-center slot name labels — fade with their slot alpha
+    // Bottom-center slot name labels — fade with their slot alpha and expansionFade
     static const char* elemNames[] = {
         "CONTOURS", "HEX GRID", "NODE NETWORK", "RETICLES", "FLOW FIELD"
     };
-    static const float charW = 8.f;  // ofDrawBitmapString char width in px
+    static const float charW = 8.f;
 
-    // Collect active (non-silence) names + their alphas
     struct NameAlpha { std::string name; float alpha; };
     std::vector<NameAlpha> labels;
     for (auto& slot : slots) {
         if (!slot.isIdle() && slot.elemIdx >= 0 && slot.drawnAlpha > 0.001f)
-            labels.push_back({ elemNames[slot.elemIdx], slot.drawnAlpha });
+            labels.push_back({ elemNames[slot.elemIdx], slot.drawnAlpha * expansionFade });
     }
 
     if (!labels.empty()) {

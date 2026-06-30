@@ -190,6 +190,16 @@ void QuadrantManager::update(float dt, const CrosshairState& state,
         }
     }
 
+    // Contraction crossfade timer
+    if (contracting) {
+        contractionT -= dt / contractionDuration;
+        if (contractionT <= 0.f) {
+            contractionT     = 0.f;
+            contracting      = false;
+            expandedQuadrant = -1;
+        }
+    }
+
     if (velHighActive) return;
 
     for (int i = 0; i < 4; i++) {
@@ -230,9 +240,26 @@ void QuadrantManager::update(float dt, const CrosshairState& state,
     }
 }
 
+void QuadrantManager::beginContraction(int quadrantID) {
+    contracting      = true;
+    contractionT     = 1.f;
+    expandedQuadrant = quadrantID;
+}
+
 void QuadrantManager::draw(ofTexture& videoTex, glm::vec2 videoSize) {
-    for (auto& q : quads)
-        q.draw(videoTex, videoSize);
+    for (auto& q : quads) {
+        if (contracting && q.id == expandedQuadrant) {
+            // Fullscreen version fades out (no scissor — full canvas draw)
+            ofEnableAlphaBlending();
+            ofSetColor(255, 255, 255, (int)(contractionT * 255));
+            videoTex.draw(0, 0, ofGetWidth(), ofGetHeight());
+            ofDisableAlphaBlending();
+            // Quarter-size version grows in underneath (scissored to crosshair region)
+            q.draw(videoTex, videoSize);
+        } else {
+            q.draw(videoTex, videoSize);
+        }
+    }
 }
 
 void QuadrantManager::drawHUD() {

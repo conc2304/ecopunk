@@ -91,7 +91,7 @@ void ReticleWidget::draw() {
     if (theme.additive) ofEnableBlendMode(OF_BLENDMODE_ADD); else ofEnableAlphaBlending();
     frame.draw(bounds, theme.colors, theme.frame, time);
     ofNoFill();
-    ofSetLineWidth(std::max(1.0f, su(bounds, 1.0f)));
+    ofSetLineWidth(std::max(1.0f, su(bounds, 1.0f) * 0.8f));
 
     for (const auto& t : targets) {
         ofVec2f p;
@@ -122,7 +122,7 @@ void ReticleWidget::draw() {
             p = pointInBounds(bounds, t.p.x, t.p.y);
         }
 
-        float s = bounds.minDim() * t.size * breathe(time + t.phase, 0.35f, 0.82f, 1.16f) * scaleFactor;
+        float s = bounds.minDim() * t.size * breathe(time + t.phase, 0.35f, 0.82f, 1.16f) * scaleFactor * 0.2f;
 
         ofSetColor(scaledAlpha(theme.colors.primary, alphaScale * 0.72f));
         ofDrawLine(p.x - s, p.y - s, p.x - s * 0.45f, p.y - s);

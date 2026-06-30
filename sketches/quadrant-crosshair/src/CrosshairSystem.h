@@ -20,14 +20,17 @@ struct CrosshairState {
 class CrosshairSystem {
 public:
 	static constexpr float HIGH_THRESH = 1.5f;
-	static constexpr int GHOST_LAG = 72; // 3 seconds at 24fps
-	static constexpr int HISTORY_SIZE = 96; // 4 seconds at 24fps
 
 	void setup();
 	void update(float dt, const LFOBank & lfo);
-	void draw();
+	void draw(float uiFadeAlpha = 1.f);
 	void setPreset(int index);
 	void nextPreset();
+
+	// Expansion control — called by ofApp each frame during an active sequence
+	void setExpansionControl(bool active, glm::vec2 pos);
+	// Called by ofApp when ExpansionDirector transitions TRAVEL_BACK → IDLE
+	void beginResume();
 
 	void sampleColor(const ofPixels & px, float cx, float cy);
 	void triggerBloom(float targetRadius, float durationSecs);
@@ -36,8 +39,6 @@ public:
 
 	CrosshairState getState() const { return state; }
 	int getCurrentPreset() const { return presetIndex; }
-
-	bool showGhost = true;
 
 private:
 	std::vector<CrosshairPreset> presets;
@@ -62,11 +63,6 @@ private:
 	// Line metrics
 	float lineWidth = 10.f;
 
-	// Ghost trail
-	std::array<glm::vec2, HISTORY_SIZE> posHistory;
-	int historyHead = 0;
-	glm::vec2 ghostPos = { 640.f, 360.f };
-
 	// Halo
 	glm::vec2 haloPos = { 640.f, 360.f };
 
@@ -76,7 +72,13 @@ private:
 	float bloomFill = 0.f;
 
 	void drawGradientArms(float cx, float cy, float opacH, float opacV);
-	void drawDashArms(float cx, float cy, float speed);
+	void drawDashArms(float cx, float cy, float speed, float uiFadeAlpha = 1.f);
+
+	// Expansion state
+	bool      expansionActive = false;
+	glm::vec2 expansionPos;
+	float     resumeLerp      = 0.f;
+	bool      resuming        = false;
 	void addArmQuad(ofMesh & mesh, glm::vec2 a, glm::vec2 b,
 		float T, ofColor ca, ofColor cb);
 };

@@ -9,6 +9,18 @@ void TriggerBus::setup() {
     cooldowns[TriggerID::DWELL]           = 0.f;
 }
 
+void TriggerBus::clearAll() {
+    if (velHighActive) { velHighActive = false; fire({ TriggerID::VELOCITY_HIGH,   false, 0.f, -1 }); }
+    if (edgeActive)    { edgeActive    = false; fire({ TriggerID::EDGE_PROXIMITY,  false, 0.f, -1 }); }
+    if (velLowActive)  { velLowActive  = false; }
+    if (centerActive)  { centerActive  = false; fire({ TriggerID::QUADRANT_CENTER, false, 0.f, -1 }); }
+    if (cornerActive)  { cornerActive  = false; fire({ TriggerID::CORNER_NEAR,     false, 0.f, -1 }); }
+    if (dwellActive)   { dwellActive   = false; fire({ TriggerID::DWELL,           false, 0.f, -1 }); }
+    velLowAccum    = 0.f;
+    dwellAccum     = 0.f;
+    dwellTotalMove = 0.f;
+}
+
 void TriggerBus::update(const CrosshairState& state, float dt) {
     for (auto& kv : cooldowns)
         kv.second = std::max(0.f, kv.second - dt);

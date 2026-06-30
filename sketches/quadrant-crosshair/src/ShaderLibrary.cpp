@@ -12,9 +12,9 @@ void ShaderLibrary::setup() {
     load("rd_step",             "shaders/rd_step.glsl");
     load("erosion",             "shaders/erosion.glsl");
     load("motion_effect",       "shaders/motion_effect.glsl");
+    load("ascii_solarpunk",     "shaders/ascii_threshold_solarpunk.glsl");
     // nature pack
     load("bioluminescence",     "of_nature_shader_pack_glsl/bioluminescence.glsl");
-    load("caustics",            "of_nature_shader_pack_glsl/caustics.glsl");
     load("chromatic_aberration","of_nature_shader_pack_glsl/chromatic_aberration.glsl");
     load("edge_glow",           "of_nature_shader_pack_glsl/edge_glow.glsl");
     load("ink_outlines",        "of_nature_shader_pack_glsl/ink_outlines.glsl");

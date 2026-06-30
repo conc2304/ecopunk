@@ -36,6 +36,7 @@ public:
     bool pushShader(const std::string& name, float fadeSecs = 1.2f, float dwellSecs = 6.f);
     void clearShaders(float fadeSecs = 1.2f);
     void resetErosion();
+    void resize(int w, int h);
     void drawDebugHUD(const std::string& phaseStr) const;
 
     bool allSlotsIdle() const {
@@ -96,7 +97,7 @@ private:
     float targetScaleMin  = 0.8f;
     float targetScaleMax  = 1.0f;
 
-    float     lastCx = 640.f, lastCy = 360.f;
+    float     lastCx = 0.f, lastCy = 0.f;
     glm::vec3 tint      = { 1.f, 0.78f, 0.25f };
     float     threshold      = 0.5f;
     float     shift          = 0.004f;

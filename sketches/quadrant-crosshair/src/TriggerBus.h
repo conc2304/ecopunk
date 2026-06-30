@@ -27,6 +27,9 @@ public:
     void setup();
     void update(const CrosshairState& state, float dt);
     void addListener(TriggerCallback cb);
+    // Fire deactivation events for all active triggers and reset state.
+    // Call when entering/leaving an expansion sequence.
+    void clearAll();
 
 private:
     void fire(TriggerEvent e);

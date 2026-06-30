@@ -35,6 +35,7 @@ void ofApp::setup() {
     });
 
     hud.setup(triggerBus, crosshair, lfo, quadrants, motionEx);
+    expansionDirector.setup();
 }
 
 void ofApp::update() {
@@ -94,43 +95,86 @@ void ofApp::update() {
     // 3. Crosshair motion
     crosshair.update(dt, lfo);
 
-    // 4. Triggers
-    triggerBus.update(crosshair.getState(), dt);
+    // 4. Expansion director — must run after crosshair so it reads current position
+    {
+        static ExpansionState prevExpState = ExpansionState::IDLE;
+        expansionDirector.update(dt,
+            { crosshair.getState().cx, crosshair.getState().cy },
+            crosshair.getState().speed);
+        ExpansionState curExpState = expansionDirector.getState();
 
-    // 5. Grid
+        // Hand crosshair position control to director while sequence is active
+        if (expansionDirector.isActive()) {
+            crosshair.setExpansionControl(true, expansionDirector.getCrosshairTarget());
+        } else {
+            crosshair.setExpansionControl(false, {});
+        }
+
+        // IDLE → TRAVEL_OUT: clear stale trigger state so QuadrantManager is not left dirty
+        if (prevExpState == ExpansionState::IDLE && curExpState == ExpansionState::TRAVEL_OUT)
+            triggerBus.clearAll();
+
+        // HOLD → TRAVEL_BACK: begin independent quadrant contraction crossfade
+        if (prevExpState == ExpansionState::HOLD && curExpState == ExpansionState::TRAVEL_BACK)
+            quadrants.beginContraction(expansionDirector.getTargetQuadrant());
+
+        // TRAVEL_BACK → IDLE: hand crosshair back to noise via 2-second blend
+        if (prevExpState == ExpansionState::TRAVEL_BACK && curExpState == ExpansionState::IDLE) {
+            crosshair.beginResume();
+            triggerBus.clearAll();
+        }
+
+        prevExpState = curExpState;
+    }
+
+    // 5. Triggers — suppressed while expansion holds the crosshair
+    if (!expansionDirector.isActive())
+        triggerBus.update(crosshair.getState(), dt);
+
+    // 6. Grid
     float decayRate = ofMap(lfo.get(LFO_GRID_DECAY), -1, 1, 0.96f, 0.995f);
     CrosshairState cs = crosshair.getState();
     grid.update(cs.cx, cs.cy, dt, decayRate);
     grid.uploadTexture();
 
-    // 6. Quadrants
+    // 7. Quadrants
     quadrants.setVideoBrightness(steeringBrightness);
     quadrants.update(dt, cs, lfo, grid.getTexture(),
                      motionEx.getMotionTexture(), motionEx.getDelayedMotionTexture());
 
-    // 7. HUD
+    // 8. HUD
     hud.update(dt);
 }
 
 void ofApp::draw() {
     if (debug.active) { debug.draw(); return; }
 
+    float uiAlpha = expansionDirector.getUIFadeAlpha();
+
     ofBackground(13, 13, 13);
 
-    // Layer 1: quadrants (erosion + per-quadrant effects including motion_effect)
-    quadrants.draw(video.getTexture(), video.getVideoSize());
+    auto drawMotionOverlay = [&]() {
+        if (motionOverlayAlpha > 0) {
+            ofEnableAlphaBlending();
+            ofSetColor(255, 255, 255, (int)(motionOverlayAlpha * uiAlpha));
+            motionEx.getMotionTexture().draw(0, 0, ofGetWidth(), ofGetHeight());
+            ofDisableAlphaBlending();
+        }
+    };
 
-    // Layer 2: motion extraction atmospheric overlay (~22% opacity, adjustable)
-    ofEnableAlphaBlending();
-    ofSetColor(255, 255, 255, motionOverlayAlpha);
-    motionEx.getMotionTexture().draw(0, 0, ofGetWidth(), ofGetHeight());
-    ofDisableAlphaBlending();
+    if (motionOverlayBehind) drawMotionOverlay();
 
-    // Layer 3: HUD (toggle with H) — drawn before crosshair so crosshair stays on top
-    if (showHUD) hud.draw();
+    // Layer 1: quadrants (erosion + per-quadrant effects, contraction crossfade)
+    quadrants.draw(video.getTexture(), glm::vec2(ofGetWidth(), ofGetHeight()));
 
-    // Layer 4: crosshair — always on top
-    crosshair.draw();
+    // Layer 2: motion extraction atmospheric overlay — fades with UI during expansion
+    if (!motionOverlayBehind) drawMotionOverlay();
+
+    // Layer 3: HUD — fades with expansion
+    if (showHUD) hud.draw(uiAlpha);
+
+    // Layer 4: crosshair — fades with expansion
+    crosshair.draw(uiAlpha);
 }
 
 void ofApp::keyPressed(int key) {
@@ -143,9 +187,26 @@ void ofApp::keyPressed(int key) {
     if (key == 'f' || key == 'F') ofToggleFullscreen();
     if (key == '[') motionOverlayAlpha = ofClamp(motionOverlayAlpha - 10, 0, 255);
     if (key == ']') motionOverlayAlpha = ofClamp(motionOverlayAlpha + 10, 0, 255);
+    if (key == 'o' || key == 'O') motionOverlayBehind = !motionOverlayBehind;
     if (key == 'm' || key == 'M') motionEx.setOutputMode((motionEx.getOutputMode() + 1) % 3);
     if (key == 'h' || key == 'H') showHUD = !showHUD;
     if (key == OF_KEY_ESC)        ofExit();
+
+    // Expansion: E = random quadrant, F1–F4 = specific quadrant (for testing)
+    if (key == 'e' || key == 'E')
+        expansionDirector.trigger({ crosshair.getState().cx, crosshair.getState().cy });
+    if (key == OF_KEY_F1)
+        expansionDirector.triggerQuadrant(0, { crosshair.getState().cx, crosshair.getState().cy });
+    if (key == OF_KEY_F2)
+        expansionDirector.triggerQuadrant(1, { crosshair.getState().cx, crosshair.getState().cy });
+    if (key == OF_KEY_F3)
+        expansionDirector.triggerQuadrant(2, { crosshair.getState().cx, crosshair.getState().cy });
+    if (key == OF_KEY_F4)
+        expansionDirector.triggerQuadrant(3, { crosshair.getState().cx, crosshair.getState().cy });
+}
+
+void ofApp::windowResized(int w, int h) {
+    quadrants.resize(w, h);
 }
 
 float ofApp::sampleBrightness(const ofPixels& px) {

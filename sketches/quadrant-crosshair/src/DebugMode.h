@@ -61,12 +61,6 @@ private:
     float pBioColorG         = 1.0f;
     float pBioColorB         = 0.75f;
 
-    float pCausticsScale     = 0.03f;
-    float pCausticsIntensity = 0.5f;
-    float pCausticsColorR    = 0.65f;
-    float pCausticsColorG    = 0.95f;
-    float pCausticsColorB    = 1.0f;
-
     float pChromAmount       = 1.5f;
     float pChromRadial       = 0.5f;
 
@@ -96,6 +90,19 @@ private:
     float pWaterAmplitude    = 6.0f;
     float pWaterFrequency    = 0.02f;
     float pWaterSpeed        = 1.0f;
+
+    // ascii_solarpunk params
+    float pAsciiCellSize        = 12.0f;
+    float pAsciiThreshMin       = 0.55f;
+    float pAsciiThreshMax       = 1.0f;
+    float pAsciiThreshMode      = 1.0f;  // 0=none 1=aboveMin 2=belowMax 3=between
+    float pAsciiOpacity         = 1.0f;
+    float pAsciiContrast        = 1.15f;
+    float pAsciiBias            = 0.0f;
+    float pAsciiSoftness        = 0.03f;
+    float pAsciiColorMode       = 0.0f;  // 0=sampledSourceColor 1=blackAndWhite
+    float pAsciiInvertMono      = 0.0f;  // 0=white glyphs 1=black glyphs
+    float pAsciiBackgroundMode  = 0.0f;  // 0=originalImage 1=transparent
 
     ofFbo trailPrevFbo;   // temporal_trails: previous accumulated frame
     ofFbo trailOutFbo;    // temporal_trails: current output (ping-pong target)

@@ -19,7 +19,11 @@ public:
     void drawHUD();
     void setVideoBrightness(float b) { videoBrightness = b; }
     void resetErosion() { for (auto& q : quads) q.resetErosion(); }
+    void resize(int w, int h) { for (auto& q : quads) q.resize(w, h); }
     void onTrigger(const TriggerEvent& e);
+
+    // Expansion contraction crossfade — called by ofApp when TRAVEL_BACK begins
+    void beginContraction(int quadrantID);
 
     struct QuadrantTelemetry {
         std::string phase;        // "ONLINE", "QUIET PHASE", "STANDBY"
@@ -34,8 +38,9 @@ private:
     std::vector<std::string> shaderPool = {
         "desaturate", "invert", "recolor", "threshold",
         "dither", "solarize", "scanlines", "channelshift", "motion_effect",
+        "ascii_solarpunk",
         // nature pack (temporal_trails excluded — needs per-quadrant FBO)
-        "bioluminescence", "caustics", "chromatic_aberration", "edge_glow",
+        "bioluminescence", "chromatic_aberration", "edge_glow",
         "ink_outlines", "pixel_drift", "pixel_sorting", "water_refraction"
     };
 
@@ -54,7 +59,13 @@ private:
     std::array<CycleState, 4> cycleStates;
 
     bool  velHighActive    = false;
-    float videoBrightness  = 0.5f;  // updated each frame from ofApp
+    float videoBrightness  = 0.5f;
+
+    // Expansion contraction crossfade state
+    float contractionT        = 0.f;
+    float contractionDuration = 3.f;
+    bool  contracting         = false;
+    int   expandedQuadrant    = -1;
 
     struct PendingEffect {
         float        delay;

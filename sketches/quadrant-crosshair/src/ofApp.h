@@ -10,6 +10,7 @@
 #include "GridState.h"
 #include "MotionExtraction.h"
 #include "HudManager.h"
+#include "ExpansionDirector.h"
 
 class ofApp : public ofBaseApp {
 public:
@@ -17,6 +18,7 @@ public:
     void update();
     void draw();
     void keyPressed(int key);
+    void windowResized(int w, int h);
 
 private:
     ShaderLibrary   shaders;
@@ -28,8 +30,11 @@ private:
     QuadrantManager quadrants;
     MotionExtraction motionEx;
 
+    ExpansionDirector expansionDirector;
+
     float steeringBrightness  = 0.5f;
     int   motionOverlayAlpha  = 55;
+    bool  motionOverlayBehind = false;  // 'o' toggles: behind quadrants vs on top
     bool  showHUD             = true;
     DebugMode debug;
 

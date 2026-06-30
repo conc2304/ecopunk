@@ -14,7 +14,7 @@ public:
     void setup(TriggerBus&, CrosshairSystem&, LFOBank&,
                QuadrantManager&, MotionExtraction&);
     void update(float dt);
-    void draw();
+    void draw(float expansionFade = 1.f);
 
     // ── In-code dials ──────────────────────────────────────────────────
     bool showBioGauge   = false;   // motion energy ring (top-center left)

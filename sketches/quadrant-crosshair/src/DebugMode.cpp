@@ -5,8 +5,9 @@
 const std::vector<std::string> DebugMode::SHADER_NAMES = {
     "desaturate", "invert", "recolor", "threshold",
     "dither", "solarize", "scanlines", "channelshift", "motion_effect",
+    "ascii_solarpunk",
     // nature pack
-    "bioluminescence", "caustics", "chromatic_aberration", "edge_glow",
+    "bioluminescence", "chromatic_aberration", "edge_glow",
     "ink_outlines", "pixel_drift", "pixel_sorting", "temporal_trails",
     "water_refraction"
 };
@@ -100,19 +101,25 @@ std::vector<DebugParam> DebugMode::buildParams() {
             p.push_back({ "extractGamma",   &pMotionGamma,       0.1f,   0.2f,  4.0f   });
             p.push_back({ "decay",          &pMotionDecay,       0.005f, 0.85f, 0.999f });
             break;
-        case 9: // bioluminescence
+        case 9: // ascii_solarpunk
+            p.push_back({ "cellSize",        &pAsciiCellSize,       1.0f,  4.0f, 32.0f  });
+            p.push_back({ "thresholdMin",    &pAsciiThreshMin,      0.02f, 0.0f,  1.0f  });
+            p.push_back({ "thresholdMax",    &pAsciiThreshMax,      0.02f, 0.0f,  1.0f  });
+            p.push_back({ "thresholdMode",   &pAsciiThreshMode,     1.0f,  0.0f,  3.0f  }); // 0=none 1=above 2=below 3=between
+            p.push_back({ "opacity",         &pAsciiOpacity,        0.05f, 0.0f,  1.0f  });
+            p.push_back({ "contrast",        &pAsciiContrast,       0.05f, 0.1f,  4.0f  });
+            p.push_back({ "bias",            &pAsciiBias,           0.02f,-0.5f,  0.5f  });
+            p.push_back({ "softness",        &pAsciiSoftness,       0.005f,0.01f, 0.15f });
+            p.push_back({ "colorMode",       &pAsciiColorMode,      1.0f,  0.0f,  1.0f  }); // 0=sampled 1=B&W
+            p.push_back({ "invertMono",      &pAsciiInvertMono,     1.0f,  0.0f,  1.0f  }); // 0=white  1=black
+            p.push_back({ "backgroundMode",  &pAsciiBackgroundMode, 1.0f,  0.0f,  1.0f  }); // 0=image  1=transparent
+            break;
+        case 10: // bioluminescence
             p.push_back({ "threshold",     &pBioThreshold,   0.05f, 0.05f, 0.8f  });
             p.push_back({ "intensity",     &pBioIntensity,   0.1f,  0.0f,  3.0f  });
             p.push_back({ "glowColor.r",   &pBioColorR,      0.05f, 0.0f,  1.0f  });
             p.push_back({ "glowColor.g",   &pBioColorG,      0.05f, 0.0f,  1.0f  });
             p.push_back({ "glowColor.b",   &pBioColorB,      0.05f, 0.0f,  1.0f  });
-            break;
-        case 10: // caustics
-            p.push_back({ "scale",         &pCausticsScale,     0.005f, 0.005f, 0.1f  });
-            p.push_back({ "intensity",     &pCausticsIntensity, 0.05f,  0.0f,   1.0f  });
-            p.push_back({ "causticColor.r",&pCausticsColorR,    0.05f,  0.0f,   1.0f  });
-            p.push_back({ "causticColor.g",&pCausticsColorG,    0.05f,  0.0f,   1.0f  });
-            p.push_back({ "causticColor.b",&pCausticsColorB,    0.05f,  0.0f,   1.0f  });
             break;
         case 11: // chromatic_aberration
             p.push_back({ "amount",        &pChromAmount,  0.1f,  0.0f,  6.0f  });
@@ -208,12 +215,6 @@ void DebugMode::drawShaderFullScreen() {
         sh.setUniform1f("intensity", pBioIntensity);
         sh.setUniform3f("glowColor", glm::vec3(pBioColorR, pBioColorG, pBioColorB));
     }
-    if (name == "caustics") {
-        sh.setUniform1f("time",         t);
-        sh.setUniform1f("scale",        pCausticsScale);
-        sh.setUniform1f("intensity",    pCausticsIntensity);
-        sh.setUniform3f("causticColor", glm::vec3(pCausticsColorR, pCausticsColorG, pCausticsColorB));
-    }
     if (name == "chromatic_aberration") {
         sh.setUniform1f("amount", pChromAmount);
         sh.setUniform1f("radial", pChromRadial);
@@ -245,6 +246,19 @@ void DebugMode::drawShaderFullScreen() {
         sh.setUniform1f("amplitude", pWaterAmplitude);
         sh.setUniform1f("frequency", pWaterFrequency);
         sh.setUniform1f("speed",     pWaterSpeed);
+    }
+    if (name == "ascii_solarpunk") {
+        sh.setUniform1f("cellSize",            pAsciiCellSize);
+        sh.setUniform1f("thresholdMin",        pAsciiThreshMin);
+        sh.setUniform1f("thresholdMax",        pAsciiThreshMax);
+        sh.setUniform1i("thresholdMode",       (int)pAsciiThreshMode);
+        sh.setUniform1f("opacity",             pAsciiOpacity);
+        sh.setUniform1f("contrast",            pAsciiContrast);
+        sh.setUniform1f("bias",                pAsciiBias);
+        sh.setUniform1f("softness",            pAsciiSoftness);
+        sh.setUniform1i("asciiColorMode",      (int)pAsciiColorMode);
+        sh.setUniform1i("asciiInvertMono",     (int)pAsciiInvertMono);
+        sh.setUniform1i("asciiBackgroundMode", (int)pAsciiBackgroundMode);
     }
 
     // temporal_trails needs its own ping-pong draw path
