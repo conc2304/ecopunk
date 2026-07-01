@@ -112,6 +112,11 @@ std::pair<float,float> QuadrantManager::chooseDitherParams() {
     return { arc, px };
 }
 
+void QuadrantManager::setVideoPixels(const ofPixels* px) {
+    currentVideoPixels = px;
+    for (auto& q : quads) q.setVideoPixels(px);
+}
+
 void QuadrantManager::kickRandomShader(int quadId) {
     if (shaderPool.empty()) return;
 
@@ -125,6 +130,8 @@ void QuadrantManager::kickRandomShader(int quadId) {
     if (chosen == "dither") {
         auto [arc, px] = chooseDitherParams();
         quads[quadId].setDitherParams(arc, px);
+    } else if (chosen == "ridgeline") {
+        quads[quadId].initRidgelineParams(currentVideoPixels);
     }
 }
 

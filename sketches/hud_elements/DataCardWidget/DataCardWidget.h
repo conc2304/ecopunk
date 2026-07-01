@@ -17,6 +17,8 @@ class DataCardWidget : public HudWidget {
 public:
     void setup() override;
     void setOptions(const DataCardOptions& next) { options = next; }
+    void setMeter(float m) { options.meter = ofClamp(m, 0.0f, 1.0f); }
+    void setValueText(const std::string& v) { options.value = v; }
     void update(float dt) override;
     void draw() override;
 private:

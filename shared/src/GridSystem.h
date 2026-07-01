@@ -92,6 +92,7 @@ class GridSystem {
 		const std::vector<GridLine> & getVLines() const { return vLines; }
 		const std::vector<GridLine> & getHLines() const { return hLines; }
 		float getDividerX() const { return dividerX; }
+		void setDividerX(float x) { dividerX = x; }
 		int getCanvasW() const { return canvasW; }
 		int getCanvasH() const { return canvasH; }
 

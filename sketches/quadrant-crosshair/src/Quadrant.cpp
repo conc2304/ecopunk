@@ -1,6 +1,22 @@
 #include "Quadrant.h"
 #include <algorithm>
 
+namespace {
+	float sampleAverageBrightness(const ofPixels& px) {
+		int W = px.getWidth(), H = px.getHeight();
+		if (W <= 0 || H <= 0) return 0.5f;
+		float sum = 0.f; int n = 0;
+		const int STEP = 32;
+		for (int y = 0; y < H; y += STEP)
+			for (int x = 0; x < W; x += STEP) {
+				auto c = px.getColor(x, y);
+				sum += 0.299f * c.r + 0.587f * c.g + 0.114f * c.b;
+				n++;
+			}
+		return n > 0 ? sum / (n * 255.f) : 0.5f;
+	}
+}
+
 void Quadrant::setup(int id_, ofRectangle region_, ShaderLibrary* lib_) {
     id        = id_;
     region    = region_;
@@ -107,6 +123,22 @@ void Quadrant::update(float dt, float cx, float cy) {
 
     for (auto& slot : slots)
         updateSlot(slot, dt);
+
+    // Rebuild ridgeline geometry whenever the effect is live and pixels are fresh.
+    if (videoPixels && videoPixels->isAllocated()) {
+        bool active = false;
+        for (const auto& slot : slots)
+            if (!slot.isIdle() && slot.name == "ridgeline") { active = true; break; }
+        if (active) {
+            int W = (int)ofGetWidth(), H = (int)ofGetHeight();
+            if (W != ridgelineW || H != ridgelineH) {
+                ridgelineRenderer.setup(W, H);
+                ridgelineW = W;
+                ridgelineH = H;
+            }
+            ridgelineRenderer.update(*videoPixels);
+        }
+    }
 }
 
 void Quadrant::draw(ofTexture& videoTex, glm::vec2 videoSize) {
@@ -169,8 +201,17 @@ void Quadrant::draw(ofTexture& videoTex, glm::vec2 videoSize) {
     // Layer 3: Shader effects alpha-fade in over the raw video
     ofEnableAlphaBlending();
     for (auto& slot : slots) {
-        if (!slot.isIdle() && slot.drawnAlpha > 0.f)
+        if (slot.isIdle() || slot.drawnAlpha <= 0.f) continue;
+        if (slot.name == "ridgeline") {
+            // CPU-side renderer: draws full canvas (0,0→W,H), clipped by the
+            // active GL scissor to this quadrant's region.
+            if (ridgelineW > 0 && ridgelineH > 0) {
+                ofTexture* overlayTex = ridgelineRenderer.getParams().overlayMode ? &videoTex : nullptr;
+                ridgelineRenderer.draw(overlayTex, slot.drawnAlpha);
+            }
+        } else {
             drawWithEffect(videoTex, videoSize, slot.name, slot.drawnAlpha, lastCx, lastCy, slot.ditherArc, slot.ditherPx);
+        }
     }
     ofDisableAlphaBlending();
 
@@ -412,4 +453,20 @@ void Quadrant::bindUniforms(ofShader& sh) {
     sh.setUniform3f("tint",      tint);
     sh.setUniform1f("threshold", threshold);
     sh.setUniform1f("shift",     shift);
+}
+
+void Quadrant::initRidgelineParams(const ofPixels* px) {
+    RidgelineRenderer::Params rp;
+    rp.numLines       = 80;
+    rp.samplesPerLine = 128;
+    rp.amplitude      = ofRandom(60.f, 255.f);
+    rp.spacingPct     = 0.020f;
+    rp.centerYPct     = 0.470f;
+    rp.marginXPct     = -0.020f;
+    rp.overlayMode    = (ofRandom(1.f) < 0.5f);
+    rp.flipX          = false;
+    rp.flipY          = true;
+    ridgelineRenderer.setParams(rp);
+    ridgelineW = 0;
+    ridgelineH = 0;
 }

@@ -91,8 +91,8 @@ void GridSystem::startNewCycle() {
 	float rightZoneWidth = W - primarySplit;
 	freshV.push_back(primarySplit + rightZoneWidth / PHI);
 
-	for (int extra = 0; extra < 2; extra++) {
-		if (ofRandom(1.0f) < 0.30f) {
+	for (int extra = 0; extra < 5; extra++) {
+		if (ofRandom(1.0f) < 0.65f) {
 			std::vector<float> sorted = freshV;
 			sorted.push_back(0.0f);
 			sorted.push_back(W);

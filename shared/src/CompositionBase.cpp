@@ -43,11 +43,21 @@ void CompositionBase::startCycle() {
 
 bool CompositionBase::allFragmentsDead() const {
 	for (const auto & f : fragments) {
-		if (!f->isDead()) {
+		Fragment::State s = f->getState();
+		if (s != Fragment::State::DEAD && s != Fragment::State::GHOST) {
 			return false;
 		}
 	}
 	return true;
+}
+
+void CompositionBase::jumpToPlacementPhase() {
+	setPhase(CyclePhase::PLACEMENT);
+	phaseElapsed = 0;
+	cycleElapsedTotal = 0;
+	placementTimer = pickPlacementInterval(timing.placementIntervalMin, timing.placementIntervalMax);
+	dissolveSchedule.clear();
+	structuralDissolveTriggered = false;
 }
 
 void CompositionBase::setPhase(CyclePhase newPhase) {
@@ -80,7 +90,10 @@ void CompositionBase::beginDissolve() {
 	dissolveSchedule.clear();
 
 	for (auto & f : fragments) {
-		if (!f->isDead()) {
+		// Ghost fragments from prior cycles are already below GHOST_OPACITY_FLOOR
+		// and decay independently — don't schedule a second dissolve for them.
+		Fragment::State s = f->getState();
+		if (s != Fragment::State::DEAD && s != Fragment::State::GHOST) {
 			dissolveSchedule.push_back({ f.get(),
 				randRangeF(0.0f, timing.dissolveDuration * 0.5f),
 				randRangeF(timing.dissolveFadeMin, timing.dissolveFadeMax),
@@ -121,7 +134,7 @@ void CompositionBase::update(float dt) {
 				placementTimer = pickPlacementInterval(timing.placementIntervalMin, timing.placementIntervalMax);
 			}
 		}
-		if (phaseElapsed >= placementDuration) {
+		if (usesAutomaticPhaseTimer() && phaseElapsed >= placementDuration) {
 			enterDensity();
 		}
 		break;
@@ -140,15 +153,16 @@ void CompositionBase::update(float dt) {
 				placementTimer = timing.placementIntervalDense;
 			}
 		}
-		if (phaseElapsed >= timing.densityDuration) {
+		if (usesAutomaticPhaseTimer() && phaseElapsed >= timing.densityDuration) {
 			beginDissolve();
 		}
 		break;
 
 	case CyclePhase::DISSOLVE: {
+		float floor = getDissolveFloor();
 		for (auto & entry : dissolveSchedule) {
 			if (!entry.started && phaseElapsed >= entry.startOffset) {
-				entry.fragment->startDissolve(entry.fadeDuration);
+				entry.fragment->startDissolve(entry.fadeDuration, floor);
 				grid->beginLineDissolveForFragment(entry.fragment->getId(), entry.fadeDuration);
 				entry.started = true;
 			}
@@ -163,8 +177,10 @@ void CompositionBase::update(float dt) {
 		float safetyTimeout = timing.dissolveDuration + timing.dissolveFadeMax + 1.0f;
 		bool gridDone = grid->isDissolveFadeComplete();
 		if ((fragmentsDone && gridDone) || phaseElapsed > safetyTimeout) {
-			setPhase(CyclePhase::RESET_HOLD);
-			phaseElapsed = 0;
+			if (onDissolveComplete()) {
+				setPhase(CyclePhase::RESET_HOLD);
+				phaseElapsed = 0;
+			}
 		}
 		break;
 	}

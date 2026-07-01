@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Fragment.h"
+#include "RidgelineRenderer.h"
 #include "ShaderLibrary.h"
 #include "glm/vec2.hpp"
 #include "glm/vec4.hpp"
@@ -36,6 +37,10 @@ public:
 	// frame by BEComposition from LFOBank, read back during drawStable().
 	void setDesatNudge(float nudge) { desatNudge = nudge; }
 
+	// Full-frame video pixels used by the ridgeline effect. Non-owning pointer;
+	// set each frame by BEComposition from VideoSampler::getPixels().
+	void setRidgelinePixels(const ofPixels* px) { ridgelinePixels = px; }
+
 	// Wraps Fragment::draw() with a slow noise-driven scale oscillation
 	// around the fragment's center — the "quadrant-style" per-slot scale
 	// drift (see Quadrant::update()'s currentScale in quadrant-crosshair).
@@ -57,6 +62,7 @@ private:
 	void pickAndStartEffect();
 	void setEffectUniforms(ofShader & sh, const std::string & effect) const;
 	void updateScaleDrift(float dt);
+	void drawRidgelineEffect() const;
 
 	GeometryType geometryType = GeometryType::RECT;
 	glm::vec2 slideStartPos { 0, 0 };
@@ -90,4 +96,10 @@ private:
 	mutable ofFbo effectSourceFbo;
 	mutable ofFbo effectResultFbo;
 	mutable bool effectFbosAllocated = false;
+
+	// ── Ridgeline effect ─────────────────────────────────────────────────────
+	const ofPixels* ridgelinePixels = nullptr; // non-owning
+	mutable RidgelineRenderer ridgelineRenderer;
+	mutable int ridgelineSetupW = -1;
+	mutable int ridgelineSetupH = -1;
 };

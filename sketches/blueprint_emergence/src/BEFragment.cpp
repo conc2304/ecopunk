@@ -10,13 +10,28 @@
 #include <cmath>
 
 namespace {
+	float sampleAverageBrightness(const ofPixels& px) {
+		int W = px.getWidth(), H = px.getHeight();
+		if (W <= 0 || H <= 0) return 0.5f;
+		float sum = 0.f; int n = 0;
+		const int STEP = 32;
+		for (int y = 0; y < H; y += STEP)
+			for (int x = 0; x < W; x += STEP) {
+				auto c = px.getColor(x, y);
+				sum += 0.299f * c.r + 0.587f * c.g + 0.114f * c.b;
+				n++;
+			}
+		return n > 0 ? sum / (n * 255.f) : 0.5f;
+	}
+
 	// Excludes "desaturate" — BEFragment already has its own always-on
 	// desaturate ramp via the fragmentEffects shader (Fragment::drawTexturedRect),
 	// so this pool is the *additional* layered-effect vocabulary.
-	const std::array<std::string, 15> kEffectPool = {
+	const std::array<std::string, 16> kEffectPool = {
 		"invert", "threshold", "recolor", "solarize", "dither", "scanlines",
 		"channelshift", "ascii_solarpunk", "bioluminescence", "chromatic_aberration",
-		"edge_glow", "ink_outlines", "pixel_drift", "pixel_sorting", "water_refraction"
+		"edge_glow", "ink_outlines", "pixel_drift", "pixel_sorting", "water_refraction",
+		"ridgeline"
 	};
 }
 
@@ -165,6 +180,20 @@ void BEFragment::pickAndStartEffect() {
 		effectSlot.params = { ofRandom(0.002f, 0.01f), 0, 0, 0 };
 	} else if (name == "pixel_sorting") {
 		effectSlot.params = { ofRandom(0.3f, 0.8f), ofRandom(0, 1) < 0.5f ? 0.0f : 1.0f, 0, 0 };
+	} else if (name == "ridgeline") {
+		RidgelineRenderer::Params rp;
+		rp.numLines       = 80;
+		rp.samplesPerLine = 128;
+		rp.amplitude      = ofRandom(60.f, 255.f);
+		rp.spacingPct     = 0.020f;
+		rp.centerYPct     = 0.470f;
+		rp.marginXPct     = -0.020f;
+		rp.overlayMode    = false; // BEFragment draws over existing content; no extra video pass
+		rp.flipX          = false;
+		rp.flipY          = true;
+		ridgelineRenderer.setParams(rp);
+		ridgelineSetupW = -1;
+		ridgelineSetupH = -1;
 	}
 }
 
@@ -233,11 +262,48 @@ void BEFragment::setEffectUniforms(ofShader & sh, const std::string & name) cons
 	}
 }
 
+void BEFragment::drawRidgelineEffect() const {
+	if (ridgelinePixels == nullptr || !ridgelinePixels->isAllocated()) return;
+
+	int w = static_cast<int>(bounds.width);
+	int h = static_cast<int>(bounds.height);
+	if (w <= 0 || h <= 0) return;
+
+	if (w != ridgelineSetupW || h != ridgelineSetupH) {
+		ridgelineRenderer.setup(w, h);
+		ridgelineSetupW = w;
+		ridgelineSetupH = h;
+	}
+	ridgelineRenderer.update(*ridgelinePixels);
+
+	glm::vec2 pos    = getDrawPosition();
+	glm::vec2 center = glm::vec2(bounds.getCenter());
+	float     alpha  = opacity * effectSlot.alpha;
+
+	ofEnableAlphaBlending();
+	ofPushMatrix();
+	ofTranslate(center.x, center.y);
+	ofScale(currentScale);
+	ofTranslate(-center.x, -center.y);
+	ofTranslate(pos.x, pos.y);
+	ridgelineRenderer.draw(nullptr, alpha);
+	ofPopMatrix();
+}
+
 void BEFragment::drawOverlay() const {
 	if (geometryType == GeometryType::CIRCLE) {
 		return;
 	}
-	if (effectSlot.isIdle() || shaderLib == nullptr || !shaderLib->has(effectSlot.name)) {
+	if (effectSlot.isIdle()) {
+		return;
+	}
+
+	if (effectSlot.name == "ridgeline") {
+		drawRidgelineEffect();
+		return;
+	}
+
+	if (shaderLib == nullptr || !shaderLib->has(effectSlot.name)) {
 		return;
 	}
 

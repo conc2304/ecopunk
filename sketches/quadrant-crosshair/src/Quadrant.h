@@ -1,5 +1,6 @@
 #pragma once
 #include "ofMain.h"
+#include "RidgelineRenderer.h"
 #include "ShaderLibrary.h"
 #include <string>
 #include <array>
@@ -80,6 +81,12 @@ public:
     void setDecay(float d)           { decayRate       = d; }
     void setMaxPixelation(float m)   { maxPixelation   = m; }
     void setDitherParams(float arc, float px);
+    // Non-owning pointer to the current video frame's pixels; used by the
+    // ridgeline effect slot. Set once per frame by QuadrantManager.
+    void setVideoPixels(const ofPixels* px) { videoPixels = px; }
+    // Randomise ridgeline params at the moment the effect is picked.
+    // px may be nullptr; when available, drives the amplitude range.
+    void initRidgelineParams(const ofPixels* px);
     void setGridTexture(ofTexture& t)        { gridTex          = &t; }
     void setMotionTexture(ofTexture& t)      { motionTex        = &t; }
     void setMotionDelayedTexture(ofTexture& t) { motionDelayedTex = &t; }
@@ -117,6 +124,10 @@ private:
     ofTexture* motionTex        = nullptr;
     ofTexture* motionDelayedTex = nullptr;
     int        motionSourceMode = 0;  // 0=accum  1=delayed  2=blend
+
+    const ofPixels* videoPixels = nullptr; // non-owning; set by QuadrantManager each frame
+    RidgelineRenderer ridgelineRenderer;
+    int ridgelineW = 0, ridgelineH = 0;
 
     void updateSlot(ShaderSlot& slot, float dt);
     void drawWithEffect(ofTexture& tex, glm::vec2 videoSize,

@@ -7,6 +7,19 @@
 
 //--------------------------------------------------------------
 void ofApp::setup() {
+	// !! DO NOT REMOVE — removing this call causes every fragment to go black
+	// !! the moment its slide-in animation ends.
+	//
+	// Force GL_TEXTURE_2D globally so texture2D() in GLSL shaders receives
+	// normalized [0,1] UV coords. oF defaults to GL_TEXTURE_RECTANGLE_ARB which
+	// passes pixel-space coords; texture2D() then GL_REPEAT-wraps values like
+	// (512,288) to (0,0), sampling the top-left (black) corner of every texture
+	// instead of the video frame. drawSlideIn() avoids the issue because it binds
+	// no custom shader, but Fragment::drawTexturedRect() does — so the bug only
+	// surfaces once a fragment leaves ARRIVING state. Must precede ALL texture/FBO
+	// allocations (motionEx.setup, erosionFBO.setup, videoSampler, etc.).
+	ofDisableArbTex();
+
 	ofSetFrameRate(TARGET_FPS);
 
 	grid.setup(CANVAS_W, CANVAS_H, DIVIDER_X);
@@ -144,16 +157,6 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-	using Phase = CompositionBase::CyclePhase;
-	Phase phase = composition.getPhase();
-
-	if (phase == Phase::RESET_HOLD) {
-		ofBackground(ofColor::black);
-		ofSetColor(TEXT_DIM);
-		ofDrawBitmapString("fps " + ofToString(ofGetFrameRate(), 1) + "  (reset hold)", 12, 18);
-		return;
-	}
-
 	// The whole scene draws into ErosionFBO's capture buffer, which is then
 	// blended against its own decaying history and presented — recent draws
 	// leave a fading trace rather than vanishing the instant they stop being
@@ -196,27 +199,17 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::drawScene() {
-	using Phase = CompositionBase::CyclePhase;
-	Phase phase = composition.getPhase();
+	// Divider is always fully drawn — no grow animation (continuous cycle mode
+	// has no BLANK phase; the divider jumps or drifts instead).
+	constexpr float dividerProgress = 1.0f;
 
-	float dividerProgress = 1.0f;
-	float gridAlpha = 1.0f;
-	bool labelShown = true;
-
-	if (phase == Phase::BLANK) {
-		float elapsed = composition.getPhaseElapsed();
-		dividerProgress = ofClamp(elapsed / DIVIDER_DRAW_DURATION, 0.0f, 1.0f);
-		float gridElapsed = elapsed - DIVIDER_DRAW_DURATION;
-		gridAlpha = ofClamp(gridElapsed / GRID_FADEIN_DURATION, 0.0f, 1.0f);
-		labelShown = elapsed >= (DIVIDER_DRAW_DURATION + GRID_FADEIN_DURATION);
-	} else {
-		// RULE_WHITE already carries ~30% baseline alpha; normalize the LFO's
-		// 0.20-0.45 opacity range against that baseline since drawGrid(alpha)
-		// is a multiplier on top of it, not a raw alpha value.
-		float lfoFrac = ofMap(lfoBank.getUnipolar(static_cast<int>(BELFOLane::GRID_OPACITY)),
-			0.0f, 1.0f, LFO_GRID_OPACITY_MIN, LFO_GRID_OPACITY_MAX);
-		gridAlpha = lfoFrac / 0.30f;
-	}
+	// LFO-driven grid opacity.
+	// RULE_WHITE already carries ~30% baseline alpha; normalize the LFO's
+	// 0.20–0.45 opacity range against that baseline since drawGrid(alpha)
+	// is a multiplier on top of it, not a raw alpha value.
+	float lfoFrac = ofMap(lfoBank.getUnipolar(static_cast<int>(BELFOLane::GRID_OPACITY)),
+		0.0f, 1.0f, LFO_GRID_OPACITY_MIN, LFO_GRID_OPACITY_MAX);
+	float gridAlpha = lfoFrac / 0.30f;
 	gridAlpha *= (1.0f - composition.getGridDimAmount()); // DENSITY_CRITICAL response
 	gridAlpha += gridPulseBoost; // PHASE_TRANSITION response
 
@@ -256,16 +249,16 @@ void ofApp::drawScene() {
 		widget->draw();
 	}
 
+	if (hud::HudWidget * scanner = composition.getCircleScannerWidget()) {
+		scanner->draw();
+	}
+
 	annotations.drawMeasurementLines();
 	annotations.drawCodeText();
 	annotations.drawHubHighlight();
 
 	annotations.drawGrid(gridAlpha);
 	annotations.drawDivider(dividerProgress, dividerBrightness);
-
-	if (labelShown) {
-		annotations.drawCornerLabel("[0,0]");
-	}
 }
 
 //--------------------------------------------------------------

@@ -36,6 +36,7 @@ class VideoSampler {
 
 		// Live-video accessors — valid once selectVideoForCycle() has been called.
 		const ofTexture& getTexture() const { return player.getTexture(); }
+		const ofPixels&  getPixels()  const { return player.getPixels(); }
 		int getVideoWidth()  const { return static_cast<int>(player.getWidth()); }
 		int getVideoHeight() const { return static_cast<int>(player.getHeight()); }
 

@@ -13,7 +13,8 @@ void CrosshairSystem::setup() {
 	noiseT = ofRandom(0, 1000);
 
 	haloPos = { 640.f, 360.f };
-	state.cx = 640.f; state.cy = 360.f;
+	state.cx = 640.f;
+	state.cy = 360.f;
 	prevState = state;
 }
 
@@ -37,9 +38,9 @@ void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 	prevState = state;
 
 	if (expansionActive) {
-		state.cx  = expansionPos.x;
-		state.cy  = expansionPos.y;
-		resuming  = false;
+		state.cx = expansionPos.x;
+		state.cy = expansionPos.y;
+		resuming = false;
 		resumeLerp = 0.f;
 	} else if (resuming) {
 		// Blend from return position back into noise over 2 seconds
@@ -57,8 +58,8 @@ void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 		}
 	}
 
-	state.vx    = state.cx - prevState.cx;
-	state.vy    = state.cy - prevState.cy;
+	state.vx = state.cx - prevState.cx;
+	state.vy = state.cy - prevState.cy;
 	state.speed = sqrtf(state.vx * state.vx + state.vy * state.vy);
 	state.chWidth = lineWidth;
 
@@ -76,13 +77,13 @@ void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 
 void CrosshairSystem::setExpansionControl(bool active, glm::vec2 pos) {
 	expansionActive = active;
-	expansionPos    = pos;
+	expansionPos = pos;
 }
 
 void CrosshairSystem::beginResume() {
 	expansionActive = false;
-	resuming        = true;
-	resumeLerp      = 0.f;
+	resuming = true;
+	resumeLerp = 0.f;
 }
 
 void CrosshairSystem::sampleColor(const ofPixels & px, float cx, float cy) {
@@ -148,9 +149,20 @@ void CrosshairSystem::drawGradientArms(float cx, float cy, float opacH, float op
 	float W = ofGetWidth(), H = ofGetHeight();
 	float T = lineWidth * 0.5f;
 
-	ofColor zero(crosshairColor.r, crosshairColor.g, crosshairColor.b, 0);
-	ofColor peakH(crosshairColor.r, crosshairColor.g, crosshairColor.b, (int)(250 * opacH));
-	ofColor peakV(crosshairColor.r, crosshairColor.g, crosshairColor.b, (int)(250 * opacV));
+	// Full opacity — brightness dims to black at edges instead of going transparent
+	ofColor zero(0, 0, 0, 255);
+	ofColor peakH(
+		(uint8_t)(crosshairColor.r * opacH),
+		(uint8_t)(crosshairColor.g * opacH),
+		(uint8_t)(crosshairColor.b * opacH),
+		255
+	);
+	ofColor peakV(
+		(uint8_t)(crosshairColor.r * opacV),
+		(uint8_t)(crosshairColor.g * opacV),
+		(uint8_t)(crosshairColor.b * opacV),
+		255
+	);
 
 	ofMesh mesh;
 	mesh.setMode(OF_PRIMITIVE_TRIANGLES);
@@ -160,9 +172,7 @@ void CrosshairSystem::drawGradientArms(float cx, float cy, float opacH, float op
 	addArmQuad(mesh, { cx, 0.f }, { cx, cy }, T, zero, peakV);
 	addArmQuad(mesh, { cx, cy }, { cx, H }, T, peakV, zero);
 
-	ofEnableAlphaBlending();
 	mesh.draw();
-	ofDisableAlphaBlending();
 }
 
 void CrosshairSystem::drawDashArms(float cx, float cy, float speed, float uiFadeAlpha) {
@@ -174,7 +184,14 @@ void CrosshairSystem::drawDashArms(float cx, float cy, float speed, float uiFade
 
 	ofMesh mesh;
 	mesh.setMode(OF_PRIMITIVE_TRIANGLES);
-	ofColor col(crosshairColor.r, crosshairColor.g, crosshairColor.b, (int)(200 * uiFadeAlpha));
+	// Full opacity — brightness replaces alpha for overall dim
+	float brightness = uiFadeAlpha * (200.f / 255.f);
+	ofColor col(
+		(uint8_t)(crosshairColor.r * brightness),
+		(uint8_t)(crosshairColor.g * brightness),
+		(uint8_t)(crosshairColor.b * brightness),
+		255
+	);
 
 	// Horizontal: left then right of cx
 	for (float x = 0.f; x < cx; x += step) {
@@ -195,9 +212,7 @@ void CrosshairSystem::drawDashArms(float cx, float cy, float speed, float uiFade
 		addArmQuad(mesh, { cx, y }, { cx, y1 }, T, col, col);
 	}
 
-	ofEnableAlphaBlending();
 	mesh.draw();
-	ofDisableAlphaBlending();
 }
 
 // ─── draw() ──────────────────────────────────────────────────────────────────
@@ -207,9 +222,7 @@ void CrosshairSystem::draw(float uiFadeAlpha) {
 
 	float cx = state.cx, cy = state.cy;
 
-	ofEnableAlphaBlending();
-
-	// 1. Arms (gradient or dashed)
+	// 1. Arms — full opacity, no alpha blending needed
 	if (state.speed > HIGH_THRESH) {
 		drawDashArms(cx, cy, state.speed, uiFadeAlpha);
 	} else {
@@ -217,6 +230,8 @@ void CrosshairSystem::draw(float uiFadeAlpha) {
 		float opacV = opacH;
 		drawGradientArms(cx, cy, opacH * uiFadeAlpha, opacV * uiFadeAlpha);
 	}
+
+	ofEnableAlphaBlending();
 
 	// 2. Halo — lagged circle, scaled by uiFadeAlpha
 	ofPushStyle();

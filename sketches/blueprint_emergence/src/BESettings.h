@@ -57,7 +57,7 @@ struct BEPresetValues {
 	float DESATURATE_RAMP_DURATION;
 
 	// Placement scoring weights
-	float PLACEMENT_SCORE_W_CENTER;
+	float PLACEMENT_SCORE_W_CENTER;   // off-center bias: lower = more center-friendly
 	float PLACEMENT_SCORE_W_PROXIMITY;
 	float PLACEMENT_SCORE_W_ZONE;
 	float PLACEMENT_SCORE_JITTER;
@@ -129,7 +129,7 @@ constexpr BEPresetValues BE_DEFAULT_PRESET = {
 	30.0f, // DESATURATE_RAMP_DURATION
 
 	// Placement scoring weights
-	1.0f, // PLACEMENT_SCORE_W_CENTER
+	0.3f, // PLACEMENT_SCORE_W_CENTER
 	1.0f, // PLACEMENT_SCORE_W_PROXIMITY
 	0.5f, // PLACEMENT_SCORE_W_ZONE
 	0.2f, // PLACEMENT_SCORE_JITTER
@@ -201,7 +201,7 @@ constexpr BEPresetValues BE_SLOW_CINEMATIC_PRESET = {
 	60.0f, // DESATURATE_RAMP_DURATION
 
 	// Placement scoring weights
-	1.0f, // PLACEMENT_SCORE_W_CENTER
+	0.3f, // PLACEMENT_SCORE_W_CENTER
 	1.0f, // PLACEMENT_SCORE_W_PROXIMITY
 	0.5f, // PLACEMENT_SCORE_W_ZONE
 	0.2f, // PLACEMENT_SCORE_JITTER
@@ -306,12 +306,16 @@ constexpr float DESATURATE_RAMP_DURATION = BE_VALUES.DESATURATE_RAMP_DURATION; /
 
 // Slot lifecycle (quadrant-style): each of the up to MAX_FRAGMENTS slots
 // independently cycles READY -> arrive -> HOLD -> dissolve -> SILENCE -> READY.
-constexpr float SLOT_HOLD_MIN = 10.0f; // seconds a fragment is guaranteed to stay visible before it's eligible to dissolve
-constexpr float SLOT_HOLD_MAX = 20.0f;
-constexpr float SLOT_SILENCE_MIN = 2.0f; // seconds a slot waits, empty, before respawning
-constexpr float SLOT_SILENCE_MAX = 6.0f;
-constexpr float SLOT_DISSOLVE_FADE_MIN = 1.5f; // per-slot turnover fade, shorter than the cycle-ending DISSOLVE_FADE_*
-constexpr float SLOT_DISSOLVE_FADE_MAX = 3.0f;
+constexpr float SLOT_HOLD_MIN = 22.0f; // seconds a fragment is guaranteed to stay visible before it's eligible to dissolve
+constexpr float SLOT_HOLD_MAX = 45.0f;
+constexpr float SLOT_SILENCE_MIN = 10.0f; // seconds a slot waits, empty, before respawning
+constexpr float SLOT_SILENCE_MAX = 22.0f;
+constexpr float SLOT_DISSOLVE_FADE_MIN = 3.0f; // per-slot turnover fade, shorter than the cycle-ending DISSOLVE_FADE_*
+constexpr float SLOT_DISSOLVE_FADE_MAX = 7.0f;
+// Per-slot stagger applied once at cycle start so slots don't all attempt
+// their first spawn simultaneously when PLACEMENT phase opens.
+constexpr float SLOT_INITIAL_STAGGER_MIN = 10.0f;
+constexpr float SLOT_INITIAL_STAGGER_MAX = 20.0f;
 
 // HUD widget — occasionally fills unoccupied grid space instead of a video
 // fragment. Independent of the 4 video slots; reserves its own occupancy
@@ -474,3 +478,22 @@ constexpr float FRAG_SCALE_MIN_HI = 0.97f;
 constexpr float FRAG_SCALE_MAX_LO = 1.03f;
 constexpr float FRAG_SCALE_MAX_HI = 1.12f;
 constexpr float FRAG_SCALE_NOISE_SPEED = 0.03f; // matches Quadrant::update()'s t*0.03f
+
+// ── Continuous Cycle Modes ────────────────────────────────────────────────────
+// Valid divider X range: column 2 → column 4 boundary in pixel space
+// At 1280px / 6 columns = 213.33px per column: col2=426.67px, col4=853.33px
+constexpr float MIN_DIVIDER_X              = (static_cast<float>(CANVAS_W) / GRID_COLS) * 2.0f;
+constexpr float MAX_DIVIDER_X              = (static_cast<float>(CANVAS_W) / GRID_COLS) * 4.0f;
+constexpr float DIVIDER_JUMP_ANIM_DURATION = 2.0f;   // seconds, GHOST_LAYERS mode only
+
+// ── GHOST_LAYERS mode ─────────────────────────────────────────────────────────
+constexpr float GHOST_OPACITY_FLOOR        = 0.07f;   // fragments dissolve to this, not 0
+constexpr float GHOST_DECAY_BASE           = 0.00015f; // per second at zero GridState activity
+constexpr float GHOST_DECAY_ACTIVITY_MULT  = 0.0012f;  // additional per second per activity unit
+
+// ── PERPETUAL mode ────────────────────────────────────────────────────────────
+constexpr float PERPETUAL_DISSOLVE_DURATION  = 4.0f;   // rolling-replacement dissolve (seconds)
+constexpr int   PERPETUAL_SEED_INTERVAL      = 8;      // placements between seed refreshes
+constexpr float DIVIDER_DRIFT_SPEED          = 0.35f;  // pixels/second (~10 min per column)
+constexpr float PERPETUAL_MODE_DURATION_MIN  = 240.0f; // 4 minutes minimum
+constexpr float PERPETUAL_MODE_DURATION_MAX  = 480.0f; // 8 minutes maximum

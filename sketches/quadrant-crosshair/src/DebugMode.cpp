@@ -167,8 +167,9 @@ std::vector<DebugParam> DebugMode::buildParams() {
             p.push_back({ "spacingPct",     &pRidgeSpacingPct,     0.005f,0.02f, 0.30f  });
             p.push_back({ "centerYPct",     &pRidgeCenterYPct,     0.02f, 0.1f,  0.9f   });
             p.push_back({ "marginXPct",     &pRidgeMarginXPct,     0.01f, 0.0f,  0.25f  });
-            p.push_back({ "occlude (0/1)",  &pRidgeOcclude,        1.0f,  0.0f,  1.0f   });
             p.push_back({ "overlay (0/1)",  &pRidgeOverlay,        1.0f,  0.0f,  1.0f   });
+            p.push_back({ "flipX (0/1)",    &pRidgeFlipX,          1.0f,  0.0f,  1.0f   });
+            p.push_back({ "flipY (0/1)",    &pRidgeFlipY,          1.0f,  0.0f,  1.0f   });
             break;
         default:
             break;
@@ -195,8 +196,9 @@ void DebugMode::drawShaderFullScreen() {
         rp.spacingPct     = pRidgeSpacingPct;
         rp.centerYPct     = pRidgeCenterYPct;
         rp.marginXPct     = pRidgeMarginXPct;
-        rp.occlude        = (pRidgeOcclude > 0.5f);
         rp.overlayMode    = (pRidgeOverlay  > 0.5f);
+        rp.flipX          = (pRidgeFlipX    > 0.5f);
+        rp.flipY          = (pRidgeFlipY    > 0.5f);
         ridgelineRenderer.setParams(rp);
         ridgelineRenderer.update(video->getPixels());
         ridgelineRenderer.draw(rp.overlayMode ? &video->getTexture() : nullptr);

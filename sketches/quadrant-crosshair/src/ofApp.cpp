@@ -139,6 +139,7 @@ void ofApp::update() {
 
     // 7. Quadrants
     quadrants.setVideoBrightness(steeringBrightness);
+    quadrants.setVideoPixels(video.getPixels().isAllocated() ? &video.getPixels() : nullptr);
     quadrants.update(dt, cs, lfo, grid.getTexture(),
                      motionEx.getMotionTexture(), motionEx.getDelayedMotionTexture());
 

@@ -6,9 +6,8 @@
 //
 // Brightness-driven horizontal ridgeline effect (Joy Division / pulsar style).
 // Samples luminance from a source ofPixels along N horizontal rows, builds
-// CPU-side polylines, and draws them GPU-side as either:
-//   - filled occlusion polygons + stroked outline (opaque "stacked ridge" look)
-//   - or plain stroked lines (cheaper, no occlusion)
+// CPU-side polylines, and draws them GPU-side as transparent stroked lines
+// over a solid ground or source image.
 //
 // Designed for Raspberry Pi 3B / GLSL ES 1.0 constraints: no per-pixel
 // fragment shader, no FBO ping-pong. All expensive work (pixel reads, polyline
@@ -29,10 +28,11 @@ public:
 		int samplesPerLine  = 64;     // luminance samples per line (keep low on Pi: 40-80)
 		float amplitude     = 80.0f;  // px, brighter pixels push the line up by up to this much
 		float spacingPct    = 0.10f;  // vertical gap between line rest-positions, as % of canvas height
-		bool occlude        = true;   // draw solid fill behind each line so nearer ridges hide farther ones
 		bool overlayMode    = false;  // false = replace (black ground), true = draw under the source image first
 		float marginXPct    = 0.08f;  // horizontal margin as % of canvas width
 		float centerYPct    = 0.55f;  // vertical center of the stack as % of canvas height
+		bool flipX          = false;  // mirror the entire output horizontally (left becomes right)
+		bool flipY          = false;  // mirror the entire output vertically (bottom becomes top)
 		ofColor lineColor   = ofColor(255, 255, 255);
 		ofColor groundColor = ofColor(13, 13, 13); // GROUND_DARK from design doc
 	};
@@ -47,8 +47,9 @@ public:
 	void update(const ofPixels& sourcePixels);
 
 	// GL calls only. Optionally pass the source texture to draw beneath the
-	// ridgelines when params.overlayMode is true.
-	void draw(ofTexture* sourceTexForOverlay = nullptr);
+	// ridgelines when params.overlayMode is true. opacity (0–1) scales all
+	// drawn colors so the effect can fade in/out via the slot lifecycle.
+	void draw(ofTexture* sourceTexForOverlay = nullptr, float opacity = 1.0f);
 
 private:
 	Params params;
@@ -59,7 +60,6 @@ private:
 
 	struct Line {
 		ofPolyline stroke;
-		ofMesh occlusionFill; // only used when params.occlude is true
 	};
 	std::vector<Line> lines;
 

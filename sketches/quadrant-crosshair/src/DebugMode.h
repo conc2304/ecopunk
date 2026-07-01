@@ -112,14 +112,15 @@ private:
     RidgelineRenderer ridgelineRenderer;
     int ridgelineCanvasW = 0;
     int ridgelineCanvasH = 0;
-    float pRidgeNumLines      = 42.0f;
-    float pRidgeSamplesPerLine= 64.0f;
-    float pRidgeAmplitude     = 80.0f;
-    float pRidgeSpacingPct    = 0.10f;
-    float pRidgeCenterYPct    = 0.55f;
-    float pRidgeMarginXPct    = 0.08f;
-    float pRidgeOcclude       = 1.0f;  // 0=off 1=on
+    float pRidgeNumLines      = 80.0f;
+    float pRidgeSamplesPerLine= 128.0f;
+    float pRidgeAmplitude     = 150.0f;
+    float pRidgeSpacingPct    = 0.020f;
+    float pRidgeCenterYPct    = 0.470f;
+    float pRidgeMarginXPct    = -0.020f;
     float pRidgeOverlay       = 0.0f;  // 0=black ground  1=source image under
+    float pRidgeFlipX         = 0.0f;  // 0=normal  1=mirror horizontally
+    float pRidgeFlipY         = 1.0f;  // 0=normal  1=mirror vertically
 
     struct TriggerSim {
         TriggerID   id;

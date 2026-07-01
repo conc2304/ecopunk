@@ -80,6 +80,26 @@ class CompositionBase {
 		// the base class's single global timer doesn't also fire.
 		virtual bool usesAutomaticPlacementTimer() const { return true; }
 
+		// When false, CompositionBase won't advance PLACEMENT→DENSITY or
+		// DENSITY→DISSOLVE on its internal phase timer. Override to false in
+		// continuous modes (e.g. PERPETUAL) that manage their own phase arc.
+		virtual bool usesAutomaticPhaseTimer() const { return true; }
+
+		// Called when DISSOLVE phase finishes. Return false to suppress the
+		// default RESET_HOLD transition and take over phase management.
+		virtual bool onDissolveComplete() { return true; }
+
+		// Opacity floor passed to startDissolve() during the DISSOLVE phase.
+		// Default 0 = fade to DEAD. Override to GHOST_OPACITY_FLOOR in ghost modes.
+		virtual float getDissolveFloor() const { return 0.0f; }
+
+		// Jump to PLACEMENT immediately, skipping BLANK. For use by subclasses
+		// implementing continuous cycle modes.
+		void jumpToPlacementPhase();
+
+		// Invoke the onCycleStart callback registered via setOnCycleStart().
+		void fireCycleStartCallback() { if (onCycleStartCb) onCycleStartCb(); }
+
 		// If currently in PLACEMENT, immediately ends it and enters DENSITY
 		// without waiting for the phase timer. No-op in any other phase.
 		void forceEnterDensity();

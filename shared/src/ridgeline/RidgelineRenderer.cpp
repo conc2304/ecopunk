@@ -35,39 +35,19 @@ void RidgelineRenderer::rebuildLines(const ofPixels& sourcePixels) {
 
 	lines.resize(numLines);
 
-	// Back-to-front: row (numLines-1) is farthest (drawn first),
-	// row 0 is nearest (drawn last, on top).
-	for (int row = numLines - 1; row >= 0; row--) {
+	for (int row = 0; row < numLines; row++) {
 		float restY = bottomY - row * spacingPx;
 		float v     = (float)row / (float)(numLines - 1);
 
 		Line& line = lines[row];
 		line.stroke.clear();
 
-		std::vector<glm::vec3> pts;
-		pts.reserve(samples + 1);
-
 		for (int s = 0; s <= samples; s++) {
 			float u   = (float)s / (float)samples;
 			float lum = sampleLuminance(sourcePixels, u, v);
 			float x   = marginX + u * usableW;
 			float y   = restY - lum * params.amplitude;
-			pts.emplace_back(x, y, 0.0f);
 			line.stroke.addVertex(x, y, 0.0f);
-		}
-
-		if (params.occlude) {
-			// Triangle strip: (curve point, base point) pairs covering the
-			// region between the ridge and a flat baseline below it.
-			float baseY = restY + spacingPx * 0.6f + 2.0f;
-
-			line.occlusionFill.clear();
-			line.occlusionFill.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
-
-			for (auto& p : pts) {
-				line.occlusionFill.addVertex(glm::vec3(p.x, p.y, 0.0f));
-				line.occlusionFill.addVertex(glm::vec3(p.x, baseY, 0.0f));
-			}
 		}
 	}
 
@@ -79,28 +59,37 @@ void RidgelineRenderer::update(const ofPixels& sourcePixels) {
 	rebuildLines(sourcePixels);
 }
 
-void RidgelineRenderer::draw(ofTexture* sourceTexForOverlay) {
+void RidgelineRenderer::draw(ofTexture* sourceTexForOverlay, float opacity) {
 	ofPushStyle();
+	auto a = [opacity](int base) { return (int)(base * opacity); };
 
+	// Background drawn in normal orientation — never flipped.
 	if (params.overlayMode && sourceTexForOverlay && sourceTexForOverlay->isAllocated()) {
-		ofSetColor(255);
+		ofSetColor(255, 255, 255, a(255));
 		sourceTexForOverlay->draw(0, 0, canvasW, canvasH);
-		ofSetColor(0, 0, 0, 90);
+		ofSetColor(0, 0, 0, a(90));
 		ofDrawRectangle(0, 0, canvasW, canvasH);
 	} else {
-		ofSetColor(params.groundColor);
+		ofColor gc = params.groundColor;
+		ofSetColor(gc.r, gc.g, gc.b, a(gc.a));
 		ofDrawRectangle(0, 0, canvasW, canvasH);
 	}
 
+	// Ridgeline strokes (and occlusion fills) are the only things that flip.
+	ofPushMatrix();
+	if (params.flipX || params.flipY) {
+		ofTranslate(params.flipX ? (float)canvasW : 0.f,
+		            params.flipY ? (float)canvasH : 0.f);
+		ofScale(params.flipX ? -1.f : 1.f,
+		        params.flipY ? -1.f : 1.f);
+	}
 	for (auto& line : lines) {
-		if (params.occlude && line.occlusionFill.getNumVertices() > 0) {
-			ofSetColor(params.overlayMode ? ofColor(0, 0, 0) : params.groundColor);
-			line.occlusionFill.draw();
-		}
-		ofSetColor(params.lineColor);
+		ofColor lc = params.lineColor;
+		ofSetColor(lc.r, lc.g, lc.b, a(lc.a));
 		ofSetLineWidth(1.0f);
 		line.stroke.draw();
 	}
+	ofPopMatrix();
 
 	ofPopStyle();
 }

@@ -18,6 +18,7 @@ public:
 		STABLE,
 		DRIFTING,
 		DISSOLVING,
+		GHOST,
 		DEAD };
 
 	struct Params {
@@ -48,7 +49,14 @@ public:
 	virtual void drawOverlay() const {}
 
 	void enterDrifting();
-	void startDissolve(float fadeDuration);
+	// Dissolve toward opacityFloor (0 = fully dead; > 0 = transitions to GHOST at floor).
+	void startDissolve(float fadeDuration, float opacityFloor = 0.0f);
+	// Immediately transition to GHOST state at opacityFloor. Safe to call on any live state.
+	void enterGhost(float opacityFloor);
+
+	// Ghost opacity is driven externally (e.g. BEComposition::updateGhostDecay).
+	void setGhostOpacity(float op) { ghostOpacity = op; }
+	float getGhostOpacity() const { return ghostOpacity; }
 
 	// Additive nudge on top of the normal DRIFTING desaturate ramp,
 	// clamped into [0,1] alongside it. Lets a subclass drive per-instance
@@ -104,6 +112,8 @@ private:
 	State state = State::ARRIVING;
 	float stateElapsed = 0.0f;
 	float dissolveDuration = 0.0f;
+	float dissolveFloor = 0.0f;
+	float ghostOpacity = 0.0f;
 	float phaseOffset = 0.0f;
 	bool driftingEnabled = false;
 	glm::vec2 driftOffset { 0, 0 };

@@ -21,6 +21,7 @@ public:
     void resetErosion() { for (auto& q : quads) q.resetErosion(); }
     void resize(int w, int h) { for (auto& q : quads) q.resize(w, h); }
     void onTrigger(const TriggerEvent& e);
+    void setVideoPixels(const ofPixels* px);
 
     // Expansion contraction crossfade — called by ofApp when TRAVEL_BACK begins
     void beginContraction(int quadrantID);
@@ -41,7 +42,9 @@ private:
         "ascii_solarpunk",
         // nature pack (temporal_trails excluded — needs per-quadrant FBO)
         "bioluminescence", "chromatic_aberration", "edge_glow",
-        "ink_outlines", "pixel_drift", "pixel_sorting", "water_refraction"
+        "ink_outlines", "pixel_drift", "pixel_sorting", "water_refraction",
+        // cpu-side effects
+        "ridgeline"
     };
 
     enum class CyclePhase { PLAYING, SILENCING, READY };
@@ -60,6 +63,7 @@ private:
 
     bool  velHighActive    = false;
     float videoBrightness  = 0.5f;
+    const ofPixels* currentVideoPixels = nullptr; // non-owning; updated each frame via setVideoPixels
 
     // Expansion contraction crossfade state
     float contractionT        = 0.f;

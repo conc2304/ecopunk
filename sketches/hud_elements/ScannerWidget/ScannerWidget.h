@@ -10,6 +10,7 @@ struct ScannerOptions {
     bool showSweep = true;
     bool showCrosshair = true;
     bool showPulses = true;
+    bool showBackground = true;
 };
 
 class ScannerWidget : public HudWidget {

@@ -48,13 +48,26 @@ void Fragment::enterDrifting() {
 	}
 }
 
-void Fragment::startDissolve(float fadeDuration) {
+void Fragment::startDissolve(float fadeDuration, float opacityFloor) {
 	if (state == State::DEAD) {
 		return;
 	}
 	state = State::DISSOLVING;
 	stateElapsed = 0.0f;
 	dissolveDuration = fadeDuration;
+	dissolveFloor = opacityFloor;
+}
+
+void Fragment::enterGhost(float opacityFloor) {
+	if (state == State::DEAD) {
+		return;
+	}
+	driftingEnabled = false;
+	driftOffset = glm::vec2(0, 0);
+	state = State::GHOST;
+	stateElapsed = 0.0f;
+	ghostOpacity = opacityFloor;
+	opacity = ghostOpacity;
 }
 
 void Fragment::update(float dt) {
@@ -85,10 +98,22 @@ void Fragment::update(float dt) {
 	}
 
 	case State::DISSOLVING:
-		opacity = 1.0f - ofClamp(stateElapsed / dissolveDuration, 0.0f, 1.0f);
+		opacity = dissolveFloor + (1.0f - dissolveFloor) * (1.0f - ofClamp(stateElapsed / dissolveDuration, 0.0f, 1.0f));
 		if (stateElapsed >= dissolveDuration) {
-			state = State::DEAD;
+			if (dissolveFloor > 0.005f) {
+				state = State::GHOST;
+				ghostOpacity = dissolveFloor;
+				driftingEnabled = false;
+				driftOffset = glm::vec2(0, 0);
+				stateElapsed = 0.0f;
+			} else {
+				state = State::DEAD;
+			}
 		}
+		break;
+
+	case State::GHOST:
+		opacity = ghostOpacity;
 		break;
 
 	case State::DEAD:

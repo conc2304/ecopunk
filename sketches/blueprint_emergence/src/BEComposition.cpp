@@ -1,4 +1,5 @@
 #include "BEComposition.h"
+#include "BECycleMode.h"
 #include "BELFOLanes.h"
 #include "BESettings.h"
 #include "BETriggers.h"
@@ -7,6 +8,7 @@
 #include "hud/DataCardWidget.h"
 #include "hud/GaugeWidget.h"
 #include "hud/HudWidget.h"
+#include "hud/ScannerWidget.h"
 #include "MotionExtraction.h"
 #include "ofLog.h"
 #include "ofMath.h"
@@ -18,6 +20,10 @@
 
 BEComposition::BEComposition() = default;
 BEComposition::~BEComposition() = default;
+
+hud::HudWidget* BEComposition::getCircleScannerWidget() const {
+	return circleScanner.get();
+}
 
 namespace {
 	int triggerIdx(BETrigger t) { return static_cast<int>(t); }
@@ -56,18 +62,18 @@ void BEComposition::setupBE(GridSystem * grid_, VideoSampler * videoSampler_, in
 }
 
 void BEComposition::onCycleStart() {
-	zoneALight = randRangeF(0.0f, 1.0f) < 0.3f; // §06: Zone A uses GROUND_LIGHT in 30% of cycles
+	zoneALight = randRangeF(0.0f, 1.0f) < 0.3f;
 
 	circleSpawnedThisCycle = false;
+	circleScanner.reset();
+	circleScannerSlot = -1;
 	nextFragmentId = 0;
 
 	for (int i = 0; i < NUM_SLOTS; i++) {
 		slots[i].phase = SlotPhase::EMPTY;
 		slots[i].timer = 0.0f;
-		// Small per-slot stagger so all 4 don't attempt their first spawn on
-		// the exact same frame once PLACEMENT begins.
-		slots[i].timerTarget = static_cast<float>(i) * randRangeF(1.0f, 3.0f);
-		slots[i].fragmentIndex = -1; // `fragments` was just cleared by startCycle()
+		slots[i].timerTarget = static_cast<float>(i) * randRangeF(SLOT_INITIAL_STAGGER_MIN, SLOT_INITIAL_STAGGER_MAX);
+		slots[i].fragmentIndex = -1;
 	}
 
 	secondsSinceLastPlacement = 0.0f;
@@ -80,15 +86,34 @@ void BEComposition::onCycleStart() {
 		gridState->clear();
 	}
 
-	// grid->clear() (called by CompositionBase::startCycle() before this)
-	// already drops all occupancy, including any HUD reservation, so just
-	// reset the widget's own state to match.
 	hudWidget.reset();
+	hudDataCard = nullptr;
+	hudGauge    = nullptr;
 	hudPhase = HudPhase::SILENCE;
 	hudTimer = 0.0f;
 	hudTimerTarget = randRangeF(SLOT_SILENCE_MIN, SLOT_SILENCE_MAX);
 
-	ofLogNotice("BEComposition") << "cycle start, slots=" << NUM_SLOTS;
+	timeInMode = 0.0f;
+	perpetualTransitionArmed = false;
+	placementsSinceSeedRefresh = 0;
+
+	// Pick initial mode and set dividerX at a random column-boundary position.
+	// Skip BLANK — composition starts mid-thought with no grow animation.
+	currentMode = selectNextMode();
+	dividerX = selectNewDividerX();
+	dividerAnimating = false;
+	grid->setDividerX(dividerX);
+
+	if (currentMode == CycleMode::PERPETUAL) {
+		dividerTargetX = selectNewDividerX();
+		modeTransitionTarget = randRangeF(PERPETUAL_MODE_DURATION_MIN, PERPETUAL_MODE_DURATION_MAX);
+	}
+
+	jumpToPlacementPhase();
+
+	ofLogNotice("BEComposition") << "cycle start, mode="
+		<< (currentMode == CycleMode::GHOST_LAYERS ? "GHOST_LAYERS" : "PERPETUAL")
+		<< " dividerX=" << dividerX;
 }
 
 void BEComposition::setTriggerBus(TriggerBus * bus) {
@@ -156,21 +181,36 @@ void BEComposition::evaluateStateTriggers() {
 
 void BEComposition::onUpdate(float dt) {
 	secondsSinceLastPlacement += dt;
+	timeInMode += dt;
 
 	if (gridState) {
 		gridState->update();
 	}
 
 	evaluateStateTriggers();
+	updateGhostDecay(dt);
+	updateDividerAnimation(dt);
+
+	if (currentMode == CycleMode::PERPETUAL) {
+		updatePerpetualMode(dt);
+	}
 
 	if (gridDimCurrent != gridDimTarget) {
 		gridDimCurrent += (gridDimTarget - gridDimCurrent) * ofClamp(dt / 3.0f, 0.0f, 1.0f);
 	}
 
 	if (lfoBank) {
+		const ofPixels* ridgePx = (videoSampler && videoSampler->getPixels().isAllocated())
+		                          ? &videoSampler->getPixels() : nullptr;
 		for (auto & f : fragments) {
-			static_cast<BEFragment *>(f.get())->setDesatNudge(lfoDesatNudgeForGroup(static_cast<BEFragment *>(f.get())->getEffectGroup()));
+			auto* bef = static_cast<BEFragment *>(f.get());
+			bef->setDesatNudge(lfoDesatNudgeForGroup(bef->getEffectGroup()));
+			bef->setRidgelinePixels(ridgePx);
 		}
+	}
+
+	if (circleScanner) {
+		circleScanner->update(dt);
 	}
 
 	updateSlots(dt);
@@ -233,6 +273,10 @@ void BEComposition::updateSlots(float dt) {
 					frag->startDissolve(fade);
 					grid->beginLineDissolveForFragment(frag->getId(), fade);
 				}
+				if (i == circleScannerSlot) {
+					circleScanner.reset();
+					circleScannerSlot = -1;
+				}
 				slot.phase = SlotPhase::DISSOLVING;
 				ofLogNotice("BEComposition") << "slot " << i << " -> DISSOLVING after holding " << slot.timer
 											 << "s (target was " << slot.timerTarget << "s, acceptingNewSpawns=" << acceptingNewSpawns << ")";
@@ -250,6 +294,14 @@ void BEComposition::updateSlots(float dt) {
 				slot.timer = 0.0f;
 				slot.timerTarget = randRangeF(SLOT_SILENCE_MIN, SLOT_SILENCE_MAX);
 				ofLogNotice("BEComposition") << "slot " << i << " -> EMPTY (silence " << slot.timerTarget << "s)";
+
+				// PERPETUAL: trigger a mode transition at the next slot respawn
+				// event once the minimum mode duration has elapsed.
+				if (currentMode == CycleMode::PERPETUAL && perpetualTransitionArmed) {
+					perpetualTransitionArmed = false;
+					enterMode(selectNextMode());
+					return; // slots just reset; stop iterating
+				}
 			}
 			break;
 		}
@@ -264,6 +316,15 @@ void BEComposition::updateHudWidget(float dt) {
 	bool acceptingNewSpawns = (getPhase() == CyclePhase::PLACEMENT || getPhase() == CyclePhase::DENSITY);
 
 	if (hudWidget) {
+		// Push live values before the widget updates so they're current this frame.
+		if (hudDataCard) {
+			float silencePressure = ofClamp(secondsSinceLastPlacement / TRIGGER_LONG_SILENCE_SECS, 0.0f, 1.0f);
+			hudDataCard->setMeter(silencePressure);
+			hudDataCard->setValueText(ofToString(static_cast<int>(fragments.size())) + "/" + ofToString(NUM_SLOTS));
+		}
+		if (hudGauge) {
+			hudGauge->setValue(gridState ? gridState->getAverageActivity() : 0.0f);
+		}
 		hudWidget->update(dt);
 	}
 
@@ -287,6 +348,8 @@ void BEComposition::updateHudWidget(float dt) {
 		if (hudTimer >= hudTimerTarget || !acceptingNewSpawns) {
 			grid->releaseFragment(HUD_FRAGMENT_ID);
 			hudWidget.reset();
+			hudDataCard = nullptr;
+			hudGauge    = nullptr;
 			hudPhase = HudPhase::SILENCE;
 			hudTimer = 0.0f;
 			hudTimerTarget = randRangeF(SLOT_SILENCE_MIN, SLOT_SILENCE_MAX);
@@ -313,21 +376,25 @@ bool BEComposition::trySpawnHudWidget() {
 		if (!grid->isRectFree(candidate, 0.10f)) continue;
 
 		std::unique_ptr<hud::HudWidget> widget;
+		hudDataCard = nullptr;
+		hudGauge    = nullptr;
 		if (randRangeI(0, 1) == 0) {
 			auto card = std::make_unique<hud::DataCardWidget>();
 			hud::DataCardOptions opts;
 			opts.title = "FRAGMENT LOG";
 			opts.subtitle = "OBSERVATION ACTIVE";
 			opts.value = ofToString(static_cast<int>(fragments.size())) + "/" + ofToString(NUM_SLOTS);
-			opts.meter = ofRandom(0.3f, 0.9f);
+			opts.meter = 0.0f; // driven live in updateHudWidget()
 			card->setOptions(opts);
+			hudDataCard = card.get();
 			widget = std::move(card);
 		} else {
 			auto gauge = std::make_unique<hud::GaugeWidget>();
 			hud::GaugeOptions opts;
 			opts.label = "ACTIVITY";
-			opts.value = gridState ? gridState->getAverageActivity() : 0.5f;
+			opts.value = gridState ? gridState->getAverageActivity() : 0.0f;
 			gauge->setOptions(opts);
+			hudGauge = gauge.get();
 			widget = std::move(gauge);
 		}
 
@@ -549,6 +616,18 @@ bool BEComposition::placeCircleFragment(int slotIndex) {
 		secondsSinceLastPlacement = 0.0f;
 		circleSpawnedThisCycle = true;
 
+		// Scanner overlay — sized to the circle bounding box so the rings are
+		// inscribed within the circular video mask. Background suppressed so the
+		// white rectangle doesn't obscure the video beneath.
+		auto scanner = std::make_unique<hud::ScannerWidget>();
+		hud::ScannerOptions scannerOpts;
+		scannerOpts.showBackground = false;
+		scanner->setOptions(scannerOpts);
+		scanner->setup();
+		scanner->setBounds(cx - radius, cy - radius, diameter, diameter);
+		circleScanner = std::move(scanner);
+		circleScannerSlot = slotIndex;
+
 		ofLogNotice("BEComposition") << "circle placed at (" << cx << "," << cy
 									 << ") radius=" << radius << "px visibleFraction=" << visibleFraction;
 		return true;
@@ -735,6 +814,18 @@ bool BEComposition::spawnFragmentInSlot(int slotIndex) {
 	}
 	secondsSinceLastPlacement = 0.0f;
 
+	// PERPETUAL mode: refresh the RNG seed every N placements so composition
+	// character gradually drifts without a hard discontinuity.
+	if (currentMode == CycleMode::PERPETUAL) {
+		placementsSinceSeedRefresh++;
+		if (placementsSinceSeedRefresh >= PERPETUAL_SEED_INTERVAL) {
+			placementsSinceSeedRefresh = 0;
+			unsigned int newSeed = static_cast<unsigned int>(ofRandom(0.0f, static_cast<float>(UINT_MAX)));
+			srand(newSeed);
+			ofLogNotice("BEComposition") << "PERPETUAL: seed refresh -> " << newSeed;
+		}
+	}
+
 	grid->maybeSubdivide();
 
 	return true;
@@ -745,4 +836,212 @@ bool BEComposition::attemptPlacement() {
 	// never calls this. Real placement happens per-slot via
 	// spawnFragmentInSlot(), driven by updateSlots() from onUpdate().
 	return false;
+}
+
+// ── Continuous cycle mode ─────────────────────────────────────────────────────
+
+float BEComposition::selectNewDividerX() const {
+	// Pick a column-boundary X (cols 2–4) that is different from the current one.
+	float colW = static_cast<float>(canvasW) / GRID_COLS;
+	int currentCol = static_cast<int>(std::round(dividerX / colW));
+	// Valid columns: 2, 3, 4
+	int choices[3], n = 0;
+	for (int c = 2; c <= 4; c++) {
+		if (c != currentCol) choices[n++] = c;
+	}
+	int pick = choices[randRangeI(0, n - 1)];
+	return pick * colW;
+}
+
+void BEComposition::pruneDeadFragments() {
+	// Remove DEAD entries and remap slot indices so they stay valid.
+	std::vector<int> remap(fragments.size(), -1);
+	int newIdx = 0;
+	for (int i = 0; i < static_cast<int>(fragments.size()); i++) {
+		if (!fragments[i]->isDead()) {
+			remap[i] = newIdx++;
+		}
+	}
+	for (auto & slot : slots) {
+		if (slot.fragmentIndex >= 0 && slot.fragmentIndex < static_cast<int>(fragments.size())) {
+			slot.fragmentIndex = remap[slot.fragmentIndex]; // -1 if the fragment was dead
+		}
+	}
+	fragments.erase(
+		std::remove_if(fragments.begin(), fragments.end(), [](const auto & f) { return f->isDead(); }),
+		fragments.end());
+}
+
+void BEComposition::enterMode(CycleMode mode) {
+	currentMode = mode;
+	timeInMode = 0.0f;
+	perpetualTransitionArmed = false;
+	placementsSinceSeedRefresh = 0;
+
+	// Fresh random seed so placement scoring varies each mode entry.
+	unsigned int newSeed = static_cast<unsigned int>(ofRandom(0.0f, static_cast<float>(UINT_MAX)));
+	srand(newSeed);
+
+	ofLogNotice("BEComposition") << "enterMode "
+		<< (mode == CycleMode::GHOST_LAYERS ? "GHOST_LAYERS" : "PERPETUAL")
+		<< " seed=" << newSeed;
+
+	if (mode == CycleMode::GHOST_LAYERS) {
+		pruneDeadFragments(); // clean up dead entries before adding new ones
+
+		// All live fragments → GHOST at the opacity floor.
+		// The DISSOLVE phase already took them to the floor via startDissolve(…, floor),
+		// but any still-live ones (e.g. entering from PERPETUAL mid-cycle) are handled here.
+		for (auto & f : fragments) {
+			Fragment::State s = f->getState();
+			if (s != Fragment::State::DEAD && s != Fragment::State::GHOST) {
+				f->enterGhost(GHOST_OPACITY_FLOOR);
+			}
+		}
+
+		// Unlink slots from ghost fragments (ghosts have no slot owner going forward).
+		circleSpawnedThisCycle = false;
+		circleScanner.reset();
+		circleScannerSlot = -1;
+		for (int i = 0; i < NUM_SLOTS; i++) {
+			slots[i].fragmentIndex = -1;
+			slots[i].phase = SlotPhase::EMPTY;
+			slots[i].timer = 0.0f;
+			slots[i].timerTarget = static_cast<float>(i) * randRangeF(1.0f, 3.0f);
+		}
+
+		// Clear occupancy and generate new structural lines for the new mini-cycle.
+		grid->clear();
+		grid->startNewCycle();
+
+		// HUD widget — reset; occupancy was cleared above.
+		if (hudWidget) {
+			hudWidget.reset();
+			hudDataCard = nullptr;
+			hudGauge    = nullptr;
+		}
+		hudPhase = HudPhase::SILENCE;
+		hudTimer = 0.0f;
+		hudTimerTarget = randRangeF(SLOT_SILENCE_MIN, SLOT_SILENCE_MAX);
+
+		// New divider position — animates if ≥ 1 column width away.
+		float oldDividerX = dividerX;
+		dividerX = selectNewDividerX();
+		float colW = static_cast<float>(canvasW) / GRID_COLS;
+		if (std::abs(dividerX - oldDividerX) >= colW - 1.0f) {
+			dividerAnimFrom = oldDividerX;
+			dividerAnimTo = dividerX;
+			dividerAnimT = 0.0f;
+			dividerAnimDur = DIVIDER_JUMP_ANIM_DURATION;
+			dividerAnimating = true;
+			// Keep drawing from the old position until the anim starts updating it.
+		} else {
+			grid->setDividerX(dividerX);
+			dividerAnimating = false;
+		}
+
+		secondsSinceLastPlacement = 0.0f;
+		densityHighActive = false;
+		densityCriticalActive = false;
+		zoneScoreBoostRemaining = 0;
+		gridDimCurrent = 0.0f;
+		gridDimTarget = 0.0f;
+		if (gridState) gridState->clear();
+
+		// Video switch, annotation reset, erosion clear — same as a normal cycle start.
+		fireCycleStartCallback();
+
+		jumpToPlacementPhase();
+
+	} else { // PERPETUAL
+		// Fragments and grid continue as-is; only divider drift is initialised.
+		dividerTargetX = selectNewDividerX();
+		modeTransitionTarget = randRangeF(PERPETUAL_MODE_DURATION_MIN, PERPETUAL_MODE_DURATION_MAX);
+		dividerAnimating = false;
+
+		// Seed refresh tracking reset.
+		placementsSinceSeedRefresh = 0;
+
+		jumpToPlacementPhase();
+	}
+}
+
+bool BEComposition::onDissolveComplete() {
+	// Called by CompositionBase when the DISSOLVE phase finishes.
+	// We take over and enter the next mode instead of RESET_HOLD.
+	enterMode(selectNextMode());
+	return false; // prevent CompositionBase from entering RESET_HOLD
+}
+
+float BEComposition::getDissolveFloor() const {
+	// In GHOST_LAYERS mode, fragments dissolve to the ghost opacity floor
+	// rather than fully to zero. In PERPETUAL, normal dissolve to zero
+	// (though PERPETUAL doesn't use the DISSOLVE phase arc at all).
+	return (currentMode == CycleMode::GHOST_LAYERS) ? GHOST_OPACITY_FLOOR : 0.0f;
+}
+
+void BEComposition::updateGhostDecay(float dt) {
+	for (auto & f : fragments) {
+		if (f->getState() != Fragment::State::GHOST) continue;
+
+		glm::vec2 center = glm::vec2(f->getBounds().getCenter());
+		float activity = gridState
+			? gridState->get(gridStateCol(center.x, canvasW), gridStateRow(center.y, canvasH))
+			: 0.0f;
+
+		float decayRate = GHOST_DECAY_BASE + activity * GHOST_DECAY_ACTIVITY_MULT;
+		float newOpacity = f->getGhostOpacity() - decayRate * dt;
+		newOpacity = std::max(newOpacity, 0.0f);
+		f->setGhostOpacity(newOpacity);
+
+		if (newOpacity < 0.005f) {
+			notifyFragmentRemoved(f.get());
+			f->startDissolve(0.01f); // GHOST → DISSOLVING → DEAD in one tick (floor=0 by default)
+		}
+	}
+}
+
+void BEComposition::updateDividerAnimation(float dt) {
+	if (!dividerAnimating) return;
+
+	dividerAnimT += dt / dividerAnimDur;
+	if (dividerAnimT >= 1.0f) {
+		dividerAnimT = 1.0f;
+		dividerAnimating = false;
+	}
+
+	// Ease-in-out quad
+	float t = dividerAnimT < 0.5f
+		? 2.0f * dividerAnimT * dividerAnimT
+		: 1.0f - 2.0f * (1.0f - dividerAnimT) * (1.0f - dividerAnimT);
+
+	dividerX = dividerAnimFrom + (dividerAnimTo - dividerAnimFrom) * t;
+	grid->setDividerX(dividerX);
+}
+
+void BEComposition::updatePerpetualMode(float dt) {
+	// Drift divider toward target; when arrived, pick a new target on the
+	// opposite side of centre (creates a slow pendulum, never gets stuck at edge).
+	float dir = (dividerTargetX > dividerX) ? 1.0f : -1.0f;
+	dividerX += dir * DIVIDER_DRIFT_SPEED * dt;
+	dividerX = ofClamp(dividerX, MIN_DIVIDER_X, MAX_DIVIDER_X);
+	grid->setDividerX(dividerX);
+
+	if (std::abs(dividerTargetX - dividerX) < 2.0f) {
+		float centre = (MIN_DIVIDER_X + MAX_DIVIDER_X) * 0.5f;
+		if (dividerX < centre) {
+			dividerTargetX = ofRandom(centre, MAX_DIVIDER_X);
+		} else {
+			dividerTargetX = ofRandom(MIN_DIVIDER_X, centre);
+		}
+	}
+
+	// Arm the mode transition once the minimum duration has elapsed.
+	if (!perpetualTransitionArmed && timeInMode >= modeTransitionTarget) {
+		perpetualTransitionArmed = true;
+		ofLogNotice("BEComposition") << "PERPETUAL: mode transition armed after " << timeInMode << "s";
+	}
+
+	// Seed refresh: re-randomise RNG every PERPETUAL_SEED_INTERVAL placements.
+	// (Tracked via placementsSinceSeedRefresh, incremented in spawnFragmentInSlot.)
 }
