@@ -5,6 +5,7 @@
 #include "ofLog.h"
 #include "ofUtils.h"
 #include "glm/glm.hpp"
+#include <algorithm>
 #include <cstdlib>
 
 namespace {
@@ -26,9 +27,8 @@ namespace {
 	}
 }
 
-void AnnotationRenderer::setup(const GridSystem* grid_, int dividerCol_, int canvasW_, int canvasH_){
+void AnnotationRenderer::setup(const GridSystem* grid_, int canvasW_, int canvasH_){
 	grid = grid_;
-	dividerCol = dividerCol_;
 	canvasW = canvasW_;
 	canvasH = canvasH_;
 }
@@ -65,15 +65,58 @@ void AnnotationRenderer::onFragmentPlaced(Fragment* newFragment, Fragment* neare
 		float dist = glm::distance(p1, p2);
 
 		MeasurementLine line;
+		line.a = newFragment;
+		line.b = nearest;
 		line.p1 = p1;
 		line.p2 = p2;
 		line.totalDist = dist;
 		line.age = 0;
 		line.label = ofToString(static_cast<int>(dist)) + "px";
 		measurementLines.push_back(line);
+
+		connectionCounts[newFragment]++;
+		connectionCounts[nearest]++;
+		recomputeHub();
 	}
 
 	lastPlacedFragment = newFragment;
+}
+
+void AnnotationRenderer::onFragmentRemoved(Fragment* frag){
+	if(frag == nullptr){
+		return;
+	}
+
+	// Erase first, then recompute: recomputeHub() only ever sets hubFragment
+	// from a key still present in connectionCounts, so if frag was the hub
+	// this naturally replaces it (with the next-best fragment, or nullptr).
+	connectionCounts.erase(frag);
+	recomputeHub();
+
+	if(lastPlacedFragment == frag){
+		lastPlacedFragment = nullptr;
+	}
+}
+
+void AnnotationRenderer::recomputeHub(){
+	Fragment* best = nullptr;
+	int bestCount = 0;
+	for(const auto& [frag, count] : connectionCounts){
+		if(count > bestCount){
+			bestCount = count;
+			best = frag;
+		}
+	}
+	if(best != hubFragment){
+		hubFragment = best;
+		hubHighlightT = 0.0f;
+	}
+	maxConnectionCount = bestCount;
+}
+
+void AnnotationRenderer::pulseMeasurementLines(float peakOpacity, float decaySeconds){
+	mlinePulseOpacity = peakOpacity;
+	mlinePulseDecay = std::max(decaySeconds, 0.01f);
 }
 
 void AnnotationRenderer::update(float dt){
@@ -81,41 +124,63 @@ void AnnotationRenderer::update(float dt){
 		line.age += dt;
 	}
 
+	if(mlinePulseOpacity > 0.0f){
+		mlinePulseOpacity -= dt / mlinePulseDecay;
+		mlinePulseOpacity = std::max(mlinePulseOpacity, 0.0f);
+	}
+
+	if(hubFragment != nullptr && hubHighlightT < 1.0f){
+		hubHighlightT = ofClamp(hubHighlightT + dt / 1.0f, 0.0f, 1.0f);
+	}
+
 	codeTextTimer -= dt;
 	if(codeTextTimer <= 0.0f){
 		trySpawnCodeText();
-		codeTextTimer = randRangeF(codeTextIntervalMin, codeTextIntervalMax);
+		codeTextTimer = hasCodeTextLfoWeight
+			? ofMap(codeTextLfoWeight, 0.0f, 1.0f, codeTextIntervalMin, codeTextIntervalMax)
+			: randRangeF(codeTextIntervalMin, codeTextIntervalMax);
 	}
 }
 
 void AnnotationRenderer::reset(){
 	measurementLines.clear();
 	codeTexts.clear();
-	usedTextCells.clear();
+	usedTextRects.clear();
 	lastPlacedFragment = nullptr;
+	connectionCounts.clear();
+	hubFragment = nullptr;
+	maxConnectionCount = 0;
+	hubHighlightT = 0.0f;
+	mlinePulseOpacity = 0.0f;
 	codeTextTimer = randRangeF(codeTextIntervalMin, codeTextIntervalMax);
 }
 
-bool AnnotationRenderer::findFreeCellNear(int anchorCol, int anchorRow, int& outCol, int& outRow) const{
-	bool anchorInZoneA = anchorCol < dividerCol;
+bool AnnotationRenderer::findFreeTextSlot(glm::vec2 anchorPos, ofRectangle& outRect) const{
+	constexpr float slotW = 90.0f;
+	constexpr float slotH = 16.0f;
+	float dividerX = grid->getDividerX();
+	bool anchorInZoneA = anchorPos.x < dividerX;
 
 	for(int attempt = 0; attempt < 20; attempt++){
-		int col = anchorCol + randRangeI(-2, 2);
-		int row = anchorRow + randRangeI(-2, 2);
+		float x = anchorPos.x + randRangeF(-2.0f, 2.0f) * 110.0f;
+		float y = anchorPos.y + randRangeF(-2.0f, 2.0f) * 90.0f;
+		ofRectangle candidate(x, y, slotW, slotH);
 
-		if(col < 0 || row < 0 || col >= grid->getCols() || row >= grid->getRows()) continue;
-		if((col < dividerCol) != anchorInZoneA) continue; // never cross the divider
-		if(grid->isOccupied(col, row)) continue;
+		if(candidate.x < 0 || candidate.y < 0
+			|| candidate.x + slotW > canvasW || candidate.y + slotH > canvasH) continue;
+		if((candidate.x < dividerX) != anchorInZoneA) continue; // never cross the divider
+		if(!grid->isRectFree(candidate, 0.0f)) continue; // overlaps a placed fragment
 
-		// Reject cells that already carry code text
 		bool taken = false;
-		for(const auto& [tc, tr] : usedTextCells){
-			if(tc == col && tr == row){ taken = true; break; }
+		for(const auto& used : usedTextRects){
+			if(used.getIntersection(candidate).width > 0 && used.getIntersection(candidate).height > 0){
+				taken = true;
+				break;
+			}
 		}
 		if(taken) continue;
 
-		outCol = col;
-		outRow = row;
+		outRect = candidate;
 		return true;
 	}
 	return false;
@@ -126,54 +191,61 @@ void AnnotationRenderer::trySpawnCodeText(){
 		return;
 	}
 
-	const ofRectangle& anchorBounds = lastPlacedFragment->getBounds();
-	int anchorCol = static_cast<int>(anchorBounds.x) / grid->getCellWidth();
-	int anchorRow = static_cast<int>(anchorBounds.y) / grid->getCellHeight();
+	glm::vec2 anchorPos = glm::vec2(lastPlacedFragment->getBounds().getCenter());
 
-	int col, row;
-	if(!findFreeCellNear(anchorCol, anchorRow, col, row)){
+	ofRectangle slot;
+	if(!findFreeTextSlot(anchorPos, slot)){
 		return;
 	}
 
-	ofRectangle cell = grid->cellRect(col, row);
-
 	CodeTextEntry entry;
-	entry.pos = glm::vec2(cell.x + 4, cell.y + cell.height * 0.5f);
+	entry.pos = glm::vec2(slot.x + 4, slot.y + slot.height * 0.5f);
 	entry.text = codeFragments[randRangeI(0, static_cast<int>(codeFragments.size()) - 1)];
 	entry.opacity = randRangeF(codeTextOpacityMin, codeTextOpacityMax);
 
-	// Truncate to fit within the cell (4px left margin already applied, keep 4px right margin)
-	float maxW = cell.width - 8.0f;
+	// Truncate to fit within the slot (4px left margin already applied, keep 4px right margin)
+	float maxW = slot.width - 8.0f;
 	while(!entry.text.empty() && codeFont.stringWidth(entry.text) > maxW){
 		entry.text.pop_back();
 	}
 	if(entry.text.empty()) return;
 
-	usedTextCells.push_back({col, row});
+	usedTextRects.push_back(slot);
 	codeTexts.push_back(entry);
 }
 
 void AnnotationRenderer::drawGrid(float alpha) const{
-	ofColor c = RULE_WHITE;
-	c.a *= alpha;
-	ofSetColor(c);
 	ofSetLineWidth(1);
 
-	for(int col = 0; col <= grid->getCols(); col++){
-		float x = col * grid->getCellWidth();
-		ofDrawLine(x, 0, x, canvasH);
-	}
-	for(int row = 0; row <= grid->getRows(); row++){
-		float y = row * grid->getCellHeight();
-		ofDrawLine(0, y, canvasW, y);
-	}
+	auto drawLines = [&](const std::vector<GridLine>& lines, bool vertical){
+		for(const auto& line : lines){
+			if(line.opacity <= 0.0f) continue;
+
+			ofColor c = RULE_WHITE;
+			c.a = static_cast<int>(c.a * line.opacity * alpha / 0.30f); // RULE_WHITE already carries ~30% baseline
+			ofSetColor(c);
+
+			if(vertical){
+				float y1 = line.extentStart * canvasH;
+				float y2 = line.extentEnd * canvasH;
+				ofDrawLine(line.position, y1, line.position, y2);
+			} else {
+				float x1 = line.extentStart * canvasW;
+				float x2 = line.extentEnd * canvasW;
+				ofDrawLine(x1, line.position, x2, line.position);
+			}
+		}
+	};
+
+	drawLines(grid->getVLines(), true);
+	drawLines(grid->getHLines(), false);
 }
 
-void AnnotationRenderer::drawDivider(float progress) const{
-	float x = dividerCol * grid->getCellWidth();
+void AnnotationRenderer::drawDivider(float progress, float brightness) const{
+	float x = grid->getDividerX();
 	float yEnd = canvasH * ofClamp(progress, 0.0f, 1.0f);
 
-	ofSetColor(RULE_ORANGE);
+	ofSetColor(RULE_ORANGE * ofClamp(brightness * grid->getDividerOpacity(), 0.0f, 1.0f));
 	ofSetLineWidth(2);
 	ofDrawLine(x, 0, x, yEnd);
 }
@@ -202,6 +274,7 @@ void AnnotationRenderer::drawMeasurementLines() const{
 		}
 
 		float opacityFactor = (line.age < mlineFadeDelay) ? 1.0f : mlineFadeOpacity;
+		opacityFactor = std::max(opacityFactor, mlinePulseOpacity);
 		ofColor c = RULE_WHITE;
 		c.a *= opacityFactor;
 		ofSetColor(c);
@@ -232,4 +305,29 @@ void AnnotationRenderer::drawCodeText() const{
 		ofSetColor(c);
 		codeFont.drawString(entry.text, entry.pos.x, entry.pos.y);
 	}
+}
+
+void AnnotationRenderer::drawHubHighlight() const{
+	if(hubFragment == nullptr || maxConnectionCount < 3 || hubHighlightT <= 0.0f){
+		return;
+	}
+
+	const ofRectangle& b = hubFragment->getBounds();
+	ofColor c = RULE_WHITE;
+	c.a = ofLerp(255 * 0.25f, 255 * 0.60f, hubHighlightT);
+	ofSetColor(c);
+	ofNoFill();
+	ofSetLineWidth(2);
+	ofDrawRectangle(b);
+
+	// Ghost border, slightly larger than the fragment, at low opacity.
+	float expand = 0.04f;
+	ofRectangle ghost(
+		b.x - b.width * expand * 0.5f,
+		b.y - b.height * expand * 0.5f,
+		b.width * (1.0f + expand),
+		b.height * (1.0f + expand));
+	ofSetColor(255, 255, 255, static_cast<int>(255 * 0.15f * hubHighlightT));
+	ofDrawRectangle(ghost);
+	ofFill();
 }

@@ -36,11 +36,24 @@ public:
 	virtual ~Fragment() = default;
 
 	void setup(const Params & p);
-	void update(float dt);
-	void draw() const;
+	virtual void update(float dt);
+	virtual void draw() const;
+
+	// Drawn in a separate pass, after the main scene's FBO capture is closed.
+	// Any subclass effect that needs its own FBO (to get clean local UVs,
+	// for instance) must not run while another FBO is bound — openFrameworks'
+	// ofFbo::end() resets the matrix/viewport to the window unconditionally,
+	// not back to the FBO that was bound before, so nesting silently corrupts
+	// everything drawn afterward in the parent FBO. Default is a no-op.
+	virtual void drawOverlay() const {}
 
 	void enterDrifting();
 	void startDissolve(float fadeDuration);
+
+	// Additive nudge on top of the normal DRIFTING desaturate ramp,
+	// clamped into [0,1] alongside it. Lets a subclass drive per-instance
+	// variation (e.g. an LFO) without duplicating the ramp computation.
+	void setExternalDesatNudge(float nudge) { externalDesatNudge = nudge; }
 
 	// Points this fragment at the video player's shared GPU texture and assigns
 	// a crop rectangle in video pixel coordinates. No copying. The texture updates
@@ -50,6 +63,11 @@ public:
 	bool isDead() const { return state == State::DEAD; }
 	State getState() const { return state; }
 	const ofRectangle & getBounds() const { return bounds; }
+
+	// Assigned by the composition at placement time; used by GridSystem to
+	// track which grid lines a given fragment owns (so they can fade with it).
+	void setId(int id_) { id = id_; }
+	int getId() const { return id; }
 
 	static void loadFragmentShader(const std::string & vertPath, const std::string & fragPath);
 
@@ -95,4 +113,6 @@ private:
 	float desaturateMax = 0.0f;
 	bool circularMask = false;
 	float maskRadius = 0.0f;
+	float externalDesatNudge = 0.0f;
+	int id = -1;
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "ofMain.h"
+#include "RidgelineRenderer.h"
 #include "ShaderLibrary.h"
 #include "VideoSystem.h"
 #include "MotionExtraction.h"
@@ -106,6 +107,19 @@ private:
 
     ofFbo trailPrevFbo;   // temporal_trails: previous accumulated frame
     ofFbo trailOutFbo;    // temporal_trails: current output (ping-pong target)
+
+    // ridgeline effect
+    RidgelineRenderer ridgelineRenderer;
+    int ridgelineCanvasW = 0;
+    int ridgelineCanvasH = 0;
+    float pRidgeNumLines      = 42.0f;
+    float pRidgeSamplesPerLine= 64.0f;
+    float pRidgeAmplitude     = 80.0f;
+    float pRidgeSpacingPct    = 0.10f;
+    float pRidgeCenterYPct    = 0.55f;
+    float pRidgeMarginXPct    = 0.08f;
+    float pRidgeOcclude       = 1.0f;  // 0=off 1=on
+    float pRidgeOverlay       = 0.0f;  // 0=black ground  1=source image under
 
     struct TriggerSim {
         TriggerID   id;

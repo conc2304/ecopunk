@@ -9,7 +9,9 @@ const std::vector<std::string> DebugMode::SHADER_NAMES = {
     // nature pack
     "bioluminescence", "chromatic_aberration", "edge_glow",
     "ink_outlines", "pixel_drift", "pixel_sorting", "temporal_trails",
-    "water_refraction"
+    "water_refraction",
+    // cpu-side effects (no shader)
+    "ridgeline"
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -158,6 +160,16 @@ std::vector<DebugParam> DebugMode::buildParams() {
             p.push_back({ "frequency",     &pWaterFrequency,  0.002f, 0.001f,0.08f  });
             p.push_back({ "speed",         &pWaterSpeed,      0.1f,   0.0f,  4.0f   });
             break;
+        case 18: // ridgeline
+            p.push_back({ "numLines",       &pRidgeNumLines,       1.0f,  10.0f, 80.0f  });
+            p.push_back({ "samplesPerLine", &pRidgeSamplesPerLine, 2.0f,  16.0f, 128.0f });
+            p.push_back({ "amplitude",      &pRidgeAmplitude,      5.0f,  0.0f,  300.0f });
+            p.push_back({ "spacingPct",     &pRidgeSpacingPct,     0.005f,0.02f, 0.30f  });
+            p.push_back({ "centerYPct",     &pRidgeCenterYPct,     0.02f, 0.1f,  0.9f   });
+            p.push_back({ "marginXPct",     &pRidgeMarginXPct,     0.01f, 0.0f,  0.25f  });
+            p.push_back({ "occlude (0/1)",  &pRidgeOcclude,        1.0f,  0.0f,  1.0f   });
+            p.push_back({ "overlay (0/1)",  &pRidgeOverlay,        1.0f,  0.0f,  1.0f   });
+            break;
         default:
             break;
     }
@@ -169,6 +181,27 @@ std::vector<DebugParam> DebugMode::buildParams() {
 void DebugMode::drawShaderFullScreen() {
     const std::string& name = SHADER_NAMES[shaderIndex];
     float W = ofGetWidth(), H = ofGetHeight();
+
+    if (name == "ridgeline") {
+        if ((int)W != ridgelineCanvasW || (int)H != ridgelineCanvasH) {
+            ridgelineRenderer.setup((int)W, (int)H);
+            ridgelineCanvasW = (int)W;
+            ridgelineCanvasH = (int)H;
+        }
+        RidgelineRenderer::Params rp;
+        rp.numLines       = (int)pRidgeNumLines;
+        rp.samplesPerLine = (int)pRidgeSamplesPerLine;
+        rp.amplitude      = pRidgeAmplitude;
+        rp.spacingPct     = pRidgeSpacingPct;
+        rp.centerYPct     = pRidgeCenterYPct;
+        rp.marginXPct     = pRidgeMarginXPct;
+        rp.occlude        = (pRidgeOcclude > 0.5f);
+        rp.overlayMode    = (pRidgeOverlay  > 0.5f);
+        ridgelineRenderer.setParams(rp);
+        ridgelineRenderer.update(video->getPixels());
+        ridgelineRenderer.draw(rp.overlayMode ? &video->getTexture() : nullptr);
+        return;
+    }
 
     if (!shaderLib->has(name)) {
         ofSetColor(255);

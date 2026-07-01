@@ -23,240 +23,240 @@
 // -----------------------------------------------------------------------------
 
 enum class BEPreset {
-    Default,
-    SlowCinematic
+	Default,
+	SlowCinematic
 };
 
 // Toggle this value to switch the whole composition timing preset.
 constexpr BEPreset BE_SETTINGS_PRESET = BEPreset::SlowCinematic;
 
 struct BEPresetValues {
-    // Cycle timing
-    float CYCLE_DURATION_MIN;
-    float CYCLE_DURATION_MAX;
-    float PLACEMENT_INTERVAL_MIN;
-    float PLACEMENT_INTERVAL_MAX;
-    float PLACEMENT_INTERVAL_DENSE;
-    float DISSOLVE_FADE_MIN;
-    float DISSOLVE_FADE_MAX;
-    float DIVIDER_DRAW_DURATION;
-    float GRID_FADEIN_DURATION;
+	// Cycle timing
+	float CYCLE_DURATION_MIN;
+	float CYCLE_DURATION_MAX;
+	float PLACEMENT_INTERVAL_MIN;
+	float PLACEMENT_INTERVAL_MAX;
+	float PLACEMENT_INTERVAL_DENSE;
+	float DISSOLVE_FADE_MIN;
+	float DISSOLVE_FADE_MAX;
+	float DIVIDER_DRAW_DURATION;
+	float GRID_FADEIN_DURATION;
 
-    // Composition cycle stage durations
-    float BLANK_DURATION;
-    float DENSITY_DURATION;
-    float DISSOLVE_DURATION;
-    float RESET_HOLD_DURATION;
+	// Composition cycle stage durations
+	float BLANK_DURATION;
+	float DENSITY_DURATION;
+	float DISSOLVE_DURATION;
+	float RESET_HOLD_DURATION;
 
-    // Fragments
-    int MAX_FRAGMENTS;
-    int PLACEMENT_MAX_ATTEMPTS;
-    float DESATURATE_MAX;
-    float DESATURATE_RAMP_DURATION;
+	// Fragments
+	int MAX_FRAGMENTS;
+	int PLACEMENT_MAX_ATTEMPTS;
+	float DESATURATE_MAX;
+	float DESATURATE_RAMP_DURATION;
 
-    // Placement scoring weights
-    float PLACEMENT_SCORE_W_CENTER;
-    float PLACEMENT_SCORE_W_PROXIMITY;
-    float PLACEMENT_SCORE_W_ZONE;
-    float PLACEMENT_SCORE_JITTER;
+	// Placement scoring weights
+	float PLACEMENT_SCORE_W_CENTER;
+	float PLACEMENT_SCORE_W_PROXIMITY;
+	float PLACEMENT_SCORE_W_ZONE;
+	float PLACEMENT_SCORE_JITTER;
 
-    // Drift
-    float DRIFT_AMP_X;
-    float DRIFT_AMP_Y;
-    float DRIFT_FREQ_X;
-    float DRIFT_FREQ_Y;
+	// Drift
+	float DRIFT_AMP_X;
+	float DRIFT_AMP_Y;
+	float DRIFT_FREQ_X;
+	float DRIFT_FREQ_Y;
 
-    // Arrival animations
-    float SCAN_REVEAL_DURATION;
-    float BORDER_DRAW_DURATION;
-    float IRIS_OPEN_DURATION;
-    float SLIDE_IN_DURATION;
-    float AFTERIMAGE_FADE_DURATION;
+	// Arrival animations
+	float SCAN_REVEAL_DURATION;
+	float BORDER_DRAW_DURATION;
+	float IRIS_OPEN_DURATION;
+	float SLIDE_IN_DURATION;
+	float AFTERIMAGE_FADE_DURATION;
 
-    // Measurement lines
-    float MLINE_DRAW_SPEED;
-    float MLINE_FADE_OPACITY;
-    float MLINE_FADE_DELAY;
+	// Measurement lines
+	float MLINE_DRAW_SPEED;
+	float MLINE_FADE_OPACITY;
+	float MLINE_FADE_DELAY;
 
-    // Typography
-    int SIZE_LABEL;
-    int SIZE_CODE;
-    int SIZE_ANNOTATION;
+	// Typography
+	int SIZE_LABEL;
+	int SIZE_CODE;
+	int SIZE_ANNOTATION;
 
-    // Code text overlay
-    float CODE_TEXT_INTERVAL_MIN;
-    float CODE_TEXT_INTERVAL_MAX;
-    float CODE_TEXT_OPACITY_MIN;
-    float CODE_TEXT_OPACITY_MAX;
+	// Code text overlay
+	float CODE_TEXT_INTERVAL_MIN;
+	float CODE_TEXT_INTERVAL_MAX;
+	float CODE_TEXT_OPACITY_MIN;
+	float CODE_TEXT_OPACITY_MAX;
 
-    // Circle fragment
-    float CIRCLE_DIAMETER_MIN_CELLS;
-    float CIRCLE_DIAMETER_MAX_CELLS;
-    float CIRCLE_REGION_CENTER_X;
-    float CIRCLE_REGION_CENTER_Y;
-    float CIRCLE_REGION_SIZE;
-    float CIRCLE_TRIGGER_MIN_FRACTION;
-    float CIRCLE_TRIGGER_MAX_FRACTION;
-    int CIRCLE_PLACEMENT_MAX_ATTEMPTS;
-    float IRIS_OPEN_LEAD_FRACTION;
-    float GHOST_RING_SCALE;
+	// Circle fragment
+	float CIRCLE_DIAMETER_MIN_CELLS;
+	float CIRCLE_DIAMETER_MAX_CELLS;
+	float CIRCLE_REGION_CENTER_X;
+	float CIRCLE_REGION_CENTER_Y;
+	float CIRCLE_REGION_SIZE;
+	float CIRCLE_TRIGGER_MIN_FRACTION;
+	float CIRCLE_TRIGGER_MAX_FRACTION;
+	int CIRCLE_PLACEMENT_MAX_ATTEMPTS;
+	float IRIS_OPEN_LEAD_FRACTION;
+	float GHOST_RING_SCALE;
 };
 
 constexpr BEPresetValues BE_DEFAULT_PRESET = {
-    // Cycle timing
-    90.0f,   // CYCLE_DURATION_MIN
-    180.0f,  // CYCLE_DURATION_MAX
-    1.0f,    // PLACEMENT_INTERVAL_MIN
-    4.0f,    // PLACEMENT_INTERVAL_MAX
-    6.0f,    // PLACEMENT_INTERVAL_DENSE
-    8.0f,    // DISSOLVE_FADE_MIN
-    12.0f,   // DISSOLVE_FADE_MAX
-    3.0f,    // DIVIDER_DRAW_DURATION
-    2.0f,    // GRID_FADEIN_DURATION
+	// Cycle timing
+	90.0f, // CYCLE_DURATION_MIN
+	180.0f, // CYCLE_DURATION_MAX
+	1.0f, // PLACEMENT_INTERVAL_MIN
+	4.0f, // PLACEMENT_INTERVAL_MAX
+	6.0f, // PLACEMENT_INTERVAL_DENSE
+	8.0f, // DISSOLVE_FADE_MIN
+	12.0f, // DISSOLVE_FADE_MAX
+	3.0f, // DIVIDER_DRAW_DURATION
+	2.0f, // GRID_FADEIN_DURATION
 
-    // Composition cycle stage durations
-    8.0f,    // BLANK_DURATION
-    30.0f,   // DENSITY_DURATION
-    30.0f,   // DISSOLVE_DURATION
-    2.0f,    // RESET_HOLD_DURATION
+	// Composition cycle stage durations
+	8.0f, // BLANK_DURATION
+	30.0f, // DENSITY_DURATION
+	30.0f, // DISSOLVE_DURATION
+	2.0f, // RESET_HOLD_DURATION
 
-    // Fragments
-    18,      // MAX_FRAGMENTS
-    50,      // PLACEMENT_MAX_ATTEMPTS
-    0.40f,   // DESATURATE_MAX
-    30.0f,   // DESATURATE_RAMP_DURATION
+	// Fragments
+	18, // MAX_FRAGMENTS
+	50, // PLACEMENT_MAX_ATTEMPTS
+	0.40f, // DESATURATE_MAX
+	30.0f, // DESATURATE_RAMP_DURATION
 
-    // Placement scoring weights
-    1.0f,    // PLACEMENT_SCORE_W_CENTER
-    1.0f,    // PLACEMENT_SCORE_W_PROXIMITY
-    0.5f,    // PLACEMENT_SCORE_W_ZONE
-    0.2f,    // PLACEMENT_SCORE_JITTER
+	// Placement scoring weights
+	1.0f, // PLACEMENT_SCORE_W_CENTER
+	1.0f, // PLACEMENT_SCORE_W_PROXIMITY
+	0.5f, // PLACEMENT_SCORE_W_ZONE
+	0.2f, // PLACEMENT_SCORE_JITTER
 
-    // Drift
-    6.0f,    // DRIFT_AMP_X
-    4.0f,    // DRIFT_AMP_Y
-    0.25f,   // DRIFT_FREQ_X
-    0.18f,   // DRIFT_FREQ_Y
+	// Drift
+	6.0f, // DRIFT_AMP_X
+	4.0f, // DRIFT_AMP_Y
+	0.25f, // DRIFT_FREQ_X
+	0.18f, // DRIFT_FREQ_Y
 
-    // Arrival animations
-    0.8f,    // SCAN_REVEAL_DURATION
-    0.3f,    // BORDER_DRAW_DURATION
-    1.0f,    // IRIS_OPEN_DURATION
-    0.6f,    // SLIDE_IN_DURATION
-    2.0f,    // AFTERIMAGE_FADE_DURATION
+	// Arrival animations
+	0.8f, // SCAN_REVEAL_DURATION
+	0.3f, // BORDER_DRAW_DURATION
+	1.0f, // IRIS_OPEN_DURATION
+	0.6f, // SLIDE_IN_DURATION
+	2.0f, // AFTERIMAGE_FADE_DURATION
 
-    // Measurement lines
-    400.0f,  // MLINE_DRAW_SPEED
-    0.20f,   // MLINE_FADE_OPACITY
-    4.0f,    // MLINE_FADE_DELAY
+	// Measurement lines
+	400.0f, // MLINE_DRAW_SPEED
+	0.20f, // MLINE_FADE_OPACITY
+	4.0f, // MLINE_FADE_DELAY
 
-    // Typography
-    14,      // SIZE_LABEL
-    16,      // SIZE_CODE
-    9,       // SIZE_ANNOTATION
+	// Typography
+	14, // SIZE_LABEL
+	16, // SIZE_CODE
+	9, // SIZE_ANNOTATION
 
-    // Code text overlay
-    3.0f,    // CODE_TEXT_INTERVAL_MIN
-    8.0f,    // CODE_TEXT_INTERVAL_MAX
-    0.50f,   // CODE_TEXT_OPACITY_MIN
-    0.70f,   // CODE_TEXT_OPACITY_MAX
+	// Code text overlay
+	3.0f, // CODE_TEXT_INTERVAL_MIN
+	8.0f, // CODE_TEXT_INTERVAL_MAX
+	0.50f, // CODE_TEXT_OPACITY_MIN
+	0.70f, // CODE_TEXT_OPACITY_MAX
 
-    // Circle fragment
-    3.5f,    // CIRCLE_DIAMETER_MIN_CELLS
-    4.5f,    // CIRCLE_DIAMETER_MAX_CELLS
-    320.0f,  // CIRCLE_REGION_CENTER_X
-    360.0f,  // CIRCLE_REGION_CENTER_Y
-    200.0f,  // CIRCLE_REGION_SIZE
-    0.50f,   // CIRCLE_TRIGGER_MIN_FRACTION
-    0.65f,   // CIRCLE_TRIGGER_MAX_FRACTION
-    20,      // CIRCLE_PLACEMENT_MAX_ATTEMPTS
-    0.10f,   // IRIS_OPEN_LEAD_FRACTION
-    1.15f    // GHOST_RING_SCALE
+	// Circle fragment
+	3.5f, // CIRCLE_DIAMETER_MIN_CELLS
+	4.5f, // CIRCLE_DIAMETER_MAX_CELLS
+	320.0f, // CIRCLE_REGION_CENTER_X
+	360.0f, // CIRCLE_REGION_CENTER_Y
+	200.0f, // CIRCLE_REGION_SIZE
+	0.50f, // CIRCLE_TRIGGER_MIN_FRACTION
+	0.65f, // CIRCLE_TRIGGER_MAX_FRACTION
+	20, // CIRCLE_PLACEMENT_MAX_ATTEMPTS
+	0.10f, // IRIS_OPEN_LEAD_FRACTION
+	1.15f // GHOST_RING_SCALE
 };
 
 constexpr BEPresetValues BE_SLOW_CINEMATIC_PRESET = {
-    // Cycle timing
-    180.0f,  // CYCLE_DURATION_MIN
-    300.0f,  // CYCLE_DURATION_MAX
-    4.0f,    // PLACEMENT_INTERVAL_MIN
-    10.0f,   // PLACEMENT_INTERVAL_MAX
-    10.0f,   // PLACEMENT_INTERVAL_DENSE
-    14.0f,   // DISSOLVE_FADE_MIN
-    22.0f,   // DISSOLVE_FADE_MAX
-    6.0f,    // DIVIDER_DRAW_DURATION
-    4.0f,    // GRID_FADEIN_DURATION
+	// Cycle timing
+	180.0f * 2.0f, // CYCLE_DURATION_MIN
+	300.0f * 2.0f, // CYCLE_DURATION_MAX
+	8.0f, // PLACEMENT_INTERVAL_MIN
+	20.0f, // PLACEMENT_INTERVAL_MAX
+	10.0f, // PLACEMENT_INTERVAL_DENSE
+	14.0f, // DISSOLVE_FADE_MIN
+	22.0f, // DISSOLVE_FADE_MAX
+	6.0f, // DIVIDER_DRAW_DURATION
+	4.0f, // GRID_FADEIN_DURATION
 
-    // Composition cycle stage durations
-    8.0f,    // BLANK_DURATION
-    60.0f,   // DENSITY_DURATION
-    45.0f,   // DISSOLVE_DURATION
-    3.0f,    // RESET_HOLD_DURATION
+	// Composition cycle stage durations
+	16.0f, // BLANK_DURATION
+	90.0f, // DENSITY_DURATION
+	45.0f, // DISSOLVE_DURATION
+	15.0f, // RESET_HOLD_DURATION
 
-    // Fragments
-    18,      // MAX_FRAGMENTS
-    50,      // PLACEMENT_MAX_ATTEMPTS
-    0.40f,   // DESATURATE_MAX
-    60.0f,   // DESATURATE_RAMP_DURATION
+	// Fragments
+	18, // MAX_FRAGMENTS
+	20, // PLACEMENT_MAX_ATTEMPTS
+	0.40f, // DESATURATE_MAX
+	60.0f, // DESATURATE_RAMP_DURATION
 
-    // Placement scoring weights
-    1.0f,    // PLACEMENT_SCORE_W_CENTER
-    1.0f,    // PLACEMENT_SCORE_W_PROXIMITY
-    0.5f,    // PLACEMENT_SCORE_W_ZONE
-    0.2f,    // PLACEMENT_SCORE_JITTER
+	// Placement scoring weights
+	1.0f, // PLACEMENT_SCORE_W_CENTER
+	1.0f, // PLACEMENT_SCORE_W_PROXIMITY
+	0.5f, // PLACEMENT_SCORE_W_ZONE
+	0.2f, // PLACEMENT_SCORE_JITTER
 
-    // Drift
-    4.0f,    // DRIFT_AMP_X
-    3.0f,    // DRIFT_AMP_Y
-    0.10f,   // DRIFT_FREQ_X
-    0.08f,   // DRIFT_FREQ_Y
+	// Drift
+	4.0f, // DRIFT_AMP_X
+	3.0f, // DRIFT_AMP_Y
+	0.10f, // DRIFT_FREQ_X
+	0.08f, // DRIFT_FREQ_Y
 
-    // Arrival animations
-    2.0f,    // SCAN_REVEAL_DURATION
-    0.8f,    // BORDER_DRAW_DURATION
-    2.5f,    // IRIS_OPEN_DURATION
-    1.6f,    // SLIDE_IN_DURATION
-    4.0f,    // AFTERIMAGE_FADE_DURATION
+	// Arrival animations
+	4.0f, // SCAN_REVEAL_DURATION
+	2.8f, // BORDER_DRAW_DURATION
+	3.5f, // IRIS_OPEN_DURATION
+	2.6f, // SLIDE_IN_DURATION
+	8.0f, // AFTERIMAGE_FADE_DURATION
 
-    // Measurement lines
-    180.0f,  // MLINE_DRAW_SPEED
-    0.20f,   // MLINE_FADE_OPACITY
-    8.0f,    // MLINE_FADE_DELAY
+	// Measurement lines
+	180.0f, // MLINE_DRAW_SPEED
+	0.20f, // MLINE_FADE_OPACITY
+	8.0f, // MLINE_FADE_DELAY
 
-    // Typography
-    14,      // SIZE_LABEL
-    16,      // SIZE_CODE
-    9,       // SIZE_ANNOTATION
+	// Typography
+	16, // SIZE_LABEL
+	18, // SIZE_CODE
+	10, // SIZE_ANNOTATION
 
-    // Code text overlay
-    8.0f,    // CODE_TEXT_INTERVAL_MIN
-    16.0f,   // CODE_TEXT_INTERVAL_MAX
-    0.50f,   // CODE_TEXT_OPACITY_MIN
-    0.70f,   // CODE_TEXT_OPACITY_MAX
+	// Code text overlay
+	8.0f, // CODE_TEXT_INTERVAL_MIN
+	16.0f, // CODE_TEXT_INTERVAL_MAX
+	0.50f, // CODE_TEXT_OPACITY_MIN
+	0.70f, // CODE_TEXT_OPACITY_MAX
 
-    // Circle fragment
-    3.5f,    // CIRCLE_DIAMETER_MIN_CELLS
-    4.5f,    // CIRCLE_DIAMETER_MAX_CELLS
-    320.0f,  // CIRCLE_REGION_CENTER_X
-    360.0f,  // CIRCLE_REGION_CENTER_Y
-    200.0f,  // CIRCLE_REGION_SIZE
-    0.50f,   // CIRCLE_TRIGGER_MIN_FRACTION
-    0.65f,   // CIRCLE_TRIGGER_MAX_FRACTION
-    20,      // CIRCLE_PLACEMENT_MAX_ATTEMPTS
-    0.10f,   // IRIS_OPEN_LEAD_FRACTION
-    1.15f    // GHOST_RING_SCALE
+	// Circle fragment
+	3.5f, // CIRCLE_DIAMETER_MIN_CELLS
+	4.5f, // CIRCLE_DIAMETER_MAX_CELLS
+	320.0f, // CIRCLE_REGION_CENTER_X
+	360.0f, // CIRCLE_REGION_CENTER_Y
+	200.0f, // CIRCLE_REGION_SIZE
+	0.50f, // CIRCLE_TRIGGER_MIN_FRACTION
+	0.65f, // CIRCLE_TRIGGER_MAX_FRACTION
+	20, // CIRCLE_PLACEMENT_MAX_ATTEMPTS
+	0.10f, // IRIS_OPEN_LEAD_FRACTION
+	1.15f // GHOST_RING_SCALE
 };
 
 constexpr BEPresetValues getBEPresetValues(BEPreset preset) {
-    return preset == BEPreset::SlowCinematic
-        ? BE_SLOW_CINEMATIC_PRESET
-        : BE_DEFAULT_PRESET;
+	return preset == BEPreset::SlowCinematic
+		? BE_SLOW_CINEMATIC_PRESET
+		: BE_DEFAULT_PRESET;
 }
 
 constexpr BEPresetValues BE_VALUES = getBEPresetValues(BE_SETTINGS_PRESET);
 
 // Canvas
-constexpr int CANVAS_W = 1280;
-constexpr int CANVAS_H = 720;
+float CANVAS_W = 1280.f;
+float CANVAS_H = 720.f;
 constexpr int TARGET_FPS = 24;
 
 // Grid
@@ -314,10 +314,9 @@ constexpr float MLINE_DRAW_SPEED = BE_VALUES.MLINE_DRAW_SPEED; // px/second
 constexpr float MLINE_FADE_OPACITY = BE_VALUES.MLINE_FADE_OPACITY;
 constexpr float MLINE_FADE_DELAY = BE_VALUES.MLINE_FADE_DELAY; // seconds before fade to MLINE_FADE_OPACITY
 
-// Typography (§02). VeraMono.ttf isn't in this repo; using LiberationMono
-// (open-license, already bundled elsewhere in this OF install) instead.
+// Typography
 // constexpr char  CODE_FONT_PATH[]          = "fonts/LiberationMono-Regular.ttf";
-constexpr char CODE_FONT_PATH[] = "fonts/ArgakaFashionRegular.ttf";
+constexpr char CODE_FONT_PATH[] = "fonts/ArgakaFashionRegular.ttf"; // Art deco
 constexpr int SIZE_LABEL = BE_VALUES.SIZE_LABEL;
 constexpr int SIZE_CODE = BE_VALUES.SIZE_CODE;
 constexpr int SIZE_ANNOTATION = BE_VALUES.SIZE_ANNOTATION;
@@ -329,7 +328,7 @@ constexpr float CODE_TEXT_INTERVAL_MAX = BE_VALUES.CODE_TEXT_INTERVAL_MAX;
 constexpr float CODE_TEXT_OPACITY_MIN = BE_VALUES.CODE_TEXT_OPACITY_MIN;
 constexpr float CODE_TEXT_OPACITY_MAX = BE_VALUES.CODE_TEXT_OPACITY_MAX;
 
-// Circle fragment (Phase 4 — §06)
+// Circle fragment
 constexpr float CIRCLE_DIAMETER_MIN_CELLS = BE_VALUES.CIRCLE_DIAMETER_MIN_CELLS;
 constexpr float CIRCLE_DIAMETER_MAX_CELLS = BE_VALUES.CIRCLE_DIAMETER_MAX_CELLS;
 constexpr float CIRCLE_REGION_CENTER_X = BE_VALUES.CIRCLE_REGION_CENTER_X; // px, left-of-center of zone A

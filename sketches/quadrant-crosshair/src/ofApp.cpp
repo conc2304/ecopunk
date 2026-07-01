@@ -153,27 +153,21 @@ void ofApp::draw() {
 
     ofBackground(13, 13, 13);
 
-    auto drawMotionOverlay = [&]() {
-        if (motionOverlayAlpha > 0) {
-            ofEnableAlphaBlending();
-            ofSetColor(255, 255, 255, (int)(motionOverlayAlpha * uiAlpha));
-            motionEx.getMotionTexture().draw(0, 0, ofGetWidth(), ofGetHeight());
-            ofDisableAlphaBlending();
-        }
-    };
+    // Layer 1: background fullscreen motion effect video (always bottom)
+    if (motionOverlayAlpha > 0) {
+        ofEnableAlphaBlending();
+        ofSetColor(255, 255, 255, (int)(motionOverlayAlpha * uiAlpha));
+        motionEx.getMotionTexture().draw(0, 0, ofGetWidth(), ofGetHeight());
+        ofDisableAlphaBlending();
+    }
 
-    if (motionOverlayBehind) drawMotionOverlay();
-
-    // Layer 1: quadrants (erosion + per-quadrant effects, contraction crossfade)
+    // Layer 2: fragment video / circle layer
     quadrants.draw(video.getTexture(), glm::vec2(ofGetWidth(), ofGetHeight()));
 
-    // Layer 2: motion extraction atmospheric overlay — fades with UI during expansion
-    if (!motionOverlayBehind) drawMotionOverlay();
-
-    // Layer 3: HUD — fades with expansion
+    // Layer 3: grid lines
     if (showHUD) hud.draw(uiAlpha);
 
-    // Layer 4: crosshair — fades with expansion
+    // Layer 4: orange starter line
     crosshair.draw(uiAlpha);
 }
 
@@ -187,7 +181,6 @@ void ofApp::keyPressed(int key) {
     if (key == 'f' || key == 'F') ofToggleFullscreen();
     if (key == '[') motionOverlayAlpha = ofClamp(motionOverlayAlpha - 10, 0, 255);
     if (key == ']') motionOverlayAlpha = ofClamp(motionOverlayAlpha + 10, 0, 255);
-    if (key == 'o' || key == 'O') motionOverlayBehind = !motionOverlayBehind;
     if (key == 'm' || key == 'M') motionEx.setOutputMode((motionEx.getOutputMode() + 1) % 3);
     if (key == 'h' || key == 'H') showHUD = !showHUD;
     if (key == OF_KEY_ESC)        ofExit();

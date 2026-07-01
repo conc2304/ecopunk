@@ -34,7 +34,6 @@ private:
 
     float steeringBrightness  = 0.5f;
     int   motionOverlayAlpha  = 55;
-    bool  motionOverlayBehind = false;  // 'o' toggles: behind quadrants vs on top
     bool  showHUD             = true;
     DebugMode debug;
 

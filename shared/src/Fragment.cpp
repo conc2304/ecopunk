@@ -132,6 +132,7 @@ void Fragment::drawMaskedFill(float radius) const {
 	float desaturateAmount = (state == State::DRIFTING)
 		? ofClamp(stateElapsed / desaturateRampDuration, 0.0f, 1.0f) * desaturateMax
 		: 0.0f;
+	desaturateAmount = ofClamp(desaturateAmount + externalDesatNudge, 0.0f, 1.0f);
 
 	// Circle path: use a textured disk mesh instead of the fragment shader's
 	// gl_FragCoord circular discard. This is the important fix for the live-video
@@ -174,13 +175,15 @@ void Fragment::drawTexturedCircleMesh(float radius) const {
 
 	// Center vertex.
 	mesh.addVertex(glm::vec3(center.x, center.y, 0.0f));
-	mesh.addTexCoord(glm::vec2(
+	mesh.addTexCoord(videoTexture->getCoordFromPoint(
 		videoCrop.x + videoCrop.width * 0.5f,
 		videoCrop.y + videoCrop.height * 0.5f));
 
 	// Ring vertices. Texture coordinates map the circle onto the fragment's
 	// rectangular crop, so the live video fills the circle without stretching more
 	// than the original crop already does.
+	// getCoordFromPoint() normalises pixel coords to [0,1] for GL_TEXTURE_2D
+	// (ofDisableArbTex mode) or leaves them as-is for GL_TEXTURE_RECTANGLE.
 	for (int i = 0; i <= segments; i++) {
 		float a = static_cast<float>(i) / static_cast<float>(segments) * TWO_PI;
 		float x = center.x + std::cos(a) * radius;
@@ -190,7 +193,7 @@ void Fragment::drawTexturedCircleMesh(float radius) const {
 		float vNorm = (y - pos.y) / bounds.height;
 
 		mesh.addVertex(glm::vec3(x, y, 0.0f));
-		mesh.addTexCoord(glm::vec2(
+		mesh.addTexCoord(videoTexture->getCoordFromPoint(
 			videoCrop.x + videoCrop.width * uNorm,
 			videoCrop.y + videoCrop.height * vNorm));
 	}

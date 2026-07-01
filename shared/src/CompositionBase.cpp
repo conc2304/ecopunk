@@ -1,140 +1,178 @@
 #include "CompositionBase.h"
+#include "ofLog.h"
 #include <cstdlib>
 #include <random>
-#include "ofLog.h"
 
-float CompositionBase::randRangeF(float lo, float hi){
+float CompositionBase::randRangeF(float lo, float hi) {
 	return lo + (hi - lo) * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX));
 }
 
-int CompositionBase::randRangeI(int lo, int hiInclusive){
+int CompositionBase::randRangeI(int lo, int hiInclusive) {
 	return lo + rand() % (hiInclusive - lo + 1);
 }
 
-void CompositionBase::setup(GridSystem* grid_, const Timing& timing_){
+void CompositionBase::setup(GridSystem * grid_, const Timing & timing_) {
 	grid = grid_;
 	timing = timing_;
 }
 
-void CompositionBase::startCycle(){
-	cycleSeed = static_cast<int>(std::random_device{}());
+void CompositionBase::startCycle() {
+	cycleSeed = static_cast<int>(std::random_device {}());
 	srand(cycleSeed);
 	ofLogNotice("CompositionBase") << "starting cycle, seed=" << cycleSeed;
 
 	grid->clear();
+	grid->startNewCycle();
 	fragments.clear();
 	dissolveSchedule.clear();
+	structuralDissolveTriggered = false;
 
 	cycleDuration = randRangeF(timing.cycleDurationMin, timing.cycleDurationMax);
 	placementDuration = cycleDuration - timing.blankDuration - timing.densityDuration - timing.dissolveDuration;
 
 	phase = CyclePhase::BLANK;
 	phaseElapsed = 0;
+	cycleElapsedTotal = 0;
 
 	onCycleStart();
 
-	if(onCycleStartCb){
+	if (onCycleStartCb) {
 		onCycleStartCb();
 	}
 }
 
-bool CompositionBase::allFragmentsDead() const{
-	for(const auto& f : fragments){
-		if(!f->isDead()){
+bool CompositionBase::allFragmentsDead() const {
+	for (const auto & f : fragments) {
+		if (!f->isDead()) {
 			return false;
 		}
 	}
 	return true;
 }
 
-void CompositionBase::beginDissolve(){
-	phase = CyclePhase::DISSOLVE;
-	phaseElapsed = 0;
-	dissolveSchedule.clear();
-
-	for(auto& f : fragments){
-		if(!f->isDead()){
-			dissolveSchedule.push_back({
-				f.get(),
-				randRangeF(0.0f, timing.dissolveDuration * 0.5f),
-				randRangeF(timing.dissolveFadeMin, timing.dissolveFadeMax),
-				false
-			});
+void CompositionBase::setPhase(CyclePhase newPhase) {
+	if (newPhase != phase) {
+		phase = newPhase;
+		if (onPhaseChangedCb) {
+			onPhaseChangedCb(newPhase);
 		}
 	}
 }
 
-void CompositionBase::update(float dt){
-	for(auto& f : fragments){
+void CompositionBase::enterDensity() {
+	setPhase(CyclePhase::DENSITY);
+	phaseElapsed = 0;
+	placementTimer = timing.placementIntervalDense;
+	for (auto & f : fragments) {
+		f->enterDrifting();
+	}
+}
+
+void CompositionBase::forceEnterDensity() {
+	if (phase == CyclePhase::PLACEMENT) {
+		enterDensity();
+	}
+}
+
+void CompositionBase::beginDissolve() {
+	setPhase(CyclePhase::DISSOLVE);
+	phaseElapsed = 0;
+	dissolveSchedule.clear();
+
+	for (auto & f : fragments) {
+		if (!f->isDead()) {
+			dissolveSchedule.push_back({ f.get(),
+				randRangeF(0.0f, timing.dissolveDuration * 0.5f),
+				randRangeF(timing.dissolveFadeMin, timing.dissolveFadeMax),
+				false });
+		}
+	}
+}
+
+void CompositionBase::update(float dt) {
+	onUpdate(dt);
+
+	grid->update(dt);
+
+	for (auto & f : fragments) {
 		f->update(dt);
 	}
 
 	phaseElapsed += dt;
+	cycleElapsedTotal += dt;
 
-	switch(phase){
-		case CyclePhase::BLANK:
-			if(phaseElapsed >= timing.blankDuration){
-				phase = CyclePhase::PLACEMENT;
-				phaseElapsed = 0;
-				placementTimer = randRangeF(timing.placementIntervalMin, timing.placementIntervalMax);
-			}
-			break;
+	switch (phase) {
+	case CyclePhase::BLANK:
+		if (phaseElapsed >= timing.blankDuration) {
+			setPhase(CyclePhase::PLACEMENT);
+			phaseElapsed = 0;
+			placementTimer = pickPlacementInterval(timing.placementIntervalMin, timing.placementIntervalMax);
+		}
+		break;
 
-		case CyclePhase::PLACEMENT:
+	case CyclePhase::PLACEMENT:
+		if (usesAutomaticPlacementTimer()) {
 			placementTimer -= dt;
-			if(placementTimer <= 0.0f){
+			if (placementTimer <= 0.0f) {
 				bool atCap = static_cast<int>(fragments.size()) >= timing.maxFragments;
-				if(!atCap){
+				if (!atCap) {
 					attemptPlacement(); // return value ignored; canvas-full → just wait for timer
 				}
-				placementTimer = randRangeF(timing.placementIntervalMin, timing.placementIntervalMax);
+				placementTimer = pickPlacementInterval(timing.placementIntervalMin, timing.placementIntervalMax);
 			}
-			if(phaseElapsed >= placementDuration){
-				phase = CyclePhase::DENSITY;
-				phaseElapsed = 0;
-				placementTimer = timing.placementIntervalDense;
-				for(auto& f : fragments){
-					f->enterDrifting();
-				}
-			}
-			break;
+		}
+		if (phaseElapsed >= placementDuration) {
+			enterDensity();
+		}
+		break;
 
-		case CyclePhase::DENSITY:
+	case CyclePhase::DENSITY:
+		if (usesAutomaticPlacementTimer()) {
 			placementTimer -= dt;
-			if(placementTimer <= 0.0f){
+			if (placementTimer <= 0.0f) {
 				bool atCap = static_cast<int>(fragments.size()) >= timing.maxFragments;
-				if(!atCap){
+				if (!atCap) {
 					bool placed = attemptPlacement();
-					if(placed){
+					if (placed) {
 						fragments.back()->enterDrifting();
 					}
 				}
 				placementTimer = timing.placementIntervalDense;
 			}
-			if(phaseElapsed >= timing.densityDuration){
-				beginDissolve();
-			}
-			break;
+		}
+		if (phaseElapsed >= timing.densityDuration) {
+			beginDissolve();
+		}
+		break;
 
-		case CyclePhase::DISSOLVE:{
-			for(auto& entry : dissolveSchedule){
-				if(!entry.started && phaseElapsed >= entry.startOffset){
-					entry.fragment->startDissolve(entry.fadeDuration);
-					entry.started = true;
-				}
+	case CyclePhase::DISSOLVE: {
+		for (auto & entry : dissolveSchedule) {
+			if (!entry.started && phaseElapsed >= entry.startOffset) {
+				entry.fragment->startDissolve(entry.fadeDuration);
+				grid->beginLineDissolveForFragment(entry.fragment->getId(), entry.fadeDuration);
+				entry.started = true;
 			}
-			float safetyTimeout = timing.dissolveDuration + timing.dissolveFadeMax + 1.0f;
-			if(allFragmentsDead() || phaseElapsed > safetyTimeout){
-				phase = CyclePhase::RESET_HOLD;
-				phaseElapsed = 0;
-			}
-			break;
 		}
 
-		case CyclePhase::RESET_HOLD:
-			if(phaseElapsed >= timing.resetHoldDuration){
-				startCycle();
-			}
-			break;
+		bool fragmentsDone = allFragmentsDead();
+		if (fragmentsDone && !structuralDissolveTriggered) {
+			grid->beginStructuralDissolve();
+			structuralDissolveTriggered = true;
+		}
+
+		float safetyTimeout = timing.dissolveDuration + timing.dissolveFadeMax + 1.0f;
+		bool gridDone = grid->isDissolveFadeComplete();
+		if ((fragmentsDone && gridDone) || phaseElapsed > safetyTimeout) {
+			setPhase(CyclePhase::RESET_HOLD);
+			phaseElapsed = 0;
+		}
+		break;
+	}
+
+	case CyclePhase::RESET_HOLD:
+		if (phaseElapsed >= timing.resetHoldDuration) {
+			startCycle();
+		}
+		break;
 	}
 }
