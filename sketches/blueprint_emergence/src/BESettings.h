@@ -94,9 +94,9 @@ struct BEPresetValues {
 	// Circle fragment
 	float CIRCLE_DIAMETER_MIN_CELLS;
 	float CIRCLE_DIAMETER_MAX_CELLS;
-	float CIRCLE_REGION_CENTER_X;
-	float CIRCLE_REGION_CENTER_Y;
-	float CIRCLE_REGION_SIZE;
+	float CIRCLE_REGION_CENTER_X_FRAC;
+	float CIRCLE_REGION_CENTER_Y_FRAC;
+	float CIRCLE_REGION_SIZE_FRAC;
 	float CIRCLE_TRIGGER_MIN_FRACTION;
 	float CIRCLE_TRIGGER_MAX_FRACTION;
 	int CIRCLE_PLACEMENT_MAX_ATTEMPTS;
@@ -166,9 +166,9 @@ constexpr BEPresetValues BE_DEFAULT_PRESET = {
 	// Circle fragment
 	3.5f, // CIRCLE_DIAMETER_MIN_CELLS
 	4.5f, // CIRCLE_DIAMETER_MAX_CELLS
-	320.0f, // CIRCLE_REGION_CENTER_X
-	360.0f, // CIRCLE_REGION_CENTER_Y
-	200.0f, // CIRCLE_REGION_SIZE
+	0.25f, // CIRCLE_REGION_CENTER_X_FRAC (320/1280)
+	0.50f, // CIRCLE_REGION_CENTER_Y_FRAC (360/720)
+	0.156f, // CIRCLE_REGION_SIZE_FRAC (200/1280)
 	0.50f, // CIRCLE_TRIGGER_MIN_FRACTION
 	0.65f, // CIRCLE_TRIGGER_MAX_FRACTION
 	20, // CIRCLE_PLACEMENT_MAX_ATTEMPTS
@@ -238,9 +238,9 @@ constexpr BEPresetValues BE_SLOW_CINEMATIC_PRESET = {
 	// Circle fragment
 	3.5f, // CIRCLE_DIAMETER_MIN_CELLS
 	4.5f, // CIRCLE_DIAMETER_MAX_CELLS
-	320.0f, // CIRCLE_REGION_CENTER_X
-	360.0f, // CIRCLE_REGION_CENTER_Y
-	200.0f, // CIRCLE_REGION_SIZE
+	0.25f, // CIRCLE_REGION_CENTER_X_FRAC (320/1280)
+	0.50f, // CIRCLE_REGION_CENTER_Y_FRAC (360/720)
+	0.156f, // CIRCLE_REGION_SIZE_FRAC (200/1280)
 	0.50f, // CIRCLE_TRIGGER_MIN_FRACTION
 	0.65f, // CIRCLE_TRIGGER_MAX_FRACTION
 	20, // CIRCLE_PLACEMENT_MAX_ATTEMPTS
@@ -269,7 +269,6 @@ constexpr int TARGET_FPS = 24;
 constexpr int GRID_COLS = 6;
 constexpr int GRID_ROWS = 8;
 constexpr float DIVIDER_X_FRACTION = 0.40f; // orange divider position, fraction of canvas width
-constexpr float DIVIDER_X = static_cast<float>(CANVAS_W) * DIVIDER_X_FRACTION;
 
 // Cycle timing (seconds)
 constexpr float CYCLE_DURATION_MIN = BE_VALUES.CYCLE_DURATION_MIN;
@@ -323,6 +322,10 @@ constexpr float SLOT_INITIAL_STAGGER_MAX = 20.0f;
 constexpr float HUD_WIDGET_PROBABILITY = 0.30f;
 constexpr float HUD_HOLD_MIN = 12.0f;
 constexpr float HUD_HOLD_MAX = 24.0f;
+// Speed multiplier applied to all autonomous (non-data-driven) HUD widgets —
+// ContourWidget, HexGridWidget, FlowFieldWidget, NodeNetworkWidget, ReticleWidget.
+// 1.0 = default animation rate; 0.333 = one-third speed (3× slower).
+constexpr float HUD_VISUAL_WIDGET_SPEED = 1.0f / 3.0f;
 
 // Chance a freshly-spawned video-fragment slot shows MotionExtraction's
 // accumulated motion-trail texture instead of live video.
@@ -371,9 +374,9 @@ constexpr float CODE_TEXT_OPACITY_MAX = BE_VALUES.CODE_TEXT_OPACITY_MAX;
 // Circle fragment (Phase 4 — §06)
 constexpr float CIRCLE_DIAMETER_MIN_CELLS = BE_VALUES.CIRCLE_DIAMETER_MIN_CELLS;
 constexpr float CIRCLE_DIAMETER_MAX_CELLS = BE_VALUES.CIRCLE_DIAMETER_MAX_CELLS;
-constexpr float CIRCLE_REGION_CENTER_X = BE_VALUES.CIRCLE_REGION_CENTER_X; // px, left-of-center of zone A
-constexpr float CIRCLE_REGION_CENTER_Y = BE_VALUES.CIRCLE_REGION_CENTER_Y; // px, vertical midpoint
-constexpr float CIRCLE_REGION_SIZE = BE_VALUES.CIRCLE_REGION_SIZE; // px, side of the randomisation square
+constexpr float CIRCLE_REGION_CENTER_X_FRAC = BE_VALUES.CIRCLE_REGION_CENTER_X_FRAC; // fraction of canvas width, left-of-center of zone A
+constexpr float CIRCLE_REGION_CENTER_Y_FRAC = BE_VALUES.CIRCLE_REGION_CENTER_Y_FRAC; // fraction of canvas height, vertical midpoint
+constexpr float CIRCLE_REGION_SIZE_FRAC = BE_VALUES.CIRCLE_REGION_SIZE_FRAC; // fraction of canvas width, side of the randomisation square
 // CIRCLE_TRIGGER_MIN/MAX_FRACTION drove the old "Nth organic placement"
 // trigger, which doesn't map onto independently-respawning slots. The hero
 // circle is now a per-spawn-attempt probability roll instead (still capped
@@ -480,10 +483,9 @@ constexpr float FRAG_SCALE_MAX_HI = 1.12f;
 constexpr float FRAG_SCALE_NOISE_SPEED = 0.03f; // matches Quadrant::update()'s t*0.03f
 
 // ── Continuous Cycle Modes ────────────────────────────────────────────────────
-// Valid divider X range: column 2 → column 4 boundary in pixel space
-// At 1280px / 6 columns = 213.33px per column: col2=426.67px, col4=853.33px
-constexpr float MIN_DIVIDER_X              = (static_cast<float>(CANVAS_W) / GRID_COLS) * 2.0f;
-constexpr float MAX_DIVIDER_X              = (static_cast<float>(CANVAS_W) / GRID_COLS) * 4.0f;
+// Valid divider X range: columns 2→4 (2/6 to 4/6 of canvas width).
+// MIN_DIVIDER_X / MAX_DIVIDER_X are computed at runtime inside BEComposition
+// using canvasW so they adapt to any window size.
 constexpr float DIVIDER_JUMP_ANIM_DURATION = 2.0f;   // seconds, GHOST_LAYERS mode only
 
 // ── GHOST_LAYERS mode ─────────────────────────────────────────────────────────
@@ -497,3 +499,10 @@ constexpr int   PERPETUAL_SEED_INTERVAL      = 8;      // placements between see
 constexpr float DIVIDER_DRIFT_SPEED          = 0.35f;  // pixels/second (~10 min per column)
 constexpr float PERPETUAL_MODE_DURATION_MIN  = 240.0f; // 4 minutes minimum
 constexpr float PERPETUAL_MODE_DURATION_MAX  = 480.0f; // 8 minutes maximum
+
+// ── Divider axis-flip animation ───────────────────────────────────────────────
+constexpr float DIVIDER_AXIS_FLIP_CHANCE     = 0.20f;  // 20% of relocations trigger a rotation
+constexpr float DIVIDER_ROTATION_DURATION    = 2.5f;   // seconds for full 90° arc
+constexpr float MIN_TRAVEL_DEGREES          = 15.0f;  // degrees swept before pivot B candidates qualify
+constexpr float INTERSECTION_SNAP_RADIUS    = 6.0f;   // px — distance to line for intersection to count
+constexpr float MIN_PIVOT_DISTANCE          = 30.0f;  // px — pivot B must be at least this far from A

@@ -142,6 +142,24 @@ void AnnotationRenderer::update(float dt){
 	}
 }
 
+void AnnotationRenderer::clearCodeTextInRect(const ofRectangle& rect) {
+	// codeTexts and usedTextRects are always pushed together in trySpawnCodeText(),
+	// so they stay index-aligned. Drop pairs whose slot intersects the given rect.
+	std::vector<CodeTextEntry> keptTexts;
+	std::vector<ofRectangle>   keptRects;
+	for (size_t i = 0; i < codeTexts.size(); ++i) {
+		const ofRectangle& slot = (i < usedTextRects.size())
+			? usedTextRects[i]
+			: ofRectangle(codeTexts[i].pos.x - 4, codeTexts[i].pos.y - 12, 90.0f, 16.0f);
+		if (slot.getIntersection(rect).getArea() <= 0) {
+			keptTexts.push_back(codeTexts[i]);
+			keptRects.push_back(slot);
+		}
+	}
+	codeTexts     = std::move(keptTexts);
+	usedTextRects = std::move(keptRects);
+}
+
 void AnnotationRenderer::reset(){
 	measurementLines.clear();
 	codeTexts.clear();
@@ -241,13 +259,11 @@ void AnnotationRenderer::drawGrid(float alpha) const{
 	drawLines(grid->getHLines(), false);
 }
 
-void AnnotationRenderer::drawDivider(float progress, float brightness) const{
-	float x = grid->getDividerX();
-	float yEnd = canvasH * ofClamp(progress, 0.0f, 1.0f);
-
+void AnnotationRenderer::drawDivider(glm::vec2 p1, glm::vec2 p2, float brightness) const{
 	ofSetColor(RULE_ORANGE * ofClamp(brightness * grid->getDividerOpacity(), 0.0f, 1.0f));
-	ofSetLineWidth(2);
-	ofDrawLine(x, 0, x, yEnd);
+	ofSetLineWidth(4);
+	ofDrawLine(p1.x, p1.y, p2.x, p2.y);
+	ofSetLineWidth(1);
 }
 
 void AnnotationRenderer::drawCornerLabel(const std::string& label) const{

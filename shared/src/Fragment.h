@@ -82,6 +82,8 @@ public:
 protected:
 	virtual void drawArrival(float t) const;
 	virtual void drawStable() const;
+	// t goes 0→1 over dissolveDuration; default fades in place via drawStable().
+	virtual void drawDeparture(float t) const;
 
 	// Draws the current media source at the fragment draw position.
 	// For circular fragments this now uses a real textured circle mesh instead

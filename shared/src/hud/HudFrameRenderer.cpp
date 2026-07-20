@@ -8,7 +8,7 @@ void HudFrameRenderer::draw(const HudBounds & b, const WidgetColors & colors, co
 
 	ofPushStyle();
 	ofNoFill();
-	ofSetLineWidth(options.thickness);
+	ofSetLineWidth(std::max(0.5f, su(b, options.thickness)));
 	ofColor c = scaledAlpha(colors.primary, options.opacity);
 
 	if (colors.background.a > 0) {
@@ -98,11 +98,12 @@ void HudFrameRenderer::drawOrganic(const HudBounds & b, const ofColor & c, const
 void HudFrameRenderer::drawTicks(const HudBounds & b, const ofColor & c, const FrameOptions & o) const {
 	ofSetColor(c);
 	float p = o.padding;
+	float tickH = std::max(2.0f, su(b, 4.0f));
 	int ticks = std::max(4, static_cast<int>(b.width / 45.0f));
 	for (int i = 1; i < ticks; ++i) {
 		float x = b.x + p + (b.width - 2 * p) * (i / static_cast<float>(ticks));
-		ofDrawLine(x, b.y + p, x, b.y + p + 4.0f);
-		ofDrawLine(x, b.y + b.height - p, x, b.y + b.height - p - 4.0f);
+		ofDrawLine(x, b.y + p, x, b.y + p + tickH);
+		ofDrawLine(x, b.y + b.height - p, x, b.y + b.height - p - tickH);
 	}
 }
 

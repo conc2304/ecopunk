@@ -21,6 +21,7 @@ public:
 	void setValueText(const std::string & v) { options.value = v; }
 	void update(float dt) override;
 	void draw() override;
+	ofVec2f getMinSize() const override { return { 200.0f, 90.0f }; }
 
 private:
 	DataCardOptions options;

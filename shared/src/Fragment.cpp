@@ -129,6 +129,8 @@ void Fragment::draw() const {
 	ofPushStyle();
 	if (state == State::ARRIVING) {
 		drawArrival(ofClamp(stateElapsed / arrivalDuration, 0.0f, 1.0f));
+	} else if (state == State::DISSOLVING) {
+		drawDeparture(ofClamp(stateElapsed / dissolveDuration, 0.0f, 1.0f));
 	} else {
 		drawStable();
 	}
@@ -231,4 +233,8 @@ void Fragment::drawTexturedCircleMesh(float radius) const {
 
 void Fragment::drawStable() const {
 	drawMaskedFill(maskRadius);
+}
+
+void Fragment::drawDeparture(float /*t*/) const {
+	drawStable();
 }

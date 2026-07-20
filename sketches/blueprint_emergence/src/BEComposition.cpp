@@ -5,9 +5,14 @@
 #include "BETriggers.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/constants.hpp"
+#include "hud/ContourWidget.h"
 #include "hud/DataCardWidget.h"
+#include "hud/FlowFieldWidget.h"
 #include "hud/GaugeWidget.h"
+#include "hud/HexGridWidget.h"
 #include "hud/HudWidget.h"
+#include "hud/NodeNetworkWidget.h"
+#include "hud/ReticleWidget.h"
 #include "hud/ScannerWidget.h"
 #include "MotionExtraction.h"
 #include "ofLog.h"
@@ -87,8 +92,10 @@ void BEComposition::onCycleStart() {
 	}
 
 	hudWidget.reset();
-	hudDataCard = nullptr;
-	hudGauge    = nullptr;
+	hudDataCard    = nullptr;
+	hudGauge       = nullptr;
+	hudNodeNetwork = nullptr;
+	hudReticle     = nullptr;
 	hudPhase = HudPhase::SILENCE;
 	hudTimer = 0.0f;
 	hudTimerTarget = randRangeF(SLOT_SILENCE_MIN, SLOT_SILENCE_MAX);
@@ -97,12 +104,17 @@ void BEComposition::onCycleStart() {
 	perpetualTransitionArmed = false;
 	placementsSinceSeedRefresh = 0;
 
-	// Pick initial mode and set dividerX at a random column-boundary position.
+	// Pick initial mode and set divider at a random column-boundary position.
 	// Skip BLANK — composition starts mid-thought with no grow animation.
 	currentMode = selectNextMode();
-	dividerX = selectNewDividerX();
+	divider.pivot.x = selectNewDividerX();
+	divider.pivot.y = static_cast<float>(canvasH) * 0.5f;
+	divider.angle = 0.0f;
+	divider.orientation = DividerOrientation::VERTICAL;
 	dividerAnimating = false;
-	grid->setDividerX(dividerX);
+	rotAnim.reset();
+	seenIntersections.clear();
+	grid->setDividerX(divider.pivot.x);
 
 	if (currentMode == CycleMode::PERPETUAL) {
 		dividerTargetX = selectNewDividerX();
@@ -113,7 +125,7 @@ void BEComposition::onCycleStart() {
 
 	ofLogNotice("BEComposition") << "cycle start, mode="
 		<< (currentMode == CycleMode::GHOST_LAYERS ? "GHOST_LAYERS" : "PERPETUAL")
-		<< " dividerX=" << dividerX;
+		<< " dividerX=" << divider.pivot.x;
 }
 
 void BEComposition::setTriggerBus(TriggerBus * bus) {
@@ -190,6 +202,7 @@ void BEComposition::onUpdate(float dt) {
 	evaluateStateTriggers();
 	updateGhostDecay(dt);
 	updateDividerAnimation(dt);
+	updateRotationAnim(dt);
 
 	if (currentMode == CycleMode::PERPETUAL) {
 		updatePerpetualMode(dt);
@@ -325,6 +338,12 @@ void BEComposition::updateHudWidget(float dt) {
 		if (hudGauge) {
 			hudGauge->setValue(gridState ? gridState->getAverageActivity() : 0.0f);
 		}
+		if (hudNodeNetwork) {
+			hud::MotionSettings m;
+			m.speed = HUD_VISUAL_WIDGET_SPEED;
+			m.drift = 0.5f + (gridState ? gridState->getAverageActivity() : 0.0f) * 1.5f;
+			hudNodeNetwork->setMotion(m);
+		}
 		hudWidget->update(dt);
 	}
 
@@ -348,8 +367,10 @@ void BEComposition::updateHudWidget(float dt) {
 		if (hudTimer >= hudTimerTarget || !acceptingNewSpawns) {
 			grid->releaseFragment(HUD_FRAGMENT_ID);
 			hudWidget.reset();
-			hudDataCard = nullptr;
-			hudGauge    = nullptr;
+			hudDataCard    = nullptr;
+			hudGauge       = nullptr;
+			hudNodeNetwork = nullptr;
+			hudReticle     = nullptr;
 			hudPhase = HudPhase::SILENCE;
 			hudTimer = 0.0f;
 			hudTimerTarget = randRangeF(SLOT_SILENCE_MIN, SLOT_SILENCE_MAX);
@@ -361,11 +382,74 @@ void BEComposition::updateHudWidget(float dt) {
 bool BEComposition::trySpawnHudWidget() {
 	// Roughly fragment-sized — big enough to read, small enough to fit in
 	// the same grid a video fragment would have used.
-	glm::vec2 wRange = { 213.3f * 1.5f, 213.3f * 3.0f };
-	glm::vec2 hRange = { 90.0f * 1.5f, 90.0f * 3.0f };
+	float cellW = static_cast<float>(canvasW) / GRID_COLS;
+	float cellH = static_cast<float>(canvasH) / GRID_ROWS;
+	glm::vec2 wRangeBase = { cellW * 1.5f, cellW * 3.0f };
+	glm::vec2 hRangeBase = { cellH * 1.5f, cellH * 3.0f };
 
 	std::vector<float> xs = grid->getSnapXPositions();
 	std::vector<float> ys = grid->getSnapYPositions();
+
+	// Pick a widget type (9 outcomes: DataCard×2, Gauge×2, visual types×1 each).
+	// Data-driven widgets get 2x weight because they carry live composition info.
+	int roll = randRangeI(0, 8);
+
+	hudDataCard    = nullptr;
+	hudGauge       = nullptr;
+	hudNodeNetwork = nullptr;
+	hudReticle     = nullptr;
+
+	std::unique_ptr<hud::HudWidget> widget;
+
+	if (roll <= 1) {
+		auto card = std::make_unique<hud::DataCardWidget>();
+		hud::DataCardOptions opts;
+		opts.title    = "FRAGMENT LOG";
+		opts.subtitle = "OBSERVATION ACTIVE";
+		opts.value    = ofToString(static_cast<int>(fragments.size())) + "/" + ofToString(NUM_SLOTS);
+		opts.meter    = 0.0f; // driven live in updateHudWidget()
+		card->setOptions(opts);
+		hudDataCard = card.get();
+		widget = std::move(card);
+	} else if (roll <= 3) {
+		auto gauge = std::make_unique<hud::GaugeWidget>();
+		hud::GaugeOptions opts;
+		opts.label = "ACTIVITY";
+		opts.value = gridState ? gridState->getAverageActivity() : 0.0f;
+		gauge->setOptions(opts);
+		hudGauge = gauge.get();
+		widget = std::move(gauge);
+	} else if (roll == 4) {
+		widget = std::make_unique<hud::ContourWidget>();
+	} else if (roll == 5) {
+		widget = std::make_unique<hud::HexGridWidget>();
+	} else if (roll == 6) {
+		widget = std::make_unique<hud::FlowFieldWidget>();
+	} else if (roll == 7) {
+		auto net = std::make_unique<hud::NodeNetworkWidget>();
+		hudNodeNetwork = net.get();
+		widget = std::move(net);
+	} else {
+		auto ret = std::make_unique<hud::ReticleWidget>();
+		hud::ReticleOptions opts;
+		opts.targetCount = static_cast<int>(fragments.size()) + 2;
+		ret->setOptions(opts);
+		hudReticle = ret.get();
+		widget = std::move(ret);
+	}
+
+	// Slow down autonomous (non-data-driven) visual widgets.
+	if (roll >= 4) {
+		hud::MotionSettings m;
+		m.speed = HUD_VISUAL_WIDGET_SPEED;
+		widget->setMotion(m);
+	}
+
+	// Tighten size range so chosen widget is never placed smaller than its minimum.
+	ofVec2f minSz = widget->getMinSize();
+	glm::vec2 wRange = { std::max(wRangeBase.x, minSz.x), wRangeBase.y };
+	glm::vec2 hRange = { std::max(hRangeBase.x, minSz.y), hRangeBase.y };
+	if (wRange.x > wRange.y || hRange.x > hRange.y) return false;
 
 	for (int attempt = 0; attempt < PLACEMENT_MAX_ATTEMPTS; attempt++) {
 		float x1, x2, y1, y2;
@@ -374,29 +458,6 @@ bool BEComposition::trySpawnHudWidget() {
 
 		ofRectangle candidate(x1, y1, x2 - x1, y2 - y1);
 		if (!grid->isRectFree(candidate, 0.10f)) continue;
-
-		std::unique_ptr<hud::HudWidget> widget;
-		hudDataCard = nullptr;
-		hudGauge    = nullptr;
-		if (randRangeI(0, 1) == 0) {
-			auto card = std::make_unique<hud::DataCardWidget>();
-			hud::DataCardOptions opts;
-			opts.title = "FRAGMENT LOG";
-			opts.subtitle = "OBSERVATION ACTIVE";
-			opts.value = ofToString(static_cast<int>(fragments.size())) + "/" + ofToString(NUM_SLOTS);
-			opts.meter = 0.0f; // driven live in updateHudWidget()
-			card->setOptions(opts);
-			hudDataCard = card.get();
-			widget = std::move(card);
-		} else {
-			auto gauge = std::make_unique<hud::GaugeWidget>();
-			hud::GaugeOptions opts;
-			opts.label = "ACTIVITY";
-			opts.value = gridState ? gridState->getAverageActivity() : 0.0f;
-			gauge->setOptions(opts);
-			hudGauge = gauge.get();
-			widget = std::move(gauge);
-		}
 
 		widget->setup();
 		widget->setBounds(candidate.x, candidate.y, candidate.width, candidate.height);
@@ -415,12 +476,9 @@ GeometryType BEComposition::pickGeometryType() const {
 	return GeometryType::SQUARE;
 }
 
-// Size ranges translated from the old 1280x720 / 6x8-cell scheme into pixel
-// ranges, since fragments now snap to whatever lines/edges currently exist
-// rather than a fixed cell multiple. Reference cell ~= 213x90px.
 void BEComposition::pickSizeRange(GeometryType type, glm::vec2 & wRange, glm::vec2 & hRange) const {
-	constexpr float cellW = 213.3f;
-	constexpr float cellH = 90.0f;
+	float cellW = static_cast<float>(canvasW) / GRID_COLS;
+	float cellH = static_cast<float>(canvasH) / GRID_ROWS;
 	switch (type) {
 	case GeometryType::RECT:
 		wRange = { cellW * 1.0f, cellW * 4.0f };
@@ -445,11 +503,10 @@ void BEComposition::pickSizeRange(GeometryType type, glm::vec2 & wRange, glm::ve
 }
 
 int BEComposition::countZoneFragments(bool zoneA) const {
-	float dividerX = grid->getDividerX();
 	int count = 0;
 	for (const auto & f : fragments) {
 		glm::vec2 center = glm::vec2(f->getBounds().getCenter());
-		bool inZoneA = center.x < dividerX;
+		bool inZoneA = (getZoneForPoint(center) == Zone::A);
 		if (inZoneA == zoneA) {
 			count++;
 		}
@@ -531,7 +588,7 @@ bool BEComposition::placeCircleFragment(int slotIndex) {
 	float cellW = static_cast<float>(canvasW) / GRID_COLS;
 	float cellH = static_cast<float>(canvasH) / GRID_ROWS;
 	float avgCell = (cellW + cellH) * 0.5f;
-	float regionHalf = CIRCLE_REGION_SIZE * 0.5f;
+	float regionHalf = canvasW * CIRCLE_REGION_SIZE_FRAC * 0.5f;
 
 	// The circle is a hero/compositional event, not a normal occupancy-constrained
 	// fragment. It is allowed to overlap existing material heavily, matching the
@@ -552,7 +609,7 @@ bool BEComposition::placeCircleFragment(int slotIndex) {
 		if (maxCy < minCy) maxCy = minCy;
 
 		float cx = randRangeF(minCx, maxCx);
-		float cy = ofClamp(CIRCLE_REGION_CENTER_Y + randRangeF(-regionHalf, regionHalf), minCy, maxCy);
+		float cy = ofClamp(canvasH * CIRCLE_REGION_CENTER_Y_FRAC + randRangeF(-regionHalf, regionHalf), minCy, maxCy);
 
 		ofRectangle pixelBounds(cx - radius, cy - radius, diameter, diameter);
 
@@ -665,7 +722,6 @@ bool BEComposition::spawnFragmentInSlot(int slotIndex) {
 		: nullptr;
 
 	std::vector<Candidate> candidates;
-	float dividerX = grid->getDividerX();
 	glm::vec2 canvasCenter(canvasW / 2.0f, canvasH / 2.0f);
 	float maxCenterDist = glm::distance(glm::vec2(0, 0), canvasCenter);
 	float canvasDiag = glm::distance(glm::vec2(0, 0), glm::vec2(canvasW, canvasH));
@@ -705,7 +761,7 @@ bool BEComposition::spawnFragmentInSlot(int slotIndex) {
 			proximityScore = 1.0f - ofClamp(fabs(nearestDist - idealGap) / canvasDiag, 0.0f, 1.0f);
 		}
 
-		bool inZoneA = center.x < dividerX;
+		bool inZoneA = (getZoneForPoint(center) == Zone::A);
 		float zoneScore = 0.0f;
 		if (inZoneA && zoneACount < zoneBCount) {
 			zoneScore = 1.0f;
@@ -843,7 +899,7 @@ bool BEComposition::attemptPlacement() {
 float BEComposition::selectNewDividerX() const {
 	// Pick a column-boundary X (cols 2–4) that is different from the current one.
 	float colW = static_cast<float>(canvasW) / GRID_COLS;
-	int currentCol = static_cast<int>(std::round(dividerX / colW));
+	int currentCol = static_cast<int>(std::round(divider.pivot.x / colW));
 	// Valid columns: 2, 3, 4
 	int choices[3], n = 0;
 	for (int c = 2; c <= 4; c++) {
@@ -873,6 +929,11 @@ void BEComposition::pruneDeadFragments() {
 }
 
 void BEComposition::enterMode(CycleMode mode) {
+	// Cancel any in-progress rotation before entering a new mode.
+	rotAnim.reset();
+	seenIntersections.clear();
+	dividerAnimating = false;
+
 	currentMode = mode;
 	timeInMode = 0.0f;
 	perpetualTransitionArmed = false;
@@ -917,28 +978,17 @@ void BEComposition::enterMode(CycleMode mode) {
 		// HUD widget — reset; occupancy was cleared above.
 		if (hudWidget) {
 			hudWidget.reset();
-			hudDataCard = nullptr;
-			hudGauge    = nullptr;
+			hudDataCard    = nullptr;
+			hudGauge       = nullptr;
+			hudNodeNetwork = nullptr;
+			hudReticle     = nullptr;
 		}
 		hudPhase = HudPhase::SILENCE;
 		hudTimer = 0.0f;
 		hudTimerTarget = randRangeF(SLOT_SILENCE_MIN, SLOT_SILENCE_MAX);
 
-		// New divider position — animates if ≥ 1 column width away.
-		float oldDividerX = dividerX;
-		dividerX = selectNewDividerX();
-		float colW = static_cast<float>(canvasW) / GRID_COLS;
-		if (std::abs(dividerX - oldDividerX) >= colW - 1.0f) {
-			dividerAnimFrom = oldDividerX;
-			dividerAnimTo = dividerX;
-			dividerAnimT = 0.0f;
-			dividerAnimDur = DIVIDER_JUMP_ANIM_DURATION;
-			dividerAnimating = true;
-			// Keep drawing from the old position until the anim starts updating it.
-		} else {
-			grid->setDividerX(dividerX);
-			dividerAnimating = false;
-		}
+		// Relocate divider — may trigger an axis-flip rotation (20% chance).
+		triggerDividerRelocation();
 
 		secondsSinceLastPlacement = 0.0f;
 		densityHighActive = false;
@@ -1015,24 +1065,42 @@ void BEComposition::updateDividerAnimation(float dt) {
 		? 2.0f * dividerAnimT * dividerAnimT
 		: 1.0f - 2.0f * (1.0f - dividerAnimT) * (1.0f - dividerAnimT);
 
-	dividerX = dividerAnimFrom + (dividerAnimTo - dividerAnimFrom) * t;
-	grid->setDividerX(dividerX);
+	divider.pivot.x = dividerAnimFrom + (dividerAnimTo - dividerAnimFrom) * t;
+	grid->setDividerX(divider.pivot.x);
 }
 
 void BEComposition::updatePerpetualMode(float dt) {
-	// Drift divider toward target; when arrived, pick a new target on the
-	// opposite side of centre (creates a slow pendulum, never gets stuck at edge).
-	float dir = (dividerTargetX > dividerX) ? 1.0f : -1.0f;
-	dividerX += dir * DIVIDER_DRIFT_SPEED * dt;
-	dividerX = ofClamp(dividerX, MIN_DIVIDER_X, MAX_DIVIDER_X);
-	grid->setDividerX(dividerX);
+	// Rotation animation takes priority — skip drift while rotating.
+	if (rotAnim.phase != RotationPhase::INACTIVE) {
+		if (!perpetualTransitionArmed && timeInMode >= modeTransitionTarget) {
+			perpetualTransitionArmed = true;
+			ofLogNotice("BEComposition") << "PERPETUAL: mode transition armed after " << timeInMode << "s";
+		}
+		return;
+	}
 
-	if (std::abs(dividerTargetX - dividerX) < 2.0f) {
-		float centre = (MIN_DIVIDER_X + MAX_DIVIDER_X) * 0.5f;
-		if (dividerX < centre) {
-			dividerTargetX = ofRandom(centre, MAX_DIVIDER_X);
-		} else {
-			dividerTargetX = ofRandom(MIN_DIVIDER_X, centre);
+	if (divider.orientation == DividerOrientation::VERTICAL) {
+		// Drift divider pivot X toward target (pendulum — never gets stuck at edge).
+		float driftDir = (dividerTargetX > divider.pivot.x) ? 1.0f : -1.0f;
+		divider.pivot.x += driftDir * DIVIDER_DRIFT_SPEED * dt;
+		float minDX = (static_cast<float>(canvasW) / GRID_COLS) * 2.0f;
+		float maxDX = (static_cast<float>(canvasW) / GRID_COLS) * 4.0f;
+		divider.pivot.x = ofClamp(divider.pivot.x, minDX, maxDX);
+		grid->setDividerX(divider.pivot.x);
+
+		if (std::abs(dividerTargetX - divider.pivot.x) < 2.0f) {
+			triggerDividerRelocation();
+		}
+	} else {
+		// Horizontal orientation: drift pivot Y.
+		float minY = (static_cast<float>(canvasH) / GRID_ROWS) * 2.0f;
+		float maxY = (static_cast<float>(canvasH) / GRID_ROWS) * 6.0f;
+		float driftDir = (dividerTargetY > divider.pivot.y) ? 1.0f : -1.0f;
+		divider.pivot.y += driftDir * DIVIDER_DRIFT_SPEED * dt;
+		divider.pivot.y = ofClamp(divider.pivot.y, minY, maxY);
+
+		if (std::abs(dividerTargetY - divider.pivot.y) < 2.0f) {
+			triggerDividerRelocation();
 		}
 	}
 
@@ -1041,7 +1109,286 @@ void BEComposition::updatePerpetualMode(float dt) {
 		perpetualTransitionArmed = true;
 		ofLogNotice("BEComposition") << "PERPETUAL: mode transition armed after " << timeInMode << "s";
 	}
+}
 
-	// Seed refresh: re-randomise RNG every PERPETUAL_SEED_INTERVAL placements.
-	// (Tracked via placementsSinceSeedRefresh, incremented in spawnFragmentInSlot.)
+// ── Axis-flip relocation ──────────────────────────────────────────────────────
+
+bool BEComposition::shouldAxisFlip() const {
+	return ofRandom(1.0f) < DIVIDER_AXIS_FLIP_CHANCE;
+}
+
+void BEComposition::triggerDividerRelocation() {
+	if (rotAnim.phase != RotationPhase::INACTIVE) return; // guard back-to-back triggers
+
+	if (shouldAxisFlip()) {
+		startAxisFlipAnimation();
+		return;
+	}
+
+	// Normal relocation — no axis flip.
+	if (currentMode == CycleMode::GHOST_LAYERS) {
+		float oldX = divider.pivot.x;
+		divider.pivot.x = selectNewDividerX();
+		float colW = static_cast<float>(canvasW) / GRID_COLS;
+		if (std::abs(divider.pivot.x - oldX) >= colW - 1.0f) {
+			dividerAnimFrom = oldX;
+			dividerAnimTo   = divider.pivot.x;
+			dividerAnimT    = 0.0f;
+			dividerAnimDur  = DIVIDER_JUMP_ANIM_DURATION;
+			dividerAnimating = true;
+		} else {
+			grid->setDividerX(divider.pivot.x);
+			dividerAnimating = false;
+		}
+	} else { // PERPETUAL
+		if (divider.orientation == DividerOrientation::VERTICAL) {
+			float minDX = (static_cast<float>(canvasW) / GRID_COLS) * 2.0f;
+			float maxDX = (static_cast<float>(canvasW) / GRID_COLS) * 4.0f;
+			float centre = (minDX + maxDX) * 0.5f;
+			if (divider.pivot.x < centre) {
+				dividerTargetX = ofRandom(centre, maxDX);
+			} else {
+				dividerTargetX = ofRandom(minDX, centre);
+			}
+		} else {
+			float minY = (static_cast<float>(canvasH) / GRID_ROWS) * 2.0f;
+			float maxY = (static_cast<float>(canvasH) / GRID_ROWS) * 6.0f;
+			float centre = (minY + maxY) * 0.5f;
+			if (divider.pivot.y < centre) {
+				dividerTargetY = ofRandom(centre, maxY);
+			} else {
+				dividerTargetY = ofRandom(minY, centre);
+			}
+		}
+	}
+}
+
+glm::vec2 BEComposition::nearestGridIntersection(const glm::vec2& pos) const {
+	float cellW = static_cast<float>(canvasW) / GRID_COLS;
+	float cellH = static_cast<float>(canvasH) / GRID_ROWS;
+	int col = static_cast<int>(std::round(pos.x / cellW));
+	int row = static_cast<int>(std::round(pos.y / cellH));
+	col = ofClamp(col, 0, GRID_COLS);
+	row = ofClamp(row, 0, GRID_ROWS);
+	return glm::vec2(col * cellW, row * cellH);
+}
+
+void BEComposition::startAxisFlipAnimation() {
+	rotAnim.reset();
+	seenIntersections.clear();
+
+	rotAnim.startAngle   = divider.angle;
+	rotAnim.currentAngle = divider.angle;
+
+	// Rotate toward canvas center to avoid endpoint clipping at edges.
+	float centerX = static_cast<float>(canvasW) * 0.5f;
+	bool rotateCW = (divider.pivot.x < centerX);
+	rotAnim.targetAngle = divider.angle + (rotateCW ? 90.0f : -90.0f);
+
+	// Snap pivot to nearest grid intersection.
+	rotAnim.pivotA = nearestGridIntersection(divider.pivot);
+	divider.pivot  = rotAnim.pivotA;
+
+	// 2nd, 3rd, or 4th intersection encountered becomes pivot B.
+	rotAnim.targetCandidateIndex = randRangeI(1, 3);
+	rotAnim.minTravelAngle = rotAnim.startAngle + (rotateCW ? MIN_TRAVEL_DEGREES : -MIN_TRAVEL_DEGREES);
+	rotAnim.totalDuration  = DIVIDER_ROTATION_DURATION;
+	rotAnim.elapsed        = 0.0f;
+	rotAnim.phase          = RotationPhase::ROTATING_AROUND_A;
+
+	ofLogNotice("BEComposition") << "axis flip: start=" << rotAnim.startAngle
+		<< " target=" << rotAnim.targetAngle
+		<< " pivotA=(" << rotAnim.pivotA.x << "," << rotAnim.pivotA.y << ")"
+		<< " candidateIdx=" << rotAnim.targetCandidateIndex;
+}
+
+void BEComposition::updateRotationAnim(float dt) {
+	if (rotAnim.phase == RotationPhase::INACTIVE) return;
+
+	rotAnim.elapsed += dt;
+	float t = ofClamp(rotAnim.elapsed / rotAnim.totalDuration, 0.0f, 1.0f);
+
+	// Ease-in-out cubic over the full 90° arc.
+	float tEased = t < 0.5f
+		? 4.0f * t * t * t
+		: 1.0f - std::pow(-2.0f * t + 2.0f, 3.0f) / 2.0f;
+
+	rotAnim.currentAngle = rotAnim.startAngle
+		+ (rotAnim.targetAngle - rotAnim.startAngle) * tEased;
+	divider.angle = rotAnim.currentAngle;
+
+	// Keep grid's dividerX tracking the pivot so zone backgrounds stay coherent.
+	grid->setDividerX(divider.pivot.x);
+
+	if (rotAnim.phase == RotationPhase::ROTATING_AROUND_A) {
+		updatePivotBDetection();
+	}
+
+	if (t >= 1.0f) {
+		completeRotationAnimation();
+	}
+}
+
+std::vector<glm::vec2> BEComposition::getLineGridIntersections(
+	const glm::vec2& pivot, float angleDeg) const
+{
+	std::vector<glm::vec2> result;
+	float rad = ofDegToRad(angleDeg);
+	glm::vec2 dir(std::sin(rad), -std::cos(rad));
+
+	float cellW = static_cast<float>(canvasW) / GRID_COLS;
+	float cellH = static_cast<float>(canvasH) / GRID_ROWS;
+
+	for (int col = 0; col <= GRID_COLS; col++) {
+		for (int row = 0; row <= GRID_ROWS; row++) {
+			glm::vec2 pt(col * cellW, row * cellH);
+			glm::vec2 v = pt - pivot;
+			float proj = glm::dot(v, dir);
+			glm::vec2 closest = pivot + dir * proj;
+			float dist = glm::distance(pt, closest);
+			if (dist < INTERSECTION_SNAP_RADIUS) {
+				result.push_back(pt);
+			}
+		}
+	}
+	return result;
+}
+
+bool BEComposition::isNewIntersection(const glm::vec2& pt) {
+	for (const auto& seen : seenIntersections) {
+		if (glm::distance(pt, seen) < INTERSECTION_SNAP_RADIUS * 2.0f) return false;
+	}
+	seenIntersections.push_back(pt);
+	return true;
+}
+
+void BEComposition::updatePivotBDetection() {
+	bool rotateCW = (rotAnim.targetAngle > rotAnim.startAngle);
+	bool pastMinTravel = rotateCW
+		? (rotAnim.currentAngle >= rotAnim.minTravelAngle)
+		: (rotAnim.currentAngle <= rotAnim.minTravelAngle);
+	if (!pastMinTravel) return;
+
+	auto intersections = getLineGridIntersections(rotAnim.pivotA, rotAnim.currentAngle);
+	for (const auto& pt : intersections) {
+		if (glm::distance(pt, rotAnim.pivotA) < MIN_PIVOT_DISTANCE) continue;
+		if (isNewIntersection(pt)) {
+			rotAnim.candidatesFound++;
+			if (rotAnim.candidatesFound == rotAnim.targetCandidateIndex + 1) {
+				rotAnim.pivotB = pt;
+				rotAnim.pivotBChosen = true;
+				handOffToPivotB();
+				return;
+			}
+		}
+	}
+}
+
+void BEComposition::handOffToPivotB() {
+	divider.pivot = rotAnim.pivotB;
+	rotAnim.phase = RotationPhase::ROTATING_AROUND_B;
+	ofLogNotice("BEComposition") << "pivot handoff B=("
+		<< rotAnim.pivotB.x << "," << rotAnim.pivotB.y << ")";
+}
+
+void BEComposition::completeRotationAnimation() {
+	divider.angle = rotAnim.targetAngle;
+
+	// Normalise to [0, 360).
+	while (divider.angle < 0.0f)    divider.angle += 360.0f;
+	while (divider.angle >= 360.0f) divider.angle -= 360.0f;
+
+	float normalised = std::fmod(std::abs(divider.angle), 180.0f);
+	divider.orientation = (normalised < 45.0f || normalised > 135.0f)
+		? DividerOrientation::VERTICAL
+		: DividerOrientation::HORIZONTAL;
+
+	if (rotAnim.pivotBChosen) {
+		divider.pivot = rotAnim.pivotB;
+	}
+	// else: degenerate — no B found, keep pivot at A
+
+	rotAnim.reset();
+	seenIntersections.clear();
+
+	ofLogNotice("BEComposition") << "rotation complete angle=" << divider.angle
+		<< " orientation="
+		<< (divider.orientation == DividerOrientation::VERTICAL ? "VERTICAL" : "HORIZONTAL");
+
+	onDividerRelocationComplete();
+}
+
+void BEComposition::forceAxisFlip() {
+	if (rotAnim.phase != RotationPhase::INACTIVE) return;
+	startAxisFlipAnimation();
+}
+
+void BEComposition::onDividerRelocationComplete() {
+	// After an axis-flip, let PERPETUAL resume drift on the new axis.
+	if (currentMode != CycleMode::PERPETUAL) return;
+
+	if (divider.orientation == DividerOrientation::VERTICAL) {
+		float minDX = (static_cast<float>(canvasW) / GRID_COLS) * 2.0f;
+		float maxDX = (static_cast<float>(canvasW) / GRID_COLS) * 4.0f;
+		float centre = (minDX + maxDX) * 0.5f;
+		if (divider.pivot.x < centre) {
+			dividerTargetX = ofRandom(centre, maxDX);
+		} else {
+			dividerTargetX = ofRandom(minDX, centre);
+		}
+	} else {
+		float minY = (static_cast<float>(canvasH) / GRID_ROWS) * 2.0f;
+		float maxY = (static_cast<float>(canvasH) / GRID_ROWS) * 6.0f;
+		float centre = (minY + maxY) * 0.5f;
+		if (divider.pivot.y < centre) {
+			dividerTargetY = ofRandom(centre, maxY);
+		} else {
+			dividerTargetY = ofRandom(minY, centre);
+		}
+	}
+}
+
+std::pair<glm::vec2, glm::vec2> BEComposition::getDividerEndpoints() const {
+	float rad = ofDegToRad(divider.angle);
+	glm::vec2 dir(std::sin(rad), -std::cos(rad));
+
+	// Liang-Barsky parametric clipping.
+	// Constraint form: p*t >= q.  p<0 → leaving (updates tMin).  p>0 → entering (updates tMax).
+	float tMin = -std::numeric_limits<float>::max();
+	float tMax =  std::numeric_limits<float>::max();
+
+	auto clip = [&](float q, float p) {
+		// Constraint: p*t + q >= 0 → t >= -q/p if p>0, t <= -q/p if p<0.
+		if (std::abs(p) < 1e-6f) return;
+		float t = -q / p;
+		if (p < 0) tMax = std::min(tMax, t); // leaving
+		else       tMin = std::max(tMin, t); // entering
+	};
+
+	// Left (x>=0):     p= dir.x, q= pivot.x
+	clip(divider.pivot.x, dir.x);
+	// Right (x<=canvasW): p=-dir.x, q= canvasW-pivot.x
+	clip(static_cast<float>(canvasW) - divider.pivot.x, -dir.x);
+	// Top (y>=0):      p= dir.y, q= pivot.y  (y is downward)
+	clip(divider.pivot.y, dir.y);
+	// Bottom (y<=canvasH): p=-dir.y, q= canvasH-pivot.y
+	clip(static_cast<float>(canvasH) - divider.pivot.y, -dir.y);
+
+	return { divider.pivot + dir * tMin, divider.pivot + dir * tMax };
+}
+
+BEComposition::Zone BEComposition::getZoneForPoint(const glm::vec2& pt) const {
+	if (divider.orientation == DividerOrientation::VERTICAL) {
+		return (pt.x < divider.pivot.x) ? Zone::A : Zone::B;
+	} else {
+		return (pt.y < divider.pivot.y) ? Zone::A : Zone::B;
+	}
+}
+
+BEComposition::Zone BEComposition::getZoneForCell(int col, int row) const {
+	float cellW = static_cast<float>(canvasW) / GRID_COLS;
+	float cellH = static_cast<float>(canvasH) / GRID_ROWS;
+	return getZoneForPoint(glm::vec2(
+		col * cellW + cellW * 0.5f,
+		row * cellH + cellH * 0.5f));
 }

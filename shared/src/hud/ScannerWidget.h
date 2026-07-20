@@ -18,6 +18,7 @@ public:
     void setOptions(const ScannerOptions& next) { options = next; }
     void update(float dt) override;
     void draw() override;
+    ofVec2f getMinSize() const override { return { 100.0f, 100.0f }; }
 
 private:
     ScannerOptions options;

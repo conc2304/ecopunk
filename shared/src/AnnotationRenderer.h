@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "glm/vec2.hpp"
 #include "ofTrueTypeFont.h"
 #include "GridSystem.h"
 #include "Fragment.h"
@@ -35,7 +36,9 @@ class AnnotationRenderer {
 		void reset(); // clears measurement lines + code text; called on cycle restart
 
 		void drawGrid(float alpha) const;
-		void drawDivider(float progress, float brightness = 1.0f) const; // progress 0..1, grows top->bottom
+		// p1/p2 are the canvas-edge endpoints; call BEComposition::getDividerEndpoints()
+		// to compute them for any angle (vertical, horizontal, or mid-rotation).
+		void drawDivider(glm::vec2 p1, glm::vec2 p2, float brightness = 1.0f) const;
 		void drawCornerLabel(const std::string& label) const;
 		void drawMeasurementLines() const;
 		void drawCodeText() const;
@@ -53,6 +56,10 @@ class AnnotationRenderer {
 		// (LONG_SILENCE / ZONE_IMBALANCE responses). Anchors near the most
 		// recently placed fragment, same as the timer-driven spawn.
 		void triggerCodeTextSpawn() { trySpawnCodeText(); }
+
+		// Removes any code-text entries whose slot overlaps `rect` (call when a
+		// HUD widget claims that region so text doesn't bleed through the panel).
+		void clearCodeTextInRect(const ofRectangle& rect);
 
 		int getMaxConnectionCount() const { return maxConnectionCount; }
 

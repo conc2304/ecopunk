@@ -22,8 +22,11 @@ void ofApp::setup() {
 
 	ofSetFrameRate(TARGET_FPS);
 
-	grid.setup(CANVAS_W, CANVAS_H, DIVIDER_X);
-	annotations.setup(&grid, CANVAS_W, CANVAS_H);
+	int cw = ofGetWidth();
+	int ch = ofGetHeight();
+	float dividerX = static_cast<float>(cw) * DIVIDER_X_FRACTION;
+	grid.setup(cw, ch, dividerX);
+	annotations.setup(&grid, cw, ch);
 	annotations.loadCodeFont(CODE_FONT_PATH, SIZE_CODE);
 	annotations.setMeasurementLineTiming(MLINE_DRAW_SPEED, MLINE_FADE_DELAY, MLINE_FADE_OPACITY);
 	annotations.setCodeTextTiming(CODE_TEXT_INTERVAL_MIN, CODE_TEXT_INTERVAL_MAX, CODE_TEXT_OPACITY_MIN, CODE_TEXT_OPACITY_MAX);
@@ -35,7 +38,7 @@ void ofApp::setup() {
 	// ── Vitality systems (LFOBank / TriggerBus / GridState / ErosionFBO) ──
 	shaderLib.setup();
 	gridState.setup(GRID_COLS, GRID_ROWS, GRIDSTATE_DECAY_RATE);
-	erosionFBO.setup(CANVAS_W, CANVAS_H, EROSION_DECAY_RATE);
+	erosionFBO.setup(cw, ch, EROSION_DECAY_RATE);
 
 	motionEx.setup();
 	motionEx.setOutputMode(0); // LUMA_GLOW
@@ -62,7 +65,7 @@ void ofApp::setup() {
 	triggerBus.setCooldown(static_cast<int>(BETrigger::CIRCLE_PLACED), 0.0f);
 	triggerBus.setCooldown(static_cast<int>(BETrigger::CYCLE_START), 0.0f);
 
-	composition.setupBE(&grid, &videoSampler, CANVAS_W, CANVAS_H);
+	composition.setupBE(&grid, &videoSampler, cw, ch);
 	composition.setLFOBank(&lfoBank);
 	composition.setTriggerBus(&triggerBus); // also registers BEComposition's own listeners
 	composition.setGridState(&gridState);
@@ -137,6 +140,12 @@ void ofApp::update() {
 		annotations.getMaxConnectionCount() >= TRIGGER_HUB_MIN_CONNECTIONS);
 	annotations.setCodeTextWeight(lfoBank.getUnipolar(static_cast<int>(BELFOLane::CODE_TEXT_WEIGHT)));
 
+	bool hasHudWidget = (composition.getActiveHudWidget() != nullptr);
+	if (hasHudWidget && !hadHudWidget) {
+		annotations.clearCodeTextInRect(composition.getActiveHudWidget()->getBounds().rect());
+	}
+	hadHudWidget = hasHudWidget;
+
 	gridPulseBoost *= std::exp(-dt / 0.8f);
 
 	// Motion overlay — driven by blueprint_emergence's own state (GridState's
@@ -171,7 +180,7 @@ void ofApp::draw() {
 		drawScene();
 		erosionFBO.endCapture();
 		erosionFBO.update();
-		erosionFBO.draw(0, 0, CANVAS_W, CANVAS_H);
+		erosionFBO.draw(0, 0, ofGetWidth(), ofGetHeight());
 	}
 
 	// Fragment shader-effect overlays draw in their own pass, after the
@@ -184,6 +193,16 @@ void ofApp::draw() {
 		fragment->drawOverlay();
 	}
 
+	// Divider drawn outside the FBO and after all overlays so it is always
+	// the topmost layer — video content and shader effects cannot bleed over it.
+	{
+		ofEnableAlphaBlending();
+		float divBrightness = ofMap(lfoBank.getUnipolar(static_cast<int>(BELFOLane::DIVIDER_BRIGHTNESS)),
+			0.0f, 1.0f, LFO_DIVIDER_MIN, LFO_DIVIDER_MAX);
+		auto divEndpoints = composition.getDividerEndpoints();
+		annotations.drawDivider(divEndpoints.first, divEndpoints.second, divBrightness);
+	}
+
 	if (showOccupancyDebug) {
 		drawOccupancyDebug();
 	}
@@ -191,18 +210,15 @@ void ofApp::draw() {
 	ofSetColor(TEXT_DIM);
 	ofDrawBitmapString("fps " + ofToString(ofGetFrameRate(), 1)
 			+ "  zone a: " + (composition.isZoneALight() ? "light" : "dark")
+			+ "  div: " + (composition.isDividerHorizontal() ? "horiz" : "vert")
 			+ "  fragments: " + ofToString(composition.getFragments().size())
 			+ "  seed: " + ofToString(composition.getCycleSeed())
-			+ "  ('g' grid debug, 'r' restart cycle)",
+			+ "  ('g' grid, 'r' restart, 'f' flip divider)",
 		12, 18);
 }
 
 //--------------------------------------------------------------
 void ofApp::drawScene() {
-	// Divider is always fully drawn — no grow animation (continuous cycle mode
-	// has no BLANK phase; the divider jumps or drifts instead).
-	constexpr float dividerProgress = 1.0f;
-
 	// LFO-driven grid opacity.
 	// RULE_WHITE already carries ~30% baseline alpha; normalize the LFO's
 	// 0.20–0.45 opacity range against that baseline since drawGrid(alpha)
@@ -212,9 +228,6 @@ void ofApp::drawScene() {
 	float gridAlpha = lfoFrac / 0.30f;
 	gridAlpha *= (1.0f - composition.getGridDimAmount()); // DENSITY_CRITICAL response
 	gridAlpha += gridPulseBoost; // PHASE_TRANSITION response
-
-	float dividerBrightness = ofMap(lfoBank.getUnipolar(static_cast<int>(BELFOLane::DIVIDER_BRIGHTNESS)),
-		0.0f, 1.0f, LFO_DIVIDER_MIN, LFO_DIVIDER_MAX);
 
 	ofBackground(GROUND_DARK);
 
@@ -226,19 +239,25 @@ void ofApp::drawScene() {
 	// loop — once motion overlay opacity ramped above zero.)
 	ofEnableAlphaBlending();
 
-	float dividerX = grid.getDividerX();
-
-	ofSetColor(composition.isZoneALight() ? GROUND_LIGHT : GROUND_DARK);
-	ofDrawRectangle(0, 0, dividerX, CANVAS_H);
-
-	ofSetColor(GROUND_DARK);
-	ofDrawRectangle(dividerX, 0, CANVAS_W - dividerX, CANVAS_H);
+	if (composition.isDividerHorizontal()) {
+		float dividerY = composition.getDividerY();
+		ofSetColor(composition.isZoneALight() ? GROUND_LIGHT : GROUND_DARK);
+		ofDrawRectangle(0, 0, ofGetWidth(), dividerY);
+		ofSetColor(GROUND_DARK);
+		ofDrawRectangle(0, dividerY, ofGetWidth(), ofGetHeight() - dividerY);
+	} else {
+		float dividerX = grid.getDividerX();
+		ofSetColor(composition.isZoneALight() ? GROUND_LIGHT : GROUND_DARK);
+		ofDrawRectangle(0, 0, dividerX, ofGetHeight());
+		ofSetColor(GROUND_DARK);
+		ofDrawRectangle(dividerX, 0, ofGetWidth() - dividerX, ofGetHeight());
+	}
 
 	// Motion overlay sits behind the grid/fragments — a soft glow of recent
 	// motion in the source video, intensity tracking composition activity.
 	if (motionOverlayOpacity > 0.001f) {
 		ofSetColor(255, 255, 255, static_cast<int>(255 * motionOverlayOpacity));
-		motionEx.getMotionTexture().draw(0, 0, CANVAS_W, CANVAS_H);
+		motionEx.getMotionTexture().draw(0, 0, ofGetWidth(), ofGetHeight());
 	}
 
 	for (const auto & fragment : composition.getFragments()) {
@@ -258,7 +277,6 @@ void ofApp::drawScene() {
 	annotations.drawHubHighlight();
 
 	annotations.drawGrid(gridAlpha);
-	annotations.drawDivider(dividerProgress, dividerBrightness);
 }
 
 //--------------------------------------------------------------
@@ -282,6 +300,8 @@ void ofApp::keyPressed(int key) {
 	} else if (key == 'e') {
 		bypassErosion = !bypassErosion;
 		ofLogNotice("ofApp") << "bypassErosion = " << bypassErosion;
+	} else if (key == 'f') {
+		composition.forceAxisFlip();
 	}
 }
 

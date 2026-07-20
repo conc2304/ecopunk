@@ -294,6 +294,9 @@ void BEFragment::drawOverlay() const {
 	if (geometryType == GeometryType::CIRCLE) {
 		return;
 	}
+	if (getState() == Fragment::State::DISSOLVING) {
+		return;
+	}
 	if (effectSlot.isIdle()) {
 		return;
 	}
@@ -371,6 +374,29 @@ void BEFragment::drawOverlay() const {
 	ofSetColor(255, 255, 255, static_cast<int>(255 * opacity * effectSlot.alpha));
 	effectResultFbo.getTexture().draw(pos.x, pos.y, bounds.width, bounds.height);
 	ofPopMatrix();
+}
+
+void BEFragment::drawDeparture(float t) const {
+	if (geometryType == GeometryType::SLIVER) {
+		drawSlideOut(t);
+	} else {
+		Fragment::drawDeparture(t); // fade in place
+	}
+}
+
+void BEFragment::drawSlideOut(float t) const {
+	float tEased = t * t; // ease-in: slow start, accelerates out
+	glm::vec2 finalPos = glm::vec2(bounds.getPosition());
+	glm::vec2 pos = glm::mix(finalPos, slideStartPos, tEased);
+
+	if (hasMedia()) {
+		ofSetColor(255, static_cast<int>(255 * opacity));
+		videoTexture->drawSubsection(pos.x, pos.y, bounds.width, bounds.height,
+			videoCrop.x, videoCrop.y, videoCrop.width, videoCrop.height);
+	} else {
+		ofSetColor(placeholderColor, static_cast<int>(255 * opacity));
+		ofDrawRectangle(pos.x, pos.y, bounds.width, bounds.height);
+	}
 }
 
 void BEFragment::drawArrival(float /*t*/) const {

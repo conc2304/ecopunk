@@ -22,6 +22,7 @@ public:
 	void setValue(float v) { options.value = ofClamp(v, 0.0f, 1.0f); }
 	void update(float dt) override;
 	void draw() override;
+	ofVec2f getMinSize() const override { return { 100.0f, 100.0f }; }
 
 private:
 	GaugeOptions options;

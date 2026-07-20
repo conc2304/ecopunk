@@ -55,4 +55,5 @@ private:
 
 	bool showOccupancyDebug = false;
 	bool bypassErosion = true; // TEMP DIAGNOSTIC, see ofApp::draw()
+	bool hadHudWidget = false;
 };

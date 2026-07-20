@@ -19,6 +19,11 @@ namespace hud {
 	class ScannerWidget;
 	class DataCardWidget;
 	class GaugeWidget;
+	class ContourWidget;
+	class FlowFieldWidget;
+	class HexGridWidget;
+	class NodeNetworkWidget;
+	class ReticleWidget;
 }
 class MotionExtraction;
 
@@ -52,7 +57,19 @@ class BEComposition : public CompositionBase {
 		BECompositionState getState() const;
 		float getGridDimAmount() const { return gridDimCurrent; }
 		CycleMode getCurrentMode() const { return currentMode; }
-		float getDividerX() const { return dividerX; }
+		float getDividerX() const { return divider.pivot.x; }
+
+		// Canvas-edge endpoints of the divider at its current angle/pivot —
+		// valid at any angle (0°=vertical, 90°=horizontal, mid-rotation).
+		std::pair<glm::vec2, glm::vec2> getDividerEndpoints() const;
+
+		// Orientation helpers for the zone-background split in ofApp.
+		bool  isDividerHorizontal() const { return divider.orientation == DividerOrientation::HORIZONTAL; }
+		float getDividerY()         const { return divider.pivot.y; }
+
+		// Force an axis-flip rotation immediately (keyboard shortcut / debug).
+		// No-op if a rotation is already in progress.
+		void forceAxisFlip();
 
 		// Non-null while a HUD widget is occupying a grid slot (max 1 at a
 		// time, system-wide). Lifecycle owned/driven entirely by BEComposition.
@@ -104,12 +121,61 @@ class BEComposition : public CompositionBase {
 		bool spawnFragmentInSlot(int slotIndex);
 
 		// ── Continuous cycle mode ─────────────────────────────────────────────
+		// Divider geometry — replaces the old float dividerX.
+		enum class DividerOrientation { VERTICAL, HORIZONTAL };
+		enum class Zone { A, B };
+
+		struct DividerLine {
+			glm::vec2         pivot;
+			float             angle       = 0.0f; // degrees: 0=vertical, 90=horizontal
+			DividerOrientation orientation = DividerOrientation::VERTICAL;
+		};
+
+		// Axis-flip rotation animation state machine.
+		enum class RotationPhase { INACTIVE, ROTATING_AROUND_A, ROTATING_AROUND_B };
+
+		struct DividerRotationAnim {
+			RotationPhase phase            = RotationPhase::INACTIVE;
+			glm::vec2     pivotA;
+			glm::vec2     pivotB;
+			bool          pivotBChosen     = false;
+			float         startAngle       = 0.0f;
+			float         targetAngle      = 90.0f;
+			float         currentAngle     = 0.0f;
+			float         totalDuration    = 0.0f;
+			float         elapsed          = 0.0f;
+			int           candidatesFound  = 0;
+			int           targetCandidateIndex = 0;
+			float         minTravelAngle   = 0.0f;
+			void reset() {
+				phase = RotationPhase::INACTIVE;
+				pivotBChosen = false;
+				candidatesFound = 0;
+				elapsed = 0.0f;
+			}
+		};
+
 		void enterMode(CycleMode mode);
 		void updateGhostDecay(float dt);
 		void updateDividerAnimation(float dt);
 		void updatePerpetualMode(float dt);
 		void pruneDeadFragments();
-		float selectNewDividerX() const; // picks a column-boundary X different from current
+		float selectNewDividerX() const;
+
+		// Axis-flip rotation
+		void triggerDividerRelocation();
+		bool shouldAxisFlip() const;
+		void startAxisFlipAnimation();
+		void updateRotationAnim(float dt);
+		void updatePivotBDetection();
+		std::vector<glm::vec2> getLineGridIntersections(const glm::vec2& pivot, float angleDeg) const;
+		bool isNewIntersection(const glm::vec2& pt);
+		void handOffToPivotB();
+		void completeRotationAnimation();
+		void onDividerRelocationComplete();
+		glm::vec2 nearestGridIntersection(const glm::vec2& pos) const;
+		Zone getZoneForPoint(const glm::vec2& pt) const;
+		Zone getZoneForCell(int col, int row) const;
 
 		// HUD widget — independent of the 4 video slots; occasionally claims
 		// unoccupied grid space instead of a video fragment.
@@ -144,8 +210,10 @@ class BEComposition : public CompositionBase {
 		std::unique_ptr<hud::HudWidget> hudWidget;
 		// Non-owning typed aliases into hudWidget — set alongside hudWidget,
 		// cleared whenever hudWidget is destroyed. Used for live per-frame updates.
-		hud::DataCardWidget* hudDataCard = nullptr;
-		hud::GaugeWidget*    hudGauge    = nullptr;
+		hud::DataCardWidget*    hudDataCard    = nullptr;
+		hud::GaugeWidget*       hudGauge       = nullptr;
+		hud::NodeNetworkWidget* hudNodeNetwork = nullptr;
+		hud::ReticleWidget*     hudReticle     = nullptr;
 		HudPhase hudPhase = HudPhase::SILENCE;
 		float hudTimer = 0.0f;
 		float hudTimerTarget = 0.0f;
@@ -169,16 +237,19 @@ class BEComposition : public CompositionBase {
 		float gridDimTarget              = 0.0f;
 
 		// ── Continuous cycle mode ─────────────────────────────────────────────
-		CycleMode currentMode            = CycleMode::GHOST_LAYERS;
-		float dividerX                   = 0.0f; // runtime position; initialised in onCycleStart()
-		float dividerTargetX             = 0.0f; // PERPETUAL drift target
-		bool  dividerAnimating           = false; // GHOST_LAYERS jump animation in progress
-		float dividerAnimFrom            = 0.0f;
-		float dividerAnimTo              = 0.0f;
-		float dividerAnimT               = 0.0f; // 0..1 normalised progress
-		float dividerAnimDur             = 0.0f;
-		float timeInMode                 = 0.0f;
-		float modeTransitionTarget       = 0.0f; // PERPETUAL: seconds until transition armed
-		bool  perpetualTransitionArmed   = false;
-		int   placementsSinceSeedRefresh = 0;
+		CycleMode currentMode              = CycleMode::GHOST_LAYERS;
+		DividerLine divider;                         // position + angle + orientation
+		float dividerTargetX               = 0.0f;  // PERPETUAL vertical drift target
+		float dividerTargetY               = 0.0f;  // PERPETUAL horizontal drift target
+		bool  dividerAnimating             = false;  // GHOST_LAYERS position-jump in progress
+		float dividerAnimFrom              = 0.0f;
+		float dividerAnimTo                = 0.0f;
+		float dividerAnimT                 = 0.0f;  // 0..1 normalised progress
+		float dividerAnimDur               = 0.0f;
+		DividerRotationAnim rotAnim;
+		std::vector<glm::vec2> seenIntersections;   // intersections counted this rotation
+		float timeInMode                   = 0.0f;
+		float modeTransitionTarget         = 0.0f;  // PERPETUAL: seconds until transition armed
+		bool  perpetualTransitionArmed     = false;
+		int   placementsSinceSeedRefresh   = 0;
 };

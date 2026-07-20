@@ -50,12 +50,14 @@ protected:
 	void update(float dt) override;
 	void drawArrival(float t) const override;
 	void drawStable() const override;
+	void drawDeparture(float t) const override;
 	void drawOverlay() const override;
 
 private:
 	void drawScanReveal(float elapsed) const;
 	void drawClockwiseBorder(glm::vec2 pos, float w, float h, float t) const;
 	void drawSlideIn(float elapsed) const;
+	void drawSlideOut(float t) const;
 	void drawIrisOpen(float elapsed) const;
 
 	void updateEffectCycle(float dt);

@@ -19,6 +19,7 @@ public:
 	virtual void randomize(int seed = -1) {
 		if (seed >= 0) rng.seed(seed);
 	}
+	virtual ofVec2f getMinSize() const { return { 150.0f, 90.0f }; }
 
 	void setBounds(float x, float y, float width, float height) {
 		bounds = { x, y, width, height };
