@@ -5,15 +5,7 @@
 #include "BETriggers.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/constants.hpp"
-#include "hud/ContourWidget.h"
-#include "hud/DataCardWidget.h"
-#include "hud/FlowFieldWidget.h"
-#include "hud/GaugeWidget.h"
-#include "hud/HexGridWidget.h"
-#include "hud/HudWidget.h"
-#include "hud/NodeNetworkWidget.h"
-#include "hud/ReticleWidget.h"
-#include "hud/ScannerWidget.h"
+#include "hud/HudElements.h"
 #include "MotionExtraction.h"
 #include "ofLog.h"
 #include "ofMath.h"
@@ -344,6 +336,12 @@ void BEComposition::updateHudWidget(float dt) {
 			m.drift = 0.5f + (gridState ? gridState->getAverageActivity() : 0.0f) * 1.5f;
 			hudNodeNetwork->setMotion(m);
 		}
+		if (hudStatusLight) {
+			float activity = gridState ? gridState->getAverageActivity() : 0.0f;
+			hudStatusLight->setState(activity > 0.6f ? hud::StatusState::Alert
+				: activity > 0.15f ? hud::StatusState::Active
+									: hud::StatusState::Idle);
+		}
 		hudWidget->update(dt);
 	}
 
@@ -371,6 +369,8 @@ void BEComposition::updateHudWidget(float dt) {
 			hudGauge       = nullptr;
 			hudNodeNetwork = nullptr;
 			hudReticle     = nullptr;
+			hudHexGrid     = nullptr;
+			hudStatusLight = nullptr;
 			hudPhase = HudPhase::SILENCE;
 			hudTimer = 0.0f;
 			hudTimerTarget = randRangeF(SLOT_SILENCE_MIN, SLOT_SILENCE_MAX);
@@ -390,14 +390,17 @@ bool BEComposition::trySpawnHudWidget() {
 	std::vector<float> xs = grid->getSnapXPositions();
 	std::vector<float> ys = grid->getSnapYPositions();
 
-	// Pick a widget type (9 outcomes: DataCard×2, Gauge×2, visual types×1 each).
-	// Data-driven widgets get 2x weight because they carry live composition info.
-	int roll = randRangeI(0, 8);
+	// Pick a widget type (12 outcomes: DataCard×2, Gauge×2, visual/event
+	// types×1 each). Data-driven widgets get 2x weight because they carry
+	// live composition info.
+	int roll = randRangeI(0, 11);
 
 	hudDataCard    = nullptr;
 	hudGauge       = nullptr;
 	hudNodeNetwork = nullptr;
 	hudReticle     = nullptr;
+	hudHexGrid     = nullptr;
+	hudStatusLight = nullptr;
 
 	std::unique_ptr<hud::HudWidget> widget;
 
@@ -422,20 +425,49 @@ bool BEComposition::trySpawnHudWidget() {
 	} else if (roll == 4) {
 		widget = std::make_unique<hud::ContourWidget>();
 	} else if (roll == 5) {
-		widget = std::make_unique<hud::HexGridWidget>();
+		auto hex = std::make_unique<hud::HexGridWidget>();
+		hudHexGrid = hex.get();
+		widget = std::move(hex);
 	} else if (roll == 6) {
 		widget = std::make_unique<hud::FlowFieldWidget>();
 	} else if (roll == 7) {
 		auto net = std::make_unique<hud::NodeNetworkWidget>();
+		// Organic (root/mycelium) reading rather than the tech-mesh default
+		// — this is a nature-footage sketch, and this widget's whole
+		// original naming ("Mycelium/root communication mesh") assumed
+		// this look even before the Straight/Organic option existed.
+		hud::NodeNetworkOptions nOpts;
+		nOpts.edgeStyle = hud::NodeNetworkEdgeStyle::Organic;
+		net->setOptions(nOpts);
 		hudNodeNetwork = net.get();
 		widget = std::move(net);
-	} else {
+	} else if (roll == 8) {
 		auto ret = std::make_unique<hud::ReticleWidget>();
 		hud::ReticleOptions opts;
 		opts.targetCount = static_cast<int>(fragments.size()) + 2;
 		ret->setOptions(opts);
+		// Registration corner marks (this codebase's default HudTheme colors
+		// already match the house palette, so only the frame style changes).
+		hud::HudTheme regTheme;
+		regTheme.frame.style = hud::FrameStyle::Registration;
+		ret->setTheme(regTheme);
 		hudReticle = ret.get();
 		widget = std::move(ret);
+	} else if (roll == 9) {
+		auto light = std::make_unique<hud::StatusLightWidget>();
+		hud::StatusLightOptions opts;
+		opts.label = "OBSERVATION";
+		opts.state = hud::StatusState::Active; // refined live in updateHudWidget()
+		light->setOptions(opts);
+		hudStatusLight = light.get();
+		widget = std::move(light);
+	} else if (roll == 10) {
+		auto scroll = std::make_unique<hud::LogScrollWidget>();
+		scroll->pushLine("> observation slot open");
+		scroll->pushLine("fragments " + ofToString(static_cast<int>(fragments.size())) + "/" + ofToString(NUM_SLOTS));
+		widget = std::move(scroll);
+	} else {
+		widget = std::make_unique<hud::GlitchTearWidget>();
 	}
 
 	// Slow down autonomous (non-data-driven) visual widgets.
@@ -849,6 +881,15 @@ bool BEComposition::spawnFragmentInSlot(int slotIndex) {
 	Fragment * newFragPtr = frag.get();
 	grid->reserve(newFragPtr->getId(), placedBounds);
 	grid->contributeFragmentEdges(newFragPtr->getId(), placedBounds, otherFragmentBounds(excludeFrag));
+
+	// Ripple the hex-grid HUD widget (when it happens to be the active one)
+	// from wherever this fragment just landed — real per-fragment event,
+	// same idea as Temporal Fields' HexGridWidget::pulseAt() wiring.
+	if (hudHexGrid) {
+		hudHexGrid->pulseAt(
+			(placedBounds.x + placedBounds.width * 0.5f) / canvasW,
+			(placedBounds.y + placedBounds.height * 0.5f) / canvasH);
+	}
 
 	if (claimedIndex >= 0 && claimedIndex < static_cast<int>(fragments.size())) {
 		notifyFragmentRemoved(fragments[claimedIndex].get());

@@ -2,7 +2,7 @@
 #include "BELFOLanes.h"
 #include "BESettings.h"
 #include "BETriggers.h"
-#include "hud/HudWidget.h"
+#include "hud/HudElements.h"
 #include <cmath>
 
 //--------------------------------------------------------------

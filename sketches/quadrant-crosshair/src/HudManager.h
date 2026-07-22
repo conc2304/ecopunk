@@ -37,6 +37,12 @@ private:
     hud::ReticleWidget     reticles;
     hud::FlowFieldWidget   flowField;
 
+    // Always-on, event-driven — not in the rotation pool.
+    hud::StatusLightWidget mediaStatus;
+    hud::LogScrollWidget   log;
+    hud::GlitchTearWidget  glitch;
+    float logPushTimer = 0.f;
+
     // System pointers (non-owning)
     TriggerBus*       triggerBus   = nullptr;
     CrosshairSystem*  crosshairSys = nullptr;

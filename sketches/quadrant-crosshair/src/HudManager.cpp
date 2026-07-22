@@ -117,7 +117,16 @@ void HudManager::drawElement(int idx, float alpha) {
         case 0: contours.setTheme(themedAt(0.40f * alpha));  contours.draw();  break;
         case 1: hexGrid.setTheme(themedAt(0.25f * alpha));   hexGrid.draw();   break;
         case 2: network.setTheme(themedAt(0.45f * alpha));   network.draw();   break;
-        case 3: reticles.setTheme(themedAt(0.40f * alpha));  reticles.draw();  break;
+        case 3: {
+            // Registration corner marks on the reticle layer specifically —
+            // matches temporal-fields' choice of pairing this frame style
+            // with the reticle/tracking-brackets widget.
+            hud::HudTheme t = themedAt(0.40f * alpha);
+            t.frame.style = hud::FrameStyle::Registration;
+            reticles.setTheme(t);
+            reticles.draw();
+            break;
+        }
         case 4: flowField.setTheme(themedAt(0.40f * alpha)); flowField.draw(); break;
     }
 }
@@ -169,6 +178,10 @@ void HudManager::setup(TriggerBus& tb, CrosshairSystem& ch, LFOBank& lfoRef,
     nOpts.connectionDistance = 0.22f;
     nOpts.wrap               = true;
     nOpts.showPackets        = true;
+    // Organic (root/mycelium) edges rather than the tech-mesh default — this
+    // widget's own naming ("Mycelium/root communication mesh") always assumed
+    // this look, even before the Straight/Organic option existed to draw it.
+    nOpts.edgeStyle          = hud::NodeNetworkEdgeStyle::Organic;
     network.setBounds(0, 0, W, H);
     network.setTheme(themedAt(0.f));
     network.setOptions(nOpts);
@@ -244,6 +257,29 @@ void HudManager::setup(TriggerBus& tb, CrosshairSystem& ch, LFOBank& lfoRef,
     flowField.setOptions(ffOpts);
     flowField.setup();
 
+    // Always-on — media status light
+    hud::StatusLightOptions slOpts;
+    slOpts.label = "MEDIA";
+    slOpts.state = hud::StatusState::Idle;
+    mediaStatus.setBounds(W - 170.f, H - 40.f, 150.f, 24.f);
+    mediaStatus.setTheme(themedAt(0.55f));
+    mediaStatus.setOptions(slOpts);
+    mediaStatus.setup();
+
+    // Always-on — event log (video loads, motion readouts)
+    hud::LogScrollOptions lOpts;
+    lOpts.maxLines    = 24;
+    lOpts.scrollSpeed = 9.f;
+    lOpts.showFrame   = true;
+    log.setBounds(W - 260.f, H - 200.f, 236.f, 150.f);
+    log.setTheme(themedAt(0.55f));
+    log.setOptions(lOpts);
+    log.setup();
+
+    glitch.setBounds(0, 0, W, H);
+    glitch.setTheme(themedAt(1.f));
+    glitch.setup();
+
     // Seed with NATURE fallback copy until first file-change notification arrives
     currentCopy_ = getCopyForCategory(NatureCategory::NATURE);
 
@@ -265,6 +301,15 @@ void HudManager::onVideoFileChanged(const std::string& basename) {
 
     reticleOpts_.labelOverride = currentCopy_.reticleLabels;
     reticles.setOptions(reticleOpts_);
+
+    // Real event, real position — ripple from wherever the crosshair
+    // actually is right now, not canvas center.
+    glitch.trigger();
+    CrosshairState cs = crosshairSys->getState();
+    float W = ofGetWidth(), H = ofGetHeight();
+    hexGrid.pulseAt(ofClamp(cs.cx / W, 0.f, 1.f), ofClamp(cs.cy / H, 0.f, 1.f));
+
+    log.pushLine("> loaded " + basename + " [" + currentCopy_.categoryName + "]");
 }
 
 // ── Update helpers ────────────────────────────────────────────────────────────
@@ -342,6 +387,19 @@ void HudManager::update(float dt) {
     hexGrid.setMotion(m);
     network.setMotion(m);
 
+    // Media status light + periodic motion readout — real signal
+    // (MotionExtraction's energy is computed every frame regardless of
+    // showBioGauge, which only gates the gauge widget's own visibility).
+    float energy = motionEx->getMotionEnergy();
+    mediaStatus.setState(energy > 0.15f ? hud::StatusState::Alert
+        : energy > 0.02f ? hud::StatusState::Active
+                          : hud::StatusState::Idle);
+    logPushTimer += dt;
+    if (logPushTimer >= 2.5f) {
+        logPushTimer = 0.f;
+        log.pushLine("bio_signal " + ofToString(energy, 3));
+    }
+
     // Advance slot lifecycles
     updateSlot(0, dt);
     updateSlot(1, dt);
@@ -354,6 +412,9 @@ void HudManager::update(float dt) {
     for (int q = 0; q < 4; q++) quadCards[q].update(dt);
     reticles.update(dt);
     flowField.update(dt);
+    mediaStatus.update(dt);
+    log.update(dt);
+    glitch.update(dt);
 }
 
 // ── Draw ──────────────────────────────────────────────────────────────────────
@@ -369,6 +430,9 @@ void HudManager::draw(float expansionFade) {
         quadCards[q].setTheme(themedAt(0.55f * expansionFade));
         quadCards[q].draw();
     }
+    mediaStatus.setTheme(themedAt(0.55f * expansionFade)); mediaStatus.draw();
+    log.setTheme(themedAt(0.55f * expansionFade));         log.draw();
+    glitch.setTheme(themedAt(1.f * expansionFade));        glitch.draw();
 
     // Rotating slots — drawnAlpha scaled by expansionFade
     for (auto& slot : slots)

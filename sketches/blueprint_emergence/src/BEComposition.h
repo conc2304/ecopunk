@@ -24,6 +24,9 @@ namespace hud {
 	class HexGridWidget;
 	class NodeNetworkWidget;
 	class ReticleWidget;
+	class StatusLightWidget;
+	class LogScrollWidget;
+	class GlitchTearWidget;
 }
 class MotionExtraction;
 
@@ -214,6 +217,8 @@ class BEComposition : public CompositionBase {
 		hud::GaugeWidget*       hudGauge       = nullptr;
 		hud::NodeNetworkWidget* hudNodeNetwork = nullptr;
 		hud::ReticleWidget*     hudReticle     = nullptr;
+		hud::HexGridWidget*     hudHexGrid     = nullptr;
+		hud::StatusLightWidget* hudStatusLight = nullptr;
 		HudPhase hudPhase = HudPhase::SILENCE;
 		float hudTimer = 0.0f;
 		float hudTimerTarget = 0.0f;

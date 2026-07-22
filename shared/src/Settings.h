@@ -11,3 +11,6 @@ static const ofColor RULE_WHITE = ofColor(255, 255, 255, 77); // 30% opacity gri
 static const ofColor RULE_ORANGE = ofColor::fromHex(0xC87941); // vertical divider accent
 static const ofColor TEXT_CODE = ofColor(255, 255, 255, 153); // 60% — code fragment overlays
 static const ofColor TEXT_DIM = ofColor::fromHex(0x888888); // secondary labels, coords
+// Warmer/redder than RULE_ORANGE on purpose — a "flagged/quarantined" tone
+// distinguishable from the divider/accent color it sits alongside.
+static const ofColor HATCH_WARNING = ofColor::fromHex(0xE0472B);
