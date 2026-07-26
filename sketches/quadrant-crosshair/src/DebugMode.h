@@ -42,6 +42,10 @@ private:
     float pTintR           = 1.0f;
     float pTintG           = 0.78f;
     float pTintB           = 0.25f;
+    float pHueOffset       = 0.0f;
+    float pHueSpeed        = 20.0f;
+    float pHueSaturationMult = 1.0f;
+    float pHueValueMult    = 1.0f;
     // motion_effect controls (fed into MotionExtraction::update each frame)
     float pMotionDecay       = 0.95f;
     float pMotionSensitivity = 4.0f;

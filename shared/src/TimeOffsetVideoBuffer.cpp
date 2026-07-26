@@ -19,6 +19,10 @@ void TimeOffsetVideoBuffer::setup(const std::string& mediaFolderPath, const Sett
 	for (const auto& file : dir.getFiles()) {
 		mediaFiles.push_back(file.getAbsolutePath());
 	}
+	// dir.sort() above only exists to make the scan itself deterministic
+	// (stable across re-scans) — playback order is randomized from here so
+	// clips don't always play in the same fixed alphabetical sequence.
+	shuffleMediaFiles();
 
 	currentFileIndex = -1;
 	mediaLoaded = false;
@@ -45,12 +49,32 @@ void TimeOffsetVideoBuffer::setup(const std::string& mediaFolderPath, const Sett
 	}
 }
 
+void TimeOffsetVideoBuffer::shuffleMediaFiles() {
+	for (int i = static_cast<int>(mediaFiles.size()) - 1; i > 0; i--) {
+		int j = static_cast<int>(ofRandom(i + 1));
+		std::swap(mediaFiles[i], mediaFiles[j]);
+	}
+}
+
 void TimeOffsetVideoBuffer::advanceToNextMedia() {
 	if (mediaFiles.size() < 2) {
 		return;
 	}
 
-	currentFileIndex = (currentFileIndex + 1) % static_cast<int>(mediaFiles.size());
+	std::string finishedFile = mediaFiles[currentFileIndex];
+	currentFileIndex++;
+	if (currentFileIndex >= static_cast<int>(mediaFiles.size())) {
+		// Completed a full lap through the shuffled order — reshuffle for
+		// the next one so the whole playlist is heard before any repeat,
+		// but the order itself keeps changing lap to lap.
+		shuffleMediaFiles();
+		currentFileIndex = 0;
+		// Avoid the same clip playing twice back-to-back across the lap
+		// boundary (the just-finished clip landing back at the front).
+		if (mediaFiles[0] == finishedFile) {
+			std::swap(mediaFiles[0], mediaFiles[1 + static_cast<int>(ofRandom(mediaFiles.size() - 1))]);
+		}
+	}
 	history.clear(); // buffered frames are from the previous source — stale, discard
 
 	player.close();

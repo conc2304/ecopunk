@@ -112,6 +112,12 @@ std::pair<float,float> QuadrantManager::chooseDitherParams() {
     return { arc, px };
 }
 
+std::pair<float,float> QuadrantManager::chooseHueRotateParams() {
+    float offset = ofRandom(0.f, 360.f);
+    float speed  = ofRandom(15.f, 60.f) * (ofRandom(1.f) < 0.5f ? -1.f : 1.f);
+    return { offset, speed };
+}
+
 void QuadrantManager::setVideoPixels(const ofPixels* px) {
     currentVideoPixels = px;
     for (auto& q : quads) q.setVideoPixels(px);
@@ -130,6 +136,9 @@ void QuadrantManager::kickRandomShader(int quadId) {
     if (chosen == "dither") {
         auto [arc, px] = chooseDitherParams();
         quads[quadId].setDitherParams(arc, px);
+    } else if (chosen == "hue_rotate") {
+        auto [offset, speed] = chooseHueRotateParams();
+        quads[quadId].setHueRotateParams(offset, speed);
     } else if (chosen == "ridgeline") {
         quads[quadId].initRidgelineParams(currentVideoPixels);
     }
@@ -221,6 +230,9 @@ void QuadrantManager::update(float dt, const CrosshairState& state,
                         if (cs.savedShader == "dither") {
                             auto [arc, px] = chooseDitherParams();
                             quads[i].setDitherParams(arc, px);
+                        } else if (cs.savedShader == "hue_rotate") {
+                            auto [offset, speed] = chooseHueRotateParams();
+                            quads[i].setHueRotateParams(offset, speed);
                         }
                         ofLogNotice("QM") << "Q" << i << " resuming '" << cs.savedShader << "' (" << resumeDwell << "s)";
                         cs.resumePending = false;

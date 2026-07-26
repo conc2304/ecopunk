@@ -106,6 +106,14 @@ class TimeOffsetVideoBuffer {
 		void setNumQuantizeBands(int bands) { settings.numQuantizeBands = bands; }
 		int getNumQuantizeBands() const { return settings.numQuantizeBands; }
 
+		// Live-tunable independently of setup() — update() recomputes the
+		// history deque's frame cap from this every call (see maxFrames in
+		// the .cpp), so shrinking trims the buffer over the next few frames
+		// and growing lets it accumulate further, with no reallocation or
+		// restart needed.
+		void setMaxHistorySeconds(float seconds) { settings.maxHistorySeconds = seconds; }
+		float getMaxHistorySeconds() const { return settings.maxHistorySeconds; }
+
 	private:
 		enum class PlayheadMotion { HOLD, RAMP };
 
@@ -119,6 +127,13 @@ class TimeOffsetVideoBuffer {
 		};
 
 		int offsetToHistoryIndex(float quantizedOffset) const;
+
+		// Fisher-Yates shuffle of mediaFiles via ofRandom (same idiom as
+		// TFHudLayer::respawnLayout()'s corner shuffle) — called once in
+		// setup() and again every time advanceToNextMedia() wraps back to
+		// the front, so playback order is randomized per lap rather than
+		// the fixed alphabetical order ofDirectory::sort() produces.
+		void shuffleMediaFiles();
 
 		ofVideoPlayer player;
 		Settings settings{};

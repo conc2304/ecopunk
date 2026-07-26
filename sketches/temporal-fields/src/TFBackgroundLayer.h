@@ -36,6 +36,12 @@ class TFBackgroundLayer {
 		void setup(TimeOffsetVideoBuffer* videoBuffer, ShaderLibrary* shaderLib,
 			const std::string& imagesFolder, int canvasW, int canvasH, const Params& params);
 		void setParams(const Params& p);
+		// draw() derives every rect from canvasW/canvasH fresh each call, so
+		// this is the only state a resize needs to update.
+		void resizeCanvas(int canvasW_, int canvasH_) {
+			canvasW = canvasW_;
+			canvasH = canvasH_;
+		}
 		void update(float dt);
 		void draw();
 

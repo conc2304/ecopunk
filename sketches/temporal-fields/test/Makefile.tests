@@ -1,0 +1,38 @@
+# Standalone test build for TFPresetTimeline -- deliberately independent of
+# the sketch's own openFrameworks Makefile/build. Links nothing from
+# openFrameworks itself: TFPresetTimeline only depends on plain
+# nlohmann::json (a single vendored header, libs/json/include), never
+# ofParameter/ofJson/ofLog, so this compiles and runs with a bare compiler
+# and zero GL/window/oF-library linkage -- appropriate for a repo that has
+# no existing test framework anywhere (no CMake/Catch2/doctest/gtest under
+# apps/myApps).
+#
+# Lives in test/ (a sibling of src/, not nested inside it) -- the sketch's
+# own Makefile recursively sweeps every .cpp under src/ into the app's own
+# build, so a src/test/*.cpp here would get compiled into the real app too
+# and collide with its main() at link time (this actually happened once;
+# see tf_timeline_tests.cpp's header comment).
+#
+# Usage (from the sketch root, apps/myApps/EcopunkVideoCollage/sketches/
+# temporal-fields/):
+#   make -C test -f Makefile.tests test
+
+ifndef OF_ROOT
+	OF_ROOT=/Users/joseconchello/openFrameworks
+endif
+
+CXX ?= c++
+CXXFLAGS = -std=c++17 -Wall -Wextra -I$(OF_ROOT)/libs/json/include
+SRC = tf_timeline_tests.cpp ../src/TFPresetTimeline.cpp
+BIN = tf_timeline_tests
+
+.PHONY: test clean
+
+test: $(BIN)
+	./$(BIN)
+
+$(BIN): $(SRC) ../src/TFPresetTimeline.h ../src/TFTimelineBinding.h ../src/TFTimelineEasing.h
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(BIN)
+
+clean:
+	rm -f $(BIN)

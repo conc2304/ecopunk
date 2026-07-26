@@ -17,10 +17,12 @@ struct ShaderSlot {
     float noiseSeed  = 0.f;
     float ditherArc  = 0.45f;
     float ditherPx   = 4.0f;
+    float hueOffset  = 0.0f;
+    float hueSpeed   = 20.0f;
     State state      = State::IDLE;
 
     bool isIdle() const { return state == State::IDLE; }
-    void clear() { name = ""; alpha = 0.f; drawnAlpha = 0.f; state = State::IDLE; dwellAcc = 0.f; noiseTime = 0.f; ditherArc = 0.45f; ditherPx = 4.0f; }
+    void clear() { name = ""; alpha = 0.f; drawnAlpha = 0.f; state = State::IDLE; dwellAcc = 0.f; noiseTime = 0.f; ditherArc = 0.45f; ditherPx = 4.0f; hueOffset = 0.0f; hueSpeed = 20.0f; }
 };
 
 class Quadrant {
@@ -81,6 +83,7 @@ public:
     void setDecay(float d)           { decayRate       = d; }
     void setMaxPixelation(float m)   { maxPixelation   = m; }
     void setDitherParams(float arc, float px);
+    void setHueRotateParams(float offset, float speed);
     // Non-owning pointer to the current video frame's pixels; used by the
     // ridgeline effect slot. Set once per frame by QuadrantManager.
     void setVideoPixels(const ofPixels* px) { videoPixels = px; }
@@ -133,6 +136,7 @@ private:
     void drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
                         const std::string& effect, float alpha,
                         float cx, float cy,
-                        float ditherArc, float ditherPx);
+                        float ditherArc, float ditherPx,
+                        float hueOffset, float hueSpeed);
     void bindUniforms(ofShader& sh);
 };

@@ -17,6 +17,14 @@ class TFPattern {
 		virtual void update(float dt) = 0;
 		virtual void draw() = 0;
 
+		// Updates the canvas dimensions this pattern lays geometry out
+		// against (e.g. on a window resize). Does not itself regenerate
+		// existing geometry -- callers that need the visible pattern to
+		// reflect the new size immediately should follow up with reset();
+		// an inactive pattern will pick up the new size for free the next
+		// time TFComposition::switchToPattern() calls reset() on it.
+		virtual void resizeCanvas(int canvasW, int canvasH) = 0;
+
 		// Fired whenever a fragment's playhead offset actually changes — the
 		// same moment that today triggers a hard cut/crossfade/erosion
 		// transition internally (see TFPatternBSP::assignPlayheads() and

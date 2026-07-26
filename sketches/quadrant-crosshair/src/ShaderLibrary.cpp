@@ -9,6 +9,7 @@ void ShaderLibrary::setup() {
     load("solarize",            "shaders/solarize.glsl");
     load("scanlines",           "shaders/scanlines.glsl");
     load("channelshift",        "shaders/channelshift.glsl");
+    load("hue_rotate",          "shaders/hue_rotate.glsl");
     load("rd_step",             "shaders/rd_step.glsl");
     load("erosion",             "shaders/erosion.glsl");
     load("motion_effect",       "shaders/motion_effect.glsl");

@@ -58,6 +58,7 @@ class TFPatternBSP : public TFPattern {
 		void reset(int seed) override;
 		void update(float dt) override;
 		void draw() override;
+		void resizeCanvas(int canvasW, int canvasH) override;
 
 		void setOnFragmentReassigned(std::function<void(float nx, float ny)> cb) override { onFragmentReassignedCb = std::move(cb); }
 		std::vector<ofVec2f> getActiveFragmentCenters() const override;

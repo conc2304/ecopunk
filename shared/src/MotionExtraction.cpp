@@ -47,8 +47,14 @@ void MotionExtraction::setup() {
 
 	// Reuses blueprint_emergence's existing pass-through vertex shader
 	// (byte-identical to quadrant-crosshair's shaders/vert.glsl).
-	accumShader.load("shaders/effects/vert.glsl", "shaders/motion_accum.glsl");
-	extractShader.load("shaders/effects/vert.glsl", "shaders/motion_extract.glsl");
+	bool accumLoaded   = accumShader.load("shaders/effects/vert.glsl", "shaders/motion_accum.glsl");
+	bool extractLoaded = extractShader.load("shaders/effects/vert.glsl", "shaders/motion_extract.glsl");
+	// A missing/broken shader file fails silently otherwise — the accum FBO just
+	// never gets drawn into and motion energy reads a permanent, plausible-looking 0.
+	if (!accumLoaded || !extractLoaded) {
+		ofLogError("MotionExtraction") << "shader load failed (accum=" << accumLoaded
+			<< ", extract=" << extractLoaded << ") — motion energy/centroid will read 0";
+	}
 }
 
 void MotionExtraction::allocateHistory() {

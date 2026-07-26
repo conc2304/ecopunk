@@ -2,7 +2,10 @@
   "permissions": {
     "defaultMode": "dontAsk",
     "allow": [
-      "Bash(*)"
+      "Bash(*)",
+      "find(*)",
+      "make(*)",
+      "grep(*)"
     ],
     "ask": [
       "Bash(npm install*)"

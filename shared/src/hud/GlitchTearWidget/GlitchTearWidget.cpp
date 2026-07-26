@@ -12,8 +12,9 @@ void GlitchTearWidget::spawnTear() {
 	int n = static_cast<int>(ofRandom(options.sliceCountMin, options.sliceCountMax + 1));
 	for (int i = 0; i < n; i++) {
 		Slice s;
-		s.yNorm = ofRandom(0.0f, 1.0f);
-		s.hNorm = ofRandom(0.015f, 0.06f);
+		s.vertical = ofRandom(1.0f) < options.verticalChance;
+		s.posNorm = ofRandom(0.0f, 1.0f);
+		s.sizeNorm = ofRandom(options.thicknessMin, options.thicknessMax);
 		s.jitterNorm = ofRandom(-options.maxJitter, options.maxJitter);
 		s.lifeMax = ofRandom(options.tearDurationMin, options.tearDurationMax);
 		s.life = s.lifeMax;
@@ -52,22 +53,40 @@ void GlitchTearWidget::draw() {
 
 	for (auto & s : slices) {
 		float a = ofClamp(s.life / s.lifeMax, 0.0f, 1.0f);
-		float y = bounds.y + s.yNorm * bounds.height;
-		float h = std::max(1.0f, s.hNorm * bounds.height);
-		float xOff = s.jitterNorm * bounds.width;
 
-		// Dark backing band so the offset accent slice above it reads as a
-		// tear rather than a translucent smear over whatever's underneath.
-		ofSetColor(scaledAlpha(theme.colors.background, motion.opacity * a * 2.2f));
-		ofDrawRectangle(bounds.x, y, bounds.width, h);
+		if (!s.vertical) {
+			float y = bounds.y + s.posNorm * bounds.height;
+			float h = std::max(1.0f, s.sizeNorm * bounds.height);
+			float xOff = s.jitterNorm * bounds.width;
 
-		ofSetColor(scaledAlpha(theme.colors.accent, motion.opacity * a));
-		ofDrawRectangle(bounds.x + xOff, y, bounds.width, h);
+			// Dark backing band so the offset accent slice above it reads as a
+			// tear rather than a translucent smear over whatever's underneath.
+			ofSetColor(scaledAlpha(theme.colors.background, motion.opacity * a * 2.2f));
+			ofDrawRectangle(bounds.x, y, bounds.width, h);
 
-		ofSetColor(scaledAlpha(theme.colors.secondary, motion.opacity * a * 0.8f));
-		ofSetLineWidth(1.0f);
-		ofDrawLine(bounds.x + xOff, y, bounds.x + xOff + bounds.width, y);
-		ofDrawLine(bounds.x + xOff, y + h, bounds.x + xOff + bounds.width, y + h);
+			ofSetColor(scaledAlpha(theme.colors.accent, motion.opacity * a));
+			ofDrawRectangle(bounds.x + xOff, y, bounds.width, h);
+
+			ofSetColor(scaledAlpha(theme.colors.secondary, motion.opacity * a * 0.8f));
+			ofSetLineWidth(1.0f);
+			ofDrawLine(bounds.x + xOff, y, bounds.x + xOff + bounds.width, y);
+			ofDrawLine(bounds.x + xOff, y + h, bounds.x + xOff + bounds.width, y + h);
+		} else {
+			float x = bounds.x + s.posNorm * bounds.width;
+			float w = std::max(1.0f, s.sizeNorm * bounds.width);
+			float yOff = s.jitterNorm * bounds.height;
+
+			ofSetColor(scaledAlpha(theme.colors.background, motion.opacity * a * 2.2f));
+			ofDrawRectangle(x, bounds.y, w, bounds.height);
+
+			ofSetColor(scaledAlpha(theme.colors.accent, motion.opacity * a));
+			ofDrawRectangle(x, bounds.y + yOff, w, bounds.height);
+
+			ofSetColor(scaledAlpha(theme.colors.secondary, motion.opacity * a * 0.8f));
+			ofSetLineWidth(1.0f);
+			ofDrawLine(x, bounds.y + yOff, x, bounds.y + yOff + bounds.height);
+			ofDrawLine(x + w, bounds.y + yOff, x + w, bounds.y + yOff + bounds.height);
+		}
 	}
 
 	ofDisableBlendMode();

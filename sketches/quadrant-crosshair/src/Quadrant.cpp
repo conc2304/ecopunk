@@ -210,7 +210,7 @@ void Quadrant::draw(ofTexture& videoTex, glm::vec2 videoSize) {
                 ridgelineRenderer.draw(overlayTex, slot.drawnAlpha);
             }
         } else {
-            drawWithEffect(videoTex, videoSize, slot.name, slot.drawnAlpha, lastCx, lastCy, slot.ditherArc, slot.ditherPx);
+            drawWithEffect(videoTex, videoSize, slot.name, slot.drawnAlpha, lastCx, lastCy, slot.ditherArc, slot.ditherPx, slot.hueOffset, slot.hueSpeed);
         }
     }
     ofDisableAlphaBlending();
@@ -264,7 +264,8 @@ void Quadrant::clearShaders(float fadeSecs) {
 void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
                                const std::string& effect, float alpha,
                                float cx, float cy,
-                               float ditherArc, float ditherPx) {
+                               float ditherArc, float ditherPx,
+                               float hueOffset, float hueSpeed) {
     bool useShader = (effect != "passthrough" && shaderLib->has(effect));
 
     if (useShader) {
@@ -323,6 +324,13 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
             sh.setUniform1f("direction", 0.0f);
             sh.setUniform1f("intensity", 1.0f);
             // threshold is LFO-driven via bindUniforms
+        }
+        if (effect == "hue_rotate") {
+            sh.setUniform1f("hueOffset",      hueOffset);
+            sh.setUniform1f("hueSpeed",       hueSpeed);
+            sh.setUniform1f("time",           timeAccum);
+            sh.setUniform1f("saturationMult", 1.0f);
+            sh.setUniform1f("valueMult",      1.0f);
         }
         if (effect == "water_refraction") {
             sh.setUniform1f("time",      timeAccum);
@@ -444,6 +452,18 @@ void Quadrant::setDitherParams(float arc, float px) {
             (slot.state == State::FADE_IN || slot.state == State::ACTIVE)) {
             slot.ditherArc = arc;
             slot.ditherPx  = px;
+            return;
+        }
+    }
+}
+
+void Quadrant::setHueRotateParams(float offset, float speed) {
+    using State = ShaderSlot::State;
+    for (auto& slot : slots) {
+        if (slot.name == "hue_rotate" &&
+            (slot.state == State::FADE_IN || slot.state == State::ACTIVE)) {
+            slot.hueOffset = offset;
+            slot.hueSpeed  = speed;
             return;
         }
     }

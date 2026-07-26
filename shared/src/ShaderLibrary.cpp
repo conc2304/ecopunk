@@ -10,6 +10,7 @@ void ShaderLibrary::setup() {
 	load("solarize", "shaders/effects/solarize.glsl");
 	load("scanlines", "shaders/effects/scanlines.glsl");
 	load("channelshift", "shaders/effects/channelshift.glsl");
+	load("hue_rotate", "shaders/effects/hue_rotate.glsl");
 	load("ascii_solarpunk", "shaders/effects/ascii_threshold_solarpunk.glsl");
 	// nature pack
 	load("bioluminescence", "of_nature_shader_pack_glsl/bioluminescence.glsl");

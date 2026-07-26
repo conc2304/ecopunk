@@ -6,6 +6,12 @@
 #include <algorithm>
 #include <utility>
 
+namespace {
+	bool hasSuffix(const std::string& s, const std::string& suffix) {
+		return s.size() >= suffix.size() && s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0;
+	}
+}
+
 void TFImageCycler::setup(const std::string& folderPath) {
 	ofDirectory dir;
 	dir.allowExt("jpg");
@@ -16,6 +22,14 @@ void TFImageCycler::setup(const std::string& folderPath) {
 
 	imagePaths.clear();
 	for (const auto& file : dir.getFiles()) {
+		// TFAmbientTextureLayer's _tint/_mask pairs live in this same
+		// "backgrounds" folder -- exclude them so this cycler's Full Image
+		// mode never crossfades through a grayscale ambient texture as if
+		// it were a real background photo.
+		const std::string& name = file.getFileName();
+		if (hasSuffix(name, "_tint.png") || hasSuffix(name, "_mask.png")) {
+			continue;
+		}
 		imagePaths.push_back(file.getAbsolutePath());
 	}
 

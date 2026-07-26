@@ -12,7 +12,8 @@
 
 namespace {
 	constexpr float NOISE_SCALE = 2.2f;
-	constexpr float NOISE_TIME_SPEED = 0.05f;
+	// ~3x slower for the "airy and calm" pass (was 0.05).
+	constexpr float NOISE_TIME_SPEED = 0.0167f;
 	// How far above the field's inside/outside threshold (1.0) a block's
 	// corners must sit before it's safe to merge into one larger fragment
 	// — keeps merged blocks well clear of the feathered boundary, which
@@ -31,6 +32,11 @@ void TFPatternBlobGrid::setup(TimeOffsetVideoBuffer* videoBuffer_, int canvasW_,
 	canvasW = canvasW_;
 	canvasH = canvasH_;
 	params = params_;
+}
+
+void TFPatternBlobGrid::resizeCanvas(int canvasW_, int canvasH_) {
+	canvasW = canvasW_;
+	canvasH = canvasH_;
 }
 
 void TFPatternBlobGrid::reset(int seed) {
@@ -250,8 +256,20 @@ void TFPatternBlobGrid::rebuildQuadtree() {
 
 void TFPatternBlobGrid::updateFragmentAlphasAndPlayheads() {
 	std::vector<ofVec2f> normalizedCenters(fragments.size());
+	std::vector<float> desiredOffsets(fragments.size());
 
 	float featherLow = 1.0f - ofClamp(params.edgeSoftness, 0.01f, 1.0f);
+	float noiseTime = elapsedTime * NOISE_TIME_SPEED;
+
+	// Hysteresis band: with this many small cells crowded into a shared
+	// noise field, tiny time drift constantly nudges many of them across a
+	// single quantize-band boundary, which reads as near-continuous
+	// content flicker (measured: ~140 reassignments/sec at default
+	// settings, vs. single digits for BSP's much larger, sparser leaves).
+	// Requiring a move of more than one band before actually committing to
+	// a new offset filters out that boundary noise without adding a fixed
+	// timer that would fight the pattern's own organic pacing.
+	float bandStep = 1.0f / static_cast<float>(std::max(1, videoBuffer->getNumQuantizeBands() - 1));
 
 	for (size_t i = 0; i < fragments.size(); i++) {
 		Fragment& f = fragments[i];
@@ -262,10 +280,20 @@ void TFPatternBlobGrid::updateFragmentAlphasAndPlayheads() {
 		f.alpha = ofClamp((field - featherLow) / (1.0f - featherLow), 0.0f, 1.0f);
 
 		normalizedCenters[i] = ofVec2f(cx / canvasW, cy / canvasH);
+
+		float gray = ofNoise(normalizedCenters[i].x * NOISE_SCALE, normalizedCenters[i].y * NOISE_SCALE, noiseTime);
+		float rawOffset = videoBuffer->quantize(gray);
+
+		if (f.lastCommittedOffset >= 0.0f && std::abs(rawOffset - f.lastCommittedOffset) <= bandStep + 0.001f) {
+			desiredOffsets[i] = f.lastCommittedOffset;
+		} else {
+			desiredOffsets[i] = rawOffset;
+			f.lastCommittedOffset = rawOffset;
+		}
 	}
 
 	std::vector<int> playheadIndices;
-	tfAssignPlayheadsByNoise(*videoBuffer, elapsedTime * NOISE_TIME_SPEED, NOISE_SCALE, normalizedCenters, playheadIndices);
+	tfAssignPlayheadsByDesiredOffsets(*videoBuffer, desiredOffsets, playheadIndices);
 
 	float bufW = static_cast<float>(videoBuffer->getBufferWidth());
 	float bufH = static_cast<float>(videoBuffer->getBufferHeight());

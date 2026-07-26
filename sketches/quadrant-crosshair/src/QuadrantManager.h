@@ -39,7 +39,7 @@ private:
     std::vector<std::string> shaderPool = {
         "desaturate", "invert", "recolor", "threshold",
         "dither", "solarize", "scanlines", "channelshift", "motion_effect",
-        "ascii_solarpunk",
+        "hue_rotate", "ascii_solarpunk",
         // nature pack (temporal_trails excluded — needs per-quadrant FBO)
         "bioluminescence", "chromatic_aberration", "edge_glow",
         "ink_outlines", "pixel_drift", "pixel_sorting", "water_refraction",
@@ -91,5 +91,6 @@ private:
     std::string             pickNextShader(int quadId);
     float                   computeSilenceDuration(int quadId);
     std::pair<float,float>  chooseDitherParams();
+    std::pair<float,float>  chooseHueRotateParams();
     std::pair<float,float>  pickScaleRange();
 };

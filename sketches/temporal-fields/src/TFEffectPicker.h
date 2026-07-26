@@ -55,6 +55,7 @@ class TFEffectPicker {
 		float paramX = 0.0f;
 		float paramY = 0.0f;
 		float paramZ = 0.0f;
+		float paramW = 0.0f;
 
 		ofFbo sourceFbo; // clean [0,1] crop of the source, re-rendered each draw call
 		ofFbo resultFbo; // shader-processed result, composited at destRect

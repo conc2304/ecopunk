@@ -27,9 +27,9 @@ namespace {
 	// Excludes "desaturate" — BEFragment already has its own always-on
 	// desaturate ramp via the fragmentEffects shader (Fragment::drawTexturedRect),
 	// so this pool is the *additional* layered-effect vocabulary.
-	const std::array<std::string, 16> kEffectPool = {
+	const std::array<std::string, 17> kEffectPool = {
 		"invert", "threshold", "recolor", "solarize", "dither", "scanlines",
-		"channelshift", "ascii_solarpunk", "bioluminescence", "chromatic_aberration",
+		"channelshift", "hue_rotate", "ascii_solarpunk", "bioluminescence", "chromatic_aberration",
 		"edge_glow", "ink_outlines", "pixel_drift", "pixel_sorting", "water_refraction",
 		"ridgeline"
 	};
@@ -178,6 +178,9 @@ void BEFragment::pickAndStartEffect() {
 		effectSlot.params = { c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, 0 };
 	} else if (name == "channelshift") {
 		effectSlot.params = { ofRandom(0.002f, 0.01f), 0, 0, 0 };
+	} else if (name == "hue_rotate") {
+		float speed = ofRandom(15.0f, 60.0f) * (ofRandom(1.0f) < 0.5f ? -1.0f : 1.0f);
+		effectSlot.params = { ofRandom(0.0f, 360.0f), speed, ofRandom(0.8f, 1.3f), ofRandom(0.9f, 1.1f) };
 	} else if (name == "pixel_sorting") {
 		effectSlot.params = { ofRandom(0.3f, 0.8f), ofRandom(0, 1) < 0.5f ? 0.0f : 1.0f, 0, 0 };
 	} else if (name == "ridgeline") {
@@ -212,6 +215,13 @@ void BEFragment::setEffectUniforms(ofShader & sh, const std::string & name) cons
 		sh.setUniform1f("alpha", 1.0f);
 	} else if (name == "channelshift") {
 		sh.setUniform1f("shift", p.x);
+		sh.setUniform1f("alpha", 1.0f);
+	} else if (name == "hue_rotate") {
+		sh.setUniform1f("hueOffset", p.x);
+		sh.setUniform1f("hueSpeed", p.y);
+		sh.setUniform1f("time", ofGetElapsedTimef());
+		sh.setUniform1f("saturationMult", p.z);
+		sh.setUniform1f("valueMult", p.w);
 		sh.setUniform1f("alpha", 1.0f);
 	} else if (name == "invert" || name == "solarize" || name == "scanlines") {
 		sh.setUniform1f("alpha", 1.0f);

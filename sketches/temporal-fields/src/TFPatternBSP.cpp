@@ -12,9 +12,10 @@
 
 namespace {
 	constexpr float NOISE_SCALE = 2.2f;
-	// Slowed for a calmer feel (was 0.05) — offset/transparency noise drifts
-	// far more gradually across the canvas.
-	constexpr float NOISE_TIME_SPEED = 0.02f;
+	// Slowed further for a calmer feel (was 0.05, then 0.02) — ~3x slower
+	// still — offset/transparency noise drifts far more gradually across
+	// the canvas.
+	constexpr float NOISE_TIME_SPEED = 0.0067f;
 	constexpr int MAX_DEPTH = 8;
 }
 
@@ -23,6 +24,11 @@ void TFPatternBSP::setup(TimeOffsetVideoBuffer* videoBuffer_, int canvasW_, int 
 	canvasW = canvasW_;
 	canvasH = canvasH_;
 	params = params_;
+}
+
+void TFPatternBSP::resizeCanvas(int canvasW_, int canvasH_) {
+	canvasW = canvasW_;
+	canvasH = canvasH_;
 }
 
 void TFPatternBSP::reset(int seed) {

@@ -14,6 +14,14 @@
 class TFMoireUnderlay {
 	public:
 		void setup(int canvasW, int canvasH);
+		// draw() derives everything from canvasW/canvasH fresh each call
+		// (via drawGrid()), so this is the only state a resize needs to
+		// update -- angleA/angleB are left alone so the rotation doesn't
+		// jump.
+		void resizeCanvas(int canvasW_, int canvasH_) {
+			canvasW = canvasW_;
+			canvasH = canvasH_;
+		}
 		void update(float dt);
 		void draw() const;
 

@@ -9,6 +9,20 @@ namespace {
 	// the status light, rather than just "footage is playing normally."
 	constexpr float kMotionAlertThreshold = 0.55f;
 	constexpr float kLogPushInterval = 2.2f; // seconds between ambient log lines
+
+	// Minimum spacing between accepted connection-thread spawns. Without
+	// this, a mass fragment reassignment (every fragment exiting at once on
+	// a scene/pattern change) fires one spawn per fragment within the same
+	// frame or two, flooding the canvas — this collapses a burst down to a
+	// single visual pulse. Set well above CONNECTION_THREAD_LIFETIME
+	// (0.75s) so consecutive spawns never overlap — at most one spawn's
+	// worth of lines (≤3) is ever on screen at once, regardless of how
+	// fast the underlying pattern is actually reassigning fragments.
+	constexpr float kConnectionThreadCooldown = 2.0f;
+
+	// How often to print the connection-thread churn summary — see
+	// connectionThreadDebugLogTimer.
+	constexpr float kConnectionThreadDebugLogInterval = 2.0f;
 }
 
 void TFHudLayer::setup(int canvasW_, int canvasH_) {
@@ -30,18 +44,12 @@ void TFHudLayer::setup(int canvasW_, int canvasH_) {
 	scanTheme = theme;
 	scanTheme.frame.showScanLines = true;
 
-	float W = static_cast<float>(canvasW);
-	float H = static_cast<float>(canvasH);
-
-	moire.setup(canvasW, canvasH);
-
 	// Underlay — full-canvas ambient field, faded low so it reads as
 	// something glimpsed through the gaps rather than competing with footage.
 	hud::ContourOptions cOpts;
 	cOpts.contourCount = 7;
 	cOpts.samples      = 70;
 	cOpts.noiseScale   = 1.3f;
-	contours.setBounds(0, 0, W, H);
 	contours.setTheme(theme);
 	contours.setOptions(cOpts);
 	contours.setup();
@@ -50,7 +58,6 @@ void TFHudLayer::setup(int canvasW_, int canvasH_) {
 	hOpts.cellSize    = 30.0f;
 	hOpts.activation  = 0.10f;
 	hOpts.filledCells = false;
-	hexGrid.setBounds(0, 0, W, H);
 	hexGrid.setTheme(theme);
 	hexGrid.setOptions(hOpts);
 	hexGrid.setup();
@@ -63,7 +70,6 @@ void TFHudLayer::setup(int canvasW_, int canvasH_) {
 	nOpts.connectionDistance = 0.16f;
 	nOpts.wrap               = true;
 	nOpts.showPackets        = true;
-	network.setBounds(0, 0, W, H);
 	network.setTheme(theme);
 	network.setOptions(nOpts);
 	network.setup();
@@ -79,7 +85,6 @@ void TFHudLayer::setup(int canvasW_, int canvasH_) {
 	noOpts.showPackets        = true;
 	noOpts.edgeStyle          = hud::NodeNetworkEdgeStyle::Organic;
 	noOpts.organicBulge       = 0.4f;
-	networkOrganic.setBounds(0, 0, W, H);
 	hud::HudTheme organicTheme = theme;
 	organicTheme.colors.muted.a     = static_cast<unsigned char>(organicTheme.colors.muted.a * 0.6f);
 	organicTheme.colors.secondary.a = static_cast<unsigned char>(organicTheme.colors.secondary.a * 0.6f);
@@ -99,7 +104,6 @@ void TFHudLayer::setup(int canvasW_, int canvasH_) {
 	ffOpts.particlesPerLine = 3;
 	ffOpts.showCurves       = false;
 	ffOpts.density          = 1.0f;
-	motes.setBounds(0, 0, W, H);
 	motes.setTheme(theme);
 	motes.setOptions(ffOpts);
 	motes.setup();
@@ -112,25 +116,30 @@ void TFHudLayer::setup(int canvasW_, int canvasH_) {
 	sOpts.showSweep     = true;
 	sOpts.showCrosshair = false;
 	sOpts.showPulses    = true;
-	float scanR = 110.0f;
-	scanner.setBounds(W - scanR * 2.0f - 30.0f, 30.0f, scanR * 2.0f, scanR * 2.0f);
 	scanner.setTheme(theme);
 	scanner.setOptions(sOpts);
 	scanner.setup();
 
-	hud::ReticleOptions rOpts;
-	rOpts.targetCount   = 4;
-	rOpts.showLabels    = true;
-	rOpts.randomTargets = true;
-	rOpts.preset        = hud::ReticlePreset::Tracking;
-	reticles.setBounds(0, 0, W, H);
+	reticleOpts_.targetCount   = 4;
+	reticleOpts_.showLabels    = true;
+	// false: Locate waypoints come from setLocateTargets() (live fragment
+	// centers, fed every update()) rather than uniformly random points.
+	reticleOpts_.randomTargets = false;
+	reticleOpts_.preset        = hud::ReticlePreset::Tracking;
+	reticleOpts_.behavior      = hud::ReticleBehavior::Locate;
+	// labelOverride starts empty (falls back to the widget's built-in
+	// nature-word table) until the first live fragment centers arrive and
+	// reticleLabelRefreshTimer fires in update() — see there for why real
+	// per-target coordinates replace that table instead of removing labels
+	// outright.
 	// Registration marks (Priority 4) live on this full-canvas widget's
 	// frame so they land at the actual canvas corners.
 	hud::HudTheme regTheme = theme;
 	regTheme.frame.style = hud::FrameStyle::Registration;
 	reticles.setTheme(regTheme);
-	reticles.setOptions(rOpts);
+	reticles.setOptions(reticleOpts_);
 	reticles.setup();
+	reticles.setMotion(hud::MotionSettings{ 0.5f, 1.0f, 1.0f, 1.0f }); // slower travel between waypoints
 
 	// Overlay — real-signal readouts
 	hud::DataCardOptions dcOpts;
@@ -140,7 +149,6 @@ void TFHudLayer::setup(int canvasW_, int canvasH_) {
 	dcOpts.meter         = 0.0f;
 	dcOpts.showMeter     = true;
 	dcOpts.showSparkline = true;
-	motionCard.setBounds(24.0f, H - 150.0f, 220.0f, 120.0f);
 	motionCard.setTheme(scanTheme); // this is the one place FrameOptions::showScanLines is on
 	motionCard.setOptions(dcOpts);
 	motionCard.setup();
@@ -159,28 +167,27 @@ void TFHudLayer::setup(int canvasW_, int canvasH_) {
 	specOpts.value         = "#000";
 	specOpts.showMeter     = false;
 	specOpts.showSparkline = false;
-	specimenCard.setBounds(24.0f, 30.0f, 200.0f, 110.0f);
 	specimenCard.setTheme(theme);
 	specimenCard.setOptions(specOpts);
 	specimenCard.setup();
 
-	// Charge-level bar — real signal: TimeOffsetVideoBuffer's history ring
-	// buffer fill fraction, 0 at startup climbing to 1 once at capacity.
+	// Charge-level bar — real signal: average playhead time-offset (0 = all
+	// live, 1 = as far back as maxHistorySeconds allows). Continuously
+	// fluctuates as fragments reassign, unlike the history-buffer-fill
+	// metric this replaced (see the update() doc comment).
 	hud::GaugeOptions bufOpts;
 	bufOpts.style     = hud::GaugeStyle::Segmented;
 	bufOpts.value     = 0.0f;
 	bufOpts.segments  = 20;
-	bufOpts.label     = "BUFFER";
+	bufOpts.label     = "DEPTH";
 	bufOpts.units     = "%";
 	bufOpts.showValue = true;
-	bufferGauge.setBounds(24.0f, 150.0f, 130.0f, 130.0f);
 	bufferGauge.setTheme(theme);
 	bufferGauge.setOptions(bufOpts);
 
 	hud::StatusLightOptions slOpts;
 	slOpts.label = "MEDIA";
 	slOpts.state = hud::StatusState::Idle;
-	mediaStatus.setBounds(24.0f, H - 178.0f, 140.0f, 24.0f);
 	mediaStatus.setTheme(theme);
 	mediaStatus.setOptions(slOpts);
 	mediaStatus.setup();
@@ -189,19 +196,200 @@ void TFHudLayer::setup(int canvasW_, int canvasH_) {
 	lOpts.maxLines    = 30;
 	lOpts.scrollSpeed = 9.0f;
 	lOpts.showFrame   = true;
-	log.setBounds(W - 260.0f, H - 190.0f, 236.0f, 160.0f);
 	log.setTheme(theme);
 	log.setOptions(lOpts);
 	log.setup();
 
-	glitch.setBounds(0, 0, W, H);
 	glitch.setTheme(theme);
 	glitch.setup();
+
+	resize(canvasW_, canvasH_);
+
+	pickNewOverlayRotation();
+	pickNewUnderlayRotation();
+
+	// HUD Visibility phase — three subgroups (Underlay pool / Overlay pool /
+	// Always-on effects) mirroring the two rotation enums plus the
+	// outside-both-enums effects, each with a master toggle ANDed against
+	// its own per-widget toggles in isUnderlayWidgetActive()/
+	// isOverlayWidgetActive()/drawOverlay(). Order here matches each
+	// widget's declared order above (and its rotation-pool enum order) so
+	// the on-screen toggle order matches the code's mental model of the
+	// pool.
+	underlayGroupEnabled.set("Underlay enabled", true);
+	underlayEnabled[UW_Moire].set("Moire", true);
+	underlayEnabled[UW_Contours].set("Contours", true);
+	underlayEnabled[UW_HexGrid].set("Hex Grid", true);
+	underlayEnabled[UW_Network].set("Network (Tech)", true);
+	underlayEnabled[UW_NetworkOrganic].set("Network (Organic)", true);
+	underlayEnabled[UW_Motes].set("Motes", true);
+	underlayVisibilityGroup.setName("Underlay");
+	underlayVisibilityGroup.add(underlayGroupEnabled);
+	for (auto& p : underlayEnabled) underlayVisibilityGroup.add(p);
+
+	overlayGroupEnabled.set("Overlay enabled", true);
+	overlayEnabled[OW_Scanner].set("Scanner", true);
+	overlayEnabled[OW_Reticles].set("Reticles", true);
+	overlayEnabled[OW_MotionCard].set("Motion Card", true);
+	overlayEnabled[OW_SpecimenCard].set("Specimen Card", true);
+	overlayEnabled[OW_BufferGauge].set("Buffer Gauge", true);
+	overlayEnabled[OW_MediaStatus].set("Media Status", true);
+	overlayEnabled[OW_Log].set("Log", true);
+	overlayVisibilityGroup.setName("Overlay");
+	overlayVisibilityGroup.add(overlayGroupEnabled);
+	for (auto& p : overlayEnabled) overlayVisibilityGroup.add(p);
+
+	alwaysOnGroupEnabled.set("Always-on enabled", true);
+	glitchEnabled.set("Glitch Tears", true);
+	connectionThreadsEnabled.set("Connection Threads", true);
+	tickStampsEnabled.set("Tick Stamps", true);
+	alwaysOnVisibilityGroup.setName("Always-on");
+	alwaysOnVisibilityGroup.add(alwaysOnGroupEnabled);
+	alwaysOnVisibilityGroup.add(glitchEnabled);
+	alwaysOnVisibilityGroup.add(connectionThreadsEnabled);
+	alwaysOnVisibilityGroup.add(tickStampsEnabled);
+
+	visibilityGroup.setName("HUD Visibility");
+	visibilityGroup.add(underlayVisibilityGroup);
+	visibilityGroup.add(overlayVisibilityGroup);
+	visibilityGroup.add(alwaysOnVisibilityGroup);
+}
+
+void TFHudLayer::resize(int canvasW_, int canvasH_) {
+	canvasW = canvasW_;
+	canvasH = canvasH_;
+
+	float W = static_cast<float>(canvasW);
+	float H = static_cast<float>(canvasH);
+
+	moire.resizeCanvas(canvasW, canvasH);
+
+	contours.setBounds(0, 0, W, H);
+	hexGrid.setBounds(0, 0, W, H);
+	network.setBounds(0, 0, W, H);
+	networkOrganic.setBounds(0, 0, W, H);
+	motes.setBounds(0, 0, W, H);
+	reticles.setBounds(0, 0, W, H);
+	glitch.setBounds(0, 0, W, H);
+
+	// scanner/motionCard/specimenCard/bufferGauge/mediaStatus/log all get
+	// their bounds from here — a resize is as good a moment as any to
+	// reroll them fresh against the new canvas size.
+	respawnLayout();
+}
+
+void TFHudLayer::layoutStack(int corner, const std::vector<ofVec2f>& sizes, std::vector<ofVec2f>& outPositions) const {
+	constexpr float margin = 24.0f;
+	constexpr float gap = 10.0f;
+	float W = static_cast<float>(canvasW);
+	float H = static_cast<float>(canvasH);
+	bool left = (corner == 0 || corner == 2);
+	bool top  = (corner == 0 || corner == 1);
+
+	float x = left ? margin : W - margin;
+	float y = top ? margin : H - margin;
+
+	outPositions.clear();
+	outPositions.reserve(sizes.size());
+	for (const auto& sz : sizes) {
+		float px = left ? x : x - sz.x;
+		float py = top ? y : y - sz.y;
+		outPositions.push_back({ px, py });
+		if (top) y += sz.y + gap; else y -= sz.y + gap;
+	}
+}
+
+void TFHudLayer::respawnLayout() {
+	// Fisher-Yates shuffle of the 4 canvas corners across the 4 widget
+	// clusters below — guarantees no two clusters land on the same corner.
+	int corners[4] = { 0, 1, 2, 3 };
+	for (int i = 3; i > 0; i--) {
+		int j = static_cast<int>(ofRandom(i + 1));
+		std::swap(corners[i], corners[j]);
+	}
+	int cSpecimen = corners[0];
+	int cMotion   = corners[1];
+	int cLog      = corners[2];
+	int cScanner  = corners[3];
+
+	// Specimen cluster: specimenCard (nearest the corner) + bufferGauge.
+	// Both widgets scale responsively via su()-relative geometry/typography
+	// (shared/src/hud/README.md's own stated design goal), so resizing them
+	// within a reasonable range on every respawn is safe.
+	{
+		ofVec2f specSz(ofRandom(170.0f, 230.0f), ofRandom(90.0f, 130.0f));
+		float bufSide = ofRandom(100.0f, 150.0f);
+		ofVec2f bufSz(bufSide, bufSide);
+		std::vector<ofVec2f> pos;
+		layoutStack(cSpecimen, { specSz, bufSz }, pos);
+		specimenCard.setBounds(pos[0].x, pos[0].y, specSz.x, specSz.y);
+		bufferGauge.setBounds(pos[1].x, pos[1].y, bufSz.x, bufSz.y);
+	}
+
+	// Motion cluster: motionCard (nearest the corner) + mediaStatus.
+	// mediaStatus's height stays fixed at 24 — it's a single fixed-size dot
+	// + one line of text, not content that reads better bigger or smaller.
+	{
+		ofVec2f motionSz(ofRandom(190.0f, 260.0f), ofRandom(100.0f, 140.0f));
+		ofVec2f statusSz(ofRandom(130.0f, 180.0f), 24.0f);
+		std::vector<ofVec2f> pos;
+		layoutStack(cMotion, { motionSz, statusSz }, pos);
+		motionCard.setBounds(pos[0].x, pos[0].y, motionSz.x, motionSz.y);
+		mediaStatus.setBounds(pos[1].x, pos[1].y, statusSz.x, statusSz.y);
+	}
+
+	// Log — standalone.
+	{
+		ofVec2f logSz(ofRandom(200.0f, 280.0f), ofRandom(130.0f, 190.0f));
+		std::vector<ofVec2f> pos;
+		layoutStack(cLog, { logSz }, pos);
+		log.setBounds(pos[0].x, pos[0].y, logSz.x, logSz.y);
+	}
+
+	// Scanner — standalone, kept square.
+	{
+		float scanSide = ofRandom(160.0f, 260.0f);
+		std::vector<ofVec2f> pos;
+		layoutStack(cScanner, { ofVec2f(scanSide, scanSide) }, pos);
+		scanner.setBounds(pos[0].x, pos[0].y, scanSide, scanSide);
+	}
 }
 
 void TFHudLayer::update(float dt, float motionEnergy01, bool hasMedia, const std::string& currentMediaFilename,
-	float historyBufferFill01) {
+	float avgPlayheadDepth01, const std::vector<ofVec2f>& activeFragmentCentersNorm, float patternDrift01) {
 	motionEnergy01 = ofClamp(motionEnergy01, 0.0f, 1.0f);
+	patternDrift01 = ofClamp(patternDrift01, 0.0f, 1.0f);
+	avgPlayheadDepth01 = ofClamp(avgPlayheadDepth01, 0.0f, 1.0f);
+
+	reticles.setLocateTargets(activeFragmentCentersNorm);
+
+	// Real per-target reticle labels — coordinates sampled from the same
+	// live fragment centers driving Locate's waypoints, replacing the
+	// widget's built-in decorative nature-word table. Throttled (not every
+	// frame): changing labelOverride triggers a full ReticleWidget rebuild,
+	// which would otherwise restart every target's spawn/tracking animation
+	// on every single frame.
+	reticleLabelRefreshTimer += dt;
+	if (reticleLabelRefreshTimer >= 8.0f && !activeFragmentCentersNorm.empty()) {
+		reticleLabelRefreshTimer = 0.0f;
+		std::vector<std::string> labels;
+		int n = std::min(static_cast<int>(activeFragmentCentersNorm.size()), 6);
+		for (int i = 0; i < n; i++) {
+			const ofVec2f& c = activeFragmentCentersNorm[i];
+			labels.push_back(ofToString(c.x, 2) + " " + ofToString(c.y, 2));
+		}
+		reticleOpts_.labelOverride = labels;
+		reticles.setOptions(reticleOpts_);
+	}
+
+	// Contour underlay's noise scale tracks the active pattern's own live
+	// irregularity/variation dial (see the update() doc comment) instead of
+	// a fixed constant — same rebuild-free setOptions() as hexGrid below.
+	hud::ContourOptions cOpts;
+	cOpts.contourCount = 7;
+	cOpts.samples      = 70;
+	cOpts.noiseScale   = ofLerp(0.6f, 2.2f, patternDrift01);
+	contours.setOptions(cOpts);
 
 	if (hasMedia && currentMediaFilename != lastMediaFilename) {
 		lastMediaFilename = currentMediaFilename;
@@ -218,16 +406,27 @@ void TFHudLayer::update(float dt, float motionEnergy01, bool hasMedia, const std
 	dcOpts.showSparkline = true;
 	motionCard.setOptions(dcOpts);
 
-	bufferGauge.setValue(ofClamp(historyBufferFill01, 0.0f, 1.0f));
+	bufferGauge.setValue(avgPlayheadDepth01);
 
 	hud::StatusState state = hud::StatusState::Idle;
 	if (hasMedia) state = (motionEnergy01 > kMotionAlertThreshold) ? hud::StatusState::Alert : hud::StatusState::Active;
 	mediaStatus.setState(state);
 
+	// Ambient hex noise floor breathes with the same optical-flow signal
+	// driving the MOTION card, on top of its existing pattern-switch/
+	// fragment-reassign pulses. setOptions() is a plain struct assign here
+	// (no rebuild), so it's safe to call every frame.
+	hud::HexGridOptions hOpts;
+	hOpts.cellSize    = 30.0f;
+	hOpts.activation  = ofLerp(0.06f, 0.35f, motionEnergy01);
+	hOpts.filledCells = false;
+	hexGrid.setOptions(hOpts);
+
 	logPushTimer += dt;
 	if (hasMedia && logPushTimer >= kLogPushInterval) {
 		logPushTimer = 0.0f;
 		log.pushLine("optical_flow " + ofToString(motionEnergy01, 2));
+		log.pushLine("depth " + ofToString(avgPlayheadDepth01 * 100.0f, 0) + "%");
 	}
 
 	moire.update(dt);
@@ -256,36 +455,120 @@ void TFHudLayer::update(float dt, float motionEnergy01, bool hasMedia, const std
 		std::remove_if(tickStamps.begin(), tickStamps.end(),
 			[](const TickStamp& s) { return s.age >= TICK_STAMP_LIFETIME; }),
 		tickStamps.end());
+
+	overlayRotationTimer += dt;
+	if (overlayRotationTimer >= overlayRotationInterval) {
+		overlayRotationTimer = 0.0f;
+		pickNewOverlayRotation();
+	}
+
+	underlayRotationTimer += dt;
+	if (underlayRotationTimer >= underlayRotationInterval) {
+		underlayRotationTimer = 0.0f;
+		pickNewUnderlayRotation();
+	}
+
+	connectionThreadCooldownTimer = std::max(0.0f, connectionThreadCooldownTimer - dt);
+
+	connectionThreadDebugLogTimer += dt;
+	if (connectionThreadDebugLogTimer >= kConnectionThreadDebugLogInterval) {
+		ofLogNotice("TFHudLayer") << "connection threads: " << reassignEventsSinceLog << " reassign events/"
+			<< kConnectionThreadDebugLogInterval << "s (" << acceptedSpawnsSinceLog << " spawned, "
+			<< rejectedSpawnsSinceLog << " throttled), " << connectionThreads.size() << " alive now";
+		if (reassignEventsSinceLog > 0) {
+			log.pushLine("threads " + ofToString(acceptedSpawnsSinceLog) + " spawned/"
+				+ ofToString(rejectedSpawnsSinceLog) + " throttled");
+		}
+		connectionThreadDebugLogTimer = 0.0f;
+		reassignEventsSinceLog = 0;
+		acceptedSpawnsSinceLog = 0;
+		rejectedSpawnsSinceLog = 0;
+	}
+}
+
+void TFHudLayer::pickNewOverlayRotation() {
+	overlayRotationInterval = ofRandom(20.0f, 35.0f);
+
+	for (int slot = 0; slot < kMaxActiveOverlayWidgets; slot++) {
+		activeOverlayWidgets[slot] = -1; // -1 = no widget in this slot
+	}
+
+	// 15% chance of a fully quiet overlay pass — the "no widgets" ask.
+	if (ofRandom(1.0f) < 0.15f) {
+		return;
+	}
+
+	// Sample without replacement from the small fixed pool — fine to do
+	// naively since OW_Count is tiny (7).
+	int pool[OW_Count];
+	for (int i = 0; i < OW_Count; i++) pool[i] = i;
+	int poolSize = OW_Count;
+
+	for (int slot = 0; slot < kMaxActiveOverlayWidgets && poolSize > 0; slot++) {
+		int pick = static_cast<int>(ofRandom(poolSize));
+		activeOverlayWidgets[slot] = pool[pick];
+		pool[pick] = pool[--poolSize];
+	}
+
+	// Fresh position (and size) every time the active set reshuffles, so a
+	// widget re-entering rotation actually lands somewhere new rather than
+	// snapping back to wherever it happened to sit last time it was visible.
+	respawnLayout();
+}
+
+bool TFHudLayer::isOverlayWidgetActive(int id) const {
+	if (!overlayGroupEnabled.get() || !overlayEnabled[id].get()) return false;
+	for (int i = 0; i < kMaxActiveOverlayWidgets; i++) {
+		if (activeOverlayWidgets[i] == id) return true;
+	}
+	return false;
+}
+
+bool TFHudLayer::isUnderlayWidgetActive(int id) const {
+	if (!underlayGroupEnabled.get() || !underlayEnabled[id].get()) return false;
+	return id == activeUnderlayWidget;
+}
+
+void TFHudLayer::pickNewUnderlayRotation() {
+	underlayRotationInterval = ofRandom(20.0f, 35.0f);
+
+	// 20% chance of no underlay this pass.
+	if (ofRandom(1.0f) < 0.20f) {
+		activeUnderlayWidget = -1;
+		return;
+	}
+
+	activeUnderlayWidget = static_cast<int>(ofRandom(UW_Count));
 }
 
 void TFHudLayer::drawUnderlay() {
-	moire.draw();
-	contours.draw();
-	hexGrid.draw();
-	network.draw();
-	networkOrganic.draw();
-	motes.draw();
+	if (isUnderlayWidgetActive(UW_Moire)) moire.draw();
+	if (isUnderlayWidgetActive(UW_Contours)) contours.draw();
+	if (isUnderlayWidgetActive(UW_HexGrid)) hexGrid.draw();
+	if (isUnderlayWidgetActive(UW_Network)) network.draw();
+	if (isUnderlayWidgetActive(UW_NetworkOrganic)) networkOrganic.draw();
+	if (isUnderlayWidgetActive(UW_Motes)) motes.draw();
 }
 
 void TFHudLayer::drawOverlay() {
-	scanner.draw();
-	reticles.draw();
-	motionCard.draw();
-	specimenCard.draw();
-	bufferGauge.draw();
-	mediaStatus.draw();
-	log.draw();
-	glitch.draw();
+	if (isOverlayWidgetActive(OW_Scanner)) scanner.draw();
+	if (isOverlayWidgetActive(OW_Reticles)) reticles.draw();
+	if (isOverlayWidgetActive(OW_MotionCard)) motionCard.draw();
+	if (isOverlayWidgetActive(OW_SpecimenCard)) specimenCard.draw();
+	if (isOverlayWidgetActive(OW_BufferGauge)) bufferGauge.draw();
+	if (isOverlayWidgetActive(OW_MediaStatus)) mediaStatus.draw();
+	if (isOverlayWidgetActive(OW_Log)) log.draw();
+	if (alwaysOnGroupEnabled.get() && glitchEnabled.get()) glitch.draw();
 
 	ofPushStyle();
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
-	drawConnectionThreads();
-	drawTickStamps();
+	if (alwaysOnGroupEnabled.get() && connectionThreadsEnabled.get()) drawConnectionThreads();
+	if (alwaysOnGroupEnabled.get() && tickStampsEnabled.get()) drawTickStamps();
 	ofDisableBlendMode();
 	ofPopStyle();
 }
 
-void TFHudLayer::onPatternSwitch(const std::string& patternName) {
+void TFHudLayer::onPatternSwitch(const std::string& patternName, int cycleSeed) {
 	glitch.trigger();
 
 	// Pattern-switch stays available as the alternate/fallback cadence
@@ -295,10 +578,11 @@ void TFHudLayer::onPatternSwitch(const std::string& patternName) {
 	}
 
 	// Specimen ticker cadence deliberately untouched by the Event Layer
-	// phase — see the comment on specimenCard in setup().
-	specimenCount++;
-	std::string idStr = ofToString(specimenCount);
-	while (idStr.size() < 3) idStr = "0" + idStr;
+	// phase — see the comment on specimenCard in setup(). ID is the real
+	// cycle seed that generated this specimen's geometry, not an arbitrary
+	// incrementing tally.
+	std::string idStr = ofToString(cycleSeed);
+	while (idStr.size() < 6) idStr = "0" + idStr;
 
 	hud::DataCardOptions specOpts;
 	specOpts.title         = "SPECIMEN";
@@ -322,7 +606,14 @@ void TFHudLayer::onFragmentReassigned(float nx, float ny, const std::vector<ofVe
 	// only fired from onPatternSwitch(); this is that gap closing.
 	hexGrid.pulseAt(nx, ny);
 
-	spawnConnectionThreads(originPx, activeFragmentCentersNorm);
+	reassignEventsSinceLog++;
+	if (connectionThreadCooldownTimer <= 0.0f) {
+		spawnConnectionThreads(originPx, activeFragmentCentersNorm);
+		connectionThreadCooldownTimer = kConnectionThreadCooldown;
+		acceptedSpawnsSinceLog++;
+	} else {
+		rejectedSpawnsSinceLog++;
+	}
 
 	tickStampCounter++;
 	TickStamp stamp;

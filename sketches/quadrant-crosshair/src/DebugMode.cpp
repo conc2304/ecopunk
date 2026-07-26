@@ -11,7 +11,8 @@ const std::vector<std::string> DebugMode::SHADER_NAMES = {
     "ink_outlines", "pixel_drift", "pixel_sorting", "temporal_trails",
     "water_refraction",
     // cpu-side effects (no shader)
-    "ridgeline"
+    "ridgeline",
+    "hue_rotate"
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -171,6 +172,13 @@ std::vector<DebugParam> DebugMode::buildParams() {
             p.push_back({ "flipX (0/1)",    &pRidgeFlipX,          1.0f,  0.0f,  1.0f   });
             p.push_back({ "flipY (0/1)",    &pRidgeFlipY,          1.0f,  0.0f,  1.0f   });
             break;
+        case 19: // hue_rotate
+            p.push_back({ "hueOffset (deg)", &pHueOffset,        5.0f,  0.0f,   360.0f });
+            p.push_back({ "hueSpeed (deg/s)",&pHueSpeed,         2.0f,  -120.0f,120.0f });
+            p.push_back({ "saturationMult",  &pHueSaturationMult,0.05f, 0.0f,   2.0f   });
+            p.push_back({ "valueMult",       &pHueValueMult,     0.05f, 0.0f,   2.0f   });
+            p.push_back({ "alpha",           &pAlpha,            0.05f, 0.f,    1.f    });
+            break;
         default:
             break;
     }
@@ -281,6 +289,13 @@ void DebugMode::drawShaderFullScreen() {
         sh.setUniform1f("amplitude", pWaterAmplitude);
         sh.setUniform1f("frequency", pWaterFrequency);
         sh.setUniform1f("speed",     pWaterSpeed);
+    }
+    if (name == "hue_rotate") {
+        sh.setUniform1f("hueOffset",      pHueOffset);
+        sh.setUniform1f("hueSpeed",       pHueSpeed);
+        sh.setUniform1f("time",           t);
+        sh.setUniform1f("saturationMult", pHueSaturationMult);
+        sh.setUniform1f("valueMult",      pHueValueMult);
     }
     if (name == "ascii_solarpunk") {
         sh.setUniform1f("cellSize",            pAsciiCellSize);

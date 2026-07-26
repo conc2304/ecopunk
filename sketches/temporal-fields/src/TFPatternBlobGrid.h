@@ -58,6 +58,7 @@ class TFPatternBlobGrid : public TFPattern {
 		void reset(int seed) override;
 		void update(float dt) override;
 		void draw() override;
+		void resizeCanvas(int canvasW, int canvasH) override;
 
 		void setOnFragmentReassigned(std::function<void(float nx, float ny)> cb) override { onFragmentReassignedCb = std::move(cb); }
 		std::vector<ofVec2f> getActiveFragmentCenters() const override;
@@ -77,6 +78,10 @@ class TFPatternBlobGrid : public TFPattern {
 			int lastPlayheadIndex = -1; // -1 means "never assigned" — no transition on first assignment
 			float alpha = 0.0f;
 			std::unique_ptr<TFFragmentTransition> transition; // lazily allocated; nullptr until first needed
+
+			// Hysteresis for the noise-derived offset — see
+			// updateFragmentAlphasAndPlayheads(). -1 means "not yet committed".
+			float lastCommittedOffset = -1.0f;
 		};
 
 		float fieldAt(float px, float py) const;

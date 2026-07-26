@@ -32,7 +32,7 @@ void TFEffectPicker::pickNext() {
 }
 
 void TFEffectPicker::randomizeEffectParams(const std::string& name) {
-	paramX = paramY = paramZ = 0.0f;
+	paramX = paramY = paramZ = paramW = 0.0f;
 
 	if (name == "dither") {
 		paramX = ofRandom(0.15f, 0.85f);
@@ -46,6 +46,11 @@ void TFEffectPicker::randomizeEffectParams(const std::string& name) {
 		paramZ = c.b / 255.0f;
 	} else if (name == "channelshift") {
 		paramX = ofRandom(0.002f, 0.01f);
+	} else if (name == "hue_rotate") {
+		paramX = ofRandom(0.0f, 360.0f);
+		paramY = ofRandom(15.0f, 60.0f) * (ofRandom(1.0f) < 0.5f ? -1.0f : 1.0f);
+		paramZ = ofRandom(0.8f, 1.3f);
+		paramW = ofRandom(0.9f, 1.1f);
 	} else if (name == "pixel_sorting") {
 		paramX = ofRandom(0.3f, 0.8f);
 		paramY = ofRandom(0.0f, 1.0f) < 0.5f ? 0.0f : 1.0f;
@@ -124,6 +129,13 @@ void TFEffectPicker::applyEffectUniforms(ofShader& sh, const std::string& name, 
 		sh.setUniform1f("alpha", 1.0f);
 	} else if (name == "channelshift") {
 		sh.setUniform1f("shift", paramX);
+		sh.setUniform1f("alpha", 1.0f);
+	} else if (name == "hue_rotate") {
+		sh.setUniform1f("hueOffset", paramX);
+		sh.setUniform1f("hueSpeed", paramY);
+		sh.setUniform1f("time", ofGetElapsedTimef());
+		sh.setUniform1f("saturationMult", paramZ);
+		sh.setUniform1f("valueMult", paramW);
 		sh.setUniform1f("alpha", 1.0f);
 	} else if (name == "invert" || name == "solarize" || name == "scanlines") {
 		sh.setUniform1f("alpha", 1.0f);

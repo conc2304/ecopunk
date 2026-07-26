@@ -6,27 +6,27 @@
 #include "ofMath.h"
 #include "ofVec2f.h"
 
-// Assigns each fragment's noise-derived target offset to a playhead in
+// Assigns each already-computed desired offset to a playhead in
 // videoBuffer's pool, reusing a playhead whenever multiple fragments want
-// the same quantized offset (the pool-sharing behavior both patterns need,
-// since the pool is a small fixed size while either pattern can easily
-// produce more fragments than that). Falls back to the closest
-// already-assigned playhead if the pool is exhausted this frame. Shared by
-// TFPatternBSP and TFPatternBlobGrid — the pool-sharing logic is identical
-// for both, only how each pattern enumerates its own fragments differs.
-inline void tfAssignPlayheadsByNoise(
+// the same quantized offset (the pool-sharing behavior every persistent-
+// cell pattern needs, since the pool is a small fixed size while any of
+// them can easily produce more fragments than that). Falls back to the
+// closest already-assigned playhead if the pool is exhausted this frame.
+//
+// Factored out from tfAssignPlayheadsByNoise() below so patterns that don't
+// want a noise-derived offset (Bands' Strata offset mode assigns a fixed,
+// index-proportional offset instead — see TFPatternBands.cpp) can reuse the
+// exact same pool-sharing policy without going through ofNoise() at all.
+inline void tfAssignPlayheadsByDesiredOffsets(
 	TimeOffsetVideoBuffer& videoBuffer,
-	float noiseTime,
-	float noiseScale,
-	const std::vector<ofVec2f>& normalizedCenters,
+	const std::vector<float>& desiredOffsets,
 	std::vector<int>& outPlayheadIndices) {
 	int numPlayheads = videoBuffer.getNumPlayheads();
 	std::vector<float> assignedOffsets(numPlayheads, -1.0f);
-	outPlayheadIndices.assign(normalizedCenters.size(), -1);
+	outPlayheadIndices.assign(desiredOffsets.size(), -1);
 
-	for (size_t i = 0; i < normalizedCenters.size(); i++) {
-		float gray = ofNoise(normalizedCenters[i].x * noiseScale, normalizedCenters[i].y * noiseScale, noiseTime);
-		float desiredOffset = videoBuffer.quantize(gray);
+	for (size_t i = 0; i < desiredOffsets.size(); i++) {
+		float desiredOffset = desiredOffsets[i];
 
 		int chosen = -1;
 
@@ -61,4 +61,23 @@ inline void tfAssignPlayheadsByNoise(
 
 		outPlayheadIndices[i] = chosen;
 	}
+}
+
+// Assigns each fragment's noise-derived target offset to a playhead in
+// videoBuffer's pool. Shared by TFPatternBSP and TFPatternBlobGrid — the
+// pool-sharing logic is identical for both, only how each pattern
+// enumerates its own fragments differs.
+inline void tfAssignPlayheadsByNoise(
+	TimeOffsetVideoBuffer& videoBuffer,
+	float noiseTime,
+	float noiseScale,
+	const std::vector<ofVec2f>& normalizedCenters,
+	std::vector<int>& outPlayheadIndices) {
+	std::vector<float> desiredOffsets(normalizedCenters.size());
+	for (size_t i = 0; i < normalizedCenters.size(); i++) {
+		float gray = ofNoise(normalizedCenters[i].x * noiseScale, normalizedCenters[i].y * noiseScale, noiseTime);
+		desiredOffsets[i] = videoBuffer.quantize(gray);
+	}
+
+	tfAssignPlayheadsByDesiredOffsets(videoBuffer, desiredOffsets, outPlayheadIndices);
 }

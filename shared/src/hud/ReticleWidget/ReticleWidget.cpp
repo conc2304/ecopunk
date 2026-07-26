@@ -7,13 +7,25 @@ static constexpr float kSpawnDur = 1.4f;
 static constexpr float kPulseDur = 0.42f;
 static constexpr float kDeathDur = kPulseDur * 2.0f + 0.6f;
 
-// Sweep behavior: hold a heading for a long stretch, then ease into a new one —
-// scanning/searchlight feel rather than the Wander behavior's constant-velocity bounce.
-static constexpr float kSweepHoldMin     = 1.6f;
-static constexpr float kSweepHoldMax     = 3.6f;
-static constexpr float kSweepTurnRate    = 1.8f;
-static constexpr float kSweepSpeed       = 0.05f;
-static constexpr float kBehaviorBlendDur = 1.0f;
+// Locate behavior: spot a distant point, travel there with an accelerate/cruise/
+// decelerate arc, hold on arrival, then spot a new point — a "found it, moving on"
+// scanning feel rather than the Wander behavior's constant-velocity local bounce.
+static constexpr float kLocateDwellMin     = 0.7f;
+static constexpr float kLocateDwellMax     = 1.8f;
+static constexpr float kLocateMinDist      = 0.4f;   // require a real medium/long haul
+static constexpr float kLocateArriveDist   = 0.02f;
+static constexpr float kLocateSpoolDur     = 0.6f;   // ease-in ramp at the start of a leg
+static constexpr float kLocateCruiseSpeed  = 0.22f;  // normalized units/sec at full speed
+static constexpr float kLocateApproachGain = 2.2f;   // decel factor as it nears the waypoint
+static constexpr float kBehaviorBlendDur   = 1.0f;
+
+// Shared roaming box for both behaviors (Wander's bounce walls, Locate's waypoint
+// range). Widened past the old 0.12–0.88/0.14–0.86 box so Wander covers more
+// ground — and Locate can reach farther — before it changes trajectory.
+static constexpr float kBoundsMinX = 0.04f;
+static constexpr float kBoundsMaxX = 0.96f;
+static constexpr float kBoundsMinY = 0.05f;
+static constexpr float kBoundsMaxY = 0.95f;
 
 static const std::vector<std::string> kDefaultLabels = {"CANOPY", "FLOW", "SPORE", "ROOT", "SIGNAL", "WATER"};
 
@@ -29,9 +41,16 @@ void ReticleWidget::respawn(Target& t, int labelIdx) {
     float angle   = ofRandom(TWO_PI);
     float speed   = ofRandom(0.025f, 0.065f);
     t.goalV       = {std::cos(angle) * speed, std::sin(angle) * speed};
-    t.sweepHeading        = ofRandom(TWO_PI);
-    t.sweepDesiredHeading = t.sweepHeading;
-    t.sweepTimer          = ofRandom(kSweepHoldMin, kSweepHoldMax);
+    // Start dwelling briefly so the Locate behavior doesn't dash off mid-spawn-ease;
+    // it'll pick a real waypoint once the dwell timer runs out.
+    t.spotTarget     = t.p;
+    t.spotDwelling   = true;
+    t.spotDwellTimer = ofRandom(0.2f, 1.0f);
+    t.spotTravelT    = 0.0f;
+    t.spotSpeedScale = 1.0f;
+    t.spotLegsTotal  = (int)ofRandom(1.0f, 4.0f); // 1-3 targets before this one dies
+    t.spotLegsDone   = 0;
+    t.spotFinished   = false;
     t.phase       = ofRandom(TWO_PI);
     t.size        = 0.20f;
     t.label       = labelFor(labelIdx);
@@ -86,34 +105,76 @@ void ReticleWidget::rebuild() {
 
 ofVec2f ReticleWidget::computeWanderVelocity(Target& t, float dt) {
     ofVec2f predicted = t.p + t.goalV * dt * motion.speed;
-    if (predicted.x < 0.12f || predicted.x > 0.88f) t.goalV.x *= -1.0f;
-    if (predicted.y < 0.14f || predicted.y > 0.86f) t.goalV.y *= -1.0f;
+    if (predicted.x < kBoundsMinX || predicted.x > kBoundsMaxX) t.goalV.x *= -1.0f;
+    if (predicted.y < kBoundsMinY || predicted.y > kBoundsMaxY) t.goalV.y *= -1.0f;
     return t.goalV * motion.speed;
 }
 
-ofVec2f ReticleWidget::computeSweepVelocity(Target& t, float dt) {
-    t.sweepTimer -= dt;
-    if (t.sweepTimer <= 0.0f) {
-        bool nearEdge = t.p.x < 0.18f || t.p.x > 0.82f || t.p.y < 0.20f || t.p.y > 0.80f;
-        if (nearEdge) {
-            // Steer the next heading back toward center instead of bouncing off the wall
-            ofVec2f toCenter   = ofVec2f(0.5f, 0.5f) - t.p;
-            float   centerAngle = std::atan2(toCenter.y, toCenter.x);
-            t.sweepDesiredHeading = centerAngle + ofRandom(-PI * 0.3f, PI * 0.3f);
-        } else {
-            t.sweepDesiredHeading = t.sweepHeading + ofRandom(-PI * 0.8f, PI * 0.8f);
+void ReticleWidget::pickWaypoint(Target& t) const {
+    ofVec2f candidate = t.spotTarget;
+
+    if (!options.randomTargets && !locateTargets.empty()) {
+        // Lock onto an actual target (e.g. a fragment center) rather than a
+        // uniformly random point — walk the pool starting from a random
+        // offset so repeated calls don't all favor index 0, and prefer one
+        // far enough away to still read as a real haul.
+        int startIdx = (int)ofRandom((float)locateTargets.size());
+        for (int i = 0; i < (int)locateTargets.size(); ++i) {
+            candidate = locateTargets[(startIdx + i) % (int)locateTargets.size()];
+            if (candidate.distance(t.p) >= kLocateMinDist) break;
         }
-        t.sweepTimer = ofRandom(kSweepHoldMin, kSweepHoldMax);
+        candidate.x = ofClamp(candidate.x, kBoundsMinX, kBoundsMaxX);
+        candidate.y = ofClamp(candidate.y, kBoundsMinY, kBoundsMaxY);
+    } else {
+        for (int i = 0; i < 8; ++i) {
+            candidate = {ofRandom(kBoundsMinX, kBoundsMaxX), ofRandom(kBoundsMinY, kBoundsMaxY)};
+            if (candidate.distance(t.p) >= kLocateMinDist) break;
+        }
     }
 
-    // Ease heading toward the desired one along the shortest angular path — this is
-    // what turns the direction change into a smooth arc instead of a snap.
-    float diff = std::atan2(std::sin(t.sweepDesiredHeading - t.sweepHeading),
-                             std::cos(t.sweepDesiredHeading - t.sweepHeading));
-    t.sweepHeading += diff * (1.0f - std::exp(-kSweepTurnRate * dt));
+    t.spotTarget     = candidate;
+    t.spotTravelT    = 0.0f;
+    // Vary the pace leg-to-leg so consecutive hops don't all read at one speed.
+    t.spotSpeedScale = ofRandom(0.6f, 1.5f);
+}
 
-    float speed = kSweepSpeed * motion.speed;
-    return { std::cos(t.sweepHeading) * speed, std::sin(t.sweepHeading) * speed };
+ofVec2f ReticleWidget::computeLocateVelocity(Target& t, float dt) {
+    if (t.spotDwelling) {
+        t.spotDwellTimer -= dt;
+        if (t.spotDwellTimer <= 0.0f) {
+            if (t.spotLegsDone >= t.spotLegsTotal) {
+                // Visited its full 1-3 target sequence — hold here; updateTracking
+                // retires this target rather than starting another leg.
+                t.spotFinished = true;
+            } else {
+                t.spotDwelling = false;
+                pickWaypoint(t);
+            }
+        }
+        return {0.0f, 0.0f};
+    }
+
+    ofVec2f toTarget = t.spotTarget - t.p;
+    float   dist     = toTarget.length();
+    if (dist <= kLocateArriveDist) {
+        t.spotLegsDone++;
+        t.spotDwelling   = true;
+        t.spotDwellTimer = ofRandom(kLocateDwellMin, kLocateDwellMax);
+        return {0.0f, 0.0f};
+    }
+
+    // Ease-in at the start of the leg, cruise, then ease-down as it nears the
+    // waypoint — the accelerate/cruise/decelerate arc that reads as "traveling to it".
+    t.spotTravelT += dt;
+    float spoolUp = ofClamp(t.spotTravelT / kLocateSpoolDur, 0.0f, 1.0f);
+    spoolUp = spoolUp * spoolUp * (3.0f - 2.0f * spoolUp); // smoothstep
+
+    float cruise        = kLocateCruiseSpeed * t.spotSpeedScale;
+    float approachSpeed = dist * kLocateApproachGain; // soft dock near arrival
+    float speed = std::min(cruise, approachSpeed) * spoolUp * motion.speed;
+
+    ofVec2f dir = toTarget / dist;
+    return dir * speed;
 }
 
 void ReticleWidget::updateTracking(Target& t, float dt, float mix) {
@@ -127,22 +188,22 @@ void ReticleWidget::updateTracking(Target& t, float dt, float mix) {
         // Both behaviors are always ticked (even when not active) so a mid-flight
         // switch blends into state that's already evolving, not a frozen start.
         ofVec2f wanderVel = computeWanderVelocity(t, dt);
-        ofVec2f sweepVel  = computeSweepVelocity(t, dt);
-        ofVec2f vFrom = (fromBehavior == ReticleBehavior::Sweep) ? sweepVel : wanderVel;
-        ofVec2f vTo   = (toBehavior   == ReticleBehavior::Sweep) ? sweepVel : wanderVel;
+        ofVec2f locateVel = computeLocateVelocity(t, dt);
+        ofVec2f vFrom = (fromBehavior == ReticleBehavior::Locate) ? locateVel : wanderVel;
+        ofVec2f vTo   = (toBehavior   == ReticleBehavior::Locate) ? locateVel : wanderVel;
         ofVec2f vel   = vFrom + (vTo - vFrom) * mix;
 
         t.p += vel * dt;
-        t.p.x = ofClamp(t.p.x, 0.12f, 0.88f);
-        t.p.y = ofClamp(t.p.y, 0.14f, 0.86f);
+        t.p.x = ofClamp(t.p.x, kBoundsMinX, kBoundsMaxX);
+        t.p.y = ofClamp(t.p.y, kBoundsMinY, kBoundsMaxY);
 
         // Drawn position lags behind goal — the "tracking" feel
         t.drawnP += (t.p - t.drawnP) * (1.0f - std::exp(-6.0f * dt));
 
-        // Periodic micro-correction snaps — dialed down for Sweep, which should read
+        // Periodic micro-correction snaps — dialed down for Locate, which should read
         // as a steady scan rather than a twitchy tracker.
-        float jitterFrom  = (fromBehavior == ReticleBehavior::Sweep) ? 0.15f : 1.0f;
-        float jitterTo    = (toBehavior   == ReticleBehavior::Sweep) ? 0.15f : 1.0f;
+        float jitterFrom  = (fromBehavior == ReticleBehavior::Locate) ? 0.15f : 1.0f;
+        float jitterTo    = (toBehavior   == ReticleBehavior::Locate) ? 0.15f : 1.0f;
         float jitterScale = jitterFrom + (jitterTo - jitterFrom) * mix;
 
         t.jitterTimer -= dt;
@@ -152,7 +213,11 @@ void ReticleWidget::updateTracking(Target& t, float dt, float mix) {
         }
         t.jitter *= std::exp(-10.0f * dt);
 
-        if (t.stateT >= t.lifetime) { t.stateT = 0.0f; t.lifecycle = TargetLifecycle::Dying; }
+        // Locate retires once it's visited its 1-3 target sequence, not on a fixed
+        // timer — a sequence can easily run longer or shorter than trackingLifetime.
+        bool locateSequenceDone = (toBehavior == ReticleBehavior::Locate) && t.spotFinished;
+        bool timerExpired       = (toBehavior != ReticleBehavior::Locate) && (t.stateT >= t.lifetime);
+        if (timerExpired || locateSequenceDone) { t.stateT = 0.0f; t.lifecycle = TargetLifecycle::Dying; }
 
     } else { // Dying
         if (t.stateT >= kDeathDur) respawn(t, (int)(&t - targets.data()));
