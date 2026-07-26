@@ -69,6 +69,14 @@ class TFParameterPanel {
 		void toggleVisible() { visible = !visible; }
 		bool isVisible() const { return visible; }
 
+		// Keeps the GUI readable with nine pattern groups in one panel —
+		// every dropdown defaults closed (see applyDefaultGuiCollapseState()
+		// in the .cpp), and only the currently active pattern's group is
+		// kept open; the other eight collapse to a single header row. Call
+		// every frame (or whenever the active pattern might have changed) —
+		// it no-ops unless the type actually changed since the last call.
+		void setActivePattern(TFPatternType type);
+
 		TFPatternBSP::Params getBSPParams() const;
 		TFPatternBlobGrid::Params getBlobGridParams() const;
 		TFPatternBands::Params getBandsParams() const;
@@ -130,6 +138,15 @@ class TFParameterPanel {
 	private:
 		void rescanPresets();
 		void onSavePressed();
+
+		// GUI declutter (see setActivePattern() above). panel.setup(rootGroup)
+		// rebuilds the widget tree from scratch (fresh, unminimized
+		// ofxGuiGroup instances) every time it's called — including the two
+		// re-registration calls below — so this must be reapplied after
+		// every such rebuild, not just once at startup.
+		void applyDefaultGuiCollapseState(); // minimizes everything, then opens the active pattern
+		void applyActivePatternCollapse(); // maximizes displayedActivePattern's group, minimizes the other eight
+		TFPatternType displayedActivePattern = TFPatternType::BSP; // mirrors TFComposition's own startup default
 
 		// Phase 7 — parameter evolution
 		struct EvolvingParam {

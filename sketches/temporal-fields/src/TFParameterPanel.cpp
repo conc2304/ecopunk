@@ -519,6 +519,8 @@ void TFParameterPanel::setup() {
 	buildTimelineBindings();
 	timeline.onWarning = [](const std::string& msg) { ofLogWarning("TFPresetTimeline") << msg; };
 	timeline.onNotice = [](const std::string& msg) { ofLogNotice("TFPresetTimeline") << msg; };
+
+	applyDefaultGuiCollapseState();
 }
 
 void TFParameterPanel::buildTimelineBindings() {
@@ -534,12 +536,38 @@ void TFParameterPanel::buildTimelineBindings() {
 void TFParameterPanel::registerBackgroundTextures(ofParameterGroup& textureGroup) {
 	rootGroup.add(textureGroup);
 	panel.setup(rootGroup); // rebuilds the widget tree; safe to call again with more groups already present
+	applyDefaultGuiCollapseState(); // the rebuild above creates fresh, unminimized widgets
 }
 
 void TFParameterPanel::registerHudVisibility(ofParameterGroup& hudVisibilityGroup) {
 	rootGroup.add(hudVisibilityGroup);
 	panel.setup(rootGroup); // rebuilds the widget tree; safe to call again with more groups already present
 	hudVisibilityGroupPtr = &hudVisibilityGroup; // kept so savePreset()/loadNextPreset() can (de)serialize it
+	applyDefaultGuiCollapseState(); // the rebuild above creates fresh, unminimized widgets
+}
+
+void TFParameterPanel::setActivePattern(TFPatternType type) {
+	if (type == displayedActivePattern) {
+		return;
+	}
+	displayedActivePattern = type;
+	applyActivePatternCollapse();
+}
+
+void TFParameterPanel::applyDefaultGuiCollapseState() {
+	panel.minimizeAll();
+	applyActivePatternCollapse();
+}
+
+void TFParameterPanel::applyActivePatternCollapse() {
+	for (const auto& entry : patternGroups) {
+		ofxGuiGroup& widget = panel.getGroup(entry.second->getName());
+		if (entry.first == displayedActivePattern) {
+			widget.maximize();
+		} else {
+			widget.minimize();
+		}
+	}
 }
 
 void TFParameterPanel::registerEvolving(ofParameter<float>& p, float lo, float hi) {

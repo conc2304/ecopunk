@@ -78,8 +78,11 @@ public:
 	// per pattern switch, not per fragment reassignment. cycleSeed: this
 	// cycle's real RNG seed (TFComposition::getCycleSeed()) — the actual
 	// value that generated this specimen's geometry, used as its displayed
-	// ID instead of an arbitrary incrementing tally.
-	void onPatternSwitch(const std::string& patternName, int cycleSeed);
+	// ID instead of an arbitrary incrementing tally. isPatternTransition:
+	// composition.getPhase() == TFComposition::CyclePhase::PATTERN_TRANSITION
+	// at the caller — passed as a plain bool rather than including
+	// TFComposition.h here, per this class's decoupling (see class comment).
+	void onPatternSwitch(const std::string& patternName, int cycleSeed, bool isPatternTransition);
 
 	// Fired per fragment reassignment (Event Layer phase — see
 	// TFPattern::setOnFragmentReassigned()). nx/ny: the reassigned

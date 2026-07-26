@@ -61,7 +61,8 @@ void ofApp::setup() {
 		if (timeOffsetBuffer.isMediaAdvanceEligible()) {
 			timeOffsetBuffer.advanceToNextMedia();
 		}
-		hudLayer.onPatternSwitch(patternName, composition.getCycleSeed());
+		hudLayer.onPatternSwitch(patternName, composition.getCycleSeed(),
+			composition.getPhase() == TFComposition::CyclePhase::PATTERN_TRANSITION);
 	});
 	composition.setOnFragmentReassigned([this](float nx, float ny) {
 		hudLayer.onFragmentReassigned(nx, ny, composition.getActiveFragmentCenters());
@@ -176,6 +177,11 @@ void ofApp::update() {
 	if (paramPanel.consumeWaypointPatternSwitch(waypointPattern)) {
 		composition.forcePattern(waypointPattern);
 	}
+
+	// Keeps the GUI panel decluttered -- only the pattern actually playing
+	// (after every possible switch this frame: auto-cycle, TAB, waypoint)
+	// has its dropdown open; the other eight stay collapsed.
+	paramPanel.setActivePattern(composition.getActivePatternType());
 }
 
 void ofApp::draw() {
@@ -217,11 +223,12 @@ void ofApp::draw() {
 	if (showDebugGui) {
 		ofSetColor(255);
 		ofDrawBitmapString(
-			"phase " + std::string(composition.getPhase() == TFComposition::CyclePhase::RUNNING ? "RUNNING" : "PATTERN_TRANSITION")
-				+ "  ('r' restart, 't' force next pattern, 'G' gui, 'S' save preset, TAB load next preset, 'd' toggle debug,"
+			"pattern: [" + tfPatternTypeName(composition.getActivePatternType()) + "]  phase "
+				+ std::string(composition.getPhase() == TFComposition::CyclePhase::RUNNING ? "RUNNING" : "PATTERN_TRANSITION")
+				+ "\n('r' restart, 't' force next pattern, 'G' gui, 'S' save preset, TAB load next preset, 'd' toggle debug,"
 				+ " 'P' timeline pause/resume, ']' timeline next state)"
 				+ "\nbg mode: [" + bgModeStr + "]  bg effect: [" + bgEffectStr + "]",
-			12, ofGetHeight() - 20);
+			12, ofGetHeight() - 40);
 
 		std::string timelineStatus = paramPanel.getTimelineDebugStatus();
 		if (!timelineStatus.empty()) {
@@ -239,8 +246,8 @@ void ofApp::drawTimeOffsetDebugStrip() {
 
 	int numPlayheads = timeOffsetBuffer.getNumPlayheads();
 	float tileW = 160.0f;
-	float tileH = 90.0f;
-	float y = ofGetHeight() - tileH - 40;
+	float tileH = 110.0f;
+	float y = ofGetHeight() - tileH - 50;
 
 	ofSetColor(255);
 	ofDrawBitmapString(
