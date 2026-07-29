@@ -35,7 +35,6 @@ class TFPatternParticleField : public TFPattern {
 			float maxLife = 8.0f;
 			float driftSpeed = 1.0f;
 			DriftDirection driftDirection = DriftDirection::OMNIDIRECTIONAL;
-			float rotationSpeed = 0.0f; // deg/sec; 0 = no rotation, matching the prototype default
 
 			// Reuses the same weighted style picker and duration every other
 			// pattern's *transitions* use — deliberate reuse, not a shared
@@ -65,7 +64,6 @@ class TFPatternParticleField : public TFPattern {
 			ofVec2f pos;
 			ofVec2f velocity;
 			float size = 0.0f;
-			float rotationDeg = 0.0f;
 			float age = 0.0f;
 			float lifespan = 1.0f;
 			int playheadIndex = -1; // fixed at spawn — no mid-life reassignment

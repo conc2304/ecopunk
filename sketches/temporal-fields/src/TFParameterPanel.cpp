@@ -160,7 +160,6 @@ void TFParameterPanel::setup() {
 	particleFieldMaxLife.set("Max Life", PARTICLEFIELD_MAX_LIFE, 0.5f, 30.0f);
 	particleFieldDriftSpeed.set("Drift Speed", PARTICLEFIELD_DRIFT_SPEED, 0.0f, 5.0f);
 	particleFieldDriftDirection.set("Drift Direction", 0, 0, 2); // 0 Omnidirectional / 1 Upward / 2 Downward
-	particleFieldRotationSpeed.set("Rotation Speed", PARTICLEFIELD_ROTATION_SPEED, 0.0f, 180.0f);
 	particleFieldDepthOrder.set("Depth Order", 0, 0, 1); // 0 Newest On Top / 1 Largest Behind
 	particleFieldGroup.setName("ParticleField");
 	particleFieldGroup.add(particleFieldSpawnRate);
@@ -171,7 +170,6 @@ void TFParameterPanel::setup() {
 	particleFieldGroup.add(particleFieldMaxLife);
 	particleFieldGroup.add(particleFieldDriftSpeed);
 	particleFieldGroup.add(particleFieldDriftDirection);
-	particleFieldGroup.add(particleFieldRotationSpeed);
 	particleFieldGroup.add(particleFieldDepthOrder);
 
 	successionGridResolution.set("Grid Resolution", SUCCESSION_GRID_RESOLUTION, 4, 30);
@@ -427,7 +425,6 @@ void TFParameterPanel::setup() {
 	registerEvolving(particleFieldMinLife, 0.5f, 20.0f);
 	registerEvolving(particleFieldMaxLife, 0.5f, 30.0f);
 	registerEvolving(particleFieldDriftSpeed, 0.0f, 5.0f);
-	registerEvolving(particleFieldRotationSpeed, 0.0f, 180.0f);
 
 	registerEvolving(successionGridResolution, 4.0f, 30.0f);
 	registerEvolving(successionMaturityTime, 5.0f, 120.0f);
@@ -816,7 +813,6 @@ TFPatternParticleField::Params TFParameterPanel::getParticleFieldParams() const 
 	p.maxLife = particleFieldMaxLife;
 	p.driftSpeed = particleFieldDriftSpeed;
 	p.driftDirection = static_cast<TFPatternParticleField::DriftDirection>(particleFieldDriftDirection.get());
-	p.rotationSpeed = particleFieldRotationSpeed;
 	p.depthOrder = static_cast<TFPatternParticleField::DepthOrder>(particleFieldDepthOrder.get());
 	// Reuses the shared transition weights/duration — deliberate reuse per
 	// Section 6, not a separate dial set.

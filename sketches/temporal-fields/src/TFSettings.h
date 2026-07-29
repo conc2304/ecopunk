@@ -71,7 +71,6 @@ constexpr float PARTICLEFIELD_MAX_SIZE = 0.18f;
 constexpr float PARTICLEFIELD_MIN_LIFE = 3.0f;
 constexpr float PARTICLEFIELD_MAX_LIFE = 8.0f;
 constexpr float PARTICLEFIELD_DRIFT_SPEED = 0.33f;
-constexpr float PARTICLEFIELD_ROTATION_SPEED = 0.0f; // 0 = no rotation, matching the prototype default
 
 // --- Transition system (per-fragment content changes) ---
 // Slower, gentler transitions (was 0.8, then 1.6) — still read as abrupt.

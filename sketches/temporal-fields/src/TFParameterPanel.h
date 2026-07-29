@@ -207,7 +207,6 @@ class TFParameterPanel {
 		ofParameter<float> particleFieldMaxLife;
 		ofParameter<float> particleFieldDriftSpeed;
 		ofParameter<int> particleFieldDriftDirection; // 0 Omnidirectional / 1 Upward / 2 Downward
-		ofParameter<float> particleFieldRotationSpeed;
 		ofParameter<int> particleFieldDepthOrder; // 0 Newest On Top / 1 Largest Behind
 
 		ofParameterGroup ecologicalSuccessionGroup;

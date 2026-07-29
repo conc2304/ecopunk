@@ -75,7 +75,6 @@ void TFPatternParticleField::update(float dt) {
 	for (auto& p : particles) {
 		p.age += dt;
 		p.pos += p.velocity * dt;
-		p.rotationDeg += params.rotationSpeed * dt;
 	}
 
 	particles.erase(
@@ -96,7 +95,6 @@ void TFPatternParticleField::spawnParticle() {
 
 	p.lifespan = std::max(0.1f, tfRandRangeF(params.minLife, params.maxLife));
 	p.age = 0.0f;
-	p.rotationDeg = 0.0f;
 
 	float baseAngle = 0.0f;
 	float spread = TWO_PI;
@@ -211,9 +209,6 @@ void TFPatternParticleField::drawParticle(const Particle& p) const {
 
 	ofPushMatrix();
 	ofTranslate(p.pos.x, p.pos.y);
-	if (params.rotationSpeed != 0.0f) {
-		ofRotateDeg(p.rotationDeg);
-	}
 
 	if (p.style == TFFragmentTransition::Style::EROSION) {
 		ofShader& shader = existenceFadeShader();
