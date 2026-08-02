@@ -295,6 +295,7 @@ class TFParameterPanel {
 		ofParameter<float> bgEffectWeightPixelDrift;
 		ofParameter<float> bgEffectWeightPixelSorting;
 		ofParameter<float> bgEffectWeightWaterRefraction;
+		ofParameter<float> bgEffectWeightHeatmapRecolor;
 
 		ofParameterGroup evolutionGroup;
 		ofParameter<bool> evolutionEnabledParam;

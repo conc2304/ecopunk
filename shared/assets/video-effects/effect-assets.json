@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "effects": {
+    "desaturate": { "assets": ["common/vert.glsl", "single-pass/desaturate.glsl"] },
+    "invert": { "assets": ["common/vert.glsl", "single-pass/invert.glsl"] },
+    "recolor": { "assets": ["common/vert.glsl", "single-pass/recolor.glsl"] },
+    "threshold": { "assets": ["common/vert.glsl", "single-pass/threshold.glsl"] },
+    "dither": { "assets": ["common/vert.glsl", "single-pass/dither.glsl"] },
+    "solarize": { "assets": ["common/vert.glsl", "single-pass/solarize.glsl"] },
+    "scanlines": { "assets": ["common/vert.glsl", "single-pass/scanlines.glsl"] },
+    "channelshift": { "assets": ["common/vert.glsl", "single-pass/channelshift.glsl"] },
+    "heatmap_recolor": { "assets": ["common/vert.glsl", "single-pass/heatmap_recolor.glsl"] },
+    "hue_rotate": { "assets": ["common/vert.glsl", "single-pass/hue_rotate.glsl"] },
+    "ascii_solarpunk": { "assets": ["common/vert.glsl", "single-pass/ascii_threshold_solarpunk.glsl"] },
+    "bioluminescence": { "assets": ["common/vert.glsl", "single-pass/bioluminescence.glsl"] },
+    "caustics": { "assets": ["common/vert.glsl", "single-pass/caustics.glsl"] },
+    "chromatic_aberration": { "assets": ["common/vert.glsl", "single-pass/chromatic_aberration.glsl"] },
+    "edge_glow": { "assets": ["common/vert.glsl", "single-pass/edge_glow.glsl"] },
+    "ink_outlines": { "assets": ["common/vert.glsl", "single-pass/ink_outlines.glsl"] },
+    "pixel_drift": { "assets": ["common/vert.glsl", "single-pass/pixel_drift.glsl"] },
+    "pixel_sorting": { "assets": ["common/vert.glsl", "single-pass/pixel_sorting.glsl"] },
+    "water_refraction": { "assets": ["common/vert.glsl", "single-pass/water_refraction.glsl"] },
+    "motion_extraction": { "assets": [] },
+    "motion_composite": { "assets": ["common/vert.glsl", "motion-extraction/motion_effect.glsl"] },
+    "erosion_accumulation": { "assets": ["common/vert.glsl", "erosion/erosion_accumulation.glsl"] },
+    "erosion_history_blend": { "assets": ["erosion/erosion_history_blend.frag", "erosion/erosion_history_blend.vert"] },
+    "temporal_trails": { "assets": ["common/vert.glsl", "temporal-trails/temporal_trails.glsl"] },
+    "reaction_diffusion": { "assets": ["common/vert.glsl", "reaction-diffusion/rd_step.glsl"] },
+    "ridgeline": { "assets": [] },
+    "video_adjust": { "assets": ["common/vert.glsl", "utility/video_adjust.glsl"] }
+  }
+}

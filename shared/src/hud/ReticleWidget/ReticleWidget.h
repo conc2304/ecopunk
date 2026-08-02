@@ -29,6 +29,15 @@ public:
     void randomize(int seed = -1) override;
     void setOptions(const ReticleOptions& next);
 
+    // Fires a single reticle immediately at (nx, ny) — normalized,
+    // bounds-relative — independent of the ambient target pool. Mirrors
+    // HexGridWidget::pulseAt() / GlitchTearWidget::trigger()'s "let a
+    // consumer fire this off a real event" pattern. Snaps to full opacity
+    // with a brief 1.6x->1.0x overshoot (no ease-in fade, unlike the ambient
+    // Spawning phase), holds steady at the point for holdSeconds, fades out,
+    // then removes itself — it never rejoins the ambient pool via respawn().
+    void triggerAt(float nx, float ny, const std::string& label = "", float holdSeconds = 1.2f);
+
     // Locate behavior's waypoint pool, normalized [0,1]. When randomTargets
     // is false and this is non-empty, pickWaypoint() travels between these
     // points (e.g. a host sketch's live fragment centers) instead of
@@ -62,6 +71,8 @@ private:
         TargetLifecycle lifecycle = TargetLifecycle::Spawning;
         float stateT   = 0.0f;
         float lifetime = 5.0f;
+        bool  oneShot     = false; // see triggerAt() — skips wander/locate motion, never respawns
+        bool  oneShotDone = false; // set once a oneShot target finishes Dying; erased at end of update()
     };
     std::vector<Target> targets;
     ReticleOptions options;

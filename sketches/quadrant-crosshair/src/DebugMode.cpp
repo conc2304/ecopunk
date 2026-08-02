@@ -12,7 +12,8 @@ const std::vector<std::string> DebugMode::SHADER_NAMES = {
     "water_refraction",
     // cpu-side effects (no shader)
     "ridgeline",
-    "hue_rotate"
+    "hue_rotate",
+    "heatmap_recolor"
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -179,6 +180,15 @@ std::vector<DebugParam> DebugMode::buildParams() {
             p.push_back({ "valueMult",       &pHueValueMult,     0.05f, 0.0f,   2.0f   });
             p.push_back({ "alpha",           &pAlpha,            0.05f, 0.f,    1.f    });
             break;
+        case 20: // heatmap_recolor
+            p.push_back({ "mix (alpha)",   &pAlpha,               0.05f, 0.f,   1.f  });
+            p.push_back({ "intensity",     &pHeatmapIntensity,    0.05f, 0.f,   2.f  });
+            p.push_back({ "gamma",         &pHeatmapGamma,        0.05f, 0.25f, 3.f  });
+            p.push_back({ "minLuminance",  &pHeatmapMinLuminance, 0.02f, 0.f,   1.f  });
+            p.push_back({ "maxLuminance",  &pHeatmapMaxLuminance, 0.02f, 0.f,   1.f  });
+            p.push_back({ "palette (0-3)", &pHeatmapPalette,      1.0f,  0.f,   3.f  });
+            p.push_back({ "reverse (0/1)", &pHeatmapReverse,      1.0f,  0.f,   1.f  });
+            break;
         default:
             break;
     }
@@ -296,6 +306,14 @@ void DebugMode::drawShaderFullScreen() {
         sh.setUniform1f("time",           t);
         sh.setUniform1f("saturationMult", pHueSaturationMult);
         sh.setUniform1f("valueMult",      pHueValueMult);
+    }
+    if (name == "heatmap_recolor") {
+        sh.setUniform1f("intensity",    pHeatmapIntensity);
+        sh.setUniform1f("gamma",        pHeatmapGamma);
+        sh.setUniform1f("minLuminance", pHeatmapMinLuminance);
+        sh.setUniform1f("maxLuminance", pHeatmapMaxLuminance);
+        sh.setUniform1i("palette",      (int)pHeatmapPalette);
+        sh.setUniform1i("reverse",      (int)pHeatmapReverse);
     }
     if (name == "ascii_solarpunk") {
         sh.setUniform1f("cellSize",            pAsciiCellSize);

@@ -287,6 +287,7 @@ void TFParameterPanel::setup() {
 	bgEffectWeightPixelDrift.set("Pixel Drift", BACKGROUND_EFFECT_DEFAULT_WEIGHT, 0.0f, 100.0f);
 	bgEffectWeightPixelSorting.set("Pixel Sorting", BACKGROUND_EFFECT_DEFAULT_WEIGHT, 0.0f, 100.0f);
 	bgEffectWeightWaterRefraction.set("Water Refraction", BACKGROUND_EFFECT_DEFAULT_WEIGHT, 0.0f, 100.0f);
+	bgEffectWeightHeatmapRecolor.set("Heatmap Recolor", BACKGROUND_EFFECT_DEFAULT_WEIGHT, 0.0f, 100.0f);
 	backgroundEffectGroup.setName("Effects");
 	backgroundEffectGroup.add(bgEffectCycleInterval);
 	backgroundEffectGroup.add(bgEffectRawWeight);
@@ -307,6 +308,7 @@ void TFParameterPanel::setup() {
 	backgroundEffectGroup.add(bgEffectWeightPixelDrift);
 	backgroundEffectGroup.add(bgEffectWeightPixelSorting);
 	backgroundEffectGroup.add(bgEffectWeightWaterRefraction);
+	backgroundEffectGroup.add(bgEffectWeightHeatmapRecolor);
 
 	bgFullVideoWeight.set("Full Video Weight", BACKGROUND_FULL_VIDEO_WEIGHT, 0.0f, 100.0f);
 	bgFullImageWeight.set("Full Image Weight", BACKGROUND_FULL_IMAGE_WEIGHT, 0.0f, 100.0f);
@@ -500,6 +502,7 @@ void TFParameterPanel::setup() {
 	registerEvolving(bgEffectWeightPixelDrift, 0.0f, 100.0f);
 	registerEvolving(bgEffectWeightPixelSorting, 0.0f, 100.0f);
 	registerEvolving(bgEffectWeightWaterRefraction, 0.0f, 100.0f);
+	registerEvolving(bgEffectWeightHeatmapRecolor, 0.0f, 100.0f);
 
 	wobbleLfo.setup(static_cast<int>(evolvingParams.size()));
 	for (int i = 0; i < static_cast<int>(evolvingParams.size()); i++) {
@@ -913,6 +916,7 @@ TFBackgroundLayer::Params TFParameterPanel::getBackgroundParams() const {
 	p.effectWeights.effectWeights["pixel_drift"] = bgEffectWeightPixelDrift;
 	p.effectWeights.effectWeights["pixel_sorting"] = bgEffectWeightPixelSorting;
 	p.effectWeights.effectWeights["water_refraction"] = bgEffectWeightWaterRefraction;
+	p.effectWeights.effectWeights["heatmap_recolor"] = bgEffectWeightHeatmapRecolor;
 
 	return p;
 }

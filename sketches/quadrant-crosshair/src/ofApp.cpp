@@ -36,9 +36,17 @@ void ofApp::setup() {
 
     hud.setup(triggerBus, crosshair, lfo, quadrants, motionEx);
     expansionDirector.setup();
+
+    hudOverlay.setup(ofGetWidth(), ofGetHeight());
+    hudOverlayPanel.setup();
 }
 
 void ofApp::update() {
+    if (hudOverlayActive) {
+        hudOverlayPanel.update(hudOverlayDials);
+        hudOverlay.update(ofGetLastFrameTime(), hudOverlayDials);
+        return;
+    }
     if (debug.active) { debug.update(); return; }
 
     float dt = ofGetLastFrameTime();
@@ -148,6 +156,12 @@ void ofApp::update() {
 }
 
 void ofApp::draw() {
+    if (hudOverlayActive) {
+        ofBackground(13, 13, 13);
+        hudOverlay.draw();
+        hudOverlayPanel.draw();
+        return;
+    }
     if (debug.active) { debug.draw(); return; }
 
     float uiAlpha = expansionDirector.getUIFadeAlpha();
@@ -173,6 +187,7 @@ void ofApp::draw() {
 }
 
 void ofApp::keyPressed(int key) {
+    if (key == 'o' || key == 'O') { hudOverlayActive = !hudOverlayActive; return; }
     if (key == 'd' || key == 'D') { debug.active = !debug.active; return; }
     if (debug.active && debug.keyPressed(key)) return;
 
@@ -201,6 +216,7 @@ void ofApp::keyPressed(int key) {
 
 void ofApp::windowResized(int w, int h) {
     quadrants.resize(w, h);
+    hudOverlay.windowResized(w, h);
 }
 
 float ofApp::sampleBrightness(const ofPixels& px) {

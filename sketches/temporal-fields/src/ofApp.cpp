@@ -72,9 +72,18 @@ void ofApp::setup() {
 	motionEx.setup();
 	hudLayer.setup(ofGetWidth(), ofGetHeight());
 	paramPanel.registerHudVisibility(hudLayer.getVisibilityParamGroup());
+
+	hudOverlay.setup(ofGetWidth(), ofGetHeight());
+	hudOverlayPanel.setup();
 }
 
 void ofApp::update() {
+	if (hudOverlayActive) {
+		hudOverlayPanel.update(hudOverlayDials);
+		hudOverlay.update(ofGetLastFrameTime(), hudOverlayDials);
+		return;
+	}
+
 	float dt = ofGetLastFrameTime();
 
 	// Push whatever the panel currently holds into both patterns every
@@ -185,6 +194,13 @@ void ofApp::update() {
 }
 
 void ofApp::draw() {
+	if (hudOverlayActive) {
+		ofBackground(13, 13, 13);
+		hudOverlay.draw();
+		hudOverlayPanel.draw();
+		return;
+	}
+
 	// Section 6a: "Solid Ground" mode clears to GROUND_DARK (shared/src's
 	// house palette token), not literally black.
 	ofBackground(GROUND_DARK);
@@ -281,10 +297,14 @@ void ofApp::windowResized(int w, int h) {
 	backgroundLayer.resizeCanvas(w, h);
 	composition.resizeCanvas(w, h);
 	hudLayer.resize(w, h);
+	hudOverlay.windowResized(w, h);
 }
 
 void ofApp::keyPressed(int key) {
-	if (key == 'G' || key == 'g') {
+	if (key == 'o' || key == 'O') {
+		hudOverlayActive = !hudOverlayActive;
+		return;
+	} else if (key == 'G' || key == 'g') {
 		paramPanel.toggleVisible();
 	} else if (key == 'd') {
 		showDebugGui = !showDebugGui;

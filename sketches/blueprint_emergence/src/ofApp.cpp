@@ -100,6 +100,9 @@ void ofApp::setup() {
 	});
 
 	composition.startCycle();
+
+	hudOverlay.setup(cw, ch);
+	hudOverlayPanel.setup();
 }
 
 //--------------------------------------------------------------
@@ -129,6 +132,12 @@ std::vector<std::string> ofApp::loadCodeFragments() const {
 
 //--------------------------------------------------------------
 void ofApp::update() {
+	if (hudOverlayActive) {
+		hudOverlayPanel.update(hudOverlayDials);
+		hudOverlay.update(ofGetLastFrameTime(), hudOverlayDials);
+		return;
+	}
+
 	float dt = ofGetLastFrameTime();
 	videoSampler.update();
 	lfoBank.update(dt);
@@ -166,6 +175,13 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
+	if (hudOverlayActive) {
+		ofBackground(13, 13, 13);
+		hudOverlay.draw();
+		hudOverlayPanel.draw();
+		return;
+	}
+
 	// The whole scene draws into ErosionFBO's capture buffer, which is then
 	// blended against its own decaying history and presented — recent draws
 	// leave a fading trace rather than vanishing the instant they stop being
@@ -293,6 +309,10 @@ void ofApp::exit() {
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
+	if (key == 'o' || key == 'O') {
+		hudOverlayActive = !hudOverlayActive;
+		return;
+	}
 	if (key == 'g') {
 		showOccupancyDebug = !showOccupancyDebug;
 	} else if (key == 'r') {
@@ -339,6 +359,7 @@ void ofApp::mouseExited(int x, int y) {
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h) {
+	hudOverlay.windowResized(w, h);
 }
 
 //--------------------------------------------------------------

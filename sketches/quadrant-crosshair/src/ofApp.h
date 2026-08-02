@@ -11,6 +11,9 @@
 #include "MotionExtraction.h"
 #include "HudManager.h"
 #include "ExpansionDirector.h"
+#include "HudOverlayLayer.h"
+#include "HudOverlayDialPanel.h"
+#include "HudOverlayDialState.h"
 
 class ofApp : public ofBaseApp {
 public:
@@ -42,6 +45,15 @@ private:
     float motionRampAlpha     = 55.f;  // overlay alpha target, ramps on onset
 
     HudManager hud;
+
+    // HUD Glitch Overlay System — standalone, isolated module (see
+    // shared/src/hud_overlay/README.md). Toggled with 'o'; while active it
+    // fully replaces this sketch's draw with the overlay alone over a
+    // solid near-black canvas, no composition wiring.
+    hudoverlay::HudOverlayLayer hudOverlay;
+    hudoverlay::HudOverlayDialPanel hudOverlayPanel;
+    hudoverlay::HudOverlayDialState hudOverlayDials;
+    bool hudOverlayActive = false;
 
     static float sampleBrightness(const ofPixels& px);
 };

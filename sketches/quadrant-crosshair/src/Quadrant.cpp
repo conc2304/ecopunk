@@ -1,4 +1,7 @@
 #include "Quadrant.h"
+#include "DefaultVideoEffectCatalog.h"
+#include "VideoEffectRegistry.h"
+#include "VideoEffectTypes.h"
 #include <algorithm>
 
 namespace {
@@ -14,6 +17,18 @@ namespace {
 				n++;
 			}
 		return n > 0 ? sum / (n * 255.f) : 0.5f;
+	}
+
+	// Lazily-built, process-lifetime registry of the canonical Contract-A
+	// single-pass catalog — see Quadrant::drawWithEffect()'s fallback branch.
+	// Mirrors shared/src/VideoRegionEffectRenderer.cpp's identical helper.
+	const videoeffects::VideoEffectRegistry& quadrantCatalogRegistry() {
+		static videoeffects::VideoEffectRegistry registry = [] {
+			videoeffects::VideoEffectRegistry r;
+			videoeffects::registerSinglePassEffects(r);
+			return r;
+		}();
+		return registry;
 	}
 }
 
@@ -292,32 +307,43 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
         sh.setUniform1i("motionSourceMode", motionSourceMode);
         bindUniforms(sh);
 
-        // nature pack uniforms — set after bindUniforms so specific values override generics
-        if (effect == "bioluminescence") {
-            sh.setUniform1f("time",      timeAccum);
-            sh.setUniform1f("threshold", 0.3f);
-            sh.setUniform1f("intensity", 1.2f);
-            sh.setUniform3f("glowColor", glm::vec3(0.1f, 1.0f, 0.75f));
-        }
-        if (effect == "chromatic_aberration") {
-            sh.setUniform1f("amount", 2.0f);
-            sh.setUniform1f("radial", 0.5f);
-        }
-        if (effect == "edge_glow") {
-            sh.setUniform1f("edgeStrength", 1.5f);
-            sh.setUniform1f("glowStrength", 1.2f);
-            sh.setUniform3f("glowColor",    glm::vec3(0.3f, 1.0f, 0.55f));
-        }
-        if (effect == "ink_outlines") {
-            sh.setUniform1f("threshold",       0.15f);
-            sh.setUniform1f("inkStrength",     0.8f);
-            sh.setUniform1f("posterizeLevels", 6.0f);
-        }
-        if (effect == "pixel_drift") {
-            sh.setUniform1f("time",   timeAccum);
-            sh.setUniform1f("amount", 6.0f);
-            sh.setUniform1f("scale",  0.03f);
-            sh.setUniform1f("speed",  0.5f);
+        // Fixed-literal nature-pack effects (no per-instance/LFO-driven
+        // variation, unlike recolor/threshold/pixel_sorting's threshold via
+        // bindUniforms() or hue_rotate/dither's function-parameter-driven
+        // state below) — bound generically from the canonical catalog
+        // (shared/src/video-effects/catalog/DefaultVideoEffectCatalog.h)
+        // instead of duplicating these same literals a fifth time (see
+        // docs/shader-effect-system-probe.md §10's duplication finding,
+        // which named this exact function as one of the four/five copies).
+        // "alpha" is skipped here — already bound generically above.
+        if (effect == "bioluminescence" || effect == "chromatic_aberration" || effect == "edge_glow"
+            || effect == "ink_outlines" || effect == "pixel_drift" || effect == "water_refraction"
+            || effect == "ascii_solarpunk") {
+            const videoeffects::VideoEffectDefinition * def = quadrantCatalogRegistry().getDefinition(effect);
+            if (def != nullptr) {
+                for (const auto & param : def->params) {
+                    if (param.id == "alpha") continue;
+                    switch (param.type) {
+                        case videoeffects::VideoEffectParameterType::Float:
+                            sh.setUniform1f(param.id, videoeffects::asFloat(param.defaultValue));
+                            break;
+                        case videoeffects::VideoEffectParameterType::Int:
+                            sh.setUniform1i(param.id, videoeffects::asInt(param.defaultValue));
+                            break;
+                        case videoeffects::VideoEffectParameterType::Bool:
+                            sh.setUniform1i(param.id, videoeffects::asBool(param.defaultValue) ? 1 : 0);
+                            break;
+                        case videoeffects::VideoEffectParameterType::Vec3: {
+                            glm::vec3 v = videoeffects::asVec3(param.defaultValue);
+                            sh.setUniform3f(param.id, v.x, v.y, v.z);
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+                sh.setUniform1f("time", timeAccum);
+            }
         }
         if (effect == "pixel_sorting") {
             sh.setUniform1f("rangePx",   12.0f);
@@ -332,24 +358,13 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
             sh.setUniform1f("saturationMult", 1.0f);
             sh.setUniform1f("valueMult",      1.0f);
         }
-        if (effect == "water_refraction") {
-            sh.setUniform1f("time",      timeAccum);
-            sh.setUniform1f("amplitude", 6.0f);
-            sh.setUniform1f("frequency", 0.02f);
-            sh.setUniform1f("speed",     1.0f);
-        }
-        if (effect == "ascii_solarpunk") {
-            sh.setUniform1f("cellSize",            12.0f);
-            sh.setUniform1f("thresholdMin",         0.55f);
-            sh.setUniform1f("thresholdMax",         1.0f);
-            sh.setUniform1i("thresholdMode",        1);     // aboveMin
-            sh.setUniform1f("opacity",              1.0f);
-            sh.setUniform1f("contrast",             1.15f);
-            sh.setUniform1f("bias",                 0.0f);
-            sh.setUniform1f("softness",             0.03f);
-            sh.setUniform1i("asciiColorMode",       0);     // sampled source color
-            sh.setUniform1i("asciiInvertMono",      0);
-            sh.setUniform1i("asciiBackgroundMode",  0);     // original image
+        if (effect == "heatmap_recolor") {
+            sh.setUniform1f("intensity", 1.0f);
+            sh.setUniform1f("gamma", 0.9f);
+            sh.setUniform1f("minLuminance", 0.05f);
+            sh.setUniform1f("maxLuminance", 0.95f);
+            sh.setUniform1i("palette", 0);
+            sh.setUniform1i("reverse", 0);
         }
     }
 

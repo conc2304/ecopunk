@@ -1,0 +1,32 @@
+# Standalone test build for VideoRegionMath -- deliberately independent of
+# the sketch's own openFrameworks Makefile/build, same rationale as
+# sketches/temporal-fields/test/Makefile.tests for TFPresetTimeline:
+# VideoRegionMath.h/.cpp were specifically kept free of any openFrameworks
+# include (confirmed by probe: even ofRectangle.h alone pulls in
+# ofConstants.h -> GL/glew.h), so this compiles and links with nothing but a
+# bare compiler.
+#
+# Lives in test/ (a sibling of src/, not nested inside it) -- this sketch's
+# own Makefile recursively sweeps every .cpp under src/ into the app build,
+# so a src/test/*.cpp here would collide with its main() at link time (see
+# tf_timeline_tests.cpp's header comment for where this was first hit).
+#
+# Usage (from this sketch's root, apps/myApps/EcopunkVideoCollage/sketches/
+# blob-region-prototype/):
+#   make -C test -f Makefile.tests test
+
+CXX ?= c++
+CXXFLAGS = -std=c++17 -Wall -Wextra
+SRC = videoregion_math_tests.cpp ../../../shared/src/VideoRegionMath.cpp
+BIN = videoregion_math_tests
+
+.PHONY: test clean
+
+test: $(BIN)
+	./$(BIN)
+
+$(BIN): $(SRC) ../../../shared/src/VideoRegionMath.h
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(BIN)
+
+clean:
+	rm -f $(BIN)

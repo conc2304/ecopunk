@@ -1,12 +1,29 @@
 #include "TFEffectPicker.h"
+#include "DefaultVideoEffectCatalog.h"
 #include "TFRandom.h"
 #include "TFTextureCropFill.h"
+#include "VideoEffectRegistry.h"
+#include "VideoEffectTypes.h"
 #include "ofColor.h"
 #include "ofGraphics.h"
 #include "ofMath.h"
 #include "ofUtils.h"
 #include <utility>
 #include <vector>
+
+namespace {
+	// Lazily-built, process-lifetime registry of the canonical Contract-A
+	// single-pass catalog — see applyEffectUniforms()'s fallback branch
+	// below. Mirrors shared/src/VideoRegionEffectRenderer.cpp's identical helper.
+	const videoeffects::VideoEffectRegistry & tfCatalogRegistry() {
+		static videoeffects::VideoEffectRegistry registry = [] {
+			videoeffects::VideoEffectRegistry r;
+			videoeffects::registerSinglePassEffects(r);
+			return r;
+		}();
+		return registry;
+	}
+}
 
 void TFEffectPicker::setup(ShaderLibrary* shaderLib_) {
 	shaderLib = shaderLib_;
@@ -54,6 +71,16 @@ void TFEffectPicker::randomizeEffectParams(const std::string& name) {
 	} else if (name == "pixel_sorting") {
 		paramX = ofRandom(0.3f, 0.8f);
 		paramY = ofRandom(0.0f, 1.0f) < 0.5f ? 0.0f : 1.0f;
+	} else if (name == "heatmap_recolor") {
+		// paramW packs palette index + reverse flag (paletteIndex + 0.5 if
+		// reversed) — mirrors blueprint_emergence's BEFragment.cpp encoding,
+		// since only 4 float slots exist here too.
+		paramX = ofRandom(0.7f, 1.3f);           // gamma
+		paramY = ofRandom(0.0f, 0.12f);          // minLuminance
+		paramZ = ofRandom(0.88f, 1.0f);          // maxLuminance
+		int paletteIdx = static_cast<int>(ofRandom(4.0f));
+		bool reversePalette = ofRandom(1.0f) < 0.2f;
+		paramW = paletteIdx + (reversePalette ? 0.5f : 0.0f);
 	}
 }
 
@@ -137,52 +164,59 @@ void TFEffectPicker::applyEffectUniforms(ofShader& sh, const std::string& name, 
 		sh.setUniform1f("saturationMult", paramZ);
 		sh.setUniform1f("valueMult", paramW);
 		sh.setUniform1f("alpha", 1.0f);
-	} else if (name == "invert" || name == "solarize" || name == "scanlines") {
-		sh.setUniform1f("alpha", 1.0f);
-	} else if (name == "ascii_solarpunk") {
-		sh.setUniform1f("alpha", 1.0f);
-		sh.setUniform1f("cellSize", 12.0f);
-		sh.setUniform1f("thresholdMin", 0.55f);
-		sh.setUniform1f("thresholdMax", 1.0f);
-		sh.setUniform1i("thresholdMode", 1);
-		sh.setUniform1f("opacity", 1.0f);
-		sh.setUniform1f("contrast", 1.15f);
-		sh.setUniform1f("bias", 0.0f);
-		sh.setUniform1f("softness", 0.03f);
-		sh.setUniform1i("asciiColorMode", 0);
-		sh.setUniform1i("asciiInvertMono", 0);
-		sh.setUniform1i("asciiBackgroundMode", 0);
-	} else if (name == "bioluminescence") {
-		sh.setUniform1f("time", ofGetElapsedTimef());
-		sh.setUniform1f("threshold", 0.3f);
-		sh.setUniform1f("intensity", 1.2f);
-		sh.setUniform3f("glowColor", 0.1f, 1.0f, 0.75f);
-	} else if (name == "chromatic_aberration") {
-		sh.setUniform1f("amount", 2.0f);
-		sh.setUniform1f("radial", 0.5f);
-	} else if (name == "edge_glow") {
-		sh.setUniform1f("edgeStrength", 1.5f);
-		sh.setUniform1f("glowStrength", 1.2f);
-		sh.setUniform3f("glowColor", 0.3f, 1.0f, 0.55f);
-	} else if (name == "ink_outlines") {
-		sh.setUniform1f("threshold", 0.15f);
-		sh.setUniform1f("inkStrength", 0.8f);
-		sh.setUniform1f("posterizeLevels", 6.0f);
-	} else if (name == "pixel_drift") {
-		sh.setUniform1f("time", ofGetElapsedTimef());
-		sh.setUniform1f("amount", 6.0f);
-		sh.setUniform1f("scale", 0.03f);
-		sh.setUniform1f("speed", 0.5f);
 	} else if (name == "pixel_sorting") {
 		sh.setUniform1f("threshold", paramX);
 		sh.setUniform1f("rangePx", 12.0f);
 		sh.setUniform1f("direction", paramY);
 		sh.setUniform1f("intensity", 1.0f);
-	} else if (name == "water_refraction") {
-		sh.setUniform1f("time", ofGetElapsedTimef());
-		sh.setUniform1f("amplitude", 6.0f);
-		sh.setUniform1f("frequency", 0.02f);
-		sh.setUniform1f("speed", 1.0f);
+	} else if (name == "heatmap_recolor") {
+		sh.setUniform1f("alpha", 1.0f);
+		sh.setUniform1f("intensity", 1.0f);
+		sh.setUniform1f("gamma", paramX);
+		sh.setUniform1f("minLuminance", paramY);
+		sh.setUniform1f("maxLuminance", paramZ);
+		int paletteIdx = static_cast<int>(paramW);
+		bool reversePalette = (paramW - paletteIdx) > 0.25f;
+		sh.setUniform1i("palette", paletteIdx);
+		sh.setUniform1i("reverse", reversePalette ? 1 : 0);
+	} else {
+		// Every remaining effect (invert/solarize/scanlines, ascii_solarpunk,
+		// bioluminescence, chromatic_aberration, edge_glow, ink_outlines,
+		// pixel_drift, water_refraction) has no per-instance randomized
+		// state — same fixed literals every time — so it binds from the
+		// canonical catalog (shared/src/video-effects/catalog/DefaultVideoEffectCatalog.h)
+		// instead of duplicating those literals a third time (see
+		// docs/shader-effect-system-probe.md §10). Effects with real
+		// per-instance randomization stay above as explicit branches reading
+		// paramX..W.
+		const videoeffects::VideoEffectDefinition * def = tfCatalogRegistry().getDefinition(name);
+		if (def != nullptr) {
+			for (const auto & param : def->params) {
+				if (param.id == "alpha") {
+					sh.setUniform1f("alpha", 1.0f);
+					continue;
+				}
+				switch (param.type) {
+					case videoeffects::VideoEffectParameterType::Float:
+						sh.setUniform1f(param.id, videoeffects::asFloat(param.defaultValue));
+						break;
+					case videoeffects::VideoEffectParameterType::Int:
+						sh.setUniform1i(param.id, videoeffects::asInt(param.defaultValue));
+						break;
+					case videoeffects::VideoEffectParameterType::Bool:
+						sh.setUniform1i(param.id, videoeffects::asBool(param.defaultValue) ? 1 : 0);
+						break;
+					case videoeffects::VideoEffectParameterType::Vec3: {
+						glm::vec3 v = videoeffects::asVec3(param.defaultValue);
+						sh.setUniform3f(param.id, v.x, v.y, v.z);
+						break;
+					}
+					default:
+						break;
+				}
+			}
+			sh.setUniform1f("time", ofGetElapsedTimef());
+		}
 	}
 	(void)w;
 	(void)h;

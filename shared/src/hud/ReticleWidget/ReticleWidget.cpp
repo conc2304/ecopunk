@@ -1,11 +1,17 @@
 #include "ReticleWidget.h"
 #include "../shared/HudUtils.h"
+#include <algorithm>
 
 namespace hud {
 
 static constexpr float kSpawnDur = 1.4f;
 static constexpr float kPulseDur = 0.42f;
 static constexpr float kDeathDur = kPulseDur * 2.0f + 0.6f;
+static constexpr float kOneShotSnapDur = 0.15f; // triggerAt()'s hard-cut overshoot snap
+// Decoupled from kDeathDur (1.44s, tuned for the ambient double-pulse death
+// animation) — triggerAt() callers (organisms with a ~1.8-2.2s total
+// lifespan) need a much quicker fade-out.
+static constexpr float kOneShotFadeDur = 0.35f;
 
 // Locate behavior: spot a distant point, travel there with an accelerate/cruise/
 // decelerate arc, hold on arrival, then spot a new point — a "found it, moving on"
@@ -78,6 +84,20 @@ void ReticleWidget::setOptions(const ReticleOptions& next) {
         toBehavior   = options.behavior;
         behaviorMix  = 0.0f;
     }
+}
+
+void ReticleWidget::triggerAt(float nx, float ny, const std::string& label, float holdSeconds) {
+    Target t;
+    t.p = t.drawnP = t.spotTarget = {ofClamp(nx, 0.0f, 1.0f), ofClamp(ny, 0.0f, 1.0f)};
+    t.goalV     = {0.0f, 0.0f};
+    t.phase     = 0.0f;
+    t.size      = 0.20f;
+    t.label     = label;
+    t.lifecycle = TargetLifecycle::Spawning;
+    t.stateT    = 0.0f;
+    t.lifetime  = std::max(0.0f, holdSeconds);
+    t.oneShot   = true;
+    targets.push_back(t);
 }
 
 void ReticleWidget::rebuild() {
@@ -180,6 +200,20 @@ ofVec2f ReticleWidget::computeLocateVelocity(Target& t, float dt) {
 void ReticleWidget::updateTracking(Target& t, float dt, float mix) {
     t.stateT += dt;
 
+    if (t.oneShot) {
+        // Fixed snap -> hold -> fade sequence, no wander/locate motion, no
+        // respawn — draw() reads lifecycle/stateT for the overshoot-snap and
+        // fade-out visuals; update() erases this target once oneShotDone.
+        if (t.lifecycle == TargetLifecycle::Spawning) {
+            if (t.stateT >= kOneShotSnapDur) { t.stateT = 0.0f; t.lifecycle = TargetLifecycle::Tracking; }
+        } else if (t.lifecycle == TargetLifecycle::Tracking) {
+            if (t.stateT >= t.lifetime) { t.stateT = 0.0f; t.lifecycle = TargetLifecycle::Dying; }
+        } else { // Dying
+            if (t.stateT >= kOneShotFadeDur) t.oneShotDone = true;
+        }
+        return;
+    }
+
     if (t.lifecycle == TargetLifecycle::Spawning) {
         t.drawnP += (t.p - t.drawnP) * (1.0f - std::exp(-5.0f * dt));
         if (t.stateT >= kSpawnDur) { t.stateT = 0.0f; t.lifecycle = TargetLifecycle::Tracking; }
@@ -233,6 +267,19 @@ void ReticleWidget::update(float dt) {
         }
         float mixEased = behaviorMix * behaviorMix * (3.0f - 2.0f * behaviorMix); // smoothstep
         for (auto& t : targets) updateTracking(t, dt, mixEased);
+        targets.erase(std::remove_if(targets.begin(), targets.end(),
+                          [](const Target& t) { return t.oneShotDone; }),
+            targets.end());
+    } else if (options.preset == ReticlePreset::Standard) {
+        // Standard preset's own update() body is a no-op (targets are static),
+        // but triggerAt() can still push oneShot targets onto it — age and
+        // reap those the same way.
+        for (auto& t : targets) {
+            if (t.oneShot) updateTracking(t, dt, 1.0f);
+        }
+        targets.erase(std::remove_if(targets.begin(), targets.end(),
+                          [](const Target& t) { return t.oneShotDone; }),
+            targets.end());
     }
 }
 
@@ -248,7 +295,21 @@ void ReticleWidget::draw() {
         float scaleFactor = 1.0f;
         float alphaScale  = motion.opacity;
 
-        if (options.preset == ReticlePreset::Tracking) {
+        if (t.oneShot) {
+            // Static point regardless of preset — see triggerAt().
+            p = pointInBounds(bounds, t.p.x, t.p.y);
+            if (t.lifecycle == TargetLifecycle::Spawning) {
+                // Hard-cut alpha (no fade-in) + 1.6x->1.0x overshoot settle.
+                float u = ofClamp(t.stateT / kOneShotSnapDur, 0.0f, 1.0f);
+                float eased = u * u * (3.0f - 2.0f * u);
+                scaleFactor = ofLerp(1.6f, 1.0f, eased);
+            } else if (t.lifecycle == TargetLifecycle::Dying) {
+                float u = ofClamp(t.stateT / kOneShotFadeDur, 0.0f, 1.0f);
+                scaleFactor = 1.0f - u * 0.3f;
+                alphaScale  = motion.opacity * (1.0f - u);
+            }
+            // Tracking: steady hold at scaleFactor 1.0 / full alpha.
+        } else if (options.preset == ReticlePreset::Tracking) {
             p = pointInBounds(bounds, t.drawnP.x + t.jitter.x, t.drawnP.y + t.jitter.y);
 
             if (t.lifecycle == TargetLifecycle::Spawning) {

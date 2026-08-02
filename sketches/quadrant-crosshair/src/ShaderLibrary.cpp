@@ -1,4 +1,5 @@
 #include "ShaderLibrary.h"
+#include "ofLog.h"
 
 void ShaderLibrary::setup() {
     load("desaturate",          "shaders/desaturate.glsl");
@@ -14,6 +15,7 @@ void ShaderLibrary::setup() {
     load("erosion",             "shaders/erosion.glsl");
     load("motion_effect",       "shaders/motion_effect.glsl");
     load("ascii_solarpunk",     "shaders/ascii_threshold_solarpunk.glsl");
+    load("heatmap_recolor",     "shaders/heatmap_recolor.glsl");
     // nature pack
     load("bioluminescence",     "of_nature_shader_pack_glsl/bioluminescence.glsl");
     load("chromatic_aberration","of_nature_shader_pack_glsl/chromatic_aberration.glsl");
@@ -26,8 +28,13 @@ void ShaderLibrary::setup() {
 }
 
 void ShaderLibrary::load(const std::string& name, const std::string& fragPath) {
-    shaders[name].load("shaders/vert.glsl", fragPath);
-    ofLogNotice("ShaderLibrary") << "Loaded: " << name;
+    bool ok = shaders[name].load("shaders/vert.glsl", fragPath);
+    if (ok) {
+        ofLogNotice("ShaderLibrary") << "Loaded: " << name;
+    } else {
+        ofLogError("ShaderLibrary") << "Failed to load: " << name << " from " << fragPath;
+        shaders.erase(name);
+    }
 }
 
 ofShader& ShaderLibrary::get(const std::string& name) { return shaders.at(name); }

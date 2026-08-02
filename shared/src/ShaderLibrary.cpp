@@ -12,6 +12,7 @@ void ShaderLibrary::setup() {
 	load("channelshift", "shaders/effects/channelshift.glsl");
 	load("hue_rotate", "shaders/effects/hue_rotate.glsl");
 	load("ascii_solarpunk", "shaders/effects/ascii_threshold_solarpunk.glsl");
+	load("heatmap_recolor", "shaders/effects/heatmap_recolor.glsl");
 	// nature pack
 	load("bioluminescence", "of_nature_shader_pack_glsl/bioluminescence.glsl");
 	load("chromatic_aberration", "of_nature_shader_pack_glsl/chromatic_aberration.glsl");

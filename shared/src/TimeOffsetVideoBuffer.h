@@ -95,6 +95,16 @@ class TimeOffsetVideoBuffer {
 		// get the actual raw frame.
 		const ofTexture& getRawVideoTexture() const { return player.getTexture(); }
 
+		// The live ofVideoPlayer's own decoded CPU pixels, same "raw,
+		// un-delayed, bypasses the history ring buffer" relationship to
+		// getPlayheadTexture() as getRawVideoTexture() above. Added so a
+		// CPU-side analysis consumer (e.g. BlobDetector) can reuse the
+		// pixels this class already pulls off the decoder every frame
+		// (see update()) instead of standing up a second ofVideoPlayer
+		// or doing its own GPU texture readback. Valid only when
+		// hasMedia() and update() has run at least once.
+		const ofPixels& getRawVideoPixels() const { return player.getPixels(); }
+
 		// Snaps a normalized [0,1] offset to this buffer's configured
 		// quantize bands — exposed so callers can pre-quantize a value
 		// (e.g. for display) without going through a playhead.

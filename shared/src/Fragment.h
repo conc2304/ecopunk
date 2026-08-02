@@ -68,9 +68,32 @@ public:
 	// automatically as the player advances.
 	void setVideoSource(const ofTexture * tex, ofRectangle crop);
 
+	// ── Region-driven bounds/crop updates ──────────────────────────────────
+	// Added for blob/region-driven fragments (see VideoRegionController),
+	// whose destination position and source crop change every tracked
+	// update instead of being fixed once at placement. Deliberately just
+	// setters: no smoothing, easing, or tracking logic belongs here — that
+	// stays in BlobTracker/VideoRegionController. Fragment only renders.
+
+	// Destination (screen-space) rectangle. Existing sketches that call
+	// setup(Params) once and never touch bounds again are unaffected.
+	void setBounds(const ofRectangle & b) { bounds = b; }
+
+	// Source crop rectangle, in the shared video texture's own pixel space.
+	void setVideoCrop(const ofRectangle & crop) { videoCrop = crop; }
+
+	// Convenience for region-driven callers: normalizedBounds is [0,1] against
+	// the full source frame (the canonical representation VideoRegion carries),
+	// converted here to a pixel-space crop and clamped to the source frame so
+	// an out-of-range detection can never sample outside the video texture.
+	void setNormalizedSourceBounds(const ofRectangle & normalizedBounds, int sourceWidth, int sourceHeight);
+
 	bool isDead() const { return state == State::DEAD; }
 	State getState() const { return state; }
 	const ofRectangle & getBounds() const { return bounds; }
+	const ofRectangle & getVideoCrop() const { return videoCrop; }
+	const ofTexture * getVideoTexture() const { return videoTexture; }
+	float getOpacity() const { return opacity; }
 
 	// Assigned by the composition at placement time; used by GridSystem to
 	// track which grid lines a given fragment owns (so they can fade with it).

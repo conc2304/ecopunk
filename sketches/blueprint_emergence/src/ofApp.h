@@ -9,6 +9,9 @@
 #include "MotionExtraction.h"
 #include "ShaderLibrary.h"
 #include "TriggerBus.h"
+#include "HudOverlayLayer.h"
+#include "HudOverlayDialPanel.h"
+#include "HudOverlayDialState.h"
 #include "ofMain.h"
 
 class ofApp : public ofBaseApp {
@@ -56,4 +59,13 @@ private:
 	bool showOccupancyDebug = false;
 	bool bypassErosion = true; // TEMP DIAGNOSTIC, see ofApp::draw()
 	bool hadHudWidget = false;
+
+	// HUD Glitch Overlay System — standalone, isolated module (see
+	// shared/src/hud_overlay/README.md). Toggled with 'o'; while active it
+	// fully replaces this sketch's draw with the overlay alone over a
+	// solid near-black canvas, no composition wiring.
+	hudoverlay::HudOverlayLayer hudOverlay;
+	hudoverlay::HudOverlayDialPanel hudOverlayPanel;
+	hudoverlay::HudOverlayDialState hudOverlayDials;
+	bool hudOverlayActive = false;
 };

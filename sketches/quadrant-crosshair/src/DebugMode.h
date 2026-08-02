@@ -96,6 +96,14 @@ private:
     float pWaterFrequency    = 0.02f;
     float pWaterSpeed        = 1.0f;
 
+    // heatmap_recolor params (alpha/mix reuses pAlpha)
+    float pHeatmapIntensity     = 1.0f;
+    float pHeatmapGamma         = 0.9f;
+    float pHeatmapMinLuminance  = 0.05f;
+    float pHeatmapMaxLuminance  = 0.95f;
+    float pHeatmapPalette       = 0.0f;  // 0=thermal 1=bioluminescent 2=solarpunk 3=infrared
+    float pHeatmapReverse       = 0.0f;  // 0/1
+
     // ascii_solarpunk params
     float pAsciiCellSize        = 12.0f;
     float pAsciiThreshMin       = 0.55f;

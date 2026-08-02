@@ -1,4 +1,5 @@
 #include "Fragment.h"
+#include "VideoRegionMath.h"
 #include "ofAppRunner.h"
 #include "ofGraphics.h"
 #include "ofLog.h"
@@ -38,6 +39,16 @@ void Fragment::setup(const Params & p) {
 void Fragment::setVideoSource(const ofTexture * tex, ofRectangle crop) {
 	videoTexture = tex;
 	videoCrop = crop;
+}
+
+void Fragment::setNormalizedSourceBounds(const ofRectangle & normalizedBounds, int sourceWidth, int sourceHeight) {
+	using namespace VideoRegionMath;
+
+	Rect normalized { normalizedBounds.x, normalizedBounds.y, normalizedBounds.width, normalizedBounds.height };
+	Rect px = normalizedToSourcePixelsRect(normalized, static_cast<float>(sourceWidth), static_cast<float>(sourceHeight));
+	Rect clamped = clampRectToBounds(px, Rect { 0, 0, static_cast<float>(sourceWidth), static_cast<float>(sourceHeight) });
+
+	videoCrop = ofRectangle(clamped.x, clamped.y, clamped.width, clamped.height);
 }
 
 void Fragment::enterDrifting() {

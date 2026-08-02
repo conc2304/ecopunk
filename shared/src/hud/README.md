@@ -34,6 +34,7 @@ shared/src/hud/
     HudWidget.h
     HudFrameRenderer.h/.cpp
   ScannerWidget/
+  PulseEmitterWidget/
   NodeNetworkWidget/
   FlowFieldWidget/
   ContourWidget/
@@ -44,6 +45,13 @@ shared/src/hud/
   GlitchTearWidget/
   StatusLightWidget/
   LogScrollWidget/
+  TickBurstWidget/
+  RadarStationWidget/
+  BreathingTickClusterWidget/
+  TelemetryReadoutWidget/
+  HalftonePatchWidget/
+  TextCalloutWidget/
+  DashedLineWidget/
 ```
 
 ## Add to an openFrameworks app
@@ -178,6 +186,17 @@ Carries a set of public in-code tuning dials (`scaleMultiplier`,
 quadrant-crosshair's production tuning; no consumer currently sets these
 away from their defaults.
 
+### PulseEmitterWidget
+Multiple independently-positioned emitters, each firing growing-ring pulses on
+a jittered timer (`PulseEmitterConfig::frequencyMs`, ±15%) up to
+`concurrency` concurrent pulses per emitter. Unlike every other widget here,
+its state is also meant to be consumed externally, not just drawn:
+`addEmitter(x, y)` (bounds-local pixel space) registers an origin,
+`getActivePulses()` returns each live pulse's `{x, y, radius, ageMs,
+emitterId}`, and `onPulseUpdate(callback)` pushes the same data per pulse per
+frame. Built for Radar Pulse's reveal-mask stamping, but usable standalone as
+a HUD element.
+
 ### NodeNetworkWidget
 Good for large horizontal areas. `NodeNetworkOptions::edgeStyle` selects
 `Straight` (default — straight edges, reads as a tech/circuit mesh) or
@@ -238,6 +257,51 @@ Continuous vertical scroll of monospace-style text, terminal-log style.
 `pushLine(...)` appends one line, entering at the bottom and drifting
 upward; oldest retained lines are dropped past `LogScrollOptions::maxLines`.
 Distinct from `DataCardWidget`, which only ever shows one static value line.
+
+### TickBurstWidget
+One-shot: a small cluster of ticks radiates outward from a point and fades.
+`triggerAt(nx, ny)` fires a burst; ambient-only otherwise (no idle
+animation). Built for `shared/src/hud_overlay/`'s Lock Sequence organism.
+
+### RadarStationWidget
+Continuous ambient atom: a wedge rotating inside a fixed ring, with 12 tick
+marks around the ring that flash bright as the wedge sweeps past — tick
+brightness is computed directly from the wedge's current rotation angle, so
+wedge and ticks stay phase-locked without independently-timed per-tick
+animation. Built for `shared/src/hud_overlay/`'s always-on Radar Station.
+
+### BreathingTickClusterWidget
+Continuous ambient atom: fixed anchor points, each a small cluster of
+parallel ticks of increasing length pulsing opacity/scale on a staggered
+sine cycle, plus a static zone label and a slow whole-cluster positional
+drift. `setAnchors(...)` overrides the 3-anchor default layout. Built for
+`shared/src/hud_overlay/`'s ambient tick clusters.
+
+### TelemetryReadoutWidget
+Continuous ambient atom: a corner-anchored text readout that updates every
+frame rather than snapping on an interval. `TelemetryReadoutOptions::mode`
+selects `FrameCounter` (elapsed-time × fps, never resets) or
+`CoordinateWalk` (a lat/long-style string that random-walks a small amount
+per tick instead of jumping to a fresh value). Built for
+`shared/src/hud_overlay/`'s live telemetry readouts.
+
+### HalftonePatchWidget
+One-shot: a halftone/checkerboard patch that flickers over a region for a
+short duration. `triggerAt(nx, ny, wNorm, hNorm)` fires one. Built for
+`shared/src/hud_overlay/`'s Fault Cascade organism.
+
+### TextCalloutWidget
+One-shot text label. `triggerAtPoint(...)` fires next to an arbitrary
+point (e.g. a coordinate readout beside a reticle); `triggerAtCorner(...)`
+fires at a fixed corner anchor (e.g. a status phrase). Holds, then fades.
+Built for `shared/src/hud_overlay/`'s Lock Sequence, Handshake, and Radar
+Ping organisms.
+
+### DashedLineWidget
+One-shot: a dashed line that grows from point A to point B over
+`DashedLineOptions::drawOnDuration`, holds, then fades.
+`triggerBetween(nxA, nyA, nxB, nyB)` fires one. Built for
+`shared/src/hud_overlay/`'s Handshake organism.
 
 ## Raspberry Pi notes
 

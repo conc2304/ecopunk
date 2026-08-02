@@ -15,6 +15,15 @@ Each sketch under `sketches/<name>/` is generated with OF's `projectGenerator`
 CLI (`projectGenerator -o <of_root> -s ../../shared/src sketches/<name>`) so
 relative paths to the OF root and to `shared/src` are computed correctly.
 
+## Video effects / shaders
+
+There is one canonical video-effect service — `shared/src/video-effects/`,
+with its assets in `shared/assets/video-effects/`. **Before writing any
+shader-effect code, read [`shared/src/video-effects/README.md`](shared/src/video-effects/README.md)**
+(or, for coding agents, [`CLAUDE.md`](CLAUDE.md)) — most sketches used to
+each hand-roll their own copy of the same effects, and that duplication is
+exactly what this service replaced.
+
 ## Build
 
 ```bash

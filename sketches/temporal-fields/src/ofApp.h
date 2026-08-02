@@ -19,6 +19,9 @@
 #include "TFHudLayer.h"
 #include "TimeOffsetVideoBuffer.h"
 #include "MotionExtraction.h"
+#include "HudOverlayLayer.h"
+#include "HudOverlayDialPanel.h"
+#include "HudOverlayDialState.h"
 
 class ofApp : public ofBaseApp {
 
@@ -58,4 +61,13 @@ private:
 	TFHudLayer       hudLayer;
 
 	bool showDebugGui = true;
+
+	// HUD Glitch Overlay System — standalone, isolated module (see
+	// shared/src/hud_overlay/README.md). Toggled with 'o'; while active it
+	// fully replaces this sketch's draw with the overlay alone over a
+	// solid near-black canvas, no composition wiring.
+	hudoverlay::HudOverlayLayer hudOverlay;
+	hudoverlay::HudOverlayDialPanel hudOverlayPanel;
+	hudoverlay::HudOverlayDialState hudOverlayDials;
+	bool hudOverlayActive = false;
 };
