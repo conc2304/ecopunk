@@ -33,7 +33,27 @@ void ofApp::setup() {
 	annotations.setCodeFragments(loadCodeFragments());
 
 	Fragment::loadFragmentShader("shaders/fragmentEffects.vert", "shaders/fragmentEffects.frag");
-	videoSampler.setup(MEDIA_PATH);
+
+	// Migrated from VideoSampler to the shared VideoPlaybackService —
+	// Shared Video Playback, Engineering Session 2, Task G. mediaRoot
+	// points at the canonical physical root (assets/shared/media/,
+	// established this session — see that directory and
+	// docs/shared-video-playback-system-implementation-report.md /
+	// docs/shared-video-playback-engineering-session-2-report.md), not
+	// this sketch's own bin/data/media/ (which now holds only
+	// compatibility symlinks into the canonical root — see this session's
+	// report, "Remaining compatibility paths"). automaticAdvance is
+	// deliberately false: BEComposition's onCycleStart callback below
+	// drives every media change (one per composition cycle), exactly
+	// matching the pre-migration VideoSampler::selectVideoForCycle()
+	// timing — enabling the shared service's own hold-timer-driven
+	// automatic advance in addition would double-advance media on an
+	// unrelated cadence, a real behavior change this migration does not
+	// make (see this session's report, "Composition-cycle behavior").
+	VideoPlaybackService::Config videoConfig;
+	videoConfig.mediaRoot = ofToDataPath("../../../../assets/shared/media", true);
+	videoConfig.automaticAdvance = false;
+	videoPlayback.setup(videoConfig);
 
 	// ── Vitality systems (LFOBank / TriggerBus / GridState / ErosionFBO) ──
 	shaderLib.setup();
@@ -65,7 +85,7 @@ void ofApp::setup() {
 	triggerBus.setCooldown(static_cast<int>(BETrigger::CIRCLE_PLACED), 0.0f);
 	triggerBus.setCooldown(static_cast<int>(BETrigger::CYCLE_START), 0.0f);
 
-	composition.setupBE(&grid, &videoSampler, cw, ch);
+	composition.setupBE(&grid, &videoPlayback, cw, ch);
 	composition.setLFOBank(&lfoBank);
 	composition.setTriggerBus(&triggerBus); // also registers BEComposition's own listeners
 	composition.setGridState(&gridState);
@@ -81,8 +101,22 @@ void ofApp::setup() {
 		annotations.onFragmentRemoved(frag);
 	});
 	composition.setOnCycleStart([this]() {
-		videoSampler.cancelPending(); // drop in-flight captures before fragments.clear() destroys their targets
-		videoSampler.selectVideoForCycle();
+		// Pre-migration this called videoSampler.cancelPending() (defensive
+		// guard against an in-flight seek-and-freeze still-frame capture,
+		// see VideoSampler::requestCapture()) before
+		// videoSampler.selectVideoForCycle(). Dropped here, not silently:
+		// this scene never actually called requestCapture() anywhere (only
+		// getTexture()/getPixels()/getVideoWidth()/getVideoHeight() — the
+		// live-frame accessors — see this session's report, "Still-frame
+		// capture behavior before and after"), so there was never anything
+		// for cancelPending() to cancel. VideoPlaybackService has no
+		// equivalent pending-capture concept to guard here for the same
+		// reason. One media advance per composition cycle is preserved via
+		// next() — see this scene's videoConfig.automaticAdvance = false
+		// comment in setup() for why this is the only trigger.
+		if (!videoPlayback.next()) {
+			ofLogWarning("ofApp") << "onCycleStart: VideoPlaybackService::next() failed (media unavailable?)";
+		}
 		annotations.reset();
 		erosionFBO.clear();
 		gridPulseBoost = 0.0f;
@@ -139,7 +173,7 @@ void ofApp::update() {
 	}
 
 	float dt = ofGetLastFrameTime();
-	videoSampler.update();
+	videoPlayback.update(dt);
 	lfoBank.update(dt);
 	composition.update(dt); // drives GridState decay, trigger condition checks, LFO desat nudges
 	triggerBus.update(dt); // ticks cooldown timers
@@ -159,11 +193,12 @@ void ofApp::update() {
 
 	// Motion overlay — driven by blueprint_emergence's own state (GridState's
 	// average activity + composition phase) rather than a crosshair signal.
-	if (videoSampler.hasMedia()) {
+	const ofTexture* liveTexForMotion = videoPlayback.currentTexture();
+	if (liveTexForMotion != nullptr) {
 		float activity = gridState.getAverageActivity();
 		float decayWeight = ofMap(activity, 0.0f, 1.0f, MOTION_DECAY_MIN, MOTION_DECAY_MAX, true);
 		float sensitivity = ofMap(activity, 0.0f, 1.0f, MOTION_SENSITIVITY_MIN, MOTION_SENSITIVITY_MAX, true);
-		motionEx.update(videoSampler.getTexture(), decayWeight, sensitivity);
+		motionEx.update(*liveTexForMotion, decayWeight, sensitivity);
 
 		using Phase = CompositionBase::CyclePhase;
 		Phase phase = composition.getPhase();
@@ -305,6 +340,13 @@ void ofApp::drawOccupancyDebug() const {
 
 //--------------------------------------------------------------
 void ofApp::exit() {
+	// This standalone sketch has no RuntimeServices to own videoPlayback's
+	// lifetime (that only exists inside the separate experience_runtime
+	// harness — see Shared Video Playback Engineering Session 2's
+	// implementation report) — ofApp is the only owner here, so ofApp is
+	// responsible for an explicit shutdown() rather than relying on
+	// destructor order alone.
+	videoPlayback.shutdown();
 }
 
 //--------------------------------------------------------------

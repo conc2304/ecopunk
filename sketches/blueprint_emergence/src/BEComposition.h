@@ -8,7 +8,7 @@
 #include "LFOBank.h"
 #include "ShaderLibrary.h"
 #include "TriggerBus.h"
-#include "VideoSampler.h"
+#include "VideoPlaybackService.h"
 #include "glm/vec2.hpp"
 #include <array>
 #include <memory>
@@ -46,7 +46,7 @@ class BEComposition : public CompositionBase {
 		BEComposition();
 		~BEComposition() override;
 
-		void setupBE(GridSystem* grid, VideoSampler* videoSampler, int canvasW, int canvasH);
+		void setupBE(GridSystem* grid, VideoPlaybackService* videoPlayback, int canvasW, int canvasH);
 
 		// Non-owning vitality-system pointers, wired once by ofApp after
 		// setupBE(). Any of these may be left null to opt out of that system.
@@ -198,7 +198,7 @@ class BEComposition : public CompositionBase {
 		float lfoDesatNudgeForGroup(int group) const;
 		void evaluateStateTriggers();
 
-		VideoSampler* videoSampler   = nullptr;
+		VideoPlaybackService* videoPlayback = nullptr;
 		int canvasW                  = 0;
 		int canvasH                  = 0;
 		int nextFragmentId           = 0;

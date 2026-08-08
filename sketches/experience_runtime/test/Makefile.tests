@@ -1,0 +1,74 @@
+# Standalone test build for FakeSceneLifecycleState and (Engineering
+# Session 2) the real VideoPlaybackStatus/EffectActivityStatus integration
+# surface -- deliberately independent of the sketch's own openFrameworks
+# Makefile/build, same rationale as
+# sketches/blob-region-prototype/test/Makefile.tests and
+# sketches/temporal-fields/test/Makefile.tests: FakeSceneLifecycleState.h,
+# shared/src/video-playback/VideoPlaybackStatus.h, and
+# shared/src/video-effects/knowledge/EffectActivityStatus.h are all
+# specifically kept free of any openFrameworks include (confirmed by
+# probe: even ofRectangle.h alone pulls in ofConstants.h -> GL/glew.h, and
+# SceneContract.h's SceneFrame member pulls in ofTexture.h the same way),
+# so both binaries below compile and link with nothing but a bare compiler.
+#
+# Lives in test/ (a sibling of src/, not nested inside it) -- this
+# sketch's own Makefile recursively sweeps every .cpp under src/ into the
+# app build, so a src/test/*.cpp here would collide with its main() at
+# link time (see tf_timeline_tests.cpp's header comment for where this was
+# first hit in this repo).
+#
+# Usage (from this sketch's root,
+# apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/):
+#   make -C test -f Makefile.tests test
+
+CXX ?= c++
+CXXFLAGS = -std=c++17 -Wall -Wextra
+
+# EffectActivityStatus.h's own comment: resolved via this monorepo's flat
+# per-subdirectory include path (same pattern used inside shared/src/
+# video-effects/ itself) -- these three -I's mirror
+# ../config.make's PROJECT_CFLAGS additions for the real sketch build.
+#
+# The glm -I is a genuinely unavoidable transitive dependency, not a
+# compromise of the "bare compiler, no OF/GL" convention this test
+# directory otherwise follows: VideoEffectTypes.h uses glm::vec2 for pure
+# value math, and glm itself has zero GL/window/OF dependency (it's a
+# header-only math library OF happens to bundle, not part of OF itself) --
+# confirmed by trying the build without it first, which fails on exactly
+# and only this one header, nothing GL-shaped.
+SESSION2_CXXFLAGS = $(CXXFLAGS) \
+	-I../../../shared/src/video-effects/core \
+	-I../../../shared/src/video-effects/evolution \
+	-I../../../shared/src/video-effects/knowledge \
+	-I../../../../../../libs/glm/include
+
+LIFECYCLE_SRC = lifecycle_state_tests.cpp
+LIFECYCLE_BIN = lifecycle_state_tests
+
+# EffectActivityStatus.cpp itself is the only real-shared-effects
+# translation unit these tests need linked in -- see
+# ../config.make's PROJECT_CFLAGS comment for why (this .cpp doesn't call
+# into EffectEvolutionController/EffectKnowledgeBase/EffectRandomizer/
+# VideoEffectDefinition's own .cpp files, only uses EvolutionPhase as a
+# value type). VideoPlaybackStatus.h is header-only (plain structs/enums,
+# no .cpp).
+SESSION2_SRC = session2_integration_tests.cpp ../../../shared/src/video-effects/knowledge/EffectActivityStatus.cpp
+SESSION2_BIN = session2_integration_tests
+
+.PHONY: test session2 clean
+
+test: $(LIFECYCLE_BIN) $(SESSION2_BIN)
+	./$(LIFECYCLE_BIN)
+	./$(SESSION2_BIN)
+
+session2: $(SESSION2_BIN)
+	./$(SESSION2_BIN)
+
+$(LIFECYCLE_BIN): $(LIFECYCLE_SRC) ../src/FakeSceneLifecycleState.h
+	$(CXX) $(CXXFLAGS) $(LIFECYCLE_SRC) -o $(LIFECYCLE_BIN)
+
+$(SESSION2_BIN): $(SESSION2_SRC)
+	$(CXX) $(SESSION2_CXXFLAGS) $(SESSION2_SRC) -o $(SESSION2_BIN)
+
+clean:
+	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN)

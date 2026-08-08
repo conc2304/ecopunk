@@ -1,4 +1,5 @@
 #include "EffectKnowledgeBase.h"
+#include "EffectKnowledgeSerialization.h"
 #include "ofFileUtils.h"
 #include "ofJson.h"
 #include "ofLog.h"
@@ -12,80 +13,6 @@ namespace videoeffects {
 
 	namespace {
 		constexpr float kDuplicateEpsilon = 1e-4f;
-
-		ofJson entryToJson(const KnowledgeEntry & e) {
-			ofJson j;
-			j["schemaVersion"] = e.schemaVersion;
-			j["effect"] = e.effect;
-			j["list"] = e.list;
-			j["snapshot"] = e.snapshot;
-			if (!e.tolerance.empty()) j["tolerance"] = e.tolerance;
-			if (!e.forbiddenRanges.empty()) {
-				ofJson ranges;
-				for (const auto & kv : e.forbiddenRanges) {
-					ranges[kv.first] = { { "min", kv.second.first }, { "max", kv.second.second } };
-				}
-				j["forbiddenRanges"] = ranges;
-			}
-			j["label"] = e.label;
-			j["notes"] = e.notes;
-			j["sourceSketch"] = e.sourceSketch;
-			j["sourceVideo"] = e.sourceVideo;
-			j["timestampUtc"] = e.timestampUtc.empty() ? ofGetTimestampString("%Y-%m-%dT%H:%M:%SZ") : e.timestampUtc;
-			if (e.perfObservedFps.has_value()) j["perfObservedFps"] = *e.perfObservedFps;
-			if (e.qualityScore.has_value()) j["qualityScore"] = *e.qualityScore;
-			if (!e.sceneContext.empty()) j["sceneContext"] = e.sceneContext;
-			return j;
-		}
-
-		// Returns false (and logs a warning) if this individual entry is too
-		// malformed to use, rather than throwing — one bad entry must not take
-		// down the rest of the file per the implementation prompt's malformed-
-		// file-recovery requirement.
-		bool jsonToEntry(const ofJson & j, KnowledgeEntry & out) {
-			if (!j.is_object() || !j.contains("effect") || !j.contains("snapshot")) {
-				return false;
-			}
-			try {
-				out.schemaVersion = j.value("schemaVersion", 1);
-				out.effect = j.value("effect", "");
-				out.list = j.value("list", "");
-				out.snapshot.clear();
-				for (auto it = j.at("snapshot").begin(); it != j.at("snapshot").end(); ++it) {
-					out.snapshot[it.key()] = it.value().get<float>();
-				}
-				out.tolerance.clear();
-				if (j.contains("tolerance") && j.at("tolerance").is_object()) {
-					for (auto it = j.at("tolerance").begin(); it != j.at("tolerance").end(); ++it) {
-						out.tolerance[it.key()] = it.value().get<float>();
-					}
-				}
-				out.forbiddenRanges.clear();
-				if (j.contains("forbiddenRanges") && j.at("forbiddenRanges").is_object()) {
-					for (auto it = j.at("forbiddenRanges").begin(); it != j.at("forbiddenRanges").end(); ++it) {
-						float lo = it.value().value("min", 0.0f);
-						float hi = it.value().value("max", 0.0f);
-						out.forbiddenRanges[it.key()] = { lo, hi };
-					}
-				}
-				out.label = j.value("label", "");
-				out.notes = j.value("notes", "");
-				out.sourceSketch = j.value("sourceSketch", "");
-				out.sourceVideo = j.value("sourceVideo", "");
-				out.timestampUtc = j.value("timestampUtc", "");
-				if (j.contains("perfObservedFps") && !j.at("perfObservedFps").is_null()) {
-					out.perfObservedFps = j.at("perfObservedFps").get<float>();
-				}
-				if (j.contains("qualityScore") && !j.at("qualityScore").is_null()) {
-					out.qualityScore = j.at("qualityScore").get<float>();
-				}
-				out.sceneContext = j.value("sceneContext", "");
-				return true;
-			} catch (const std::exception & ex) {
-				ofLogWarning("EffectKnowledgeBase") << "skipping malformed entry: " << ex.what();
-				return false;
-			}
-		}
 	} // namespace
 
 	EffectKnowledgeBase::EffectKnowledgeBase(std::string dataDir_)
@@ -119,7 +46,7 @@ namespace videoeffects {
 
 		for (const auto & entryJson : root) {
 			KnowledgeEntry entry;
-			if (jsonToEntry(entryJson, entry)) {
+			if (knowledgeEntryFromJson(entryJson, entry)) {
 				result.push_back(std::move(entry));
 			}
 		}
@@ -169,7 +96,7 @@ namespace videoeffects {
 			}
 		}
 
-		root.push_back(entryToJson(entry));
+		root.push_back(knowledgeEntryToJson(entry));
 
 		ofDirectory::createDirectory(ofFilePath::getEnclosingDirectory(resolvedPath), true, true);
 
@@ -195,6 +122,64 @@ namespace videoeffects {
 
 	bool EffectKnowledgeBase::appendBlacklist(const KnowledgeEntry & entry) {
 		return appendEntry(entry, "blacklist");
+	}
+
+	std::optional<EffectLevelKnowledge> EffectKnowledgeBase::loadEffectLevelKnowledge(const std::string & effectId) const {
+		std::string resolvedPath = ofToDataPath(dataDir + "/" + effectId + ".effect-defaults.json", true);
+		ofFile file(resolvedPath);
+		if (!file.exists()) {
+			return std::nullopt;
+		}
+
+		ofJson root;
+		try {
+			root = ofLoadJson(resolvedPath);
+		} catch (const std::exception & ex) {
+			ofLogError("EffectKnowledgeBase") << "failed to parse " << resolvedPath << ": " << ex.what()
+											   << " — treating as absent rather than failing startup";
+			return std::nullopt;
+		}
+		if (!root.is_object()) {
+			ofLogWarning("EffectKnowledgeBase") << resolvedPath << " is not a JSON object — treating as absent";
+			return std::nullopt;
+		}
+
+		EffectLevelKnowledge result;
+		result.effectId = root.value("effectId", effectId);
+		if (root.contains("compatibleSceneIds") && root.at("compatibleSceneIds").is_array()) {
+			for (const auto & sceneIdJson : root.at("compatibleSceneIds")) {
+				if (sceneIdJson.is_string()) result.compatibleSceneIds.push_back(sceneIdJson.get<std::string>());
+			}
+		}
+		result.piSafe.reset();
+		if (root.contains("piSafe") && !root.at("piSafe").is_null()) {
+			result.piSafe = root.at("piSafe").get<bool>();
+		}
+		return result;
+	}
+
+	bool EffectKnowledgeBase::saveEffectLevelKnowledge(const EffectLevelKnowledge & effectDefault) {
+		std::string resolvedPath = ofToDataPath(dataDir + "/" + effectDefault.effectId + ".effect-defaults.json", true);
+
+		ofJson root;
+		root["effectId"] = effectDefault.effectId;
+		root["compatibleSceneIds"] = effectDefault.compatibleSceneIds;
+		if (effectDefault.piSafe.has_value()) root["piSafe"] = *effectDefault.piSafe;
+
+		ofDirectory::createDirectory(ofFilePath::getEnclosingDirectory(resolvedPath), true, true);
+
+		std::string tmpPath = resolvedPath + ".tmp";
+		if (!ofSavePrettyJson(tmpPath, root)) {
+			ofLogError("EffectKnowledgeBase") << "failed to write " << tmpPath;
+			return false;
+		}
+		std::error_code ec;
+		std::filesystem::rename(tmpPath, resolvedPath, ec);
+		if (ec) {
+			ofLogError("EffectKnowledgeBase") << "failed to finalize write to " << resolvedPath << ": " << ec.message();
+			return false;
+		}
+		return true;
 	}
 
 } // namespace videoeffects

@@ -1,0 +1,214 @@
+# Standalone test build for the HUD presentation-model foundation
+# (shared/src/hud-compositor/) -- deliberately independent of any sketch's
+# own openFrameworks Makefile. Links nothing from openFrameworks: every
+# header/source under shared/src/hud-compositor/ this binary depends on is
+# plain C++17 (see HudDataTypes.h's header comment for why), so this
+# compiles and runs with a bare compiler and zero GL/window/oF-library
+# linkage -- same convention as
+# sketches/temporal-fields/test/Makefile.tests and
+# sketches/blob-region-prototype/test/Makefile.tests.
+#
+# Usage (from this directory):
+#   make -f Makefile.tests test
+
+CXX ?= c++
+# -I../scene and -I../video-playback: Engineering Session 2's type
+# reconciliation makes this dependency-free binary include real, OF-free
+# shared headers directly (SceneSemanticTypes.h, VideoPlaybackStatus.h) —
+# see HudDataTypes.h/FakeHudSemanticTypes.h's own header comments. Neither
+# path adds any openFrameworks dependency; both were verified this session
+# to include only <cstdint>/<optional>/<string>/<vector>.
+CXXFLAGS = -std=c++17 -Wall -Wextra -I../scene -I../video-playback
+
+HUD_SRC_DIR = ../hud-compositor
+
+SRC = \
+	hud_presentation_tests.cpp \
+	$(HUD_SRC_DIR)/HudSourceResolver.cpp \
+	$(HUD_SRC_DIR)/HudRegionCatalog.cpp \
+	$(HUD_SRC_DIR)/HudWidgetContract.cpp \
+	$(HUD_SRC_DIR)/HudPresentationProfile.cpp \
+	$(HUD_SRC_DIR)/HudProfileCompiler.cpp \
+	$(HUD_SRC_DIR)/HudFormattingService.cpp \
+	$(HUD_SRC_DIR)/HudVocabularyResolver.cpp \
+	$(HUD_SRC_DIR)/HudMissingDataController.cpp \
+	$(HUD_SRC_DIR)/HudHistoryStore.cpp \
+	$(HUD_SRC_DIR)/widgets/HudTextMetricsCache.cpp \
+	$(HUD_SRC_DIR)/fake/FakeHudScenarioBase.cpp \
+	$(HUD_SRC_DIR)/fake/FakeBlobScenario.cpp \
+	$(HUD_SRC_DIR)/fake/FakeContourScenario.cpp \
+	$(HUD_SRC_DIR)/fake/FakeTemporalScenario.cpp \
+	$(HUD_SRC_DIR)/fake/FakeFragmentScenario.cpp \
+	$(HUD_SRC_DIR)/fake/FakeQuadrantScenario.cpp \
+	$(HUD_SRC_DIR)/fake/FakeBlueprintScenario.cpp \
+	$(HUD_SRC_DIR)/fake/FakeHudScenarioRegistry.cpp
+
+BIN = hud_presentation_tests
+
+# -- test-real: HudRealFrameResolver, the one file in this domain that
+# needs openFrameworks on the include path (HudFrameData.h ->
+# SceneContract.h -> ofTexture.h) — see HudRealFrameResolver.h's own
+# header comment for why it's a separate binary/target rather than folded
+# into the dependency-free `test` target above. Compiles source files
+# directly against the repo's real OF headers (same -I set Engineering
+# Session 1 used to syntax-check the widget layer) WITHOUT linking
+# libopenFrameworks.a — no GL context/window is created or required,
+# since this only ever compares SceneFrame::texture against nullptr, never
+# dereferences it.
+ifndef OF_ROOT
+	OF_ROOT_REAL=/Users/joseconchello/openFrameworks
+else
+	OF_ROOT_REAL=$(OF_ROOT)
+endif
+
+OF_INCLUDES = \
+	-I$(OF_ROOT_REAL)/libs/FreeImage/include \
+	-I$(OF_ROOT_REAL)/libs/cairo/include -I$(OF_ROOT_REAL)/libs/cairo/include/cairo \
+	-I$(OF_ROOT_REAL)/libs/curl/include \
+	-I$(OF_ROOT_REAL)/libs/fmt/include -I$(OF_ROOT_REAL)/libs/fmt/include/fmt \
+	-I$(OF_ROOT_REAL)/libs/freetype/include -I$(OF_ROOT_REAL)/libs/freetype/include/freetype \
+	-I$(OF_ROOT_REAL)/libs/glew/include -I$(OF_ROOT_REAL)/libs/glew/include/GL \
+	-I$(OF_ROOT_REAL)/libs/glfw/include -I$(OF_ROOT_REAL)/libs/glfw/include/GLFW \
+	-I$(OF_ROOT_REAL)/libs/glm/include \
+	-I$(OF_ROOT_REAL)/libs/json/include \
+	-I$(OF_ROOT_REAL)/libs/libpng/include \
+	-I$(OF_ROOT_REAL)/libs/openssl/include \
+	-I$(OF_ROOT_REAL)/libs/pixman/include \
+	-I$(OF_ROOT_REAL)/libs/pugixml/include \
+	-I$(OF_ROOT_REAL)/libs/rtAudio/include \
+	-I$(OF_ROOT_REAL)/libs/tess2/include \
+	-I$(OF_ROOT_REAL)/libs/uriparser/include \
+	-I$(OF_ROOT_REAL)/libs/utf8/include \
+	-I$(OF_ROOT_REAL)/libs/zlib/include \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks/3d \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks/video \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks/types \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks/app \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks/utils \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks/math \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks/gl \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks/communication \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks/events \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks/graphics \
+	-I$(OF_ROOT_REAL)/libs/openFrameworks/sound
+
+REAL_CXXFLAGS = -std=c++17 -stdlib=libc++ -DUSE_FMOD=0 -D__MACOSX_CORE__ -Wall -x objective-c++ \
+	$(OF_INCLUDES) -I../scene -I../hud-runtime -I../video-playback \
+	-I../video-effects/core -I../video-effects/evolution -I../video-effects/knowledge
+# ^ video-effects/{core,evolution,knowledge} added by the ExperienceRuntime
+# Architecture-Closure Session: ../hud-runtime/HudFrameData.h now includes
+# ../video-effects/knowledge/EffectActivityStatus.h (DEC-015's additive
+# `std::optional<videoeffects::EffectActivityStatus> effects` field), whose
+# own transitive chain (EffectEvolutionController.h -> EffectKnowledgeBase.h/
+# EffectRandomizer.h -> VideoEffectDefinition.h/VideoEffectParameters.h)
+# needs these three flat per-subdirectory include paths — same three paths
+# sketches/experience_runtime/config.make already added for the same
+# reason. Nothing in this domain's own logic changed; this is purely
+# keeping an existing include chain resolvable after an upstream additive
+# header change.
+
+REAL_SRC = \
+	hud_real_frame_tests.cpp \
+	$(HUD_SRC_DIR)/HudRealFrameResolver.cpp \
+	$(HUD_SRC_DIR)/HudSourceResolver.cpp \
+	../video-effects/knowledge/EffectActivityStatus.cpp
+# ^ EffectActivityStatus.cpp added alongside the REAL_CXXFLAGS include-path
+# change above (same Architecture-Closure reason): HudRealFrameResolver.cpp
+# now CALLS videoeffects::resolveDominantEffectIds() (DEC-015's canonical
+# dominance resolver), not just references EffectActivityStatus.h's types —
+# the header alone is no longer enough to link. EffectEvolutionController.h/
+# EffectKnowledgeBase.h/EffectRandomizer.h/VideoEffectDefinition.h/
+# VideoEffectParameters.h are used here only for the EvolutionPhase enum
+# VALUE (never a method call into any of those classes) — same empirically-
+# confirmed-safe relationship sketches/experience_runtime/config.make's own
+# comment documents, so none of THEIR .cpp files need linking here either.
+
+REAL_BIN = hud_real_frame_tests
+
+VIEWPORT_SRC = \
+	hud_media_viewport_tests.cpp \
+	$(HUD_SRC_DIR)/MediaViewportMesh.cpp
+
+VIEWPORT_BIN = hud_media_viewport_tests
+
+
+# NOTE: HudTextMetricsCache turned out not to need ofBitmapFont after all
+# (see its own header comment — measuring against the font's known,
+# verified-not-guessed 8px fixed-glyph-width constant instead of calling
+# an OF API that crashes without a live GL context) — so, unlike
+# VIEWPORT_SRC below, this compiles and links with the plain
+# dependency-free $(CXXFLAGS)/no-OF path, exactly like $(SRC) above.
+TYPOGRAPHY_SRC = \
+	hud_typography_tests.cpp \
+	$(HUD_SRC_DIR)/widgets/HudTextMetricsCache.cpp
+
+TYPOGRAPHY_BIN = hud_typography_tests
+
+# MediaViewportMesh.cpp calls real (non-inline) openFrameworks functions
+# (ofPushStyle/ofSetColor/ofEnableAlphaBlending/ofPopStyle/ofDegToRad/
+# ofLerp/ofTexture::bind/unbind/isAllocated, plus ofMesh::draw()'s own
+# ofGetCurrentRenderer() dependency) whose SYMBOLS the linker must resolve
+# even though this test binary's main() never calls draw() itself (a
+# compiled .o's referenced symbols must all resolve at static-link time
+# regardless of which of its functions actually run) — unlike
+# HudRealFrameResolver.cpp, which only ever touches an ofTexture* as a
+# pointer, never calls into it. So, unlike test/test-real above, this
+# target links the real, already-prebuilt libopenFrameworks.a (see
+# libs/openFrameworksCompiled/lib/osx/) — still no window/GL context is
+# created (nothing in the test file calls ofMesh::draw() or any
+# window-dependent call), just static symbol resolution.
+OF_LIB = $(OF_ROOT_REAL)/libs/openFrameworksCompiled/lib/osx/libopenFrameworks.a
+OF_XCFRAMEWORK_LIBS = \
+	$(OF_ROOT_REAL)/libs/FreeImage/lib/macos/FreeImage.xcframework/macos-arm64_x86_64/FreeImage.a \
+	$(OF_ROOT_REAL)/libs/brotli/lib/macos/brotli.xcframework/macos-arm64_x86_64/brotli.a \
+	$(OF_ROOT_REAL)/libs/cairo/lib/macos/cairo.xcframework/macos-arm64_x86_64/libcairo.a \
+	$(OF_ROOT_REAL)/libs/curl/lib/macos/curl.xcframework/macos-arm64_x86_64/curl.a \
+	$(OF_ROOT_REAL)/libs/fmt/lib/macos/fmt.xcframework/macos-arm64_x86_64/libfmt.a \
+	$(OF_ROOT_REAL)/libs/freetype/lib/macos/freetype.xcframework/macos-arm64_x86_64/libfreetype.a \
+	$(OF_ROOT_REAL)/libs/glew/lib/macos/glew.xcframework/macos-arm64_x86_64/libGLEW.a \
+	$(OF_ROOT_REAL)/libs/glfw/lib/macos/glfw.xcframework/macos-arm64_x86_64/libglfw3.a \
+	$(OF_ROOT_REAL)/libs/libpng/lib/macos/libpng.xcframework/macos-arm64_x86_64/libpng.a \
+	$(OF_ROOT_REAL)/libs/openssl/lib/macos/openssl.xcframework/macos-arm64_x86_64/openssl.a \
+	$(OF_ROOT_REAL)/libs/pixman/lib/macos/pixman.xcframework/macos-arm64_x86_64/libpixman-1.a \
+	$(OF_ROOT_REAL)/libs/pugixml/lib/macos/pugixml.xcframework/macos-arm64_x86_64/libpugixml.a \
+	$(OF_ROOT_REAL)/libs/rtAudio/lib/macos/rtAudio.xcframework/macos-arm64_x86_64/librtaudio.a \
+	$(OF_ROOT_REAL)/libs/tess2/lib/macos/tess2.xcframework/macos-arm64_x86_64/libtess2.a \
+	$(OF_ROOT_REAL)/libs/uriparser/lib/macos/uriparser.xcframework/macos-arm64_x86_64/uriparser.a \
+	$(OF_ROOT_REAL)/libs/zlib/lib/macos/zlib.xcframework/macos-arm64_x86_64/zlib.a
+OF_FRAMEWORKS = -framework Accelerate -framework AppKit -framework ApplicationServices -framework AVFoundation \
+	-framework AudioToolbox -framework Cocoa -framework CoreVideo -framework CoreAudio -framework CoreMedia \
+	-framework CoreFoundation -framework CoreServices -framework Metal -framework Foundation -framework IOKit \
+	-framework OpenGL -framework QuartzCore -framework Security -framework SystemConfiguration
+OF_LDFLAGS = -stdlib=libc++ -mmacosx-version-min=10.15 $(OF_FRAMEWORKS) $(OF_LIB) $(OF_XCFRAMEWORK_LIBS) -lobjc
+
+.PHONY: test test-real test-viewport test-typography test-all clean
+
+test: $(BIN)
+	./$(BIN)
+
+test-real: $(REAL_BIN)
+	./$(REAL_BIN)
+
+test-viewport: $(VIEWPORT_BIN)
+	./$(VIEWPORT_BIN)
+
+test-typography: $(TYPOGRAPHY_BIN)
+	./$(TYPOGRAPHY_BIN)
+
+test-all: test test-real test-viewport test-typography
+
+$(BIN): $(SRC)
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(BIN)
+
+$(REAL_BIN): $(REAL_SRC)
+	$(CXX) $(REAL_CXXFLAGS) $(REAL_SRC) -o $(REAL_BIN)
+
+$(VIEWPORT_BIN): $(VIEWPORT_SRC)
+	$(CXX) $(REAL_CXXFLAGS) $(VIEWPORT_SRC) -x none $(OF_LDFLAGS) -o $(VIEWPORT_BIN)
+
+$(TYPOGRAPHY_BIN): $(TYPOGRAPHY_SRC)
+	$(CXX) $(CXXFLAGS) $(TYPOGRAPHY_SRC) -o $(TYPOGRAPHY_BIN)
+
+clean:
+	rm -f $(BIN) $(REAL_BIN) $(VIEWPORT_BIN) $(TYPOGRAPHY_BIN)

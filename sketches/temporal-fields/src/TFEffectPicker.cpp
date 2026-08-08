@@ -1,13 +1,16 @@
 #include "TFEffectPicker.h"
 #include "DefaultVideoEffectCatalog.h"
+#include "EffectKnowledgePack.h"
 #include "TFRandom.h"
 #include "TFTextureCropFill.h"
 #include "VideoEffectRegistry.h"
 #include "VideoEffectTypes.h"
 #include "ofColor.h"
 #include "ofGraphics.h"
+#include "ofLog.h"
 #include "ofMath.h"
 #include "ofUtils.h"
+#include <cmath>
 #include <utility>
 #include <vector>
 
@@ -25,8 +28,59 @@ namespace {
 	}
 }
 
+namespace {
+	// Bounded retry, mirroring EffectRandomizer::generate()'s own
+	// reject/retry cap (docs/shader-effect-system-probe.md §9) rather than
+	// inventing a new policy -- never blocks forever, always terminates by
+	// accepting whatever the last attempt landed on.
+	constexpr int kBlacklistAvoidanceMaxAttempts = 3;
+	constexpr float kBlacklistMatchEpsilon = 1e-4f;
+
+	// Same content-equality rule as EffectKnowledgeBase::isDuplicate (exact
+	// key set + all values within epsilon) -- deliberately not exposed by
+	// EffectKnowledgeBase itself (it's private), so this is a narrow,
+	// independent re-implementation scoped to this one call site rather
+	// than a shared-header change.
+	bool snapshotMatchesEntry(const std::map<std::string, float>& snapshot, const videoeffects::KnowledgeEntry& entry) {
+		if (snapshot.empty() || entry.snapshot.size() != snapshot.size()) return false;
+		for (const auto& kv : snapshot) {
+			auto it = entry.snapshot.find(kv.first);
+			if (it == entry.snapshot.end() || std::fabs(it->second - kv.second) > kBlacklistMatchEpsilon) return false;
+		}
+		return true;
+	}
+}
+
 void TFEffectPicker::setup(ShaderLibrary* shaderLib_) {
 	shaderLib = shaderLib_;
+
+	// Shared Effect Knowledge integration -- Engineering Session 2's first
+	// real proof target, see docs/temporal-fields-knowledge-pack-integration.md.
+	// This bin/data-relative path is now a real, populated file (Shared
+	// Effects Architecture-Closure Session, DEC-016): the canonical
+	// AUTHORED copy lives at assets/shared/video-effects/knowledge/
+	// effect-knowledge-pack.json (written by shader-effect-debugger's [k]
+	// export action), and scripts/sync-video-effect-assets.py copies it
+	// into this exact path on every sync run -- see that script's
+	// sync_knowledge_pack()/discover_knowledge_only_sketches(), and
+	// docs/shared-effect-knowledge-schema-v1.md's "Canonical path/
+	// distribution evidence" section for the real end-to-end proof
+	// (debugger export -> sync -> this import, all real files, no mocks).
+	// An absent pack (sync never run, or nothing exported yet) still
+	// degrades safely to an empty knowledgeBase -- every check below that
+	// consults it is a no-op in that case, so pickNext()'s behavior is
+	// unaffected either way.
+	videoeffects::EffectKnowledgePackImportReport report = videoeffects::importEffectKnowledgePack(
+		"shared-video-effects/knowledge/effect-knowledge-pack.json", knowledgeBase, tfCatalogRegistry().allIds());
+	if (!report.ok) {
+		ofLogWarning("TFEffectPicker") << "shared effect knowledge pack present but rejected (schemaVersion "
+										<< report.schemaVersion << ", versionSupported=" << report.versionSupported
+										<< ") -- proceeding exactly as if no pack existed";
+	} else if (report.importedWhitelist > 0 || report.importedBlacklist > 0) {
+		ofLogNotice("TFEffectPicker") << "shared effect knowledge: imported " << report.importedWhitelist << " whitelist + "
+									   << report.importedBlacklist << " blacklist entries";
+	}
+
 	pickNext(); // don't sit empty until the first cycleInterval elapses
 }
 
@@ -44,8 +98,97 @@ void TFEffectPicker::pickNext() {
 	for (auto& kv : weights.effectWeights) {
 		options.push_back({ kv.first, kv.second });
 	}
-	currentEffect = tfWeightedPick(options);
-	randomizeEffectParams(currentEffect);
+
+	// Preserves 100% of the existing selection/randomization behavior when
+	// knowledgeBase is empty (the common case today, see setup()'s
+	// comment): the loop always runs at least once, and an empty blacklist
+	// for the picked effect means `blocked` never becomes true, so the
+	// very first attempt is accepted exactly as pickNext() always did
+	// before this change.
+	for (int attempt = 0; attempt < kBlacklistAvoidanceMaxAttempts; ++attempt) {
+		currentEffect = tfWeightedPick(options);
+		randomizeEffectParams(currentEffect);
+
+		if (currentEffect.empty()) break; // "Raw" has no params to check against blacklist entries
+
+		std::map<std::string, float> snapshot = currentParamSnapshot(currentEffect);
+		if (snapshot.empty()) break; // nothing this class snapshots for this effect -- nothing to compare
+
+		bool blocked = false;
+		for (const auto& entry : knowledgeBase.loadBlacklist(currentEffect)) {
+			if (snapshotMatchesEntry(snapshot, entry)) {
+				blocked = true;
+				break;
+			}
+		}
+		if (!blocked) break;
+
+		ofLogNotice("TFEffectPicker") << "re-picking: '" << currentEffect
+									   << "' landed on a known-blacklisted parameter combination (attempt "
+									   << (attempt + 1) << "/" << kBlacklistAvoidanceMaxAttempts << ")";
+	}
+}
+
+std::map<std::string, float> TFEffectPicker::currentParamSnapshot(const std::string& name) const {
+	// Keys here MUST match the canonical VideoEffectDefinition's real
+	// parameter ids (shared/src/video-effects/catalog/DefaultVideoEffectCatalog.cpp)
+	// -- a shader-effect-debugger-authored blacklist entry is keyed by
+	// those ids, not by this class's internal paramX..W naming. Verified
+	// against that file directly, not assumed.
+	std::map<std::string, float> snapshot;
+	if (name == "dither") {
+		snapshot["alpha"] = paramX; // "Arc position", per dither.glsl's own comment -- not opacity
+		snapshot["maxPixelation"] = paramY;
+	} else if (name == "threshold") {
+		snapshot["threshold"] = paramX;
+	} else if (name == "recolor") {
+		// recolor's only randomized parameter is "tint", a Vec3 --
+		// KnowledgeEntry::snapshot is scalar-only (map<string,float>) and
+		// deliberately does not cover vector-typed parameters in v1 (see
+		// EffectRandomizer.h's own comment on this same limitation). There
+		// is currently no way to represent a blacklisted tint at all, so
+		// intentionally nothing is returned here rather than fabricating a
+		// key ("tint.r" or similar) that doesn't exist in the real schema
+		// and could never legitimately match an authored entry.
+	} else if (name == "channelshift") {
+		snapshot["shift"] = paramX;
+	} else if (name == "hue_rotate") {
+		snapshot["hueOffset"] = paramX;
+		snapshot["hueSpeed"] = paramY;
+		snapshot["saturationMult"] = paramZ;
+		snapshot["valueMult"] = paramW;
+	} else if (name == "pixel_sorting") {
+		snapshot["threshold"] = paramX;
+		snapshot["direction"] = paramY;
+	} else if (name == "heatmap_recolor") {
+		snapshot["gamma"] = paramX;
+		snapshot["minLuminance"] = paramY;
+		snapshot["maxLuminance"] = paramZ;
+		// paramW packs paletteIndex + reverse-flag into one float (see
+		// randomizeEffectParams()) -- not decomposed into "palette"/
+		// "reverse" here, since a debugger-authored entry would use those
+		// two separate real ids, not this class's packed encoding. Left
+		// out rather than compared against the wrong keys.
+	}
+	return snapshot;
+}
+
+videoeffects::EffectActivityStatus TFEffectPicker::activityStatus() const {
+	videoeffects::EffectActivityStatus status;
+	if (currentEffect.empty()) {
+		return status; // "Raw / No Effect" -- zero slots, not a slot with an empty id
+	}
+
+	videoeffects::EffectActivitySlot slot;
+	slot.slotId = "temporal_fields.background";
+	slot.effectId = currentEffect;
+	const videoeffects::VideoEffectDefinition* def = tfCatalogRegistry().getDefinition(currentEffect);
+	slot.displayName = (def != nullptr && !def->displayName.empty()) ? def->displayName : currentEffect;
+	slot.phase = videoeffects::EvolutionPhase::Holding; // hard-cut picker, see this method's header comment
+	slot.transitionProgress01 = 1.0f;
+	slot.prominence = 1.0f; // sole content layer in FULL_VIDEO mode -- no competing slot to rank against
+	status.slots.push_back(std::move(slot));
+	return status;
 }
 
 void TFEffectPicker::randomizeEffectParams(const std::string& name) {

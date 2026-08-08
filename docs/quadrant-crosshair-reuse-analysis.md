@@ -1,5 +1,44 @@
 QUADRANT-CROSSHAIR REUSE ANALYSIS
 
+> **⚠️ SUPERSEDED (2026-08-01) — read this note before trusting anything below.**
+> This document was written 2026-06-29 (commit `e12b39b`, "wrap up the quadrant
+> sketch"), over a month before the shared-library migration commit
+> `0367477` ("add a bunh of crap", 2026-08-01) landed. That commit gave
+> quadrant-crosshair `PROJECT_EXTERNAL_SOURCE_PATHS = ../../shared/src` in its
+> own `config.make`, so the claim below — "quadrant-crosshair... does not use
+> [shared/src] at all... is fully self-contained inside its own `src/`" — is
+> **false as of current code**. quadrant-crosshair now consumes
+> `shared/src/hud/` (via `HudManager`), `shared/src/hud_overlay/` (the
+> standalone ambient/organism system, toggled with `o`/`O`),
+> `shared/src/ridgeline/` (`RidgelineRenderer`, used by `DebugMode` and one
+> `Quadrant` effect slot), and `shared/src/video-effects/` (`Quadrant.cpp`
+> reads canonical default uniform values from the shared catalog — see
+> top-level `CLAUDE.md`'s migration-status table, which lists
+> quadrant-crosshair's production path as "Migrated").
+>
+> Also note: the "SIDE NOTES" section below references `hud_elements/`
+> (`src/hud_elements/`) as quadrant-crosshair's own self-contained widget
+> library. That directory no longer exists in this sketch — the widget
+> library it describes was consolidated into the single canonical
+> `shared/src/hud/` (see that directory's own README and
+> `sketches/hud_elements/README.md`, itself now just a pointer to the
+> canonical location).
+>
+> The per-system reuse assessments below (LFOBank, ShaderLibrary, TriggerBus,
+> GridState, CrosshairSystem, MotionExtraction, ExpansionDirector, DebugMode,
+> HudManager) were accurate descriptions of quadrant-crosshair's *own*
+> `src/`-local implementations at the time of writing and may still be a
+> reasonable starting point for understanding those classes' *shapes* — but
+> re-verify against current code before using this doc as input to any
+> migration decision. The "fully self-contained" framing that organizes the
+> whole document is what's actually wrong, not necessarily every individual
+> per-class note.
+>
+> For current, verified facts (build config, actual `shared/src` usage,
+> per-sketch state machines), see
+> [`docs/scene-consolidation-probe.md`](./scene-consolidation-probe.md)
+> instead.
+
 Cross-sketch survey — informs design decisions only, no code changes implied or made.
 
 Purpose: catalog which systems in `sketches/quadrant-crosshair/` could realistically be reused to build other sketch compositions, with `sketches/blueprint_emergence/` as the first candidate target. This is a snapshot for future decision-making, not a migration plan — it deliberately does not prescribe whether a given system should land in the shared library (`shared/src/`) or be copied/adapted directly into a target sketch.

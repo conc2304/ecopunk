@@ -1,0 +1,53 @@
+# Standalone test build for the video-playback subsystem's pure-logic
+# pieces (MediaCatalog::build(), VideoSelectionPolicy) -- deliberately
+# independent of any sketch's own openFrameworks Makefile/build, same
+# rationale as sketches/blob-region-prototype/test/Makefile.tests and
+# sketches/experience_runtime/test/Makefile.tests: MediaCatalog.{h,cpp},
+# MediaMetadata.h, VideoPlaybackStatus.h, and VideoSelectionPolicy.{h,cpp}
+# were specifically kept free of any openFrameworks include (confirmed by
+# probe: even ofRectangle.h alone pulls in ofConstants.h -> GL/glew.h, and
+# this subsystem's own OF-dependent pieces -- IVideoDecoder.h,
+# OfVideoDecoder.{h,cpp}, VideoPlaybackService.{h,cpp},
+# MediaCatalogJsonLoader.cpp -- are excluded from this build on purpose),
+# so this compiles and links with nothing but a bare compiler.
+#
+# IMPORTANT -- do not delete this test/ directory or rename it to
+# something other than "test": every sketch whose config.make pulls in all
+# of ../../shared/src (not a scoped subset -- see
+# sketches/experience_runtime/config.make for the scoped alternative) must
+# add an exclusion for this exact directory, e.g.:
+#   PROJECT_EXCLUSIONS = ../../shared/src/video-playback/test%
+# otherwise this directory's *_tests.cpp files (each define their own
+# main()) get swept into that sketch's own build by
+# PROJECT_EXTERNAL_SOURCE_PATHS' recursive directory scan and collide with
+# the sketch's real main.cpp at link time. See this increment's
+# implementation report, "Newly discovered risks", for a pre-existing
+# instance of this same hazard already latent in
+# shared/src/video-effects/test/.
+#
+# Usage (from this directory):
+#   make -f Makefile.tests test
+
+CXX ?= c++
+CXXFLAGS = -std=c++17 -Wall -Wextra
+
+CATALOG_SRC = media_catalog_tests.cpp ../MediaCatalog.cpp
+CATALOG_BIN = media_catalog_tests
+
+POLICY_SRC = video_selection_policy_tests.cpp ../VideoSelectionPolicy.cpp
+POLICY_BIN = video_selection_policy_tests
+
+.PHONY: test clean
+
+test: $(CATALOG_BIN) $(POLICY_BIN)
+	./$(CATALOG_BIN)
+	./$(POLICY_BIN)
+
+$(CATALOG_BIN): $(CATALOG_SRC) ../MediaCatalog.h ../MediaMetadata.h
+	$(CXX) $(CXXFLAGS) $(CATALOG_SRC) -o $(CATALOG_BIN)
+
+$(POLICY_BIN): $(POLICY_SRC) ../VideoSelectionPolicy.h ../MediaMetadata.h ../VideoPlaybackStatus.h
+	$(CXX) $(CXXFLAGS) $(POLICY_SRC) -o $(POLICY_BIN)
+
+clean:
+	rm -f $(CATALOG_BIN) $(POLICY_BIN)

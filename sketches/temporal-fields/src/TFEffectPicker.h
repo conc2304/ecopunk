@@ -7,6 +7,8 @@
 #include "ofShader.h"
 #include "ofTexture.h"
 #include "ShaderLibrary.h"
+#include "EffectActivityStatus.h"
+#include "EffectKnowledgeBase.h"
 
 // Weighted-random cycling among ShaderLibrary's 16 registered effects plus
 // a "Raw / No Effect" option (17 weighted choices total), on its own timer
@@ -40,15 +42,41 @@ class TFEffectPicker {
 
 		std::string getCurrentEffectName() const { return currentEffect; } // "" = raw
 
+		// Shared Effect Knowledge integration (Engineering Session 2's first
+		// real proof target -- see docs/shared-effect-knowledge-scoped-extension.md
+		// and docs/temporal-fields-knowledge-pack-integration.md). Empty
+		// (zero slots) when currentEffect == "" (Raw / No Effect selected) --
+		// there is no active effect to report in that case, not an effect with
+		// an empty id. phase is always EvolutionPhase::Holding: this picker
+		// hard-cuts between effects on its own timer, it does not blend/
+		// transition the way EffectEvolutionController does, so there is no
+		// genuine "Transitioning" state to report.
+		videoeffects::EffectActivityStatus activityStatus() const;
+
 	private:
 		void pickNext();
 		void randomizeEffectParams(const std::string& name);
 		void applyEffectUniforms(ofShader& sh, const std::string& name, float w, float h) const;
 
+		// Best-effort content-based avoidance of blacklisted parameter
+		// combinations for the small set of effects this class randomizes
+		// itself (see randomizeEffectParams()). Returns the snapshot map used
+		// for that check (empty map for effects this class doesn't randomize,
+		// e.g. "invert"/"solarize" -- nothing to compare, so nothing to avoid,
+		// matching this class's existing "only 7 effects have real
+		// per-instance randomization" design).
+		std::map<std::string, float> currentParamSnapshot(const std::string& name) const;
+
 		ShaderLibrary* shaderLib = nullptr;
 		Weights weights;
 		float timer = 0.0f;
 		std::string currentEffect; // "" = raw
+
+		// Imported once in setup(); absent/malformed pack leaves this empty and
+		// every knowledge-based check below becomes a no-op, so pickNext()'s
+		// existing behavior is completely unchanged when no pack has ever been
+		// exported -- see setup()'s own comment.
+		videoeffects::EffectKnowledgeBase knowledgeBase;
 
 		// Mirrors BEFragment's per-instance randomized params (effectSlot.params),
 		// picked once when an effect is selected, not regenerated every frame.

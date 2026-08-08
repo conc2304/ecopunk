@@ -61,7 +61,34 @@ PROJECT_EXTERNAL_SOURCE_PATHS = ../../shared/src
 #
 #   Note: Leave a leading space when adding list items with the += operator
 ################################################################################
-# PROJECT_EXCLUSIONS =
+# Engineering Session 2, Task B: PROJECT_EXTERNAL_SOURCE_PATHS = ../../shared/src
+# above pulls in every subdirectory recursively, including several that
+# contain standalone *_tests.cpp files with their own main() (the
+# dependency-free test convention documented in
+# shared/src/video-playback/test/Makefile.tests). Left unexcluded, these
+# collide with src/main.cpp's real main() at link time ("duplicate symbol
+# '_main'") — confirmed directly for this exact sketch during this session
+# (this was a pre-existing, latent build break, not introduced by this
+# session — see the implementation report's "Newly discovered risks").
+# Fixed via the one shared, repository-level exclusion list — see
+# shared/build/test-main-exclusions.mk.
+#
+# Also excludes shared/src/hud-compositor% (the HUD Runtime domain's own,
+# separately in-progress semantic-slot-binding/widget subsystem):
+# confirmed by direct build attempt during this session that it currently
+# fails to compile independent of anything in this session's own changes
+# (a FakeSceneHealth/SceneHealth type mismatch in
+# shared/src/hud-compositor/HudWireframeRenderer.cpp — see this session's
+# implementation report, "Newly discovered risks"), and confirmed by
+# `grep` that this sketch's own sources never include anything under
+# hud-compositor/ — it is swept in only as an unwanted side effect of the
+# unscoped PROJECT_EXTERNAL_SOURCE_PATHS = ../../shared/src above, not
+# because this sketch needs it. Excluding it here is scoping this
+# sketch's OWN build to what it actually uses, not a fix to the HUD
+# Runtime domain's bug (which remains unfixed and out of this session's
+# scope).
+include ../../shared/build/test-main-exclusions.mk
+PROJECT_EXCLUSIONS = $(SHARED_TEST_MAIN_EXCLUSIONS) ../../shared/src/hud-compositor%
 
 ################################################################################
 # PROJECT LINKER FLAGS

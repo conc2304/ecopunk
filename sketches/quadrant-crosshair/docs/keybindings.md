@@ -8,10 +8,10 @@
 | `Tab` | Cycle to next crosshair preset |
 | `n` / `N` | Advance to next video file |
 | `f` / `F` | Toggle fullscreen |
-| `h` / `H` | Toggle HUD overlay |
+| `h` / `H` | Toggle `HudManager`'s always-on telemetry HUD (scanner/gauges/data cards) |
 | `[` | Decrease motion overlay opacity (–10) |
 | `]` | Increase motion overlay opacity (+10) |
-| `o` / `O` | Toggle motion overlay depth: behind quadrants ↔ in front of quadrants |
+| `o` / `O` | Toggle the separate standalone `shared/src/hud_overlay` ambient/organism system: fully replaces the scene with it over a solid near-black background; press again to return. **Not** a motion-overlay depth toggle — see note below. |
 | `m` / `M` | Cycle motion extraction output mode (luma glow → chroma preserve → signed field) |
 | `e` / `E` | Trigger expansion sequence (random quadrant) |
 | `F1` | Trigger expansion on quadrant 0 (top-left) |
@@ -20,6 +20,8 @@
 | `F4` | Trigger expansion on quadrant 3 (bottom-right) |
 | `d` / `D` | Enter / exit debug mode |
 | `Esc` | Quit |
+
+> **Note (2026-08 correction):** `o`/`O` previously toggled a `motionOverlayBehind` bool that swapped the fullscreen motion overlay between drawing behind vs. on top of the quadrants. That feature was removed (not merely undocumented) in the same commit that introduced the standalone `hud_overlay` system and repurposed `o`/`O` for it — the motion overlay is now always drawn behind the quadrants, unconditionally, with no depth toggle. This doc previously described the removed behavior; corrected here to match current code.
 
 ---
 

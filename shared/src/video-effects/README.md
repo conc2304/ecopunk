@@ -29,9 +29,17 @@ shared/src/video-effects/
 │                    RidgelineEffect, TemporalTrailsEffect, ReactionDiffusionEffect)
 │                    each back exactly one stateful effect family.
 ├── knowledge/       EffectKnowledgeBase (whitelist/blacklist persistence),
-│                    EffectRandomizer (the shared random-parameter-generation pipeline)
+│                    EffectRandomizer (the shared random-parameter-generation pipeline),
+│                    EffectSceneCompatibility (which of the six roadmap scenes
+│                    consume this service), EffectActivityStatus (HUD-facing
+│                    active-effect summary + dominance resolution),
+│                    EffectKnowledgePack (cross-scene debugger export/import) —
+│                    see "Shared Effect Knowledge" below
 ├── evolution/       EffectEvolutionController (current->target parameter transitions),
 │                    PatternDriftController (continuous low-amplitude drift)
+├── test/            Standalone, OF-free unit tests for the pure-logic pieces
+│                    above (dominance resolution, compatibility lookups) —
+│                    `make -C test -f Makefile.tests test`
 └── catalog/         DefaultVideoEffectCatalog.{h,cpp} — THE place every effect gets
                      registered. If you're adding a new effect, this is where.
 ```
@@ -144,6 +152,42 @@ Both are read-only in `--check`/default mode respectively for the drift
 checker; only `sync-video-effect-assets.py` without `--check` writes files
 (into sketches' `bin/data/shared-video-effects/`, never into
 `shared/assets/video-effects/` itself).
+
+## Shared Effect Knowledge (scoped extension)
+
+Three additive pieces under `knowledge/`, none of which change
+`EffectKnowledgeBase`'s or `EffectRandomizer`'s existing behavior — see
+[`docs/shared-effect-knowledge-scoped-extension.md`](../../../docs/shared-effect-knowledge-scoped-extension.md)
+for the full design rationale and open questions:
+
+- **`EffectSceneCompatibility.h`** — a small static table of which of the six
+  roadmap scenes consume this service at all (`SharedServiceConsumer` /
+  `LocalForkOnly` / `NotIntegrated`), transcribed from this file's own
+  migration table above and `docs/video-effect-second-wave-evaluation.md`.
+  Deliberately scene-level, not per-effect-per-scene — per-effect eligibility
+  within a consuming scene is already `VideoEffectCapabilities::safeForAutomaticSelection`
+  (`core/VideoEffectCapabilities.h`); this file doesn't duplicate that.
+- **`EffectActivityStatus.h`** — lets a scene turn its live effect-instance
+  state into the small, curated label list `SceneHudStatus::activeEffects`
+  expects, via `resolveDominantEffectLabels()`'s dominance-resolution rules
+  (highest-prominence effect(s) win, same effect across multiple slots
+  collapses to one label, capped to a couple of labels). No shader parameter
+  ever crosses this boundary — only a display label. Reuses
+  `EffectEvolutionController`'s own `EvolutionPhase` as its transition-phase
+  model rather than inventing a second one.
+- **`EffectKnowledgePack.h`** — bundles `shader-effect-debugger`'s
+  whitelist/blacklist entries for a set of effects into one exportable file,
+  and imports that file into any other `EffectKnowledgeBase` idempotently.
+  Closes the gap where the debugger's curated knowledge never reached a
+  production scene without hand-copying JSON. `shader-effect-debugger` gained
+  a `[k]` export-pack action (writes to `bin/data/shared-video-effects/knowledge/`);
+  wiring an equivalent import into a real scene's `setup()`, and folding this
+  into `scripts/sync-video-effect-assets.py` so it round-trips through
+  `shared/assets/video-effects/`, are both flagged as follow-ups, not done yet.
+
+All three are OF-free where practical (verified — `knowledge/EffectActivityStatus.*`
+and `knowledge/EffectSceneCompatibility.*` link with nothing but a bare
+compiler + glm) and covered by `test/`.
 
 ## What this service does *not* own
 

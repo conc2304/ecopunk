@@ -1,5 +1,6 @@
 #pragma once
 
+#include "EffectLevelKnowledge.h"
 #include "VideoEffectParameters.h"
 #include <map>
 #include <optional>
@@ -44,6 +45,66 @@ namespace videoeffects {
 		std::optional<float> perfObservedFps;
 		std::optional<float> qualityScore;
 		std::string sceneContext;
+
+		// Additive fields (Shared Effect Knowledge — scoped extension, see
+		// docs/shared-effect-knowledge-scoped-extension.md). Absent in every
+		// entry written before this change; readers must treat a missing
+		// piSafe as "unknown," never as false. Nothing above this comment
+		// changed shape or meaning.
+		std::optional<bool> piSafe;
+
+		// Compatibility OVERRIDE for this specific authored preset — Shared
+		// Effect Knowledge v1 Freeze Policy (DEC-016) / Architecture-Closure
+		// Session. `std::optional` (not a bare vector) so absent and
+		// explicit-empty are distinguishable on read, per DEC-016's
+		// precedence rule:
+		//
+		//   preset override (this field, if present)
+		//     -> effect-level default (EffectLevelKnowledge::compatibleSceneIds)
+		//     -> Unclassified
+		//
+		//   - nullopt            : no preset-level override authored; fall
+		//                          through to the effect-level default.
+		//   - present, non-empty : explicitly compatible with exactly these
+		//                          scene ids (a positive list).
+		//   - present, EMPTY     : explicitly compatible with NO production
+		//                          scenes — a real, intentional override,
+		//                          not the same as "not yet classified."
+		//
+		// See EffectKnowledgePrecedence.h for the functions that actually
+		// resolve this against an effect-level default and a target scene
+		// id — this field only stores the authored value, it does not
+		// interpret it.
+		//
+		// On-disk note: this was a plain std::vector<std::string> before the
+		// Architecture-Closure Session (pack schemaVersion 1); every pre-
+		// closure entry had the JSON key entirely absent (the field did not
+		// exist yet in Session 1), so it deserializes to nullopt under the
+		// new type — i.e. every legacy entry correctly becomes "no override,
+		// fall through," never "explicitly compatible with nothing." See
+		// EffectKnowledgeSerialization.cpp.
+		std::optional<std::vector<std::string>> compatibleSceneIds;
+
+		// Stable canonical preset identity — DEC-016. Recommended format
+		// "preset.<effect-id>.<slug>" (EffectPresetId.h validates it).
+		// nullopt = a "legacy anonymous preset": an entry written before
+		// stable preset identity existed (or authored without one since).
+		// Legacy anonymous entries:
+		//   - remain fully loadable (this field simply stays nullopt);
+		//   - are NOT promoted to a stable, reusable, production-selectable
+		//     preset identity merely by loading — see
+		//     isReusableAuthoredPreset() in EffectPresetId.h;
+		//   - remain available for manual/debug inspection and for the
+		//     existing (effect, snapshot)-based blacklist-avoidance content
+		//     match (TFEffectPicker's existing use, unaffected by this
+		//     field's presence or absence).
+		// Never synthesized from vector index, file order, or a floating-
+		// point snapshot hash during normal load — see
+		// EffectKnowledgeSerialization.cpp's read path, which only ever
+		// copies this field verbatim from JSON, and EffectPresetId.h for the
+		// one-time, explicit, opt-in migration helper that is the sole
+		// sanctioned way to assign an ID to a previously-anonymous entry.
+		std::optional<std::string> presetId;
 	};
 
 	class EffectKnowledgeBase {
@@ -60,6 +121,26 @@ namespace videoeffects {
 		std::vector<KnowledgeEntry> loadBlacklist(const std::string & effectId) const;
 
 		bool isDuplicate(const KnowledgeEntry & entry, const std::vector<KnowledgeEntry> & existing) const;
+
+		// Effect-level knowledge defaults (Shared Effect Knowledge v1 Freeze
+		// Policy, DEC-016 — see EffectLevelKnowledge.h). One record per
+		// effect id, stored at <dataDir>/<effectId>.effect-defaults.json —
+		// deliberately a SEPARATE file per effect (not one shared file for
+		// every effect) so this follows the exact same per-effect storage
+		// shape whitelist/blacklist already use, rather than introducing a
+		// second storage convention into this class.
+		//
+		// Returns nullopt if no effect-level record has ever been saved for
+		// this effect id — callers (EffectKnowledgePrecedence.h's
+		// functions) already treat a null/absent EffectLevelKnowledge* as
+		// "no effect-level default," so this is the correct absent
+		// representation, not a default-constructed empty record.
+		std::optional<EffectLevelKnowledge> loadEffectLevelKnowledge(const std::string & effectId) const;
+
+		// Overwrites (not appends — there is exactly one effect-level
+		// record per effect id, unlike whitelist/blacklist's many entries)
+		// the stored default for effectDefault.effectId.
+		bool saveEffectLevelKnowledge(const EffectLevelKnowledge & effectDefault);
 
 	private:
 		std::string dataDir;

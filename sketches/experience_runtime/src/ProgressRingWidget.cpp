@@ -1,0 +1,1 @@
+../../../shared/src/hud-compositor/widgets/ProgressRingWidget.cpp

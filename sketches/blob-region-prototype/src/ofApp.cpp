@@ -40,11 +40,22 @@ void ofApp::setup() {
 
 	shaderLib.setup();
 
-	TimeOffsetVideoBuffer::Settings settings;
-	settings.bufferWidth = 640;
-	settings.bufferHeight = 360;
-	settings.maxHistorySeconds = 2.0f; // this prototype doesn't use temporal offsets — kept short, just enough for hasMedia()/isFrameNew() bookkeeping
-	videoBuffer.setup("media", settings);
+	// automaticAdvance is deliberately false: this scene has never
+	// advanced media on its own (no next/prev command, no hold — see
+	// docs/video-playback-ownership-probe-report.md's per-scene
+	// compatibility matrix) and preserving that exact "play the same clip
+	// forever" behavior is this migration's whole point, not a place to
+	// introduce new automatic-cycling behavior the scene never had.
+	//
+	// mediaRoot updated to the canonical physical root (Shared Video
+	// Playback Engineering Session 2, Task C) — this sketch's own
+	// bin/data/media/ now holds only compatibility symlinks (see
+	// docs/shared-video-playback-engineering-session-2-report.md), no
+	// longer scanned directly.
+	VideoPlaybackService::Config videoConfig;
+	videoConfig.mediaRoot = ofToDataPath("../../../../assets/shared/media", true);
+	videoConfig.automaticAdvance = false;
+	videoPlayback.setup(videoConfig);
 
 	blobDetector.setup(BlobDetector::Config {});
 	blobTracker.setup(BlobTracker::Config {});
@@ -145,20 +156,26 @@ void ofApp::update() {
 		dt = 1.0f / 60.0f;
 	}
 
-	videoBuffer.update(dt);
+	videoPlayback.update(dt);
 	syncParamsToSystems();
 
 	float detectorMs = 0.0f;
 	float trackerMs = 0.0f;
 	float regionUpdateMs = 0.0f;
 
-	if (videoBuffer.hasMedia()) {
+	// Mirrors the old `videoBuffer.hasMedia()` gate exactly:
+	// VideoPlaybackService::currentTexture() returns nullptr unless health
+	// is Ready or Degraded (see VideoPlaybackService.cpp) — the same
+	// "don't touch detection/tracking/region code until real media is
+	// actually playing" behavior as before, expressed as a null check
+	// instead of a bool getter.
+	if (const ofTexture * srcTex = videoPlayback.currentTexture()) {
 		// CPU pixel path: reuse the decoder's own pixels via
-		// TimeOffsetVideoBuffer::getRawVideoPixels() (added specifically
-		// for this) — no GPU readback anywhere in this pipeline.
-		const ofPixels & srcPixels = videoBuffer.getRawVideoPixels();
-		if (srcPixels.isAllocated()) {
-			blobDetector.update(srcPixels);
+		// VideoPlaybackService::currentPixels() — no GPU readback anywhere
+		// in this pipeline.
+		const ofPixels * srcPixels = videoPlayback.currentPixels();
+		if (srcPixels && srcPixels->isAllocated()) {
+			blobDetector.update(*srcPixels);
 		}
 		detectorMs = blobDetector.getLastProcessingTimeMs();
 
@@ -166,14 +183,13 @@ void ofApp::update() {
 		blobTracker.update(blobDetector.getDetections(), dt);
 		trackerMs = static_cast<float>(ofGetElapsedTimeMicros() - t0) / 1000.0f;
 
-		const ofTexture & srcTex = videoBuffer.getRawVideoTexture();
-		if (srcTex.isAllocated()) {
-			int srcW = static_cast<int>(srcTex.getWidth());
-			int srcH = static_cast<int>(srcTex.getHeight());
+		if (srcTex->isAllocated()) {
+			int srcW = static_cast<int>(srcTex->getWidth());
+			int srcH = static_cast<int>(srcTex->getHeight());
 			ofRectangle destRect(0, 0, static_cast<float>(ofGetWidth()), static_cast<float>(ofGetHeight()));
 
 			uint64_t t1 = ofGetElapsedTimeMicros();
-			regionController.update(blobTracker.getActiveRegions(), srcTex, srcW, srcH, destRect, dt);
+			regionController.update(blobTracker.getActiveRegions(), *srcTex, srcW, srcH, destRect, dt);
 			regionUpdateMs = static_cast<float>(ofGetElapsedTimeMicros() - t1) / 1000.0f;
 		}
 	}
@@ -202,16 +218,16 @@ void ofApp::draw() {
 	ofBackground(0);
 
 	ofRectangle destRect(0, 0, static_cast<float>(ofGetWidth()), static_cast<float>(ofGetHeight()));
-	const ofTexture & srcTex = videoBuffer.getRawVideoTexture();
+	const ofTexture * srcTex = videoPlayback.currentTexture();
 
 	float drawMs = 0.0f;
 
-	if (videoBuffer.hasMedia() && srcTex.isAllocated()) {
+	if (srcTex && srcTex->isAllocated()) {
 		// Background draw mode (off/normal/effect) — the region fragments
 		// drawn below are additive on top of whatever this produces (or
 		// on top of the plain black-cleared canvas, in "off" mode), never
 		// a replacement for it.
-		drawBackground(srcTex, destRect);
+		drawBackground(*srcTex, destRect);
 
 		uint64_t t0 = ofGetElapsedTimeMicros();
 		regionController.draw();
@@ -277,11 +293,11 @@ void ofApp::drawBackground(const ofTexture & srcTex, const ofRectangle & destRec
 
 void ofApp::drawDebugOverlay() {
 	ofRectangle destRect(0, 0, static_cast<float>(ofGetWidth()), static_cast<float>(ofGetHeight()));
-	const ofTexture & srcTex = videoBuffer.getRawVideoTexture();
+	const ofTexture * srcTex = videoPlayback.currentTexture();
 
-	if (videoBuffer.hasMedia() && srcTex.isAllocated()) {
+	if (srcTex && srcTex->isAllocated()) {
 		VideoRegionMath::Rect cropSrc = VideoRegionMath::computeCropFillSourceRect(
-			srcTex.getWidth(), srcTex.getHeight(), VideoRegionMath::toRect(destRect));
+			srcTex->getWidth(), srcTex->getHeight(), VideoRegionMath::toRect(destRect));
 		VideoRegionMath::Rect destR = VideoRegionMath::toRect(destRect);
 
 		// Raw detections (this analysis frame's un-tracked contour boxes) in orange.
@@ -290,7 +306,7 @@ void ofApp::drawDebugOverlay() {
 		ofSetColor(255, 140, 0);
 		for (const BlobDetection & d : blobDetector.getDetections()) {
 			VideoRegionMath::Rect r = VideoRegionMath::mapNormalizedSourceRectToScreen(
-				VideoRegionMath::toRect(d.normalizedBounds), srcTex.getWidth(), srcTex.getHeight(), cropSrc, destR);
+				VideoRegionMath::toRect(d.normalizedBounds), srcTex->getWidth(), srcTex->getHeight(), cropSrc, destR);
 			ofDrawRectangle(r.x, r.y, r.width, r.height);
 		}
 
@@ -298,7 +314,7 @@ void ofApp::drawDebugOverlay() {
 		ofSetColor(0, 220, 255);
 		for (const VideoRegion & region : blobTracker.getActiveRegions()) {
 			VideoRegionMath::Rect r = VideoRegionMath::mapNormalizedSourceRectToScreen(
-				VideoRegionMath::toRect(region.smoothedNormalizedBounds), srcTex.getWidth(), srcTex.getHeight(), cropSrc, destR);
+				VideoRegionMath::toRect(region.smoothedNormalizedBounds), srcTex->getWidth(), srcTex->getHeight(), cropSrc, destR);
 			ofDrawRectangle(r.x, r.y, r.width, r.height);
 			ofDrawBitmapStringHighlight(
 				"id " + ofToString(region.id) + " miss " + ofToString(region.missingSeconds, 2),
@@ -339,7 +355,7 @@ void ofApp::drawDebugOverlay() {
 			}
 			ss << "\n";
 		}
-		ss << "CPU pixels path: TimeOffsetVideoBuffer::getRawVideoPixels() (no GPU readback)\n";
+		ss << "CPU pixels path: VideoPlaybackService::currentPixels() (no GPU readback)\n";
 		ss << "[g] toggle GUI  [d] toggle debug overlay";
 		ofDrawBitmapStringHighlight(ss.str(), 20, 30);
 	}

@@ -38,7 +38,7 @@ public:
 	void setDesatNudge(float nudge) { desatNudge = nudge; }
 
 	// Full-frame video pixels used by the ridgeline effect. Non-owning pointer;
-	// set each frame by BEComposition from VideoSampler::getPixels().
+	// set each frame by BEComposition from VideoPlaybackService::currentPixels().
 	void setRidgelinePixels(const ofPixels* px) { ridgelinePixels = px; }
 
 	// Wraps Fragment::draw() with a slow noise-driven scale oscillation

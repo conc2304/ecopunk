@@ -44,6 +44,11 @@ private:
 	void saveCurrentToBlacklist();
 	void togglePausePlay();
 
+	// Shared Effect Knowledge, scoped extension: bundles every effect's
+	// accumulated whitelist/blacklist entries into one cross-scene-consumable
+	// pack file — see shared/src/video-effects/knowledge/EffectKnowledgePack.h.
+	void exportKnowledgePack();
+
 	videoeffects::VideoEffectService service;
 	std::vector<std::string> effectIds;
 	int currentEffectIndex = -1;

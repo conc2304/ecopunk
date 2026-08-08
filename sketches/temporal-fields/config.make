@@ -69,7 +69,23 @@ PROJECT_EXTERNAL_SOURCE_PATHS = ../../shared/src
 # widgets + TFHudLayer.o + MotionExtraction.o present in the final link
 # line, exit 0). No file-level or class-name collision exists between
 # shared/src/hud and this sketch's TF* sources either. Leaving unexcluded.
-PROJECT_EXCLUSIONS =
+#
+# The three exclusions below ARE a real, separate collision, unrelated to
+# the hud/ note above: shared/src/video-effects/test/,
+# shared/src/hud-compositor-test/, and shared/src/video-playback/test/ each
+# contain a standalone *_tests.cpp with its own main() (the dependency-free
+# test convention documented in each one's own Makefile.tests), which
+# collides with src/*.cpp's real main() at link time ("duplicate symbol
+# '_main'") if PROJECT_EXTERNAL_SOURCE_PATHS pulls them in unexcluded — the
+# same fix already applied to sketches/blob-region-prototype/config.make
+# (Shared Video Playback System increment) and
+# sketches/shader-effect-debugger/config.make (Shared Effect Knowledge
+# Engineering Session 2); mirrored here rather than reinvented, required by
+# this increment's own temporal-fields build/test step. The trailing "%"
+# matches each directory's own contents — see fragment-trail/config.make's
+# own comment on this Makefile system's exact-string, non-recursive
+# exclusion matching.
+PROJECT_EXCLUSIONS = ../../shared/src/video-playback/test% ../../shared/src/video-effects/test% ../../shared/src/hud-compositor-test%
 
 ################################################################################
 # PROJECT LINKER FLAGS

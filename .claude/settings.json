@@ -3,9 +3,9 @@
     "defaultMode": "dontAsk",
     "allow": [
       "Bash(*)",
-      "find(*)",
-      "make(*)",
-      "grep(*)"
+      "Find(*)",
+      "Make(*)",
+      "Grep(*)"
     ],
     "ask": [
       "Bash(npm install*)"

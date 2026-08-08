@@ -6,17 +6,26 @@
 #include "BlobDetector.h"
 #include "BlobTracker.h"
 #include "ShaderLibrary.h"
-#include "TimeOffsetVideoBuffer.h"
+#include "VideoPlaybackService.h"
 #include "VideoRegionController.h"
 #include "VideoRegionEffectRenderer.h"
 #include "VideoRegionMathOf.h"
 
 // Smallest vertical slice of the blob-region architecture: one MP4 through
-// the canonical shared TimeOffsetVideoBuffer, low-res blob detection off
-// its already-decoded CPU pixels, tracked into stable VideoRegions, drawn
-// as effected fragments over the unmodified full-screen background. See
+// the shared VideoPlaybackService, low-res blob detection off its
+// already-decoded CPU pixels, tracked into stable VideoRegions, drawn as
+// effected fragments over the unmodified full-screen background. See
 // docs/blob-region-architecture.md for the full write-up; this class is
 // deliberately thin — almost everything it does is call into shared/src.
+//
+// Migrated from a bare TimeOffsetVideoBuffer to VideoPlaybackService as
+// the lowest-risk first consumer of the Shared Video Playback System
+// (Implement-Shared-Video-Playback-System-Agent-Prompt.md, Stage 2) — see
+// docs/video-playback-ownership-probe-report.md §I for why this scene was
+// chosen first: it only ever used TimeOffsetVideoBuffer's live-decode
+// accessors, never its playhead/history machinery, so migrating it is a
+// pure media-root/scanning/selection ownership change with no temporal-
+// history behavior to preserve.
 class ofApp : public ofBaseApp {
 public:
 	void setup() override;
@@ -29,7 +38,7 @@ private:
 	void drawDebugOverlay();
 	void drawBackground(const ofTexture & srcTex, const ofRectangle & destRect);
 
-	TimeOffsetVideoBuffer videoBuffer;
+	VideoPlaybackService videoPlayback;
 	ShaderLibrary shaderLib;
 	BlobDetector blobDetector;
 	BlobTracker blobTracker;

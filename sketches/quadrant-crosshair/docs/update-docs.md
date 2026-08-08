@@ -343,7 +343,7 @@ Loads shaders, opens the video player, sets up every subsystem, wires three `Tri
 
 13.4 draw()
 
-`debug.draw()` short-circuits everything else when debug mode is active. Otherwise: background clear → motion overlay (behind, if toggled) → quadrants (erosion + effects + contraction crossfade) → motion overlay (on top, default) → HUD (if shown) → crosshair (always last, on top of everything).
+`debug.draw()` short-circuits everything else when debug mode is active; `hudOverlay`'s standalone system (toggled by `o`/`O`) short-circuits it a second, separate way — see the key-map note below. Otherwise: background clear → motion overlay (always drawn behind the quadrants — the old behind/on-top toggle was removed, see key-map note) → quadrants (erosion + effects + contraction crossfade) → HUD (if shown) → crosshair (always last, on top of everything).
 
 14 — KEY MAP
 
@@ -354,12 +354,14 @@ Loads shaders, opens the video player, sets up every subsystem, wires three `Tri
 | N | Load next video file |
 | F | Toggle fullscreen |
 | [ / ] | Decrease / increase motion overlay alpha |
-| O | Toggle motion overlay behind vs. on top of quadrants |
+| O | Toggle the standalone `shared/src/hud_overlay` system: fully replaces the scene with its ambient/organism HUD over a solid near-black background |
 | M | Cycle motion extraction output mode |
-| H | Toggle HUD visibility |
+| H | Toggle `HudManager`'s always-on telemetry HUD (distinct from `hud_overlay` above — the two are separate systems that happen to share the word "HUD") |
 | D | Toggle debug mode |
 | E | Trigger an expansion sequence to a random quadrant |
 | F1–F4 | Trigger an expansion sequence to a specific quadrant |
 | ESC | Quit |
+
+> **Note (2026-08 correction):** `O` previously toggled a `motionOverlayBehind` bool (behind-quadrants ↔ on-top-of-quadrants for the motion overlay). That feature was removed — not just left undocumented — in the same commit that added `hudoverlay::HudOverlayLayer`/`HudOverlayDialPanel`/`HudOverlayDialState` and repurposed the `O` key for it (members `hudOverlay`, `hudOverlayPanel`, `hudOverlayDials`, `bool hudOverlayActive` are not listed in §13.1's member list above, which also predates that change). The motion overlay now draws behind the quadrants unconditionally, with no depth toggle. This doc previously described the removed behavior; corrected here to match current `ofApp.cpp`.
 
 Debug mode has its own key layer (shader navigation, parameter adjustment, trigger simulation) — see `docs/keybindings.md`.

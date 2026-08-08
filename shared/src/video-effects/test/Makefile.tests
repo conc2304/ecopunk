@@ -1,0 +1,49 @@
+# Standalone test build for the Shared Effect Knowledge scoped extension
+# (EffectActivityStatus's dominance resolution, EffectSceneCompatibility's
+# matrix lookups) -- deliberately independent of any sketch's own
+# openFrameworks Makefile/build, same rationale as
+# sketches/experience_runtime/test/Makefile.tests,
+# sketches/blob-region-prototype/test/Makefile.tests, and
+# sketches/temporal-fields/test/Makefile.tests: both headers under test here
+# were specifically confirmed to pull in nothing from openFrameworks itself
+# (verified during this pass by a bare-compiler build) -- they only reach
+# glm/ (vec2/vec3/vec4 headers), which is why GLM_INCLUDE below is the only
+# extra -I this Makefile needs.
+#
+# Also covers EffectPresetId.cpp and EffectKnowledgePrecedence.cpp (DEC-016
+# preset identity / precedence chain, added by the Shared Effects
+# Architecture-Closure Session) -- both confirmed OF-free the same way, by a
+# bare-compiler build, during that session.
+#
+# NOT covered here: EffectKnowledgeBase.cpp/EffectKnowledgePack.cpp/
+# EffectKnowledgeSerialization.cpp's file I/O, which genuinely needs
+# ofJson/ofFileUtils and is validated by building shader-effect-debugger
+# instead (per this repo's CLAUDE.md: "a change to shared/src/video-effects/
+# should be validated by rebuilding at least one consuming sketch").
+#
+# Usage (from this directory,
+# apps/myApps/EcopunkVideoCollage/shared/src/video-effects/test/):
+#   make -f Makefile.tests test
+
+CXX ?= c++
+GLM_INCLUDE = ../../../../../../../libs/glm/include
+CXXFLAGS = -std=c++17 -Wall -Wextra \
+	-I../core -I../knowledge -I../evolution -I$(GLM_INCLUDE)
+SRC = effect_knowledge_extension_tests.cpp \
+	../knowledge/EffectActivityStatus.cpp \
+	../knowledge/EffectSceneCompatibility.cpp \
+	../knowledge/EffectPresetId.cpp \
+	../knowledge/EffectKnowledgePrecedence.cpp
+BIN = effect_knowledge_extension_tests
+
+.PHONY: test clean
+
+test: $(BIN)
+	./$(BIN)
+
+$(BIN): $(SRC) ../knowledge/EffectActivityStatus.h ../knowledge/EffectSceneCompatibility.h \
+	../knowledge/EffectPresetId.h ../knowledge/EffectKnowledgePrecedence.h ../knowledge/EffectLevelKnowledge.h
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(BIN)
+
+clean:
+	rm -f $(BIN)

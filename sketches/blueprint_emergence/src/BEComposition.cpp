@@ -36,8 +36,8 @@ namespace {
 	}
 }
 
-void BEComposition::setupBE(GridSystem * grid_, VideoSampler * videoSampler_, int canvasW_, int canvasH_) {
-	videoSampler = videoSampler_;
+void BEComposition::setupBE(GridSystem * grid_, VideoPlaybackService * videoPlayback_, int canvasW_, int canvasH_) {
+	videoPlayback = videoPlayback_;
 	canvasW = canvasW_;
 	canvasH = canvasH_;
 
@@ -205,8 +205,8 @@ void BEComposition::onUpdate(float dt) {
 	}
 
 	if (lfoBank) {
-		const ofPixels* ridgePx = (videoSampler && videoSampler->getPixels().isAllocated())
-		                          ? &videoSampler->getPixels() : nullptr;
+		const ofPixels* livePixels = videoPlayback ? videoPlayback->currentPixels() : nullptr;
+		const ofPixels* ridgePx = (livePixels && livePixels->isAllocated()) ? livePixels : nullptr;
 		for (auto & f : fragments) {
 			auto* bef = static_cast<BEFragment *>(f.get());
 			bef->setDesatNudge(lfoDesatNudgeForGroup(bef->getEffectGroup()));
@@ -585,14 +585,20 @@ std::vector<ofRectangle> BEComposition::otherFragmentBounds(const Fragment * exc
 }
 
 void BEComposition::requestVideoTexture(BEFragment * fragment, int pxW, int pxH) const {
-	if (videoSampler == nullptr || !videoSampler->hasMedia()) return;
+	if (videoPlayback == nullptr) return;
+	const ofTexture* liveTex = videoPlayback->currentTexture();
 	// Guard against the video player having reported dimensions but not yet
 	// decoded its first frame — storing an unallocated texture pointer causes
 	// "texture has not been allocated" errors when drawSubsection() runs.
-	if (!videoSampler->getTexture().isAllocated()) return;
+	// currentTexture() already returns nullptr unless VideoPlaybackHealth is
+	// Ready/Degraded (see VideoPlaybackService.cpp), the same "don't use it
+	// until real media is actually playing" gate the old
+	// videoSampler->hasMedia() check enforced.
+	if (liveTex == nullptr || !liveTex->isAllocated()) return;
 
-	int videoW = videoSampler->getVideoWidth();
-	int videoH = videoSampler->getVideoHeight();
+	glm::ivec2 videoSize = videoPlayback->sourceSize();
+	int videoW = videoSize.x;
+	int videoH = videoSize.y;
 	if (videoW <= 0 || videoH <= 0) return;
 
 	// Pick a crop whose aspect ratio matches the fragment so no stretching occurs.
@@ -613,7 +619,7 @@ void BEComposition::requestVideoTexture(BEFragment * fragment, int pxW, int pxH)
 	int cropX = (maxCropX > 0) ? (rand() % maxCropX) : 0;
 	int cropY = (maxCropY > 0) ? (rand() % maxCropY) : 0;
 
-	fragment->setVideoSource(&videoSampler->getTexture(), ofRectangle(cropX, cropY, cropW, cropH));
+	fragment->setVideoSource(liveTex, ofRectangle(cropX, cropY, cropW, cropH));
 }
 
 bool BEComposition::placeCircleFragment(int slotIndex) {

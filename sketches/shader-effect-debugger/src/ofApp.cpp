@@ -1,4 +1,7 @@
 #include "ofApp.h"
+#include "EffectKnowledgePack.h"
+#include "EffectPresetId.h"
+#include "KnowledgePackSelfTest.h"
 #include "MotionExtractionEffect.h"
 
 using namespace videoeffects;
@@ -23,6 +26,14 @@ void ofApp::setup() {
 			effectIds.push_back(id);
 		}
 	}
+
+	// Engineering Session 2 acceptance criterion: prove the debugger's
+	// export path and the shared import path round-trip real knowledge
+	// without semantic loss, using the real registered catalog to exercise
+	// unknown-effect-id rejection. Runs unconditionally at startup (not
+	// gated behind a keypress) so this is provable from a console log
+	// without GUI interaction — see KnowledgePackSelfTest.h.
+	runKnowledgePackRoundTripSelfTest(service.registry().allIds());
 
 	scanMediaFiles();
 	if (!videoFiles.empty()) {
@@ -234,6 +245,22 @@ void ofApp::saveCurrentToWhitelist() {
 	for (const auto & e : guiIntParams) entry.snapshot[e->id] = static_cast<float>(e->param.get());
 	for (const auto & e : guiBoolParams) entry.snapshot[e->id] = e->param.get() ? 1.0f : 0.0f;
 
+	// Stable canonical preset identity (DEC-016 / Shared Effects
+	// Architecture-Closure Session): every entry saved to the whitelist
+	// through THIS action is, by definition, a "reusable authored/favored
+	// preset" -- exactly the category DEC-016 requires a presetId for
+	// before schema freeze. The slug is a timestamp plus a per-run
+	// disambiguating counter, deliberately NOT derived from `entry.snapshot`
+	// -- DEC-016 explicitly prohibits generating a preset id "only from
+	// current floating-point snapshot serialization." A blank/failed
+	// synthesis (should not happen for a well-formed effect id) leaves
+	// presetId unset rather than saving a malformed one -- the entry still
+	// saves as a legacy-anonymous preset in that case, not a hard failure.
+	static int presetSaveCounter = 0;
+	std::string slug = ofGetTimestampString("%Y%m%d_%H%M%S") + "_" + ofToString(++presetSaveCounter);
+	std::string candidateId = videoeffects::synthesizeMigrationPresetId(entry.effect, slug);
+	if (!candidateId.empty()) entry.presetId = candidateId;
+
 	bool ok = service.knowledgeBase().appendWhitelist(entry);
 	showToast(ok ? "Saved to whitelist" : "Save failed (duplicate or write error — see log)");
 }
@@ -252,6 +279,29 @@ void ofApp::saveCurrentToBlacklist() {
 
 	bool ok = service.knowledgeBase().appendBlacklist(entry);
 	showToast(ok ? "Saved to blacklist" : "Save failed (duplicate or write error — see log)");
+}
+
+void ofApp::exportKnowledgePack() {
+	// Bundles every known effect id's accumulated whitelist/blacklist —
+	// not just the currently-loaded one — so the pack always reflects a
+	// full, current snapshot of this debugger's knowledge, per
+	// EffectKnowledgePack.h's "full export snapshot, not an incremental
+	// log" contract.
+	//
+	// Written directly to the canonical AUTHORED root (DEC-016 / Shared
+	// Effects Architecture-Closure Session), not this sketch's own
+	// bin/data/ — per that decision's own wording, "per-sketch copies are
+	// derived deployment/build artifacts," and this export action IS the
+	// authoring step, not a deployment step. Every consuming sketch
+	// (including this debugger's own bin/data/, if it wants a locally
+	// runnable copy) receives its copy from
+	// scripts/sync-video-effect-assets.py syncing OUT of this same path,
+	// never by reading it directly at runtime — see that script's
+	// sync_knowledge_pack() and this session's implementation report,
+	// "Canonical path/distribution evidence."
+	const std::string outputPath = "../../../../assets/shared/video-effects/knowledge/effect-knowledge-pack.json";
+	bool ok = videoeffects::exportEffectKnowledgePack(service.knowledgeBase(), effectIds, outputPath, "shader-effect-debugger");
+	showToast(ok ? "Exported knowledge pack" : "Export failed — see log");
 }
 
 // ------------------------------------------------------------------ loop ----
@@ -340,7 +390,7 @@ void ofApp::draw() {
 	ss << "EFFECT: " << effectName << "  (" << (currentEffectIndex + 1) << "/" << effectIds.size() << ")  [Left/Right cycle]\n";
 	ss << "VIDEO:  " << videoName << "  [/] cycle, [space] pause\n";
 	ss << "evolution: " << phaseStr << "   drift: " << (pDriftEnabled.get() ? "on" : "off") << "\n";
-	ss << "[r] randomize  [0] reset  [w] whitelist  [b] blacklist  [e] evolution  [p] drift\n";
+	ss << "[r] randomize  [0] reset  [w] whitelist  [b] blacklist  [k] export pack  [e] evolution  [p] drift\n";
 
 	const VideoEffectDefinition * def = currentEffectIndex >= 0 ? service.getDefinition(effectIds[currentEffectIndex]) : nullptr;
 	if (def != nullptr) {
@@ -377,6 +427,8 @@ void ofApp::keyPressed(int key) {
 		saveCurrentToWhitelist();
 	} else if (key == 'b' || key == 'B') {
 		saveCurrentToBlacklist();
+	} else if (key == 'k' || key == 'K') {
+		exportKnowledgePack();
 	} else if (key == 'e' || key == 'E') {
 		pEvolutionEnabled.set(!pEvolutionEnabled.get());
 	} else if (key == 'p' || key == 'P') {

@@ -1,0 +1,34 @@
+{
+    "blacklist": [],
+    "effectDefaults": [],
+    "exportedAtUtc": "2026-08-08T08:58:58Z",
+    "schemaVersion": 2,
+    "sourceTool": "shader-effect-debugger",
+    "whitelist": [
+        {
+            "effect": "ascii_solarpunk",
+            "label": "",
+            "list": "whitelist",
+            "notes": "",
+            "presetId": "preset.ascii_solarpunk.20260807_205820_1",
+            "schemaVersion": 1,
+            "snapshot": {
+                "alpha": 1.0,
+                "asciiBackgroundMode": 0.0,
+                "asciiColorMode": 0.0,
+                "asciiInvertMono": 0.0,
+                "bias": 0.0,
+                "cellSize": 12.0,
+                "contrast": 1.149999976158142,
+                "opacity": 1.0,
+                "softness": 0.029999999329447746,
+                "thresholdMax": 1.0,
+                "thresholdMin": 0.550000011920929,
+                "thresholdMode": 1.0
+            },
+            "sourceSketch": "shader-effect-debugger",
+            "sourceVideo": "",
+            "timestampUtc": "2026-08-07T20:58:20Z"
+        }
+    ]
+}

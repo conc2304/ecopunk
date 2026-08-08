@@ -1,5 +1,51 @@
 # Fragment Trail — Handoff: "no video visible inside fragments" bug
 
+## ✅ RESOLVED (2026-08-01) — read this before the bisection plan below
+
+**The bug is fixed, and confirmed fixed by actually running the sketch**
+(built `make Release -j4`, launched `bin/fragment-trail.app`, screenshotted
+twice ~2 minutes apart while fragments spawned/decayed). Both screenshots
+show fragments with real, varied, recognizable content — not a flat fill:
+one capture (frame ~2159) shows a teal circular/arch pattern, a
+magenta/pink noisy texture, and a glitchy vertically-striped fragment, all
+clearly distinct from one another; a later capture (frame ~4636) shows the
+background video itself as a recognizable flower close-up with visible
+fragment overlays showing real (if desaturated-looking) texture, not solid
+color blocks.
+
+**Actual root cause — not the one this document's "recommended next
+steps" below were chasing.** It was neither the scissor/shader/zoom
+geometry pipeline (all of §"The open bug" below's diagnostics were
+correct: geometry, textures, and shader binding were fine) nor anything
+in `FTFragment::drawContent()` at all. It was the fragment's **HUD-theme
+background fill**, set in `FTFragmentPool.cpp::setup()`:
+
+```cpp
+theme.colors.background = ofColor(0, 20, 16, 36);
+```
+
+`shared/src/hud/shared/HudFrameRenderer.cpp`'s `draw()` fills the full
+widget bounds with `colors.background` whenever `colors.background.a > 0`,
+**unconditionally, before the `FrameStyle` switch runs** — so the
+Box→Corners fix already applied below (item 1 of "What's already fixed")
+only stopped `drawBox()`'s own separate fill; it never touched this other,
+always-on background wash. The value actually shipped in this repo's
+history was alpha `160` (63% opacity) — high enough to drown the video
+content in a near-opaque wash after every fragment's content draw, which
+is exactly the "flat, detail-free colored fill" symptom. It was found by
+comparing sibling sketches' own `HudFrameRenderer`-consuming theme setups
+(`blueprint_emergence` uses background alpha `36`, `quadrant-crosshair`
+uses `18`, `temporal-fields` uses `40` — all comfortably low), not by
+continuing the scissor/shader bisection this document originally
+recommended. The fix: lower this sketch's background alpha to `36` to
+match that convention.
+
+**The "Recommended next steps" section further down (shader/scissor/zoom
+bisection, Retina viewport-scale investigation, FBO fallback) was on the
+wrong track and was never actually needed** — kept below only as a
+historical record of what was ruled out along the way, not as pending
+work. Don't restart that bisection for this bug.
+
 ## Context
 
 Fragment Trail is a new openFrameworks sketch at `sketches/fragment-trail/`,
@@ -123,6 +169,11 @@ scissor+shader+draw combination actually renders still isn't showing real
 pixel data.**
 
 ## Recommended next steps, in order
+
+> **Superseded — see "✅ RESOLVED" at the top of this document.** None of
+> steps 1-5 below were actually needed; the real fix was the HUD-theme
+> background-alpha fill described up there. Kept here as historical record
+> of what was investigated and ruled out.
 
 1. **Bisect shader vs. scissor**: temporarily force the `!useShader`
    branch unconditionally (comment out the `useShader` check) so every

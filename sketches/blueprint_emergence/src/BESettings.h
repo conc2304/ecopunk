@@ -388,7 +388,14 @@ constexpr int CIRCLE_PLACEMENT_MAX_ATTEMPTS = BE_VALUES.CIRCLE_PLACEMENT_MAX_ATT
 constexpr float IRIS_OPEN_LEAD_FRACTION = BE_VALUES.IRIS_OPEN_LEAD_FRACTION; // how far ahead the outline leads the fill
 constexpr float GHOST_RING_SCALE = BE_VALUES.GHOST_RING_SCALE; // ghost ring radius as a multiple of targetRadius
 
-// Media path
+// Media path — superseded by Shared Video Playback Engineering Session 2
+// (Task G): ofApp.cpp no longer consumes this constant. The canonical
+// media root is now assets/shared/media/, configured directly in
+// ofApp::setup() via VideoPlaybackService::Config::mediaRoot. Left in
+// place (unused) rather than deleted, since PLATFORM_PI is never defined
+// by any build in this repo (dead code on both branches already, per
+// docs/video-playback-ownership-probe-report.md §F.2) and removing a
+// named constant is outside this migration's scope.
 #ifdef PLATFORM_PI
 constexpr char MEDIA_PATH[] = "/home/pi/blueprint/media/";
 #else

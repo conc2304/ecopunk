@@ -38,8 +38,21 @@ PROJECT_EXTERNAL_SOURCE_PATHS = ../../shared/src
 
 ################################################################################
 # PROJECT EXCLUSIONS
+#
+# PROJECT_EXTERNAL_SOURCE_PATHS = ../../shared/src pulls in every
+# subdirectory recursively, including several that contain standalone
+# *_tests.cpp files with their own main() — left unexcluded, these collide
+# with src/main.cpp's real main() at link time ("duplicate symbol
+# '_main'"), confirmed by direct build attempt during the Shared Video
+# Playback System increment (Session 1). Engineering Session 2, Task B
+# consolidated this sketch's own one-off exclusion list (previously
+# spelled out here directly) into one shared, repository-level list — see
+# shared/build/test-main-exclusions.mk for the full rationale and the
+# convention for keeping it up to date as new shared/src test directories
+# are added.
 ################################################################################
-PROJECT_EXCLUSIONS =
+include ../../shared/build/test-main-exclusions.mk
+PROJECT_EXCLUSIONS = $(SHARED_TEST_MAIN_EXCLUSIONS)
 
 ################################################################################
 # PROJECT COMPILERS

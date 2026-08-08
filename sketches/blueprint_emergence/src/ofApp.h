@@ -9,6 +9,7 @@
 #include "MotionExtraction.h"
 #include "ShaderLibrary.h"
 #include "TriggerBus.h"
+#include "VideoPlaybackService.h"
 #include "HudOverlayLayer.h"
 #include "HudOverlayDialPanel.h"
 #include "HudOverlayDialState.h"
@@ -43,7 +44,15 @@ private:
 
 	GridSystem grid;
 	AnnotationRenderer annotations;
-	VideoSampler videoSampler;
+	// Migrated from VideoSampler to the shared VideoPlaybackService
+	// (Shared Video Playback — Engineering Session 2, Task G). See
+	// ofApp.cpp's setup()/exit() and BEComposition::setupBE()/
+	// requestVideoTexture() for the call-site migration; see this
+	// session's implementation report ("Still-frame capture behavior
+	// before and after") for why VideoSampler's requestCapture()
+	// seek/settle/callback machinery was NOT ported — this scene never
+	// called it.
+	VideoPlaybackService videoPlayback;
 	BEComposition composition;
 
 	LFOBank lfoBank;
