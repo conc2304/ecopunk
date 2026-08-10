@@ -1,0 +1,1 @@
+../../../shared/src/video-effects/knowledge/EffectKnowledgeBase.cpp

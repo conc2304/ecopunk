@@ -167,6 +167,12 @@ glm::ivec2 VideoPlaybackService::sourceSize() const {
 	return decoder_->getSize();
 }
 
+std::optional<std::string> VideoPlaybackService::currentAbsolutePath() const {
+	if (!policy_.hasActiveItem()) return std::nullopt;
+	const MediaMetadata& item = catalog_[static_cast<size_t>(policy_.activeCatalogIndex())];
+	return ofFilePath::join(mediaRoot_, item.relativePath);
+}
+
 VideoPlaybackStatus VideoPlaybackService::status() const {
 	VideoPlaybackStatus s;
 	s.schemaVersion = 1;

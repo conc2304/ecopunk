@@ -1,6 +1,9 @@
 #include "TFEffectPicker.h"
 #include "DefaultVideoEffectCatalog.h"
 #include "EffectKnowledgePack.h"
+#include "EffectKnowledgePrecedence.h"
+#include "EffectLevelKnowledge.h"
+#include "EffectPresetId.h"
 #include "TFRandom.h"
 #include "TFTextureCropFill.h"
 #include "VideoEffectRegistry.h"
@@ -49,6 +52,15 @@ namespace {
 		}
 		return true;
 	}
+
+	// Matches EffectSceneCompatibility.cpp's own scene-id string exactly
+	// (shared/src/video-effects/knowledge/EffectSceneCompatibility.cpp) --
+	// this is a DIFFERENT, narrower mechanism (that file tracks whether a
+	// scene consumes the shared service at all; this constant is the scene
+	// id resolveCompatibility() checks a specific preset/effect-default
+	// against), but reuses the identical string so the two never drift
+	// apart into two different spellings of "temporal-fields."
+	const std::string kSceneId = "temporal-fields";
 }
 
 void TFEffectPicker::setup(ShaderLibrary* shaderLib_) {
@@ -107,9 +119,24 @@ void TFEffectPicker::pickNext() {
 	// before this change.
 	for (int attempt = 0; attempt < kBlacklistAvoidanceMaxAttempts; ++attempt) {
 		currentEffect = tfWeightedPick(options);
-		randomizeEffectParams(currentEffect);
 
-		if (currentEffect.empty()) break; // "Raw" has no params to check against blacklist entries
+		if (currentEffect.empty()) {
+			randomizeEffectParams(currentEffect); // zeroes paramX..W for "Raw" -- unchanged
+			lastPickUsedCanonicalPreset_ = false;
+			lastAppliedPresetId_.reset();
+			break; // "Raw" has no params to check against blacklist entries, and no preset to apply
+		}
+
+		// Shared Effect Knowledge v1 Freeze Policy (DEC-016) production-
+		// selector adoption: prefer a real, canonically-eligible authored
+		// preset for the effect weights.effectWeights already chose above.
+		// See applyEligibleCanonicalPreset()'s own header comment for exactly
+		// which rules gate this and why WHICH EFFECT is chosen is unaffected.
+		lastPickUsedCanonicalPreset_ = applyEligibleCanonicalPreset(currentEffect);
+		if (!lastPickUsedCanonicalPreset_) {
+			lastAppliedPresetId_.reset();
+			randomizeEffectParams(currentEffect); // pre-this-increment fallback, unchanged
+		}
 
 		std::map<std::string, float> snapshot = currentParamSnapshot(currentEffect);
 		if (snapshot.empty()) break; // nothing this class snapshots for this effect -- nothing to compare
@@ -127,6 +154,129 @@ void TFEffectPicker::pickNext() {
 									   << "' landed on a known-blacklisted parameter combination (attempt "
 									   << (attempt + 1) << "/" << kBlacklistAvoidanceMaxAttempts << ")";
 	}
+}
+
+bool TFEffectPicker::applyEligibleCanonicalPreset(const std::string& effectName) {
+	// WHICH EFFECT to render remains weights.effectWeights' own local
+	// policy (unaffected by this method) -- gating effect-SELECTION itself
+	// on eligibility was deliberately rejected: no EffectLevelKnowledge
+	// record exists yet for any of this class's 7 randomized effects in
+	// the real canonical pack, so requiring "Allowed" at the effect-
+	// selection layer would make every one of them Unclassified-and-
+	// therefore-ineligible today, collapsing effectWeights' whole candidate
+	// pool to "Raw" -- a large, sudden, real behavior change this
+	// increment's own migration-risk guidance says to avoid ("do not
+	// silently broaden eligibility... document any visible selection-rate
+	// change" implies the inverse too: don't silently CRUSH it either, for
+	// a scene that never asked to be filtered). This method instead governs
+	// only which PARAMETER VALUES an already-chosen effect uses.
+	std::vector<videoeffects::KnowledgeEntry> candidates = knowledgeBase.loadWhitelist(effectName);
+	if (candidates.empty()) return false;
+
+	std::optional<videoeffects::EffectLevelKnowledge> effectDefault = knowledgeBase.loadEffectLevelKnowledge(effectName);
+	const videoeffects::EffectLevelKnowledge* effectDefaultPtr = effectDefault.has_value() ? &(*effectDefault) : nullptr;
+
+	// Production Selector / Eligibility Increment 2: loaded once, up
+	// front, so blocked-ness is a HARD CANDIDATE-FILTERING criterion --
+	// checked before a blocked entry can ever reach `eligible`, not left
+	// to the pre-existing post-hoc bounded retry loop in pickNext() (that
+	// loop still exists for the fallback-randomized path and as defense
+	// in depth here, but a canonical authored preset that is also
+	// blacklisted must never be a candidate at all, per this increment's
+	// own "close the strongest safety gap" mandate -- with only one
+	// eligible-and-blocked candidate, the OLD design could exhaust the
+	// retry budget and apply it anyway; this filter makes that
+	// structurally impossible instead of merely unlikely).
+	std::vector<videoeffects::KnowledgeEntry> blockedEntries = knowledgeBase.loadBlacklist(effectName);
+
+	std::vector<const videoeffects::KnowledgeEntry*> eligible;
+	for (const auto& entry : candidates) {
+		// Legacy anonymous presets (no stable presetId) remain usable for
+		// this class's existing content-match blacklist-avoidance path, but
+		// are never automatic-production-selection-eligible per DEC-016 --
+		// see EffectPresetId.h's isReusableAuthoredPreset().
+		if (!videoeffects::isReusableAuthoredPreset(entry)) continue;
+
+		videoeffects::KnowledgeClassification classification =
+			videoeffects::resolveCompatibility(entry, effectDefaultPtr, kSceneId);
+		if (!videoeffects::isEligibleForAutomaticProductionSelection(classification)) continue;
+
+		// Hard exclusion: hierarchy is reusable AND compatible AND NOT
+		// blocked -- favored/weight preference (the uniform pick below)
+		// only ever runs over what survives this filter, so blocked can
+		// never win via favored status or (once weights exist) higher
+		// weight, per this increment's own required precedence.
+		bool blocked = false;
+		for (const auto& blockedEntry : blockedEntries) {
+			if (snapshotMatchesEntry(entry.snapshot, blockedEntry)) {
+				blocked = true;
+				break;
+			}
+		}
+		if (blocked) continue;
+
+		eligible.push_back(&entry);
+	}
+	if (eligible.empty()) return false;
+
+	// "If only whitelist/favored membership exists, use the existing
+	// behavior" -- no numeric per-preset weight field exists in this
+	// schema (Shared Effects Production Selector task, Step 3), so a
+	// uniform pick among the eligible (i.e. favored-by-whitelist-
+	// membership) set is the existing behavior this adopts, not a new
+	// policy invented here.
+	std::size_t index = static_cast<std::size_t>(ofRandom(0.0f, static_cast<float>(eligible.size())));
+	if (index >= eligible.size()) index = eligible.size() - 1; // ofRandom's upper bound is exclusive in practice, but clamp defensively
+	const videoeffects::KnowledgeEntry* chosen = eligible[index];
+
+	applyParamsFromSnapshot(effectName, chosen->snapshot);
+	lastAppliedPresetId_ = chosen->presetId;
+	ofLogNotice("TFEffectPicker") << "applying canonical eligible preset '"
+								   << (chosen->presetId.has_value() ? *chosen->presetId : std::string("(no presetId?)"))
+								   << "' for effect '" << effectName << "'";
+	return true;
+}
+
+void TFEffectPicker::applyParamsFromSnapshot(const std::string& name, const std::map<std::string, float>& snapshot) {
+	// Inverse of currentParamSnapshot()'s key mapping -- see that method's
+	// own comment for why these exact keys (canonical
+	// VideoEffectDefinition parameter ids) and not paramX..W names.
+	paramX = paramY = paramZ = paramW = 0.0f;
+	auto get = [&](const std::string& key, float fallback) {
+		auto it = snapshot.find(key);
+		return it != snapshot.end() ? it->second : fallback;
+	};
+	if (name == "dither") {
+		paramX = get("alpha", paramX);
+		paramY = get("maxPixelation", paramY);
+	} else if (name == "threshold") {
+		paramX = get("threshold", paramX);
+	} else if (name == "channelshift") {
+		paramX = get("shift", paramX);
+	} else if (name == "hue_rotate") {
+		paramX = get("hueOffset", paramX);
+		paramY = get("hueSpeed", paramY);
+		paramZ = get("saturationMult", paramZ);
+		paramW = get("valueMult", paramW);
+	} else if (name == "pixel_sorting") {
+		paramX = get("threshold", paramX);
+		paramY = get("direction", paramY);
+	} else if (name == "heatmap_recolor") {
+		paramX = get("gamma", paramX);
+		paramY = get("minLuminance", paramY);
+		paramZ = get("maxLuminance", paramZ);
+		// palette/reverse (paramW's packed encoding) intentionally not
+		// sourced from a canonical preset -- same limitation as
+		// currentParamSnapshot()'s own comment on this effect.
+	}
+	// "recolor": tint is vector-typed, never representable in a scalar
+	// snapshot (see currentParamSnapshot()'s own comment) -- never applied
+	// from a canonical preset; applyEligibleCanonicalPreset() may still
+	// return true for a "recolor" entry with an empty/irrelevant snapshot,
+	// which would leave paramX..W at 0 -- Session evidence (see this
+	// increment's report) confirms no "recolor" whitelist entry with a
+	// meaningful scalar snapshot exists in the real canonical pack today,
+	// so this is a documented latent gap, not silently masked.
 }
 
 std::map<std::string, float> TFEffectPicker::currentParamSnapshot(const std::string& name) const {
@@ -175,6 +325,25 @@ std::map<std::string, float> TFEffectPicker::currentParamSnapshot(const std::str
 
 videoeffects::EffectActivityStatus TFEffectPicker::activityStatus() const {
 	videoeffects::EffectActivityStatus status;
+
+	// Health, independent of which effect (if any) is selected below: this
+	// class's only real "something isn't working as expected" condition is
+	// a picked effect whose shader failed to load -- the exact same check
+	// drawCurrent() already makes for its own raw-draw fallback (see that
+	// method). Mirrors deriveEffectHealth()'s "runs, but not with what was
+	// expected" Degraded case (shared/src/video-effects/knowledge/
+	// EffectActivityStatus.cpp) without needing a VideoEffectLoadReport --
+	// this class never owned one (it uses the bare VideoEffectRegistry for
+	// parameter defaults and its own ShaderLibrary, never VideoEffectService
+	// -- see docs/shared-effect-knowledge-engineering-session-2-verification.md's
+	// Blob/Temporal ownership findings for why no VideoEffectLoadReport is
+	// available here to begin with). Raw/No-Effect (currentEffect.empty())
+	// short-circuits this to Ready -- an empty selection is never a failure.
+	if (!currentEffect.empty() && (shaderLib == nullptr || !shaderLib->has(currentEffect))) {
+		status.health = videoeffects::EffectHealth::Degraded;
+		status.messageId = "effect.shader_unavailable"; // stable id, never raw text -- same discipline as SceneHudStatus::message
+	}
+
 	if (currentEffect.empty()) {
 		return status; // "Raw / No Effect" -- zero slots, not a slot with an empty id
 	}

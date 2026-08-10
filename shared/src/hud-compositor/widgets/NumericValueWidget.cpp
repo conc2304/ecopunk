@@ -13,14 +13,21 @@ void NumericValueWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 
 	float opacity = (valueRole && valueRole->dimmed) ? 0.5f : 1.0f;
 
+	float pad = wu(bounds, 4.0f);
+	// Fixed native pixel-space budget (see HudWidgetDrawUtils.h's v1
+	// typography strategy comment) — not scale-adjusted.
+	float localMaxWidth = std::max(0.0f, bounds.width - pad * 2.0f);
+
 	if (!input.captionText.empty()) {
 		ofSetColor(scaledAlpha(colors.muted, opacity));
-		drawText(input.captionText, bounds.x + wu(bounds, 4.0f), bounds.y + wu(bounds, 12.0f), wu(bounds, 0.6f, 120.0f));
+		const auto& caption = textCache_.truncateToWidth(input.captionText, localMaxWidth);
+		drawText(caption.text, bounds.x + pad, bounds.y + wu(bounds, 12.0f));
 	}
 
 	if (valueRole && valueRole->shouldRender) {
 		ofSetColor(scaledAlpha(valueRole->useAmbientFallback ? colors.muted : colors.primary, opacity));
-		drawText(valueRole->formattedText, bounds.x + wu(bounds, 4.0f), bounds.y + bounds.height - wu(bounds, 4.0f), wu(bounds, 1.0f, 120.0f));
+		const auto& value = textCache_.truncateToWidth(valueRole->formattedText, localMaxWidth);
+		drawText(value.text, bounds.x + pad, bounds.y + bounds.height - wu(bounds, 4.0f));
 	}
 
 	ofPopStyle();

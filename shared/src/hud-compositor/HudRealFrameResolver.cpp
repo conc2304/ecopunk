@@ -53,6 +53,36 @@ HudIdentifierList toIdentifierList(const std::vector<std::string>& ids) {
 	return list;
 }
 
+// Final Narrow Closure Patch — the COMPLETE active-effect-ID set from the
+// frozen snapshot, per this task's Task 1: "effects.active -> complete
+// active effect set from EffectActivityStatus::slots... do not use
+// resolveDominantEffectIds() to build effects.active... do not apply
+// dominance threshold or label cap... do not drop low-prominence active
+// effects." Deduplicated by effectId (two slots running the same effect
+// — e.g. two quadrants both on "recolor" — are ONE active effect, not
+// two list entries; this is the same "group by effectId" step
+// resolveDominantEffectIds() itself documents as its own step 2, reused
+// here as plain grouping with NO ranking/threshold/cap applied on top),
+// in first-seen slot order — slot order carries no dominance meaning
+// (effects.dominant, resolved separately below via the canonical
+// resolver, is the only ranked value) but is still a deterministic,
+// reproducible order for a fixed input, which is all this needs to be.
+// HudIdentifierList's own kMaxItems=8 capacity limit still applies (with
+// its own honest `overflowed` flag) — a structural container limit, not
+// a semantic dominance/prominence cut, so it does not violate "no
+// dominance threshold or cap" above.
+HudIdentifierList allActiveEffectIds(const videoeffects::EffectActivityStatus& status) {
+	HudIdentifierList list;
+	for (const auto& slot : status.slots) {
+		bool alreadyPresent = false;
+		for (size_t i = 0; i < list.count; ++i) {
+			if (list.items[i] == slot.effectId) { alreadyPresent = true; break; }
+		}
+		if (!alreadyPresent) list.push(slot.effectId);
+	}
+	return list;
+}
+
 // Same three-tier fallback as HudSourceResolver.cpp's resolveMediaTitle()
 // — see that function's header comment for the full rationale (titleId is
 // vocabulary-resolvable Identifier text; fallbackDisplayTitle/mediaId are
@@ -307,18 +337,22 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveEffects(const std::
 
 	if (frame.effects) {
 		const EffectActivityStatus& status = *frame.effects;
-		// Default DominanceConfig (maxLabels=2, minProminenceToShow=0.05,
-		// annotateTransitioning=true) — the same config
-		// EffectActivityStatus.h's own header comment documents as the
-		// canonical effects.active/effects.dominant/effects.transition.progress
-		// mapping; this file does not override any of its fields.
-		auto dominant = resolveDominantEffectIds(status);
 
+		// Final Narrow Closure Patch — effects.active and effects.dominant
+		// are now DELIBERATELY independent computations, per Task 1/Task 2:
+		// effects.active is the complete active set (allActiveEffectIds(),
+		// no dominance filtering at all); effects.dominant alone uses the
+		// canonical dominance resolver below (default DominanceConfig —
+		// maxLabels=2, minProminenceToShow=0.05, annotateTransitioning=true
+		// — this file does not override any of its fields). A widget MAY
+		// still visually cap how many chips it draws (EffectChipsWidget's
+		// own row-wrapping/space-limit logic) — that is presentation, not
+		// this semantic value.
 		if (sourceId == "effects.active") {
-			HudIdentifierList list;
-			for (const auto& d : dominant) list.push(d.effectId);
-			return HudResolvedValue::list(list); // present, possibly empty — present-empty is not missing
+			return HudResolvedValue::list(allActiveEffectIds(status)); // present, possibly empty — present-empty is not missing
 		}
+
+		auto dominant = resolveDominantEffectIds(status);
 		if (sourceId == "effects.dominant") {
 			if (dominant.empty()) return HudResolvedValue::missing(HudSourceValueType::Identifier, HudDataClass::Literal);
 			return HudResolvedValue::identifier(dominant.front().effectId);

@@ -42,6 +42,12 @@ public:
 
 	void update(const std::vector<BlobDetection> & detections, float dt);
 
+	// Drops every track/active region and restarts id assignment. Added
+	// for IEcopunkScene-style reactivation — a track id from before a
+	// scene was deactivated must never resurface as if it were the same
+	// persistent identity after reactivation.
+	void reset();
+
 	const std::vector<VideoRegion> & getActiveRegions() const { return activeRegions; }
 
 	int getTrackCount() const { return static_cast<int>(tracks.size()); }

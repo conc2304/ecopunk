@@ -55,11 +55,31 @@ LIFECYCLE_BIN = lifecycle_state_tests
 SESSION2_SRC = session2_integration_tests.cpp ../../../shared/src/video-effects/knowledge/EffectActivityStatus.cpp
 SESSION2_BIN = session2_integration_tests
 
+# Blob First Production Acceptance narrow patch: blobsemantics::compute()
+# (../src/BlobSemanticMapping.h/.cpp) only needs SceneSemanticTypes.h, which
+# is itself OF-free (confirmed: only <cstdint>/<optional>/<string>/<vector>)
+# — no glm/-I needed beyond locating that one header, same bare-compiler
+# convention as LIFECYCLE_BIN/SESSION2_BIN above.
+BLOB_SEMANTIC_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/scene
+BLOB_SEMANTIC_SRC = blob_semantic_mapping_tests.cpp ../src/BlobSemanticMapping.cpp
+BLOB_SEMANTIC_BIN = blob_semantic_mapping_tests
+
+# Temporal Production Scene #2 Migration: temporalsemantics::compute()
+# (../src/TemporalSemanticMapping.h/.cpp) has the exact same OF-free
+# dependency shape as blobsemantics::compute() above (only
+# SceneSemanticTypes.h) — same bare-compiler convention, no new -I beyond
+# locating that one header.
+TEMPORAL_SEMANTIC_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/scene
+TEMPORAL_SEMANTIC_SRC = temporal_semantic_mapping_tests.cpp ../src/TemporalSemanticMapping.cpp
+TEMPORAL_SEMANTIC_BIN = temporal_semantic_mapping_tests
+
 .PHONY: test session2 clean
 
-test: $(LIFECYCLE_BIN) $(SESSION2_BIN)
+test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN)
 	./$(LIFECYCLE_BIN)
 	./$(SESSION2_BIN)
+	./$(BLOB_SEMANTIC_BIN)
+	./$(TEMPORAL_SEMANTIC_BIN)
 
 session2: $(SESSION2_BIN)
 	./$(SESSION2_BIN)
@@ -70,5 +90,11 @@ $(LIFECYCLE_BIN): $(LIFECYCLE_SRC) ../src/FakeSceneLifecycleState.h
 $(SESSION2_BIN): $(SESSION2_SRC)
 	$(CXX) $(SESSION2_CXXFLAGS) $(SESSION2_SRC) -o $(SESSION2_BIN)
 
+$(BLOB_SEMANTIC_BIN): $(BLOB_SEMANTIC_SRC) ../src/BlobSemanticMapping.h
+	$(CXX) $(BLOB_SEMANTIC_CXXFLAGS) $(BLOB_SEMANTIC_SRC) -o $(BLOB_SEMANTIC_BIN)
+
+$(TEMPORAL_SEMANTIC_BIN): $(TEMPORAL_SEMANTIC_SRC) ../src/TemporalSemanticMapping.h
+	$(CXX) $(TEMPORAL_SEMANTIC_CXXFLAGS) $(TEMPORAL_SEMANTIC_SRC) -o $(TEMPORAL_SEMANTIC_BIN)
+
 clean:
-	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN)
+	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN)

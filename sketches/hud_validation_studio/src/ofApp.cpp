@@ -334,6 +334,38 @@ std::vector<ofApp::RealFrameCase> ofApp::buildRealFrameCases() const {
 		cases.push_back({"effects_no_intensity", f});
 	}
 	{
+		// Final Narrow Closure Patch, Task 3/6 — the mandatory >2-effect
+		// regression, visually: 4 active effects, one below the canonical
+		// dominance threshold (0.02 < minProminenceToShow=0.05), dominant
+		// effect deliberately last in the vector — same case
+		// hud_real_frame_tests.cpp's
+		// test_real_effects_active_full_set_with_below_threshold_and_dominance_not_first()
+		// proves at the resolver level; this proves it end-to-end through
+		// the real EffectChipsWidget/StatusBadge chain.
+		HudFrameData f = baseRealFrame("real-frame-demo");
+		EffectActivityStatus status;
+		status.health = EffectHealth::Ready;
+		EffectActivitySlot a;
+		a.slotId = "quadrant_0";
+		a.effectId = "heatmap_recolor";
+		a.prominence = 0.3f;
+		EffectActivitySlot b; // BELOW dominance threshold — must still appear in effects.active
+		b.slotId = "quadrant_1";
+		b.effectId = "desaturate";
+		b.prominence = 0.02f;
+		EffectActivitySlot c;
+		c.slotId = "quadrant_2";
+		c.effectId = "bioluminescence";
+		c.prominence = 0.5f;
+		EffectActivitySlot d; // the DOMINANT slot — deliberately last
+		d.slotId = "quadrant_3";
+		d.effectId = "channel_shift";
+		d.prominence = 0.9f;
+		status.slots = {a, b, c, d};
+		f.effects = status;
+		cases.push_back({"effects_multi_below_threshold_and_dominance_not_first", f});
+	}
+	{
 		// Compatibility-fallback demo — explicitly opted in, for tooling/
 		// fixture demonstration only (DEC-015 §10.5). Frame has NO
 		// authoritative snapshot but a populated SceneHudStatus::activeEffects;

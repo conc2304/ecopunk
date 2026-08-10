@@ -1,14 +1,17 @@
 #pragma once
 
 #include "AllocationCounter.h"
+#include "BlobProductionScene.h"
 #include "HudCompositorBridge.h"
 #include "HudFrameData.h"
 #include "InputRouter.h"
 #include "RuntimeServices.h"
 #include "SceneContract.h"
 #include "SceneManager.h"
+#include "TemporalProductionScene.h"
 
 #include "ofFbo.h"
+#include "ofImage.h"
 
 // ExperienceRuntime — top-level owner, per Scene-HUD-Contract-v1.md §4's
 // sibling-system diagram:
@@ -52,6 +55,62 @@
 //  17. Present.
 class ExperienceRuntime {
 public:
+	// Blob First Complete Production Migration: blobScene_ below binds a
+	// reference to runtimeServices_.video() at construction time (the one
+	// canonical VideoPlaybackService instance — valid immediately, since
+	// RuntimeServices default-constructs its VideoPlaybackService member
+	// regardless of whether RuntimeServices::setup() has run yet), so an
+	// explicit constructor is required. See member declaration order below
+	// (runtimeServices_ before blobScene_/temporalScene_ — C++ initializes
+	// members in declaration order, not initializer-list order).
+	ExperienceRuntime();
+
+	// Installs blobScene_ as the scene SceneManager actually drives.
+	// Caller-controlled (not called automatically inside setup() below) so
+	// GlRestorationHarness's existing FakeScene-only proofs keep running
+	// unmodified: ofApp only calls this when the harness is NOT requested
+	// (see ofApp.cpp), and it MUST be called before setup() (matches
+	// SceneManager::installProductionScene()'s own requirement) — setup()
+	// activates and caches capabilities for whichever scene is installed
+	// at the time it runs.
+	void installBlobProductionScene() {
+		installedTemporalScene_ = false;
+		sceneManager_.installProductionScene(&blobScene_);
+	}
+
+	// Temporal Production Scene #2 Migration: same contract as
+	// installBlobProductionScene() above, for temporalScene_. Mutually
+	// exclusive with it — SceneManager has exactly one productionScene_
+	// slot (see that class's own comment); this session hosts Temporal as
+	// a complete, independently launchable production scene, not
+	// simultaneously alongside Blob (real Blob<->Temporal switching is the
+	// separate, later two-scene acceptance milestone — see this
+	// migration's completion report). Also installs temporalScene_'s own
+	// real canonical-effect-activity source (currentEffectActivitySnapshot())
+	// through SceneManager's generic production seam — see
+	// SceneManager::installProductionScene()'s EffectActivitySource
+	// parameter comment.
+	void installTemporalProductionScene() {
+		installedTemporalScene_ = true;
+		sceneManager_.installProductionScene(
+			&temporalScene_, [this] { return temporalScene_.currentEffectActivitySnapshot(); });
+	}
+
+	// Temporal Production Scene #2 Migration: development/test-only access
+	// to the real TemporalProductionScene instance — same rationale as
+	// blobSceneForTesting() below.
+	TemporalProductionScene& temporalSceneForTesting() { return temporalScene_; }
+
+	// Blob Post-Acceptance Hardening: development/test-only access to the
+	// real BlobProductionScene instance — same class as
+	// sceneManagerForTesting() above. SceneManager's own IEcopunkScene-level
+	// public surface (hudStatus()/capabilities()/etc.) has no way to expose
+	// Blob-local instrumentation (scratch-FBO dimensions, configured caps)
+	// without widening the frozen IEcopunkScene contract itself, so harness
+	// code that needs those reads blobScene_ directly through this getter
+	// instead. Production code never calls this.
+	BlobProductionScene& blobSceneForTesting() { return blobScene_; }
+
 	void setup();
 	void update(float dt);
 	void draw();
@@ -98,6 +157,28 @@ public:
 		sceneFbo_.allocate(newSize.x, newSize.y, GL_RGBA);
 	}
 
+	// Blob First Production Acceptance narrow patch: saves the
+	// runtime-owned scene FBO's current contents to a PNG — i.e. the
+	// active scene's rendered output BEFORE HUD compositing, for visual-
+	// parity evidence (comparing Blob's runtime-hosted output directly
+	// against the standalone sketch, without HUD framing in the way).
+	// Test/tooling-only, same class as sceneManagerForTesting()/
+	// forceSceneFboReallocationForTesting() above — not a SceneContract.h
+	// addition, not part of IEcopunkScene, and not used by production
+	// draw/update code. Returns false (no-op) if the FBO isn't allocated
+	// yet. Caller is responsible for the enclosing directory existing
+	// (matches GlRestorationHarness's own captures/ convention).
+	bool saveSceneFrameCaptureForTesting(const std::string& path) const {
+		if (!sceneFbo_.isAllocated()) {
+			return false;
+		}
+		ofPixels pixels;
+		sceneFbo_.getTexture().readToPixels(pixels);
+		ofImage img;
+		img.setFromPixels(pixels);
+		return img.save(path);
+	}
+
 	// Provisional development frame rate. NOT the Raspberry Pi 3B
 	// production target — the six existing runtime scenes set 24/30/unset
 	// inconsistently (see the placement/readiness probe §6). This value
@@ -125,6 +206,28 @@ private:
 	InputRouter inputRouter_;
 	RuntimeServices runtimeServices_;
 	HudCompositorBridge hudCompositorBridge_;
+
+	// The first real production scene — see class header comment and
+	// setup() for installation into sceneManager_. Constructed here
+	// (member declaration order, not the constructor body) bound to
+	// runtimeServices_.video(); must stay declared after runtimeServices_.
+	BlobProductionScene blobScene_;
+
+	// Temporal Production Scene #2 Migration: the second real production
+	// scene, same construction-order rule as blobScene_ above (must stay
+	// declared after runtimeServices_). Only one of blobScene_/
+	// temporalScene_ is ever actually installed into sceneManager_ at a
+	// time in this session — see installBlobProductionScene()/
+	// installTemporalProductionScene() above.
+	TemporalProductionScene temporalScene_;
+
+	// Set by whichever of installBlobProductionScene()/
+	// installTemporalProductionScene() was called last — read by setup()
+	// below to derive services.sceneAssetRoot from the actually-installed
+	// scene's own sceneId() (neither scene currently reads that field —
+	// see BlobProductionScene::setup()'s own comment — so this only
+	// affects an inert value either way).
+	bool installedTemporalScene_ = false;
 
 	// The one current aggregate — replaced once per completed runtime
 	// frame in draw(), valid for the whole compositor draw call, passed

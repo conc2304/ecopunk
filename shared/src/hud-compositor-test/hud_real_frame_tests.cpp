@@ -354,7 +354,13 @@ void test_real_effects_present_active_one_slot() {
 
 // Proves dominance uses the canonical resolver's prominence-ranking, never
 // vector/insertion order — this test's whole point is that slots[0] is
-// NOT the dominant result.
+// NOT the dominant result. Final Narrow Closure Patch: effects.active and
+// effects.dominant are now independent computations (Task 1/Task 2) —
+// effects.active is the complete active set in first-seen SLOT order (no
+// dominance ranking applied to it at all), effects.dominant alone is
+// prominence-ranked. This test proves BOTH: effects.dominant is NOT
+// slots[0], and effects.active's own order is NOT dominance-derived
+// either (it stays in insertion order, unaffected by prominence).
 void test_real_effects_dominance_not_first_in_vector() {
 	HudRealFrameResolver resolver;
 	HudFrameData frame = makeMinimalRealFrame();
@@ -380,7 +386,10 @@ void test_real_effects_dominance_not_first_in_vector() {
 
 	auto active = resolver.resolve("effects.active", frame);
 	HUD_CHECK(active && active->present && active->listValue.count == 2);
-	HUD_CHECK_EQ_STR(active->listValue.items[0], "bioluminescence"); // dominance order, not insertion order
+	// effects.active is NOT dominance-ordered — it reflects the complete
+	// active set in the slot order it was given, independent of prominence.
+	HUD_CHECK_EQ_STR(active->listValue.items[0], "desaturate");
+	HUD_CHECK_EQ_STR(active->listValue.items[1], "bioluminescence");
 }
 
 void test_real_effects_transition_progress() {
@@ -485,6 +494,55 @@ void test_real_effects_intensity_always_absent() {
 	HUD_CHECK(intensity && intensity->present == false);
 }
 
+// Final Narrow Closure Patch, Task 3 — the mandatory >2-effect regression:
+// 4 active effects, one below the canonical dominance threshold
+// (minProminenceToShow=0.05, DominanceConfig's default), dominant effect
+// NOT at vector index 0. Proves effects.active retains ALL FOUR
+// (including the below-threshold one) while effects.dominant matches
+// ONLY the canonical dominance result — the two are independent
+// computations, exactly per Task 1/Task 2.
+void test_real_effects_active_full_set_with_below_threshold_and_dominance_not_first() {
+	HudRealFrameResolver resolver;
+	HudFrameData frame = makeMinimalRealFrame();
+	EffectActivityStatus status;
+	status.health = EffectHealth::Ready;
+
+	EffectActivitySlot a; // index 0 — not dominant
+	a.slotId = "quadrant_0";
+	a.effectId = "heatmap_recolor";
+	a.prominence = 0.3f;
+
+	EffectActivitySlot b; // index 1 — BELOW dominance threshold (0.02 < 0.05)
+	b.slotId = "quadrant_1";
+	b.effectId = "desaturate";
+	b.prominence = 0.02f;
+
+	EffectActivitySlot c; // index 2
+	c.slotId = "quadrant_2";
+	c.effectId = "bioluminescence";
+	c.prominence = 0.5f;
+
+	EffectActivitySlot d; // index 3 — the DOMINANT slot, deliberately last
+	d.slotId = "quadrant_3";
+	d.effectId = "channel_shift";
+	d.prominence = 0.9f;
+
+	status.slots = {a, b, c, d};
+	frame.effects = status;
+
+	auto active = resolver.resolve("effects.active", frame);
+	HUD_CHECK(active && active->present);
+	HUD_CHECK(active->listValue.count == 4); // ALL FOUR survive, including the below-threshold one
+	HUD_CHECK_EQ_STR(active->listValue.items[0], "heatmap_recolor");
+	HUD_CHECK_EQ_STR(active->listValue.items[1], "desaturate"); // below-threshold, still present
+	HUD_CHECK_EQ_STR(active->listValue.items[2], "bioluminescence");
+	HUD_CHECK_EQ_STR(active->listValue.items[3], "channel_shift");
+
+	auto dominant = resolver.resolve("effects.dominant", frame);
+	HUD_CHECK(dominant && dominant->present);
+	HUD_CHECK_EQ_STR(dominant->textValue, "channel_shift"); // canonical dominance result ONLY — not index 0, not the below-threshold slot
+}
+
 void test_real_manager_transition_fields() {
 	HudRealFrameResolver resolver;
 	HudFrameData frame = makeMinimalRealFrame();
@@ -528,6 +586,7 @@ int main() {
 	test_real_effects_present_empty();
 	test_real_effects_present_active_one_slot();
 	test_real_effects_dominance_not_first_in_vector();
+	test_real_effects_active_full_set_with_below_threshold_and_dominance_not_first();
 	test_real_effects_transition_progress();
 	test_real_effects_health_degraded_empty();
 	test_real_effects_health_degraded_active();

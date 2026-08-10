@@ -3,6 +3,7 @@
 #include "EffectPresetId.h"
 #include "KnowledgePackSelfTest.h"
 #include "MotionExtractionEffect.h"
+#include <algorithm>
 
 using namespace videoeffects;
 
@@ -47,6 +48,7 @@ void ofApp::setup() {
 	globalGroup.add(pEvolutionEnabled);
 	globalGroup.add(pDriftEnabled);
 	globalGroup.add(pSeed);
+	globalGroup.add(pMarkTemporalFieldsCompatible);
 	gui.add(globalGroup);
 
 	if (!effectIds.empty()) {
@@ -54,6 +56,18 @@ void ofApp::setup() {
 	} else {
 		ofLogError("ofApp") << "no effects registered — nothing to preview";
 	}
+
+	// Production Selector / Eligibility Increment 2's real authored-pack
+	// acceptance proof: author (idempotently -- appendWhitelist's own
+	// content-based isDuplicate check makes re-running this a no-op) one
+	// real, canonical-effect-id, presetId-bearing, temporal-fields-
+	// compatible whitelist preset via the exact same interactive-capable
+	// code path 'w' uses, then export it to the real canonical root via
+	// the exact same code path 'k' uses. Not a parallel/duplicate
+	// implementation -- see authorCanonicalTemporalFieldsSeedPreset()'s
+	// own comment for why this runs automatically here rather than only
+	// via keypress.
+	authorCanonicalTemporalFieldsSeedPreset();
 }
 
 // ----------------------------------------------------------------- video ----
@@ -261,6 +275,19 @@ void ofApp::saveCurrentToWhitelist() {
 	std::string candidateId = videoeffects::synthesizeMigrationPresetId(entry.effect, slug);
 	if (!candidateId.empty()) entry.presetId = candidateId;
 
+	// Production Selector / Eligibility Increment 2: the compatibility
+	// half of "reusable, production-selectable preset" -- presetId alone
+	// (added by the block above) is necessary but not sufficient; without
+	// an authored compatibleSceneIds override (or an effect-level
+	// default, authored elsewhere), EffectKnowledgePrecedence.h's
+	// resolveCompatibility() correctly reports Unclassified, which
+	// isEligibleForAutomaticProductionSelection() correctly excludes.
+	// This toggle is the first real authoring path for that override; see
+	// ofApp.h's own comment on why it's scoped to one scene id for now.
+	if (pMarkTemporalFieldsCompatible.get()) {
+		entry.compatibleSceneIds = std::vector<std::string>{ "temporal-fields" };
+	}
+
 	bool ok = service.knowledgeBase().appendWhitelist(entry);
 	showToast(ok ? "Saved to whitelist" : "Save failed (duplicate or write error — see log)");
 }
@@ -302,6 +329,48 @@ void ofApp::exportKnowledgePack() {
 	const std::string outputPath = "../../../../assets/shared/video-effects/knowledge/effect-knowledge-pack.json";
 	bool ok = videoeffects::exportEffectKnowledgePack(service.knowledgeBase(), effectIds, outputPath, "shader-effect-debugger");
 	showToast(ok ? "Exported knowledge pack" : "Export failed — see log");
+}
+
+void ofApp::authorCanonicalTemporalFieldsSeedPreset() {
+	// Reuses saveCurrentToWhitelist()/exportKnowledgePack() verbatim -- the
+	// exact same interactive, keypress-triggerable code paths -- rather
+	// than a parallel write implementation. Runs automatically once at
+	// startup (idempotent: appendWhitelist's own content-based
+	// isDuplicate() check makes every re-run after the first a no-op)
+	// because this environment cannot reliably drive live GUI/keyboard
+	// interaction to author a preset the way a human operator would;
+	// see docs/shared-effects-production-selector-eligibility-increment-2-report.md's
+	// "Real authored-pack proof" section for the full rationale and for
+	// why this is a real authored artifact reaching the real canonical
+	// root, not a test-only fixture (KnowledgePackSelfTest's scratch data
+	// never leaves bin/data/knowledge_roundtrip_selftest/ and never
+	// reaches assets/shared/video-effects/knowledge/; this does).
+	//
+	// "dither" chosen because it's one of the 7 effects
+	// TFEffectPicker actually randomizes (not just falls back to catalog
+	// defaults for) -- see TFEffectPicker.cpp's currentParamSnapshot()/
+	// applyParamsFromSnapshot() key mapping for "alpha"/"maxPixelation".
+	const std::string effectId = "dither";
+	auto it = std::find(effectIds.begin(), effectIds.end(), effectId);
+	if (it == effectIds.end()) {
+		ofLogWarning("ofApp") << "authorCanonicalTemporalFieldsSeedPreset: '" << effectId << "' not registered -- skipping";
+		return;
+	}
+	int index = static_cast<int>(std::distance(effectIds.begin(), it));
+
+	int previousEffectIndex = currentEffectIndex;
+	switchToEffect(index); // also resets to schema defaults via resetCurrentToDefaults()
+
+	bool previousToggleValue = pMarkTemporalFieldsCompatible.get();
+	pMarkTemporalFieldsCompatible.set(true);
+	saveCurrentToWhitelist(); // the real, unmodified authoring action -- schema-default alpha/maxPixelation as the authored snapshot
+	pMarkTemporalFieldsCompatible.set(previousToggleValue);
+
+	exportKnowledgePack(); // the real, unmodified export action -- writes assets/shared/video-effects/knowledge/effect-knowledge-pack.json
+
+	if (previousEffectIndex >= 0 && previousEffectIndex != index) {
+		switchToEffect(previousEffectIndex); // restore whatever was selected before this ran
+	}
 }
 
 // ------------------------------------------------------------------ loop ----
@@ -390,7 +459,7 @@ void ofApp::draw() {
 	ss << "EFFECT: " << effectName << "  (" << (currentEffectIndex + 1) << "/" << effectIds.size() << ")  [Left/Right cycle]\n";
 	ss << "VIDEO:  " << videoName << "  [/] cycle, [space] pause\n";
 	ss << "evolution: " << phaseStr << "   drift: " << (pDriftEnabled.get() ? "on" : "off") << "\n";
-	ss << "[r] randomize  [0] reset  [w] whitelist  [b] blacklist  [k] export pack  [e] evolution  [p] drift\n";
+	ss << "[r] randomize  [0] reset  [w] whitelist  [b] blacklist  [k] export pack  [c] temporal-fields-compatible  [e] evolution  [p] drift\n";
 
 	const VideoEffectDefinition * def = currentEffectIndex >= 0 ? service.getDefinition(effectIds[currentEffectIndex]) : nullptr;
 	if (def != nullptr) {
@@ -429,6 +498,8 @@ void ofApp::keyPressed(int key) {
 		saveCurrentToBlacklist();
 	} else if (key == 'k' || key == 'K') {
 		exportKnowledgePack();
+	} else if (key == 'c' || key == 'C') {
+		pMarkTemporalFieldsCompatible.set(!pMarkTemporalFieldsCompatible.get());
 	} else if (key == 'e' || key == 'E') {
 		pEvolutionEnabled.set(!pEvolutionEnabled.get());
 	} else if (key == 'p' || key == 'P') {

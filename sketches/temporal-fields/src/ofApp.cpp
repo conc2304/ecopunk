@@ -1,11 +1,14 @@
 #include "ofApp.h"
 #include "Settings.h"
 #include "TFSettings.h"
+#include "TFActivityStatusSelfTest.h"
+#include "TFEligibilitySelfTest.h"
+#include "TFVideoAdapterSelfTest.h"
 #include <algorithm>
 
 void ofApp::setup() {
-	// Must precede ALL texture/FBO allocations (timeOffsetBuffer's playhead
-	// textures, TFFragmentTransition's snapshot FBOs) — oF defaults to
+	// Must precede ALL texture/FBO allocations (temporalVideoAdapter's
+	// buffer's playhead textures, TFFragmentTransition's snapshot FBOs) — oF defaults to
 	// GL_TEXTURE_RECTANGLE_ARB, whose pixel-space texcoords break the
 	// fragmentDissolve shader's normalized texture2D() sampling. See
 	// blueprint_emergence/src/ofApp.cpp's identical setup() comment, which
@@ -15,30 +18,87 @@ void ofApp::setup() {
 	ofSetFrameRate(TARGET_FPS);
 
 	shaderLib.setup();
+
+	// Shared Effects "Final Canonical Activity Producer Seam Patch" --
+	// proves TFEffectPicker::activityStatus() (the real, existing
+	// production DEC-015 accessor) is side-effect-free, stable, and
+	// honestly derives health/canonical-IDs/phase/progress/prominence from
+	// real owned state. Runs unconditionally at startup, using its own
+	// scratch TFEffectPicker instances against the real, just-loaded
+	// shaderLib -- does not touch this scene's own backgroundLayer/
+	// effectPicker. See TFActivityStatusSelfTest.h.
+	videoeffects::runActivityStatusSelfTest(shaderLib);
+
+	// Shared Effects "Production Selector / Eligibility Adoption" -- proves
+	// TFEffectPicker::applyEligibleCanonicalPreset() genuinely routes
+	// through the real, unmodified EffectKnowledgePrecedence.h API
+	// (resolveCompatibility(), isEligibleForAutomaticProductionSelection(),
+	// EffectPresetId.h's isReusableAuthoredPreset()) against deterministic,
+	// hand-seeded knowledge -- not against whatever the real canonical pack
+	// happens to contain on disk. Runs unconditionally at startup, using
+	// its own scratch TFEffectPicker instances. See TFEligibilitySelfTest.h.
+	videoeffects::runEligibilitySelfTest(shaderLib);
+
+	// Shared Video — Temporal Fields Specialized Adapter Seam session's
+	// required real-decoder proof (DEC-013/DEC-014): proves the real
+	// VideoPlaybackService + TimeOffsetPlaybackAdapter classes against
+	// real files under the canonical assets/shared/media/ root. Runs
+	// unconditionally at startup, using its own scratch instances --
+	// does not touch this scene's own videoPlaybackService/
+	// temporalVideoAdapter. Real frame arrival needs the actual oF run
+	// loop pumping (see TFVideoAdapterSelfTest.h's own header comment for
+	// why a synchronous setup()-time version of this test does not work in
+	// this environment) — begin() only does the synchronous part; the
+	// remaining real-decode-dependent checks advance once per frame via
+	// tickTemporalVideoAdapterSelfTest() in update() below.
+	beginTemporalVideoAdapterSelfTest();
+
 	paramPanel.setup();
 
 	ambientTextures.setup(ofGetWidth(), ofGetHeight(), "backgrounds");
 	paramPanel.registerBackgroundTextures(ambientTextures.getParamGroup());
+
+	// Shared Video — Temporal Fields Specialized Adapter Seam (DEC-013/
+	// DEC-014). videoPlaybackService is the sole canonical media catalog/
+	// selection/session-history/Previous-Next/hold-timing authority,
+	// pointed at the canonical physical media root (DEC-011) via the same
+	// bin/data-relative traversal every other migrated sketch uses.
+	// temporalVideoAdapter.buffer() (a TimeOffsetVideoBuffer) never scans,
+	// shuffles, or selects media itself from here on — see
+	// synchronizeSelectedMedia() below and TimeOffsetVideoBuffer.h's own
+	// "LEGACY PATH" comments on setup()/advanceToNextMedia(), neither of
+	// which this file calls anymore.
+	VideoPlaybackService::Config videoConfig;
+	videoConfig.mediaRoot = ofToDataPath("../../../../assets/shared/media", true);
+	// Reuses the same pacing constant the legacy isMediaAdvanceEligible()
+	// gate used, so canonical-service-driven automatic advance keeps a
+	// similar minimum-time-on-screen feel — MEDIA_MIN_LOOP_COUNT has no
+	// analog here (VideoPlaybackService's hold timer is real-time-based
+	// only; see this session's implementation report, "Deviations").
+	videoConfig.holdDurationSeconds = MEDIA_MIN_PLAYTIME_SECONDS;
+	videoConfig.automaticAdvance = true;
+	videoPlaybackService.setup(videoConfig);
 
 	TimeOffsetVideoBuffer::Settings bufferSettings;
 	bufferSettings.numQuantizeBands = paramPanel.getQuantizeBands();
 	bufferSettings.maxHistorySeconds = paramPanel.getMaxHistorySeconds();
 	bufferSettings.minPlaytimeSeconds = MEDIA_MIN_PLAYTIME_SECONDS;
 	bufferSettings.minLoopCount = MEDIA_MIN_LOOP_COUNT;
-	timeOffsetBuffer.setup("media", bufferSettings);
+	temporalVideoAdapter.setup(bufferSettings);
+	syncTemporalVideoAdapter();
 
-	backgroundLayer.setup(&timeOffsetBuffer, &shaderLib, "backgrounds", ofGetWidth(), ofGetHeight(),
+	backgroundLayer.setup(&temporalVideoAdapter.buffer(), &shaderLib, "backgrounds", ofGetWidth(), ofGetHeight(),
 		paramPanel.getBackgroundParams());
 
-	bspPattern.setup(&timeOffsetBuffer, ofGetWidth(), ofGetHeight(), paramPanel.getBSPParams());
-	blobGridPattern.setup(&timeOffsetBuffer, ofGetWidth(), ofGetHeight(), paramPanel.getBlobGridParams());
-	bandsPattern.setup(&timeOffsetBuffer, ofGetWidth(), ofGetHeight(), paramPanel.getBandsParams());
-	columnGridPattern.setup(&timeOffsetBuffer, ofGetWidth(), ofGetHeight(), paramPanel.getColumnGridParams());
-	telescopingFramesPattern.setup(&timeOffsetBuffer, ofGetWidth(), ofGetHeight(), paramPanel.getTelescopingFramesParams());
-	particleFieldPattern.setup(&timeOffsetBuffer, ofGetWidth(), ofGetHeight(), paramPanel.getParticleFieldParams());
-	ecologicalSuccessionPattern.setup(&timeOffsetBuffer, ofGetWidth(), ofGetHeight(), paramPanel.getEcologicalSuccessionParams());
-	networkGrowthPattern.setup(&timeOffsetBuffer, ofGetWidth(), ofGetHeight(), paramPanel.getNetworkGrowthParams());
-	temporalTidesPattern.setup(&timeOffsetBuffer, ofGetWidth(), ofGetHeight(), paramPanel.getTemporalTidesParams());
+	bspPattern.setup(&temporalVideoAdapter.buffer(), ofGetWidth(), ofGetHeight(), paramPanel.getBSPParams());
+	blobGridPattern.setup(&temporalVideoAdapter.buffer(), ofGetWidth(), ofGetHeight(), paramPanel.getBlobGridParams());
+	bandsPattern.setup(&temporalVideoAdapter.buffer(), ofGetWidth(), ofGetHeight(), paramPanel.getBandsParams());
+	columnGridPattern.setup(&temporalVideoAdapter.buffer(), ofGetWidth(), ofGetHeight(), paramPanel.getColumnGridParams());
+	telescopingFramesPattern.setup(&temporalVideoAdapter.buffer(), ofGetWidth(), ofGetHeight(), paramPanel.getTelescopingFramesParams());
+	particleFieldPattern.setup(&temporalVideoAdapter.buffer(), ofGetWidth(), ofGetHeight(), paramPanel.getParticleFieldParams());
+	ecologicalSuccessionPattern.setup(&temporalVideoAdapter.buffer(), ofGetWidth(), ofGetHeight(), paramPanel.getEcologicalSuccessionParams());
+	networkGrowthPattern.setup(&temporalVideoAdapter.buffer(), ofGetWidth(), ofGetHeight(), paramPanel.getNetworkGrowthParams());
+	temporalTidesPattern.setup(&temporalVideoAdapter.buffer(), ofGetWidth(), ofGetHeight(), paramPanel.getTemporalTidesParams());
 
 	TFComposition::Timing timing;
 	timing.cycleDuration = CYCLE_DURATION;
@@ -58,9 +118,12 @@ void ofApp::setup() {
 	composition.setOnPatternChanged([this](TFPatternType type) {
 		std::string patternName = tfPatternTypeName(type);
 		ofLogNotice("ofApp") << "active pattern -> " << patternName;
-		if (timeOffsetBuffer.isMediaAdvanceEligible()) {
-			timeOffsetBuffer.advanceToNextMedia();
-		}
+		// A pattern switch no longer triggers a media change directly —
+		// DEC-013/DEC-014 make videoPlaybackService's own hold timer the
+		// sole automatic-advance cadence (see this session's
+		// implementation report, "Deviations," for the resulting pacing
+		// change vs. the old isMediaAdvanceEligible()-gated
+		// advanceToNextMedia() call this replaces).
 		hudLayer.onPatternSwitch(patternName, composition.getCycleSeed(),
 			composition.getPhase() == TFComposition::CyclePhase::PATTERN_TRANSITION);
 	});
@@ -77,6 +140,22 @@ void ofApp::setup() {
 	hudOverlayPanel.setup();
 }
 
+void ofApp::syncTemporalVideoAdapter() {
+	// videoPlaybackService.status()/currentAbsolutePath() are the ONLY
+	// source of the media identity handed to the adapter here — no local
+	// scan, shuffle, or selection decision happens in this function or
+	// anywhere else in this file anymore (DEC-013/DEC-014).
+	VideoPlaybackStatus status = videoPlaybackService.status();
+	if (!status.mediaId.has_value()) {
+		return; // nothing selected yet (e.g. empty/missing canonical media root)
+	}
+	std::optional<std::string> absolutePath = videoPlaybackService.currentAbsolutePath();
+	if (!absolutePath.has_value()) {
+		return; // should be impossible whenever mediaId is set, but never assume
+	}
+	temporalVideoAdapter.synchronizeSelectedMedia(*status.mediaId, *absolutePath);
+}
+
 void ofApp::update() {
 	if (hudOverlayActive) {
 		hudOverlayPanel.update(hudOverlayDials);
@@ -85,6 +164,11 @@ void ofApp::update() {
 	}
 
 	float dt = ofGetLastFrameTime();
+
+	// No-ops once done (see tickTemporalVideoAdapterSelfTest()'s own
+	// isDone() guard) — advances the real-decoder self-test by one real
+	// frame each call until it finishes and logs its PASS/FAIL summary.
+	tickTemporalVideoAdapterSelfTest(dt);
 
 	// Push whatever the panel currently holds into both patterns every
 	// frame — cheap POD struct copies, and the simplest way for a live
@@ -101,8 +185,8 @@ void ofApp::update() {
 	ecologicalSuccessionPattern.setParams(paramPanel.getEcologicalSuccessionParams());
 	networkGrowthPattern.setParams(paramPanel.getNetworkGrowthParams());
 	temporalTidesPattern.setParams(paramPanel.getTemporalTidesParams());
-	timeOffsetBuffer.setNumQuantizeBands(paramPanel.getQuantizeBands());
-	timeOffsetBuffer.setMaxHistorySeconds(paramPanel.getMaxHistorySeconds());
+	temporalVideoAdapter.buffer().setNumQuantizeBands(paramPanel.getQuantizeBands());
+	temporalVideoAdapter.buffer().setMaxHistorySeconds(paramPanel.getMaxHistorySeconds());
 	composition.setTransitionParams(paramPanel.getTransitionDuration(), paramPanel.getHardCutWeight(),
 		paramPanel.getCrossfadeWeight(), paramPanel.getErosionWeight());
 
@@ -115,14 +199,21 @@ void ofApp::update() {
 	// running so it doesn't get yanked to a different pattern mid-timeline.
 	composition.setAutoCycleSuspended(paramPanel.isTimelineActive());
 	composition.update(dt);
-	timeOffsetBuffer.update(dt);
+
+	// videoPlaybackService.update(dt) drives its own hold timer/automatic
+	// advance (DEC-013) — must run before syncTemporalVideoAdapter() below
+	// so a hold-timer-triggered media change is observed and forwarded to
+	// the adapter the same frame it happens, not one frame late.
+	videoPlaybackService.update(dt);
+	syncTemporalVideoAdapter();
+	temporalVideoAdapter.update(dt);
 
 	// Feed on the live, un-delayed video texture (not any time-offset
 	// playhead) so the readout reflects what's actually happening in the
 	// source right now, independent of which historical offset each
 	// fragment happens to be displaying.
-	if (timeOffsetBuffer.hasMedia()) {
-		motionEx.update(timeOffsetBuffer.getRawVideoTexture(), 0.85f, 1.0f);
+	if (temporalVideoAdapter.buffer().hasMedia()) {
+		motionEx.update(temporalVideoAdapter.buffer().getRawVideoTexture(), 0.85f, 1.0f);
 	}
 	// Average of all active playheads' current time offset (0 = live, 1 = as
 	// far back as maxHistorySeconds allows) — continuously fluctuates as
@@ -130,11 +221,11 @@ void ofApp::update() {
 	// buffer-fill metric, which ramps once at startup then sits pinned at
 	// 100% for the rest of the session.
 	float avgPlayheadDepth01 = 0.0f;
-	int numPlayheadsForDepth = timeOffsetBuffer.getNumPlayheads();
+	int numPlayheadsForDepth = temporalVideoAdapter.buffer().getNumPlayheads();
 	if (numPlayheadsForDepth > 0) {
 		float sum = 0.0f;
 		for (int i = 0; i < numPlayheadsForDepth; i++) {
-			sum += timeOffsetBuffer.getPlayheadOffset(i);
+			sum += temporalVideoAdapter.buffer().getPlayheadOffset(i);
 		}
 		avgPlayheadDepth01 = sum / static_cast<float>(numPlayheadsForDepth);
 	}
@@ -174,8 +265,8 @@ void ofApp::update() {
 	}
 
 	hudLayer.setEventCadence(paramPanel.getHudCadenceOnFragmentReassign(), paramPanel.getHudCadenceOnPatternSwitch());
-	hudLayer.update(dt, motionEx.getMotionEnergy(), timeOffsetBuffer.hasMedia(),
-		timeOffsetBuffer.getCurrentMediaFilename(), avgPlayheadDepth01, composition.getActiveFragmentCenters(),
+	hudLayer.update(dt, motionEx.getMotionEnergy(), temporalVideoAdapter.buffer().hasMedia(),
+		temporalVideoAdapter.buffer().getCurrentMediaFilename(), avgPlayheadDepth01, composition.getActiveFragmentCenters(),
 		patternDrift01);
 
 	if (paramPanel.consumeSaveRequest()) {
@@ -256,31 +347,31 @@ void ofApp::draw() {
 }
 
 void ofApp::drawTimeOffsetDebugStrip() {
-	if (!timeOffsetBuffer.hasMedia()) {
+	if (!temporalVideoAdapter.buffer().hasMedia()) {
 		return;
 	}
 
-	int numPlayheads = timeOffsetBuffer.getNumPlayheads();
+	int numPlayheads = temporalVideoAdapter.buffer().getNumPlayheads();
 	float tileW = 160.0f;
 	float tileH = 110.0f;
 	float y = ofGetHeight() - tileH - 50;
 
 	ofSetColor(255);
 	ofDrawBitmapString(
-		"history " + ofToString(timeOffsetBuffer.getHistoryFrameCount()) + "/"
-			+ ofToString(timeOffsetBuffer.getHistoryCapacityFrames()) + " frames  ["
-			+ ofFilePath::getFileName(timeOffsetBuffer.getCurrentMediaFilename()) + "]",
+		"history " + ofToString(temporalVideoAdapter.buffer().getHistoryFrameCount()) + "/"
+			+ ofToString(temporalVideoAdapter.buffer().getHistoryCapacityFrames()) + " frames  ["
+			+ ofFilePath::getFileName(temporalVideoAdapter.buffer().getCurrentMediaFilename()) + "]",
 		12, y - 8);
 
 	for (int i = 0; i < numPlayheads; i++) {
 		float x = 12 + i * (tileW + 8);
-		const ofTexture & tex = timeOffsetBuffer.getPlayheadTexture(i);
+		const ofTexture & tex = temporalVideoAdapter.buffer().getPlayheadTexture(i);
 		if (!tex.isAllocated()) {
 			continue;
 		}
 		ofSetColor(255);
 		tex.draw(x, y, tileW, tileH);
-		ofDrawBitmapString(ofToString(timeOffsetBuffer.getPlayheadOffset(i), 2), x, y + tileH + 14);
+		ofDrawBitmapString(ofToString(temporalVideoAdapter.buffer().getPlayheadOffset(i), 2), x, y + tileH + 14);
 	}
 }
 

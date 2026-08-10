@@ -66,6 +66,32 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"scene.temporal.state.evolving", "EVOLVING"},
 		{"scene.temporal.state.regenerating", "REGENERATING"},
 
+		// -- Temporal pattern IDs (scene.temporal.metric.pattern's
+		// Identifier valueId) — bare keys, not prefixed with the metricId,
+		// matching how TemporalProductionScene.cpp's patternSemanticId()
+		// and shared/src/hud-compositor/fake/FakeTemporalScenario.cpp both
+		// already emit this value (e.g. "particle_field", not
+		// "scene.temporal.metric.pattern.particle_field") — same bare-key
+		// convention already used above for health/transition-phase values
+		// ("ready"/"idle"/etc.), not the metricId-prefixed convention
+		// scene.fragment.metric.movement_preset.* uses. Covers the complete
+		// production TFPatternType inventory (TFPatternType.h) — every
+		// value TemporalSceneCore.cpp registers into TFComposition, so
+		// every pattern Temporal can actually reach in production. Casing/
+		// word-break style matches the effect-label convention above
+		// (underscore -> space, uppercase); BSP is spelled out to "BSP
+		// FIELD" since the bare 3-letter acronym alone reads as noise at
+		// cinematic HUD scale, unlike the other multi-word ids.
+		{"bsp", "BSP FIELD"},
+		{"blob_grid", "BLOB GRID"},
+		{"bands", "BANDS"},
+		{"column_grid", "COLUMN GRID"},
+		{"telescoping_frames", "TELESCOPING FRAMES"},
+		{"particle_field", "PARTICLE FIELD"},
+		{"ecological_succession", "ECOLOGICAL SUCCESSION"},
+		{"network_growth", "NETWORK GROWTH"},
+		{"temporal_tides", "TEMPORAL TIDES"},
+
 		// -- Fragment state IDs (§18.4) -----------------------------------
 		{"scene.fragment.state.drifting", "DRIFTING"},
 		{"scene.fragment.state.scanning", "SCANNING"},

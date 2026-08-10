@@ -8,6 +8,13 @@ void BlobDetector::setup(const Config & initialConfig) {
 	ensureAnalysisBuffersAllocated();
 }
 
+void BlobDetector::reset() {
+	detections.clear();
+	frameCounter = 0;
+	havePrevFrame = false; // re-seed the frame-difference reference frame
+	lastProcessingTimeMs = 0.0f;
+}
+
 void BlobDetector::ensureAnalysisBuffersAllocated() {
 	int w = std::max(1, config.analysisWidth);
 	int h = std::max(1, config.analysisHeight);

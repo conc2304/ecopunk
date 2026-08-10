@@ -82,6 +82,28 @@ public:
 	bool isFrameNew() const;
 	glm::ivec2 sourceSize() const;
 
+	// The absolute, on-disk path of the currently active media item —
+	// nullopt if none is active. This is the SAME path this service's own
+	// decoder was loaded with (see activateCandidate()'s
+	// ofFilePath::join(mediaRoot_, item.relativePath)), just exposed
+	// read-only rather than recomputed a second time elsewhere.
+	//
+	// Added for DEC-014 (Temporal Playback / History Boundary): a
+	// specialized consumer adapter (e.g.
+	// shared/src/video-playback/adapters/TimeOffsetPlaybackAdapter.h) needs
+	// to explicit-load the exact file this service selected, and
+	// VideoPlaybackStatus::mediaId is a one-way synthesized identity
+	// (MediaCatalog::synthesizeMediaId() hashes relativePath — see that
+	// function's own comment) that cannot be reversed back into a path by
+	// any caller outside this class. Exposing the already-computed path
+	// here is the only alternative to a second, duplicate, unowned
+	// path-resolution algorithm living in a consumer adapter — which would
+	// itself be a second source of truth for media identity, exactly what
+	// DEC-013 forbids. This method changes no ownership, no selection
+	// semantics, and no VideoPlaybackStatus field — it is purely additive
+	// read access to information this class already computes internally.
+	std::optional<std::string> currentAbsolutePath() const;
+
 	VideoPlaybackStatus status() const;
 
 private:

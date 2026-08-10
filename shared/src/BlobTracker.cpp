@@ -86,6 +86,12 @@ void BlobTracker::update(const std::vector<BlobDetection> & detections, float dt
 	rebuildActiveRegions();
 }
 
+void BlobTracker::reset() {
+	tracks.clear();
+	activeRegions.clear();
+	nextTrackId = 1;
+}
+
 void BlobTracker::rebuildActiveRegions() {
 	activeRegions.clear();
 	activeRegions.reserve(tracks.size());

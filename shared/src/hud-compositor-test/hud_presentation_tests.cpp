@@ -445,6 +445,88 @@ void test_scene_override() {
 }
 
 // ---------------------------------------------------------------------
+// "temporal pattern vocabulary" — HUD Temporal pattern-vocabulary
+// completion task. Covers the complete production TFPatternType
+// inventory (sketches/temporal-fields/src/TFPatternType.h), each ID
+// exactly as sketches/experience_runtime/src/TemporalProductionScene.cpp's
+// patternSemanticId() emits it (bare key, unprefixed — see
+// HudVocabularyResolver.cpp's own comment on this section).
+// ---------------------------------------------------------------------
+void test_temporal_pattern_vocabulary() {
+	HudVocabularyResolver vocab;
+
+	const std::vector<std::pair<std::string, std::string>> patterns = {
+		{"bsp", "BSP FIELD"},
+		{"blob_grid", "BLOB GRID"},
+		{"bands", "BANDS"},
+		{"column_grid", "COLUMN GRID"},
+		{"telescoping_frames", "TELESCOPING FRAMES"},
+		{"particle_field", "PARTICLE FIELD"},
+		{"ecological_succession", "ECOLOGICAL SUCCESSION"},
+		{"network_growth", "NETWORK GROWTH"},
+		{"temporal_tides", "TEMPORAL TIDES"},
+	};
+	for (const auto& [id, expected] : patterns) {
+		HUD_CHECK_EQ_STR(vocab.resolve("temporal-fields", id), expected);
+		HUD_CHECK(vocab.resolvedThroughVocabulary("temporal-fields", id));
+	}
+
+	// Longest label fits the canonical 1280x720 flexible.primary bounds —
+	// same catalog/canvas-size convention
+	// test_region_bounds_within_canvas_and_no_same_role_overlap() already
+	// uses. scene.temporal.metric.pattern is not currently bound to any
+	// widget by buildTemporalProfile() (HudPresentationProfile.cpp), so
+	// there is no existing Validation Studio scenario exercising this
+	// specific label on-screen; this reuses the already-linked
+	// HudTextMetricsCache/HudRegionCatalog directly rather than standing up
+	// a new harness, per this task's instruction not to create one solely
+	// for this check.
+	{
+		constexpr float kCanvasW = 1280.0f;
+		HudTextMetricsCache metrics;
+		HudRegionCatalog catalog;
+		const auto* flexiblePrimary = catalog.find("flexible.primary");
+		HUD_CHECK(flexiblePrimary != nullptr);
+		if (flexiblePrimary) {
+			float budgetPx = flexiblePrimary->bounds.width * kCanvasW;
+			std::string longest = "ECOLOGICAL SUCCESSION"; // longest of the 9 labels above
+			for (const auto& [id, expected] : patterns) {
+				HUD_CHECK(metrics.widthOf(expected) <= metrics.widthOf(longest) + 1e-4f);
+			}
+			HUD_CHECK(metrics.widthOf(longest) <= budgetPx);
+		}
+	}
+
+	// Unknown Temporal pattern ID: the accepted fallback chain (scene
+	// override -> selected pack -> canonical default -> stable ID) must
+	// still return the ID itself, unresolved through vocabulary — same
+	// behavior test_vocabulary_fallback() already proves generically,
+	// exercised here specifically against a Temporal pattern-shaped key so
+	// a future accidental narrowing of the fallback to only certain key
+	// shapes would be caught.
+	HUD_CHECK_EQ_STR(vocab.resolve("temporal-fields", "unknown_future_pattern"), "unknown_future_pattern");
+	HUD_CHECK(!vocab.resolvedThroughVocabulary("temporal-fields", "unknown_future_pattern"));
+}
+
+// ---------------------------------------------------------------------
+// "blob vocabulary non-regression" — proves this task's Temporal-only
+// vocabulary addition left Blob's resolved output unchanged: title,
+// primary-state labels, and flexible metric/card label.
+// ---------------------------------------------------------------------
+void test_blob_vocabulary_unchanged() {
+	HudVocabularyResolver vocab;
+
+	HUD_CHECK_EQ_STR(vocab.resolve("blob-region-prototype", "scene.blob-region-prototype.title"), "REGION FIELD STUDY");
+
+	HUD_CHECK_EQ_STR(vocab.resolve("blob-region-prototype", "scene.blob.state.analyzing"), "ANALYZING");
+	HUD_CHECK_EQ_STR(vocab.resolve("blob-region-prototype", "scene.blob.state.fragmenting"), "FRAGMENTING");
+	HUD_CHECK_EQ_STR(vocab.resolve("blob-region-prototype", "scene.blob.state.stable"), "STABLE");
+	HUD_CHECK_EQ_STR(vocab.resolve("blob-region-prototype", "scene.blob.state.degraded"), "SIGNAL DEGRADED");
+
+	HUD_CHECK_EQ_STR(vocab.resolve("blob-region-prototype", "scene.blob.card.label"), "REGION FIELD");
+}
+
+// ---------------------------------------------------------------------
 // "missing-data policy"
 // ---------------------------------------------------------------------
 void test_missing_data_policy() {
@@ -844,6 +926,59 @@ void test_region_bounds_within_canvas_and_no_same_role_overlap() {
 	}
 }
 
+// Final Narrow Closure Patch, Task 5 — flexible.secondary_a/b's own exact
+// bounds/adjacency, tested by name (not just swept generically by the
+// same-role check above): confirms their documented pixel bounds
+// (hud-wireframe-bounds-v1.md §1), confirms they do NOT overlap each
+// other, and confirms neither overlaps flexible.primary — the three
+// Flexible-role regions must partition space cleanly, per this task's
+// "no adjacent-region overlap" requirement.
+void test_flexible_secondary_regions_exact_bounds_and_no_overlap() {
+	constexpr float kCanvasW = 1280.0f;
+	constexpr float kCanvasH = 720.0f;
+
+	HudRegionCatalog catalog;
+	const auto* secondaryA = catalog.find("flexible.secondary_a");
+	const auto* secondaryB = catalog.find("flexible.secondary_b");
+	const auto* primary = catalog.find("flexible.primary");
+	HUD_CHECK(secondaryA != nullptr);
+	HUD_CHECK(secondaryB != nullptr);
+	HUD_CHECK(primary != nullptr);
+	if (!secondaryA || !secondaryB || !primary) return;
+
+	// Exact documented bounds (hud-wireframe-bounds-v1.md §1).
+	auto approxEq = [](float a, float b) { return std::abs(a - b) < 0.01f; };
+	HUD_CHECK(approxEq(secondaryA->bounds.x * kCanvasW, 844.8f));
+	HUD_CHECK(approxEq(secondaryA->bounds.y * kCanvasH, 583.2f));
+	HUD_CHECK(approxEq(secondaryA->bounds.width * kCanvasW, 192.0f));
+	HUD_CHECK(approxEq(secondaryA->bounds.height * kCanvasH, 43.2f));
+	HUD_CHECK(approxEq(secondaryB->bounds.x * kCanvasW, 1062.4f));
+	HUD_CHECK(approxEq(secondaryB->bounds.y * kCanvasH, 583.2f));
+	HUD_CHECK(approxEq(secondaryB->bounds.width * kCanvasW, 192.0f));
+	HUD_CHECK(approxEq(secondaryB->bounds.height * kCanvasH, 43.2f));
+
+	struct PixelRect {
+		float x, y, w, h;
+		bool overlaps(const PixelRect& o) const {
+			return x < o.x + o.w && o.x < x + w && y < o.y + o.h && o.y < y + h;
+		}
+	};
+	PixelRect rA{secondaryA->bounds.x * kCanvasW, secondaryA->bounds.y * kCanvasH,
+		secondaryA->bounds.width * kCanvasW, secondaryA->bounds.height * kCanvasH};
+	PixelRect rB{secondaryB->bounds.x * kCanvasW, secondaryB->bounds.y * kCanvasH,
+		secondaryB->bounds.width * kCanvasW, secondaryB->bounds.height * kCanvasH};
+	PixelRect rPrimary{primary->bounds.x * kCanvasW, primary->bounds.y * kCanvasH,
+		primary->bounds.width * kCanvasW, primary->bounds.height * kCanvasH};
+
+	HUD_CHECK(!rA.overlaps(rB));
+	HUD_CHECK(!rA.overlaps(rPrimary));
+	HUD_CHECK(!rB.overlaps(rPrimary));
+
+	// Both stay fully within the canvas.
+	HUD_CHECK(rA.x >= 0.0f && rA.y >= 0.0f && (rA.x + rA.w) <= kCanvasW && (rA.y + rA.h) <= kCanvasH);
+	HUD_CHECK(rB.x >= 0.0f && rB.y >= 0.0f && (rB.x + rB.w) <= kCanvasW && (rB.y + rB.h) <= kCanvasH);
+}
+
 // HudTextMetricsCache::truncateToWidth()'s own core invariant, fuzzed
 // across a battery of representative (text, budget) pairs — the
 // structural proof behind "text measured bounds ⊆ text live bounds"
@@ -900,12 +1035,15 @@ int main() {
 	test_invalid_flexible_does_not_remove_universal();
 	test_vocabulary_fallback();
 	test_scene_override();
+	test_temporal_pattern_vocabulary();
+	test_blob_vocabulary_unchanged();
 	test_missing_data_policy();
 	test_history_sample_cadence();
 	test_history_reset_on_scene_epoch();
 	test_deterministic_fake_output();
 	test_no_scene_id_leaks_into_compiled_bindings();
 	test_region_bounds_within_canvas_and_no_same_role_overlap();
+	test_flexible_secondary_regions_exact_bounds_and_no_overlap();
 	test_truncation_never_exceeds_budget();
 	test_formatting_spot_checks();
 

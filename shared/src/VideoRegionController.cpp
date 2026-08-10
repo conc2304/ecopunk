@@ -176,6 +176,10 @@ void VideoRegionController::draw() {
 	}
 }
 
+void VideoRegionController::reset() {
+	managed.clear();
+}
+
 int VideoRegionController::getActiveFragmentCount() const {
 	int count = 0;
 	for (const auto & kv : managed) {

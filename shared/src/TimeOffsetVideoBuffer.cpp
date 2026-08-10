@@ -5,10 +5,14 @@
 #include <algorithm>
 #include <cmath>
 
-void TimeOffsetVideoBuffer::setup(const std::string& mediaFolderPath, const Settings& settings_) {
+void TimeOffsetVideoBuffer::configure(const Settings& settings_) {
 	settings = settings_;
 	playheads.assign(std::max(1, settings.numPlayheads), Playhead{});
 	history.clear();
+}
+
+void TimeOffsetVideoBuffer::setup(const std::string& mediaFolderPath, const Settings& settings_) {
+	configure(settings_);
 
 	ofDirectory dir;
 	dir.allowExt("mp4");
@@ -91,7 +95,36 @@ void TimeOffsetVideoBuffer::advanceToNextMedia() {
 	}
 }
 
+bool TimeOffsetVideoBuffer::loadExplicit(const std::string& absolutePath) {
+	// No scan, no shuffle, no playlist mutation, no fallback selection —
+	// mediaFiles/currentFileIndex are deliberately untouched here (DEC-014).
+	history.clear();
+
+	player.close();
+	mediaLoaded = player.load(absolutePath);
+	mediaElapsedTime = 0.0f;
+	mediaLoopCount = 0;
+	lastMediaPosition = 0.0f;
+	// Recorded regardless of success/failure, matching setup()/
+	// advanceToNextMedia()'s own precedent of tracking the attempted file
+	// (getCurrentMediaFilename() reflects "what was last asked for," not
+	// "what is definitely playing" — hasMedia() is the success signal).
+	explicitMediaPath = absolutePath;
+
+	if (mediaLoaded) {
+		player.setLoopState(OF_LOOP_NORMAL);
+		player.play();
+		ofLogNotice("TimeOffsetVideoBuffer") << "loadExplicit: loaded " << absolutePath;
+	} else {
+		ofLogWarning("TimeOffsetVideoBuffer") << "loadExplicit: failed to load " << absolutePath;
+	}
+	return mediaLoaded;
+}
+
 std::string TimeOffsetVideoBuffer::getCurrentMediaFilename() const {
+	if (!explicitMediaPath.empty()) {
+		return explicitMediaPath;
+	}
 	if (currentFileIndex < 0 || currentFileIndex >= static_cast<int>(mediaFiles.size())) {
 		return "";
 	}

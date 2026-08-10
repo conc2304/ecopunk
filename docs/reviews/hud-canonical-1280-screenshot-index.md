@@ -80,6 +80,7 @@ screenshots visually confirm.
 | `effects.degraded.active` | Present, 1 slot, `health=Degraded` | `effects_degraded_active.png` | 1280×720 |
 | `effects.failed` | Present, `slots={}`, `health=Failed` | `effects_failed.png` | 1280×720 |
 | `effects.no-intensity` | Present, 1 maximal-prominence slot — proves `effects.intensity` stays absent (DEC-016) | `effects_no_intensity.png` | 1280×720 |
+| **`effects.>2 active, below-threshold, dominance-not-first`** (Final Narrow Closure Patch, Task 3/6) | Present, 4 slots — one below `minProminenceToShow=0.05`, dominant slot last in the vector — proves `effects.active` retains all 4 (Task 1) while `effects.dominant` remains canonically ranked (Task 2), end-to-end through the real widget chain | `effects_multi_below_threshold_and_dominance_not_first.png` | 1280×720 |
 | Compatibility-fallback demo (tooling only) | `frame.effects = nullopt`, `SceneHudStatus::activeEffects` populated, `setActiveEffectsCompatibilityFallbackEnabled(true)` explicitly opted in | `effects_compatibility_fallback_demo.png` | 1280×720 |
 
 ## 6. Geometry / bounds

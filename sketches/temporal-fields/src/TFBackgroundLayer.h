@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "EffectActivityStatus.h"
 #include "ShaderLibrary.h"
 #include "TFEffectPicker.h"
 #include "TFImageCycler.h"
@@ -47,6 +48,15 @@ class TFBackgroundLayer {
 
 		Mode getCurrentMode() const { return currentMode; }
 		std::string getCurrentEffectName() const { return effectPicker.getCurrentEffectName(); } // "" = raw
+
+		// Temporal Production Scene #2 Migration: narrow one-level
+		// forward of TFEffectPicker::activityStatus() (the accepted
+		// DEC-015 canonical accessor -- see TFEffectPicker.h) so a
+		// caller that only holds a TFBackgroundLayer (TemporalSceneCore)
+		// can reach it without reaching into effectPicker's private
+		// member directly. Returns the value unchanged -- no field is
+		// added, removed, or reconstructed here.
+		videoeffects::EffectActivityStatus effectActivityStatus() const { return effectPicker.activityStatus(); }
 
 	private:
 		void pickNextMode();

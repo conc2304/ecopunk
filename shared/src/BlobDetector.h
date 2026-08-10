@@ -48,6 +48,14 @@ public:
 
 	void setup(const Config & initialConfig);
 
+	// Clears transient detection state (last detections, frame-difference
+	// reference frame, frame counter) without touching config or
+	// reallocating buffers. Added for IEcopunkScene-style reactivation —
+	// a scene calling this on activate()/reset() must not see stale
+	// detections or diff against a frame captured before it was last
+	// active.
+	void reset();
+
 	// sourceFramePixels: the full-resolution decoded frame (any pixel
 	// format ofPixels supports — this class reads it only through
 	// ofPixels::getColor(), so RGB/RGBA/BGRA source formats are all handled

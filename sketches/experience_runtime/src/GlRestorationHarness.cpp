@@ -47,6 +47,25 @@ bool semanticVariantMatchesExpectation(const SceneSemanticData& data, FakeScene:
 	return false;
 }
 
+bool effectActivityStatusEqual(const videoeffects::EffectActivityStatus& a, const videoeffects::EffectActivityStatus& b) {
+	if (a.schemaVersion != b.schemaVersion || a.health != b.health || a.messageId != b.messageId) {
+		return false;
+	}
+	if (a.slots.size() != b.slots.size()) {
+		return false;
+	}
+	for (std::size_t i = 0; i < a.slots.size(); ++i) {
+		const auto& sa = a.slots[i];
+		const auto& sb = b.slots[i];
+		if (sa.slotId != sb.slotId || sa.effectId != sb.effectId || sa.displayName != sb.displayName
+			|| sa.phase != sb.phase || sa.transitionProgress01 != sb.transitionProgress01
+			|| sa.prominence != sb.prominence) {
+			return false;
+		}
+	}
+	return true;
+}
+
 } // namespace
 
 bool GlRestorationHarness::isRequested() {
@@ -596,16 +615,232 @@ void GlRestorationHarness::step(float dt) {
 	}
 
 	if (frameIndex_ >= kAllocWindowStartFrame + kAllocWindow3) {
-		if (!finished_) {
-			finished_ = true;
-			ofLogNotice("GlRestorationHarness") << "self-test complete: "
-				<< (failureCount_ == 0 ? "ALL CHECKS PASSED" : (ofToString(failureCount_) + " CHECK(S) FAILED"));
-			ofExit();
+		// Allocation investigation is done (logged above, exactly once, the
+		// frame this threshold was first reached). Final Shared Effects
+		// Source-of-Truth Seam Proof session: rather than exiting here,
+		// run a short appended phase proving the TFEffectPicker seam — see
+		// stepSeamProof()'s own comment for why this is appended after
+		// rather than interleaved with the cases/window above.
+		stepSeamProof(dt);
+		if (seamProofFinished_) {
+			if (!finished_) {
+				finished_ = true;
+				ofLogNotice("GlRestorationHarness") << "self-test complete: "
+					<< (failureCount_ == 0 ? "ALL CHECKS PASSED" : (ofToString(failureCount_) + " CHECK(S) FAILED"));
+				ofExit();
+			}
+			return;
 		}
+		frameIndex_++;
 		return;
 	}
 
 	frameIndex_++;
+}
+
+void GlRestorationHarness::stepSeamProof(float dt) {
+	seamProofLastDt_ = dt;
+	SceneManager& sceneManager = runtime_.sceneManagerForTesting();
+	FakeScene& scene = sceneManager.devScene();
+
+	switch (seamProofFrameIndex_) {
+		case 0: {
+			// One-time setup. TFEffectPicker::setup(nullptr) is safe (see
+			// TFEffectPicker.cpp's own comment) and immediately calls its
+			// private pickNext() using the default Weights{} (rawWeight=20,
+			// no effectWeights) — the only nonzero-weight option is "" (raw),
+			// so currentEffect starts as "" deterministically.
+			seamProofPicker_.setup(nullptr);
+			TFEffectPicker::Weights frozenRaw;
+			frozenRaw.cycleInterval = 1.0e9f; // effectively never auto-cycles again on its own
+			frozenRaw.rawWeight = 1.0f;
+			seamProofPicker_.setWeights(frozenRaw);
+
+			// Install the override — the narrow runtime capture seam (see
+			// SceneManager.h's own comment on setEffectActivitySourceOverrideForTesting()).
+			// The lambda IS this proof's stand-in for "a real scene's
+			// update() ticks its owned TFEffectPicker, then the runtime
+			// forwarding boundary pulls activityStatus() from it" — update()
+			// is called textually before activityStatus() on every
+			// invocation, and both counters below increment together, once
+			// per invocation, proving both "updates before capture" and
+			// "activityStatus() called exactly once per frame" by
+			// construction, not by inference.
+			sceneManager.setEffectActivitySourceOverrideForTesting(
+				[this]() -> std::optional<videoeffects::EffectActivityStatus> {
+					seamProofUpdateCalls_++;
+					seamProofPicker_.update(seamProofLastDt_);
+					seamProofCaptureCalls_++;
+					videoeffects::EffectActivityStatus status = seamProofPicker_.activityStatus();
+					seamProofLastForwarded_ = status;
+					return status;
+				});
+
+			// FakeScene is left independently populated with ITS OWN,
+			// differently-effect-id'd demo slots ("heatmap_recolor"/
+			// "channelshift", see buildDemoSlots()) for the whole remainder
+			// of this phase — SceneHudStatus::activeEffects (the compat
+			// field, populated via captureSceneStatus(), a completely
+			// separate pull from captureEffectActivityStatus()) keeps
+			// reporting FakeScene's own labels throughout, letting case 2
+			// below prove the two are never coupled.
+			scene.setEffectActivityTestState(FakeScene::EffectActivityTestState::PresentActive);
+
+			// This frame's already-completed automatic update() (before
+			// step() was invoked) still used the OLD source (FakeScene,
+			// pre-override) — the override above only takes effect starting
+			// NEXT frame's automatic update(), same one-frame-later
+			// visibility rule used throughout this harness. Nothing to
+			// check yet; just render and advance.
+			runOneFrame(dt, false);
+
+			// Baselines for the delta-based status-poll check in case 3
+			// below — captured AFTER this case's own runOneFrame(), so both
+			// counters reflect "this frame's poll AND draw both accounted
+			// for" symmetrically (capturing before runOneFrame() here would
+			// under-count framesRendered_ by exactly 1 relative to
+			// statusPollCount, since this frame's automatic update()/poll
+			// already happened before step() — and therefore before this
+			// case's own body — ever runs). See this class's header comment
+			// on why raw cumulative totals (case 13's legacy double-draw)
+			// aren't directly comparable, which is why case 3 uses these
+			// deltas instead of framesRendered_/statusPollCount directly.
+			seamProofBaselineStatusPollCount_ = scene.counters().statusPollCount;
+			seamProofBaselineFramesRendered_ = framesRendered_;
+			break;
+		}
+
+		case 1: {
+			// Now this frame's automatic update() (already run before this
+			// step() call) used the override for the first time.
+			runOneFrame(dt, false);
+
+			logResult("Seam Proof: activityStatus() called exactly once per frame (frame 1 since install)",
+				seamProofCaptureCalls_ == 1, "seamProofCaptureCalls_=" + ofToString(seamProofCaptureCalls_));
+			logResult("Seam Proof: TFEffectPicker::update() called before activityStatus() every frame "
+				"(update/capture counters stay paired 1:1, by construction)",
+				seamProofUpdateCalls_ == seamProofCaptureCalls_,
+				"updateCalls=" + ofToString(seamProofUpdateCalls_) + ", captureCalls=" + ofToString(seamProofCaptureCalls_));
+
+			const auto& effects = runtime_.currentHudFrameData().effects;
+			bool rawPresentEmpty = effects.has_value() && effects->slots.empty()
+				&& effects->health == videoeffects::EffectHealth::Ready && !effects->messageId.has_value();
+			logResult("Seam Proof: TFEffectPicker Raw/No-Effect forwards as HudFrameData.effects "
+				"present-with-empty-slots (not absent, not a fabricated failure)", rawPresentEmpty,
+				effects.has_value() ? ("slots=" + ofToString(effects->slots.size())) : "effects absent");
+
+			bool forwardedUnchanged = effects.has_value() && seamProofLastForwarded_.has_value()
+				&& effectActivityStatusEqual(*effects, *seamProofLastForwarded_);
+			logResult("Seam Proof: HudFrameData.effects is byte-for-byte what TFEffectPicker authored "
+				"(forwarded without reconstruction) — raw state", forwardedUnchanged, "");
+
+			// Arm the next pick: freeze cycleInterval near-zero and make
+			// "dither" the only nonzero-weight option — deterministic (the
+			// "" bucket has zero width in tfWeightedPick's cumulative
+			// distribution), and deliberately a DIFFERENT canonical id than
+			// FakeScene's own demo slots ("heatmap_recolor"/"channelshift")
+			// so case 2's independence check is unambiguous.
+			TFEffectPicker::Weights forceDither;
+			forceDither.cycleInterval = 0.0001f;
+			forceDither.rawWeight = 0.0f;
+			forceDither.effectWeights["dither"] = 1.0f;
+			seamProofPicker_.setWeights(forceDither);
+			break;
+		}
+
+		case 2: {
+			runOneFrame(dt, false); // this frame's update() re-picked "dither"
+
+			const auto& effects = runtime_.currentHudFrameData().effects;
+			bool correctCanonicalId = effects.has_value() && effects->slots.size() == 1
+				&& effects->slots[0].effectId == "dither" && effects->slots[0].slotId == "temporal_fields.background";
+			logResult("Seam Proof: real active effect forwards with the correct canonical effect id "
+				"(not a display name, not FakeScene's own demo id)", correctCanonicalId,
+				effects.has_value() && !effects->slots.empty() ? ("effectId=" + effects->slots[0].effectId) : "no slot");
+
+			bool degradedPropagated = effects.has_value() && effects->health == videoeffects::EffectHealth::Degraded
+				&& effects->messageId.has_value() && *effects->messageId == "effect.shader_unavailable";
+			logResult("Seam Proof: TFEffectPicker's real Degraded health (shaderLib==nullptr, non-raw pick) "
+				"propagates unchanged through HudFrameData.effects", degradedPropagated,
+				effects.has_value() ? ("health=" + ofToString(static_cast<int>(effects->health))
+					+ " messageId=" + (effects->messageId.has_value() ? *effects->messageId : "none")) : "effects absent");
+
+			bool forwardedUnchanged = effects.has_value() && seamProofLastForwarded_.has_value()
+				&& effectActivityStatusEqual(*effects, *seamProofLastForwarded_);
+			logResult("Seam Proof: HudFrameData.effects is byte-for-byte what TFEffectPicker authored "
+				"(forwarded without reconstruction) — active/degraded state", forwardedUnchanged, "");
+
+			const auto& compatLabels = runtime_.currentHudFrameData().scene.activeEffects;
+			bool compatIndependent = compatLabels.size() == 2 && correctCanonicalId
+				&& compatLabels[0].find("Dither") == std::string::npos
+				&& compatLabels[1].find("Dither") == std::string::npos;
+			logResult("Seam Proof: SceneHudStatus::activeEffects (FakeScene's own compat labels) cannot "
+				"override or leak into the canonical HudFrameData.effects snapshot (independently sourced)",
+				compatIndependent, "activeEffects=" + (compatLabels.empty() ? std::string("[]")
+					: ("[\"" + compatLabels[0] + "\"" + (compatLabels.size() > 1 ? (", \"" + compatLabels[1] + "\"]") : "]"))));
+
+			logResult("Seam Proof: activityStatus() called exactly once per frame (cumulative)",
+				seamProofCaptureCalls_ == 2, "seamProofCaptureCalls_=" + ofToString(seamProofCaptureCalls_));
+			break;
+		}
+
+		case 3: {
+			runOneFrame(dt, false); // steady state — still "dither" (weights unchanged)
+
+			const auto& counters = scene.counters();
+			logResult("Seam Proof: capabilities() caching is unaffected by the override "
+				"(still queried exactly once, ever)", counters.capabilityPollCount == 1,
+				"capabilityPollCount=" + ofToString(counters.capabilityPollCount));
+
+			// Delta-based, not a raw cumulative-totals comparison — see this
+			// class's header comment (seamProofBaseline*_) for why: an
+			// EARLIER, unrelated case (13) legitimately draws twice within
+			// one real tick, so framesRendered_'s raw total has permanently
+			// run 1 ahead of statusPollCount's raw total since then. Within
+			// the seam-proof phase's OWN window (baseline captured at case
+			// 0), both counters advance 1:1 with every real tick — this is
+			// the correct, non-vacuous re-proof of "one status poll per
+			// frame," scoped to what this session actually added.
+			int statusPollDelta = counters.statusPollCount - seamProofBaselineStatusPollCount_;
+			int framesRenderedDelta = framesRendered_ - seamProofBaselineFramesRendered_;
+			logResult("Seam Proof: hudStatus() still queried exactly once per runtime frame "
+				"(delta since seam-proof phase began)", statusPollDelta == framesRenderedDelta,
+				"statusPollDelta=" + ofToString(statusPollDelta) + ", framesRenderedDelta=" + ofToString(framesRenderedDelta));
+
+			uint64_t drawCalls = runtime_.hudCompositorBridgeForTesting().drawCallCount();
+			logResult("Seam Proof: still exactly one production HUD draw per runtime frame (cumulative)",
+				drawCalls == static_cast<uint64_t>(framesRendered_),
+				"drawCallCount=" + ofToString(drawCalls) + ", framesRendered=" + ofToString(framesRendered_));
+
+			logResult("Seam Proof: capture-call counters exactly track frames since override install "
+				"(no missed frame, no double-pull)", seamProofCaptureCalls_ == 3 && seamProofUpdateCalls_ == 3,
+				"updateCalls=" + ofToString(seamProofUpdateCalls_) + ", captureCalls=" + ofToString(seamProofCaptureCalls_));
+
+			// Remove the override — proving it is a true, cleanly-removable
+			// test-only seam, never a permanent production monkeypatch.
+			sceneManager.setEffectActivitySourceOverrideForTesting(SceneManager::EffectActivitySource{});
+			scene.setEffectActivityTestState(FakeScene::EffectActivityTestState::NoSnapshot);
+			break;
+		}
+
+		case 4: {
+			runOneFrame(dt, false); // override removed last frame — back to FakeScene's own path
+
+			const auto& effects = runtime_.currentHudFrameData().effects;
+			logResult("Seam Proof: removing the override cleanly restores the production-default "
+				"forwarding path (FakeScene's own NoSnapshot -> HudFrameData.effects == std::nullopt)",
+				!effects.has_value(), effects.has_value() ? "effects still present" : "");
+
+			seamProofFinished_ = true;
+			break;
+		}
+
+		default:
+			seamProofFinished_ = true;
+			break;
+	}
+
+	seamProofFrameIndex_++;
 }
 
 void GlRestorationHarness::checkSemanticVariant(FakeScene::SemanticVariant variant, const std::string& label) {

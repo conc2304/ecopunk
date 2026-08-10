@@ -35,7 +35,11 @@ void AmbientFieldWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 	if (!input.captionText.empty()) {
 		ofFill();
 		ofSetColor(scaledAlpha(colors.muted, 0.7f));
-		drawText(input.captionText, bounds.x + wu(bounds, 3.0f), bounds.y + wu(bounds, 10.0f), wu(bounds, 0.45f, 120.0f));
+		float pad = wu(bounds, 3.0f);
+		// Fixed native pixel-space budget (see HudWidgetDrawUtils.h's v1
+		// typography strategy comment) — not scale-adjusted.
+		const auto& caption = textCache_.truncateToWidth(input.captionText, std::max(0.0f, bounds.width - pad));
+		drawText(caption.text, bounds.x + pad, bounds.y + wu(bounds, 10.0f));
 	}
 
 	ofPopStyle();

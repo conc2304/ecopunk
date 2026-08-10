@@ -57,15 +57,21 @@ void ProgressRingWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 	ofSetColor(scaledAlpha(ambient ? colors.muted : colors.accent, opacity));
 	drawArc(cx, cy, radius, -90.0f, -90.0f + 360.0f * ratio, thickness);
 
+	// Fixed native pixel-space budget (see HudWidgetDrawUtils.h's v1
+	// typography strategy comment) — not scale-adjusted.
+	float localMaxWidth = std::max(0.0f, bounds.width - wu(bounds, 4.0f));
+
 	if (!input.captionText.empty()) {
 		ofFill();
 		ofSetColor(scaledAlpha(colors.muted, opacity));
-		drawText(input.captionText, bounds.x + wu(bounds, 2.0f), bounds.y + bounds.height - wu(bounds, 4.0f), wu(bounds, 0.5f, 120.0f));
+		const auto& caption = textCache_.truncateToWidth(input.captionText, localMaxWidth);
+		drawText(caption.text, bounds.x + wu(bounds, 2.0f), bounds.y + bounds.height - wu(bounds, 4.0f));
 	}
 	if (valueRole && valueRole->shouldRender && !ambient) {
 		ofFill();
 		ofSetColor(scaledAlpha(colors.primary, opacity));
-		drawText(valueRole->formattedText, cx - wu(bounds, 12.0f), cy + wu(bounds, 4.0f), wu(bounds, 0.7f, 120.0f));
+		const auto& value = textCache_.truncateToWidth(valueRole->formattedText, localMaxWidth);
+		drawText(value.text, cx - wu(bounds, 12.0f), cy + wu(bounds, 4.0f));
 	}
 
 	ofPopStyle();

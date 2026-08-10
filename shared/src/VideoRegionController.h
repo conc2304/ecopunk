@@ -56,6 +56,14 @@ public:
 
 	void draw();
 
+	// Drops every managed fragment immediately (no fade-out) and returns
+	// to an empty-region state. Added for IEcopunkScene-style
+	// reactivation — a fragment created against a previous activation's
+	// video texture must never survive into a new one. Does not touch
+	// params or the (shared, reused-by-design) VideoRegionEffectRenderer
+	// scratch FBOs.
+	void reset();
+
 	int getActiveFragmentCount() const;
 	int getManagedRegionCount() const { return static_cast<int>(managed.size()); }
 	int getScratchFboWidth() const { return effectRenderer.getScratchWidth(); }

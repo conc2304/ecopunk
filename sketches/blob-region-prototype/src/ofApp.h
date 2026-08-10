@@ -3,29 +3,24 @@
 #include "ofMain.h"
 #include "ofxGui.h"
 
-#include "BlobDetector.h"
-#include "BlobTracker.h"
-#include "ShaderLibrary.h"
+#include "BlobSceneCore.h"
 #include "VideoPlaybackService.h"
-#include "VideoRegionController.h"
-#include "VideoRegionEffectRenderer.h"
-#include "VideoRegionMathOf.h"
 
-// Smallest vertical slice of the blob-region architecture: one MP4 through
-// the shared VideoPlaybackService, low-res blob detection off its
-// already-decoded CPU pixels, tracked into stable VideoRegions, drawn as
-// effected fragments over the unmodified full-screen background. See
-// docs/blob-region-architecture.md for the full write-up; this class is
-// deliberately thin — almost everything it does is call into shared/src.
+// Standalone development host for the Blob visual pipeline. Blob First
+// Complete Production Migration: the pipeline itself (ShaderLibrary,
+// BlobDetector, BlobTracker, VideoRegionController, background effect
+// renderer) now lives in BlobSceneCore (shared, host-agnostic — see that
+// class's header comment), reused unchanged by the production
+// IEcopunkScene adapter (sketches/experience_runtime/src/
+// BlobProductionScene.h). This class is now purely: own the standalone
+// dev's own VideoPlaybackService instance, own the ofxGui/ofParameter dev
+// tuning surface (pushed into BlobSceneCore's config accessors every
+// frame, same as the pre-migration syncParamsToSystems() did directly),
+// and own debug-overlay/perf-instrumentation drawing that must never
+// appear in the production HUD path (see
+// docs/hud-double-hud-prevention-and-migration-matrix.md's Blob row).
 //
-// Migrated from a bare TimeOffsetVideoBuffer to VideoPlaybackService as
-// the lowest-risk first consumer of the Shared Video Playback System
-// (Implement-Shared-Video-Playback-System-Agent-Prompt.md, Stage 2) — see
-// docs/video-playback-ownership-probe-report.md §I for why this scene was
-// chosen first: it only ever used TimeOffsetVideoBuffer's live-decode
-// accessors, never its playhead/history machinery, so migrating it is a
-// pure media-root/scanning/selection ownership change with no temporal-
-// history behavior to preserve.
+// See docs/blob-region-architecture.md for the full pipeline write-up.
 class ofApp : public ofBaseApp {
 public:
 	void setup() override;
@@ -36,24 +31,9 @@ public:
 private:
 	void syncParamsToSystems();
 	void drawDebugOverlay();
-	void drawBackground(const ofTexture & srcTex, const ofRectangle & destRect);
 
 	VideoPlaybackService videoPlayback;
-	ShaderLibrary shaderLib;
-	BlobDetector blobDetector;
-	BlobTracker blobTracker;
-	VideoRegionController regionController;
-
-	// Separate scratch FBO pair from VideoRegionController's own
-	// (region-fragment-sized) one — the background renders at full
-	// destRect size, and sharing one high-water-mark FBO between "usually
-	// small blob crops" and "always full-frame background" would just
-	// force the fragment scratch FBO to permanently grow to full-frame
-	// size the first time the background effect is used. Kept a plain
-	// member here (not owned by VideoRegionController) because background
-	// compositing isn't region lifecycle — it's drawn once per frame,
-	// unconditionally, before regionController.draw().
-	VideoRegionEffectRenderer backgroundEffectRenderer;
+	BlobSceneCore blobCore;
 
 	// ── GUI / parameters (Part 3 of the handoff) ───────────────────────────
 	ofxPanel gui;
@@ -81,7 +61,7 @@ private:
 	ofParameterGroup backgroundGroup;
 	// 0 = off (canvas stays cleared to black), 1 = normal (unshaded
 	// cover-fit draw, the original behavior), 2 = effect (background run
-	// through one ShaderLibrary shader, via backgroundEffectRenderer).
+	// through one ShaderLibrary shader, via BlobSceneCore::backgroundConfig()).
 	ofParameter<int> pBackgroundMode { "backgroundMode (0=off,1=normal,2=effect)", 1, 0, 2 };
 	ofParameter<int> pBackgroundEffectIndex { "backgroundEffectIndex (see log)", 0, 0, 17 };
 	ofParameter<float> pBackgroundEffectAmount { "backgroundEffectAmount", 1.0f, 0.0f, 1.0f };
@@ -89,10 +69,10 @@ private:
 	ofParameterGroup renderingGroup;
 	ofParameter<bool> pFragmentsEnabled { "fragmentsEnabled", true };
 	// ofxGui has no built-in editable-string widget wired up here, so the
-	// effect is chosen by index into kEffectChoices (see .cpp) rather than
-	// as an ofParameter<string> — VideoRegionController::Params::effectName
-	// itself is still a plain std::string either way. Range covers all 18
-	// ShaderLibrary effects (see kEffectChoices) — NOT "ridgeline" (a
+	// effect is chosen by index into BlobSceneCore::effectChoices() (see
+	// .cpp) rather than as an ofParameter<string> — VideoRegionController::
+	// Params::effectName itself is still a plain std::string either way.
+	// Range covers all 18 ShaderLibrary effects — NOT "ridgeline" (a
 	// BEFragment-only special path using RidgelineRenderer + full-frame CPU
 	// pixels, not a ShaderLibrary shader) or "contour" (doesn't exist as an
 	// effect anywhere — ContourWidget is unrelated decorative HUD art).

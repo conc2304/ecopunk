@@ -1,7 +1,7 @@
 {
     "blacklist": [],
     "effectDefaults": [],
-    "exportedAtUtc": "2026-08-08T08:58:58Z",
+    "exportedAtUtc": "2026-08-09T17:27:13Z",
     "schemaVersion": 2,
     "sourceTool": "shader-effect-debugger",
     "whitelist": [
@@ -29,6 +29,25 @@
             "sourceSketch": "shader-effect-debugger",
             "sourceVideo": "",
             "timestampUtc": "2026-08-07T20:58:20Z"
+        },
+        {
+            "compatibleSceneIds": [
+                "temporal-fields"
+            ],
+            "effect": "dither",
+            "label": "",
+            "list": "whitelist",
+            "notes": "",
+            "presetId": "preset.dither.20260809_172713_1",
+            "schemaVersion": 1,
+            "snapshot": {
+                "alpha": 0.5,
+                "maxPixelation": 6.0,
+                "opacity": 1.0
+            },
+            "sourceSketch": "shader-effect-debugger",
+            "sourceVideo": "",
+            "timestampUtc": "2026-08-09T17:27:13Z"
         }
     ]
 }

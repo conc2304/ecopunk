@@ -307,19 +307,30 @@ was ever needed).
 
 ## 17. Effect slot projections
 
+**Updated by the Final Narrow Closure Patch** — `effects.active` and
+`effects.dominant`/`.transition.progress` are now DELIBERATELY
+independent computations, not both derived from the same
+`resolveDominantEffectIds()` call (the original Architecture-Closure
+Session implementation incorrectly ran `effects.active` through that
+dominance-ranked, threshold-filtered, capped-at-2 helper too — found and
+fixed this patch; see the Final Narrow Closure Patch completion report
+for the full before/after).
+
 | Slot | Projection |
 |---|---|
-| `effects.active` | `resolveDominantEffectIds(status).map(.effectId)` — a list, present-but-possibly-empty when a snapshot exists |
-| `effects.dominant` | `resolveDominantEffectIds(status).front().effectId` if non-empty, else missing |
+| `effects.active` | `allActiveEffectIds(status)` — the COMPLETE active set, deduplicated by `effectId`, in first-seen slot order. No dominance threshold, no `maxLabels` cap, no low-prominence filtering. A list, present-but-possibly-empty when a snapshot exists |
+| `effects.dominant` | `resolveDominantEffectIds(status).front().effectId` if non-empty, else missing — the canonical dominance resolver, unmodified |
 | `effects.transition.progress` | `resolveDominantEffectIds(status).front().transitionProgress01`, ONLY when `.transitioning == true` — otherwise missing (not a misleading fixed `1.0`) |
 | `effects.health` | `effectHealthId(status.health)` — direct enum mapping, never derived from slot count |
 | `effects.intensity` | **Always missing** in v1 (see §20) |
 
-All five reuse the SAME `resolveDominantEffectIds()` call per `resolve()`
-invocation (default `DominanceConfig` — `maxLabels=2`,
-`minProminenceToShow=0.05`, `annotateTransitioning=true` — matching
-`EffectActivityStatus.h`'s own documented canonical mapping comment,
-un-overridden).
+`effects.dominant`/`.transition.progress` still use the canonical
+`resolveDominantEffectIds()` call (default `DominanceConfig` —
+`maxLabels=2`, `minProminenceToShow=0.05`, `annotateTransitioning=true`,
+un-overridden). `effects.active` no longer calls it at all. A widget MAY
+still visually cap how many chips it draws (`EffectChipsWidget`'s own
+row-wrapping/space-limit logic, unchanged) — that remains presentation-
+only and never feeds back into this semantic value.
 
 ## 18. Absent / empty / active semantics
 
@@ -349,9 +360,16 @@ and 10 corresponding Validation Studio screenshots (§9,
 level (`test_real_effects_dominance_not_first_in_vector` — a
 low-prominence slot inserted first, a high-prominence slot inserted
 second, `effects.dominant` correctly resolves to the high-prominence
-one) and visually (`effects_multi_dominance_not_first.png` shows
-"bioluminescence" — the higher-prominence, second-inserted slot — ordered
-first in the rendered chip list, ahead of "desaturate").
+one) and via the mandatory >2-effect regression added by the Final Narrow
+Closure Patch (`test_real_effects_active_full_set_with_below_threshold_and_dominance_not_first`,
+4 slots, dominant slot last in the vector, one slot below the dominance
+threshold — `effects.dominant` resolves to the correct high-prominence
+slot regardless of its position, while `effects.active` independently
+retains all 4, unaffected by the dominance ranking). Also confirmed
+visually: `effects_multi_below_threshold_and_dominance_not_first.png`
+shows all four effect IDs present in `effects.active` (in slot order, NOT
+dominance order — a change from this session's own earlier, incorrect
+implementation, see §17).
 
 ## 20. Health result
 
@@ -552,9 +570,38 @@ None.
 
 ## 30. Recommendation
 
-**READY FOR ARCHITECTURE ACCEPTANCE.** Every checklist item in §29 is
-satisfied; the documented gaps (§25) are scoped, risk-assessed, and
-explicitly non-blocking (five widgets' truncation audit,
-`flexible.secondary_*` padding audit). No contract change is requested.
-HUD Blueprint v1 is explicitly NOT frozen by this session. Production
-skin work was not started.
+**READY FOR ARCHITECTURE ACCEPTANCE**, as of the Architecture-Closure
+Session. Every checklist item in §29 was satisfied; the two documented
+gaps (§25) were scoped, risk-assessed, and explicitly non-blocking.
+
+## 31. Final Narrow Closure Patch addendum
+
+The two gaps flagged in §25 are now closed. See
+`docs/reviews/hud-final-narrow-closure-patch-report.md` for the full
+report; summary:
+
+- **`effects.active` corrected**: was incorrectly derived from
+  `resolveDominantEffectIds()` (dominance-filtered, capped at 2) — a
+  defect this patch found in the Architecture-Closure Session's own prior
+  work, not a pre-existing one. Now the complete active-effect set, per
+  DEC-015/DEC-016's actual requirement. `effects.dominant` confirmed
+  unchanged and independently canonical.
+- **Five-widget typography audit closed**: `NumericValueWidget`,
+  `ProgressRingWidget`, `SparklineWidget`, `AmbientFieldWidget` now
+  truncate; `BindingPlaceholderWidget` confirmed tooling-only, no
+  production text path.
+- **`flexible.secondary_a`/`_b` padding closed**: exact per-widget
+  live-content budgets documented (`hud-typography-metrics-v1.md` §5),
+  dedicated containment test added and passing.
+- **Full regression**: 1307/1307 checks (was 1282), full 5000-frame
+  `GlRestorationHarness` re-run — **ALL CHECKS PASSED**, HUD-only
+  allocation 170.4/169.4/169.1 allocs/frame at 50/500/5000 frames
+  (baseline was 169.0/171.5/169.5 — consistent, no regression), studio
+  profile-switch still exactly 705 allocations/cycle across 5 cycles
+  (identical to baseline, zero drift).
+- **Singular production HUD path**: reconfirmed
+  (`drawCallCount()==framesRendered()` held at 23/23 and, via a
+  concurrently-landed "Seam Proof" phase, at 5028/5028 cumulative frames).
+
+No shared contract changed. **Final disposition: Ready for HUD Runtime
+acceptance.**

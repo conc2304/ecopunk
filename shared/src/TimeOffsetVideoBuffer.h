@@ -43,10 +43,28 @@ class TimeOffsetVideoBuffer {
 			int minLoopCount = 4;
 		};
 
+		// Applies settings (buffer dimensions, history length, playhead
+		// count/quantization, min-playtime/loop gating) and (re)allocates
+		// the playhead pool + clears history — everything setup() below
+		// does EXCEPT the directory scan/shuffle/load. Extracted so a
+		// canonical-service-driven caller (see loadExplicit() below and
+		// shared/src/video-playback/adapters/TimeOffsetPlaybackAdapter.h)
+		// can configure this buffer's shape without ever going through the
+		// legacy scan path — setup() itself now just calls this and then
+		// does the scan/shuffle/load on top.
+		void configure(const Settings& settings);
+
 		// mediaFolderPath is a FOLDER (scanned for .mp4 files, mirroring
 		// VideoSampler's ofDirectory + allowExt("mp4") idiom), not a single
 		// file — loads the first file found and keeps the rest of the
 		// playlist for advanceToNextMedia().
+		//
+		// LEGACY PATH — retained for callers that still own their own local
+		// media selection (see this header's own top comment history and
+		// DEC-014, Shared Video / Temporal Playback-History Boundary). A
+		// canonical-service-driven caller should use configure() +
+		// loadExplicit() below instead and never call setup()/
+		// advanceToNextMedia() at all.
 		void setup(const std::string& mediaFolderPath, const Settings& settings);
 		void update(float dt);
 
@@ -54,7 +72,47 @@ class TimeOffsetVideoBuffer {
 		// history ring buffer first — buffered frames from the old source
 		// are meaningless once the video itself has changed. No-op if only
 		// zero or one file were found.
+		//
+		// LEGACY PATH — see setup()'s comment above. A canonical-service-
+		// driven caller must never call this (DEC-014: "must not
+		// independently scan, shuffle, or select media").
 		void advanceToNextMedia();
+
+		// Loads exactly the file at absolutePath — no directory scan, no
+		// shuffle, no playlist, no fallback selection (DEC-014, Shared
+		// Effects — Temporal Playback / History Boundary). This is the one
+		// sanctioned entry point for a caller (see
+		// shared/src/video-playback/adapters/TimeOffsetPlaybackAdapter.h)
+		// that receives its media selection from VideoPlaybackService.
+		//
+		// Reuses setup()/advanceToNextMedia()'s own load sequence (close
+		// any current player, clear history, load, loop, play) rather than
+		// duplicating it — the only difference is the path comes from the
+		// caller instead of an internal scanned/shuffled list, and
+		// mediaFiles/currentFileIndex (the legacy playlist state) are left
+		// completely untouched, so this path and the legacy scan path never
+		// interfere with each other even if a future caller mixed both
+		// (not a supported configuration, but not something that should
+		// corrupt state either).
+		//
+		// History is cleared unconditionally, even on failure — a failed
+		// load must never leave stale frames from whatever was playing
+		// before attributed to the new (failed) identity. Returns the
+		// decoder's own load success/failure honestly; on failure,
+		// hasMedia() becomes false and the history/playhead APIs behave
+		// exactly as they do before any media has ever loaded (see
+		// getPlayheadTexture()'s own "idx < 0" handling) — no local
+		// fallback selection of any kind is attempted here.
+		bool loadExplicit(const std::string& absolutePath);
+
+		// Returns the explicitly-loaded path if loadExplicit() was ever
+		// called (even if that load failed — matches legacy
+		// setup()/advanceToNextMedia()'s own behavior of recording the
+		// attempted file regardless of outcome), otherwise falls back to
+		// the legacy scanned-playlist's current file. The two sources are
+		// mutually exclusive in any real caller (a caller uses either the
+		// legacy scan path OR loadExplicit(), never both), so there is no
+		// real ambiguity about which one "wins" here in practice.
 		std::string getCurrentMediaFilename() const;
 
 		// True once the current clip has played at least
@@ -151,6 +209,12 @@ class TimeOffsetVideoBuffer {
 
 		std::vector<std::string> mediaFiles;
 		int currentFileIndex = -1;
+
+		// Set only by loadExplicit() — kept entirely separate from
+		// mediaFiles/currentFileIndex (the legacy scan/playlist state)
+		// above, so the two selection paths can never cross-contaminate
+		// each other. See getCurrentMediaFilename()'s header comment.
+		std::string explicitMediaPath;
 
 		// Minimum-playtime tracking for isMediaAdvanceEligible() — reset in
 		// setup() and advanceToNextMedia(). Loop completion is detected by a

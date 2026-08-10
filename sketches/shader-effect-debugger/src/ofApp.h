@@ -49,6 +49,19 @@ private:
 	// pack file — see shared/src/video-effects/knowledge/EffectKnowledgePack.h.
 	void exportKnowledgePack();
 
+	// Shared Effects "Production Selector / Eligibility Increment 2": the
+	// real, permanent authoring capability this action was missing --
+	// KnowledgeEntry::compatibleSceneIds existed since the Architecture-
+	// Closure Session but nothing in this debugger ever set it, so every
+	// [w]-saved preset was Unclassified (never automatic-production-
+	// eligible) regardless of intent. This toggle is consulted by
+	// saveCurrentToWhitelist() below -- 'c' toggles it, same interaction
+	// pattern as 'e'/pEvolutionEnabled and 'p'/pDriftEnabled. Scoped to
+	// exactly one scene id for now (deliberately not a general multi-scene
+	// picker UI -- that's real future authoring-tooling scope, not this
+	// increment's).
+	void authorCanonicalTemporalFieldsSeedPreset();
+
 	videoeffects::VideoEffectService service;
 	std::vector<std::string> effectIds;
 	int currentEffectIndex = -1;
@@ -70,6 +83,8 @@ private:
 	ofParameter<bool> pEvolutionEnabled { "Scene evolution", false };
 	ofParameter<bool> pDriftEnabled { "Pattern drift", false };
 	ofParameter<int> pSeed { "Seed (0 = random)", 0, 0, 999999 };
+	// See authorCanonicalTemporalFieldsSeedPreset()'s header comment.
+	ofParameter<bool> pMarkTemporalFieldsCompatible { "Compatible: temporal-fields", false };
 
 	ofParameterGroup effectParamGroup;
 	// Backing storage for the dynamically-rebuilt effect param group — cleared

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <optional>
 #include <string>
 #include "ofFbo.h"
 #include "ofRectangle.h"
@@ -53,6 +54,38 @@ class TFEffectPicker {
 		// genuine "Transitioning" state to report.
 		videoeffects::EffectActivityStatus activityStatus() const;
 
+	// Test-support surface, NOT part of this class's real production
+	// role -- lets a self-test seed real (effect, snapshot, presetId,
+	// compatibility) knowledge into this instance's own
+	// EffectKnowledgeBase without going through file-based pack
+	// import, and lets a test force pickNext()'s effect-selection
+	// coin flip while still exercising the REAL applyEligibleCanonicalPreset()/
+	// isReusableAuthoredPreset()/resolveCompatibility() call chain.
+	// See TFEligibilitySelfTest.h.
+	videoeffects::EffectKnowledgeBase& knowledgeBaseForTest() { return knowledgeBase; }
+	void forceEffectForTest(const std::string& effectName) {
+		Weights w;
+		w.rawWeight = effectName.empty() ? 1000.0f : 0.0f;
+		w.cycleInterval = 999999.0f;
+		if (!effectName.empty()) w.effectWeights = { { effectName, 1000.0f } };
+		setWeights(w);
+		pickNext();
+	}
+	// Exposes which path the most recent pickNext() actually took --
+	// test-only visibility into applyEligibleCanonicalPreset()'s
+	// return value, which pickNext() itself only otherwise expresses
+	// through which private param-setting function it called.
+	bool lastPickUsedCanonicalPreset() const { return lastPickUsedCanonicalPreset_; }
+	std::optional<std::string> lastAppliedPresetId() const { return lastAppliedPresetId_; }
+	// Exposes the exact same snapshot representation applyEligibleCanonicalPreset()/
+	// randomizeEffectParams() left paramX..W in, for the currently-selected
+	// effect -- the same private currentParamSnapshot() the real blacklist-
+	// avoidance check and (by construction) the real render path's values
+	// derive from. Lets a test prove a selected preset's authored values
+	// genuinely reached this class's internal state, not just that some
+	// function returned true.
+	std::map<std::string, float> currentParamSnapshotForTest() const { return currentParamSnapshot(currentEffect); }
+
 	private:
 		void pickNext();
 		void randomizeEffectParams(const std::string& name);
@@ -67,6 +100,26 @@ class TFEffectPicker {
 		// per-instance randomization" design).
 		std::map<std::string, float> currentParamSnapshot(const std::string& name) const;
 
+		// Shared Effect Knowledge v1 Freeze Policy (DEC-016) production-
+		// selector adoption -- see EffectKnowledgePrecedence.h. Consults
+		// the real canonical eligibility chain (preset override -> effect
+		// default -> Unclassified; blocked always excluded; legacy
+		// anonymous presets never automatic-selection-eligible) against
+		// this scene's id ("temporal-fields") for `effectName`'s
+		// WHITELIST entries only -- this governs which PARAMETER VALUES
+		// an already-chosen effect uses, not which effect gets chosen
+		// (that remains this class's own `weights.effectWeights` local
+		// policy, unaffected -- see this method's .cpp comment for why
+		// gating effect-selection itself on eligibility was rejected).
+		// On success, applies the chosen entry's snapshot into
+		// paramX..W (via the same per-effect key mapping
+		// currentParamSnapshot() uses in the other direction) and
+		// returns true. Returns false (leaving paramX..W untouched) if
+		// no eligible preset exists, so the caller can fall back to
+		// randomizeEffectParams() exactly as before this increment.
+		bool applyEligibleCanonicalPreset(const std::string& effectName);
+		void applyParamsFromSnapshot(const std::string& name, const std::map<std::string, float>& snapshot);
+
 		ShaderLibrary* shaderLib = nullptr;
 		Weights weights;
 		float timer = 0.0f;
@@ -74,9 +127,16 @@ class TFEffectPicker {
 
 		// Imported once in setup(); absent/malformed pack leaves this empty and
 		// every knowledge-based check below becomes a no-op, so pickNext()'s
-		// existing behavior is completely unchanged when no pack has ever been
-		// exported -- see setup()'s own comment.
+		// pre-this-increment behavior is completely unchanged when no pack
+		// has ever been exported, or when nothing eligible has been
+		// authored for the chosen effect -- see setup()'s own comment.
 		videoeffects::EffectKnowledgeBase knowledgeBase;
+
+		// Diagnostic only (not consumed by drawCurrent()/activityStatus()) --
+		// updated at the top of pickNext() each time, so it always
+		// reflects the most recent pick, never stale.
+		bool lastPickUsedCanonicalPreset_ = false;
+		std::optional<std::string> lastAppliedPresetId_;
 
 		// Mirrors BEFragment's per-instance randomized params (effectSlot.params),
 		// picked once when an effect is selected, not regenerated every frame.

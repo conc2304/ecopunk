@@ -7,6 +7,17 @@
 #include "ofGraphics.h"
 #include "ofLog.h"
 
+ExperienceRuntime::ExperienceRuntime()
+	: blobScene_(runtimeServices_.video())
+	, temporalScene_(runtimeServices_.video()) {
+	// See ExperienceRuntime.h's constructor comment and blobScene_'s own
+	// declaration comment: runtimeServices_.video() is a valid, stable
+	// reference from the moment runtimeServices_ itself is constructed
+	// (declaration order, above blobScene_/temporalScene_ in the header),
+	// independent of whether RuntimeServices::setup() has run yet — that
+	// happens later, in setup() below, before either scene is activated.
+}
+
 void ExperienceRuntime::establishGlobalRenderingBaseline() {
 	// Moved out of scene setup() code per the placement/readiness probe's
 	// discovery report §6 — every one of these was previously set
@@ -25,6 +36,28 @@ void ExperienceRuntime::establishGlobalRenderingBaseline() {
 
 void ExperienceRuntime::setup() {
 	establishGlobalRenderingBaseline();
+
+	// VideoPlaybackService setup, per Implement-Shared-Video-Playback-
+	// System-Agent-Prompt.md §2/§9's approved ownership (RuntimeServices
+	// owns VideoPlaybackService) — moved ahead of SceneManager setup/
+	// activation (Blob First Complete Production Migration): blobScene_
+	// consumes runtimeServices_.video() directly (the ONE canonical
+	// instance — see BlobProductionScene's constructor comment for why
+	// this must never be a second/local instance), so the video service
+	// must be configured before the scene that reads it is set up and
+	// activated below.
+	VideoPlaybackService::Config videoConfig;
+	videoConfig.mediaRoot = ofToDataPath("../../../../assets/shared/media", true);
+	videoConfig.holdDurationSeconds = 30.0f;
+	videoConfig.automaticAdvance = true;
+	runtimeServices_.setup(videoConfig);
+
+	// Blob First Complete Production Migration: whether blobScene_ (vs.
+	// fakeScene_) is the scene that gets set up/activated below is decided
+	// by the CALLER, before this method runs — see
+	// installBlobProductionScene()'s own comment for why (GlRestorationHarness
+	// must keep exercising fakeScene_ unmodified). Nothing here forces one
+	// or the other.
 
 	// SceneServices construction.
 	//
@@ -48,18 +81,29 @@ void ExperienceRuntime::setup() {
 
 	// Canonical-shaped paths per Scene-HUD-Contract-v1.md §12's asset
 	// tree. sceneAssetRoot/sharedEffectAssetRoot still do not exist in
-	// this repo and FakeScene never reads from them in this increment.
-	// sharedMediaRoot now resolves to a REAL, populated directory
+	// this repo and neither FakeScene nor BlobProductionScene reads from
+	// them in this increment (Blob consumes runtimeServices_.video()
+	// directly instead — see BlobProductionScene::setup()'s own comment).
+	// sharedMediaRoot resolves to a REAL, populated directory
 	// (Shared Video Playback Engineering Session 2, Task C established
 	// assets/shared/media/ as the canonical physical media root) — the
 	// value's *meaning* is unchanged from the draft placeholder this
 	// replaces (still "the shared media root"), only whether it actually
-	// resolves to real content changed. FakeScene still never reads this
-	// field itself; only videoConfig.mediaRoot below (populated
-	// independently, not derived from this field, since VideoPlaybackService
-	// takes an already-OF-resolved path via its own Config, not a raw
-	// SceneServices field) actually feeds the video service.
-	services.sceneAssetRoot = "assets/scenes/" + std::string(FakeScene::kSceneId) + "/";
+	// resolves to real content changed. videoConfig.mediaRoot above is
+	// populated independently, not derived from this field, since
+	// VideoPlaybackService takes an already-OF-resolved path via its own
+	// Config, not a raw SceneServices field.
+	//
+	// Blob First Complete Production Migration / Temporal Production Scene
+	// #2 Migration: still an inert, unread value regardless of which scene
+	// ends up installed (neither FakeScene nor BlobProductionScene nor
+	// TemporalProductionScene reads it) — derived from whichever real
+	// scene installTemporalProductionScene()/installBlobProductionScene()
+	// most recently selected (see installedTemporalScene_'s own comment);
+	// the harness path (fakeScene_ actually resident) is unaffected either
+	// way.
+	services.sceneAssetRoot =
+		"assets/scenes/" + (installedTemporalScene_ ? temporalScene_.sceneId() : blobScene_.sceneId()) + "/";
 	services.sharedMediaRoot = ofToDataPath("../../../../assets/shared/media", true);
 	services.sharedEffectAssetRoot = "assets/shared/video-effects/";
 
@@ -72,23 +116,6 @@ void ExperienceRuntime::setup() {
 
 	glm::ivec2 nativeSize = sceneManager_.activeSceneNativeRenderSize();
 	sceneFbo_.allocate(nativeSize.x, nativeSize.y, GL_RGBA);
-
-	// VideoPlaybackService setup, per Implement-Shared-Video-Playback-
-	// System-Agent-Prompt.md §2/§9's approved ownership
-	// (RuntimeServices owns VideoPlaybackService). This harness still has
-	// no real scene consuming video (FakeScene has no media concept — see
-	// FakeScene.h), but mediaRoot now points at the real canonical root
-	// (Shared Video Playback Engineering Session 2, Task C) rather than
-	// this sketch's own empty bin/data/media — so this end-to-end path now
-	// exercises VideoPlaybackHealth::Ready with real catalog entries, not
-	// just the Unavailable/empty-catalog path (still reachable, and still
-	// tested, by pointing a Config at an empty/missing root — see
-	// shared/src/video-playback/test/).
-	VideoPlaybackService::Config videoConfig;
-	videoConfig.mediaRoot = ofToDataPath("../../../../assets/shared/media", true);
-	videoConfig.holdDurationSeconds = 30.0f;
-	videoConfig.automaticAdvance = true;
-	runtimeServices_.setup(videoConfig);
 
 	// Engineering Session 2: real HudCompositor bridge setup — establishes
 	// the canonical 1280x720 canvas (see HudCompositorBridge's own header
@@ -216,6 +243,18 @@ void ExperienceRuntime::keyPressed(int key) {
 	}
 	if (auto runtimeCommand = inputRouter_.translateToRuntimeCommand(key)) {
 		handleRuntimeCommand(*runtimeCommand);
+		return;
+	}
+
+	// Blob First Production Acceptance narrow patch: manual scene-only
+	// (pre-HUD-composite) capture, for visual-parity evidence gathering —
+	// see saveSceneFrameCaptureForTesting()'s own comment. Deliberately
+	// scene-agnostic (works for whichever scene is actually installed),
+	// unlike the FakeScene-only dev hooks below.
+	if (key == 's' || key == 'S') {
+		bool saved = saveSceneFrameCaptureForTesting("captures/scene_only_manual.png");
+		ofLogNotice("ExperienceRuntime") << "Scene-only capture "
+			<< (saved ? "saved to captures/scene_only_manual.png" : "FAILED (FBO not allocated?)");
 		return;
 	}
 

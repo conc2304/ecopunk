@@ -1,0 +1,137 @@
+{
+  "_comment": "Maps each <name>_tint/_mask pair in this folder to its display name, draw layer (underlay = beneath fragments, overlay = above fragments and HUD annotations), blend mode (screen/multiply/alpha -- independent of layer, do not derive one from the other), default opacity (0.0-0.4), and spans_both_zones (reserved, unenforced -- Temporal Fields has no Zone A/B divider). opacity_default values marked 'brief' come straight from the original spec; others are a uniform 0.05 starting point for content types the brief didn't cover, meant to be tuned against real footage. blend_mode defaults to 'alpha' for any entry that omits it.",
+
+  "leaf_vein_tracery": {
+    "display_name": "Leaf Vein Tracery",
+    "layer": "overlay",
+    "blend_mode": "screen",
+    "opacity_default": 0.12,
+    "spans_both_zones": false
+  },
+  "woodgrain_bark_rings": {
+    "display_name": "Woodgrain / Bark Rings",
+    "layer": "underlay",
+    "blend_mode": "multiply",
+    "opacity_default": 0.08,
+    "spans_both_zones": false
+  },
+  "contour_topo_lines": {
+    "display_name": "Contour / Topo Lines",
+    "layer": "overlay",
+    "blend_mode": "screen",
+    "opacity_default": 0.14,
+    "spans_both_zones": false
+  },
+  "root_mycelium_network": {
+    "display_name": "Root / Mycelium Network",
+    "layer": "underlay",
+    "blend_mode": "screen",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "moss_lichen_patina": {
+    "display_name": "Moss / Lichen Patina",
+    "layer": "underlay",
+    "blend_mode": "multiply",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "dappled_canopy_light": {
+    "display_name": "Dappled Canopy Light",
+    "layer": "overlay",
+    "blend_mode": "multiply",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "cracked_earth_drought": {
+    "display_name": "Cracked Earth (Drought)",
+    "layer": "underlay",
+    "blend_mode": "multiply",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "fern_frond_silhouette": {
+    "display_name": "Fern Frond Silhouette",
+    "layer": "overlay",
+    "blend_mode": "screen",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "forest_floor_litter": {
+    "display_name": "Forest Floor Leaf Litter",
+    "layer": "underlay",
+    "blend_mode": "multiply",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "canopy_silhouette_below": {
+    "display_name": "Canopy Silhouette From Below",
+    "layer": "overlay",
+    "blend_mode": "multiply",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "wind_current_lines": {
+    "display_name": "Wind Current Lines",
+    "layer": "overlay",
+    "blend_mode": "screen",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "dust_motes_light": {
+    "display_name": "Dust Motes In Light",
+    "layer": "overlay",
+    "blend_mode": "screen",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "water_ripple_rings": {
+    "display_name": "Water Ripple Rings",
+    "layer": "overlay",
+    "blend_mode": "screen",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "water_surface_caustics": {
+    "display_name": "Water Surface Caustics",
+    "layer": "overlay",
+    "blend_mode": "screen",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "moss_carpet_closeup": {
+    "display_name": "Moss Carpet Close-up",
+    "layer": "underlay",
+    "blend_mode": "multiply",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "moss_on_bark": {
+    "display_name": "Moss On Bark",
+    "layer": "underlay",
+    "blend_mode": "multiply",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "moss_stone_wall": {
+    "display_name": "Moss-Covered Stone Wall",
+    "layer": "underlay",
+    "blend_mode": "multiply",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "moss_spore_texture": {
+    "display_name": "Fine Moss Spore Texture",
+    "layer": "underlay",
+    "blend_mode": "multiply",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  },
+  "dried_moss_drought": {
+    "display_name": "Dried Moss / Drought Variant",
+    "layer": "underlay",
+    "blend_mode": "multiply",
+    "opacity_default": 0.05,
+    "spans_both_zones": false
+  }
+}

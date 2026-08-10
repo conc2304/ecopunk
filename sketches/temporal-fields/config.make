@@ -170,3 +170,23 @@ PROJECT_EXCLUSIONS = ../../shared/src/video-playback/test% ../../shared/src/vide
 # Uncomment/comment below to switch between C++11 and C++17 ( or newer ). On macOS C++17 needs 10.15 or above.
 # export MAC_OS_MIN_VERSION = 10.15
 # export MAC_OS_CPP_VER = -std=c++17
+
+################################################################################
+# TEMPORAL RUNTIME ASSET REPRODUCIBILITY (Temporal Production Scene #2,
+# asset-closure session)
+#
+# This sketch is the canonical owner of the Temporal-only shader pairs
+# (fragmentDissolve/particleExistenceFade/textureBlendFade) and the
+# backgrounds/ ambient-texture set, authored at
+# sketches/temporal-fields/data/{shaders,backgrounds}/ (tracked — not under
+# any bin/ tree). Its own bin/data/ copies are just as .gitignore'd as
+# experience_runtime's (repo-root .gitignore's `**/bin/data/*`), so this
+# sketch needs the same deterministic sync, not just the sketch that
+# consumes it downstream. See
+# scripts/sync-temporal-runtime-assets.py and experience_runtime/config.make's
+# matching hook for the full rationale.
+################################################################################
+Release Debug: sync-temporal-runtime-assets
+.PHONY: sync-temporal-runtime-assets
+sync-temporal-runtime-assets:
+	@python3 ../../scripts/sync-temporal-runtime-assets.py $(CURDIR)

@@ -91,7 +91,7 @@ at that region's own pixel size).
 | `universal.scene_title` | Label | 844.8, 21.6, 409.6, 43.2 | `wu(bounds,4)`=1.44/side | 406.72 | Yes | 1 |
 | `universal.media_title` | Label | 844.8, 72.0, 409.6, 36.0 | `wu(bounds,4)`=1.2/side | 407.2 | Yes | 1 |
 | `universal.primary_state` | StatusBadge | 844.8, 115.2, 409.6, 43.2 | `wu(bounds,4)`=1.44/side | 406.72 | Yes | 1 |
-| `universal.activity` | NumericValue / ProgressBar | 844.8, 165.6, 409.6, 43.2 | ProgressBar: none subtracted | 409.6 | Yes (ProgressBar); NumericValue not yet audited (bounded numeric/percentage format, low overflow risk) | 1 |
+| `universal.activity` | NumericValue / ProgressBar | 844.8, 165.6, 409.6, 43.2 | NumericValue: `wu(bounds,4)`=1.44/side; ProgressBar: none subtracted | NumericValue: 406.72; ProgressBar: 409.6 | Yes (both) | 1 |
 | `universal.effect_summary` (chips slot) | EffectChips | 844.8, 216.0, 409.6, 21.6 (upper half of a 2-slot vertical split) | per-chip `wu(bounds,4)`=0.72/side | 408.16 per-chip backstop budget (before row-wrap) | Yes (per chip) | 1 (wraps to additional rows, not multi-line per chip) |
 | `universal.effect_summary` (health slot) | StatusBadge | 844.8, 237.6, 409.6, 21.6 (lower half) | `wu(bounds,4)`=0.72/side | 408.16 | Yes | 1 |
 | `overlay.health` | StatusBadge / Label | 25.6, 21.6, 256.0, 43.2 | `wu(bounds,4)`=1.44/side | 253.12 | Yes | 1 |
@@ -101,26 +101,45 @@ at that region's own pixel size).
 | `controls.reseed` | Label | 588.8, 648.0, 128.0, 43.2 | `wu(bounds,4)`=1.44/side | 125.12 | Yes | 1 |
 | `flexible.primary` | MetadataCard / ChannelStrip / others | 844.8, 460.8, 409.6, 115.2 | MetadataCard: `wu(bounds,6)`=5.76/side | 398.08 (MetadataCard); ChannelStrip per-cell below | 1 | 1 |
 | `flexible.primary` (ChannelStrip per-cell) | ChannelStrip | 4 cells × 102.4 wide within the region above | `wu(bounds,3)`=2.88 (parent-region-relative) | 99.52 per cell | Yes | 1 |
-| `flexible.secondary_a` / `flexible.secondary_b` | NumericValue / ProgressBar / ProgressRing / StatusBadge / Sparkline / AmbientField | 844.8/1062.4, 583.2, 192.0, 43.2 each | Not yet audited per-widget (see §4) | — | Partial | 1 |
+| `flexible.secondary_a` | NumericValue / ProgressBar / ProgressRing / StatusBadge / Sparkline / AmbientField | 844.8, 583.2, 192.0, 43.2 | See §5's per-widget breakdown | 189.12–192.0 (per widget, §5) | Yes (all six) | 1 |
+| `flexible.secondary_b` | NumericValue / ProgressBar / ProgressRing / StatusBadge / Sparkline / AmbientField | 1062.4, 583.2, 192.0, 43.2 | See §5's per-widget breakdown | 189.12–192.0 (per widget, §5) | Yes (all six) | 1 |
 | `media_viewport` | (MediaViewportMesh — not a text region) | 25.6, 115.2, 768.0, 504.0 | N/A | N/A | N/A | N/A |
 
-## 4. Coverage and known gaps
+## 4. Coverage — CLOSED, no unresolved production text-path gap
 
-**Truncation added this session** (all verified via `hud_typography_tests.cpp`
-— 14/14 passing — plus real screenshot inspection): `LabelWidget`,
-`StatusBadgeWidget`, `MetadataCardWidget`, `EffectChipsWidget`,
-`ChannelStripWidget`, `ProgressBarWidget`, `TimelineWidget`.
+**Final Narrow Closure Patch**: the five remaining widgets are now
+classified and audited. **All 12 widget types in
+`shared/src/hud-compositor/widgets/` are accounted for** — every
+production-visible dynamic text path has truncation; the one tooling-only
+widget is explicitly exempted, not overlooked.
 
-**Not yet audited for truncation** (documented gap, not silently
-ignored): `NumericValueWidget`, `ProgressRingWidget`, `SparklineWidget`,
-`AmbientFieldWidget`, `BindingPlaceholderWidget`. Risk assessment: these
-widgets' dynamic text is either a small, closed vocabulary caption set
-(e.g. "ACTIVITY", "REGION FIELD" — bounded length by construction, not by
-truncation) or an inherently short formatted value (percentages, counts,
-durations — `HudFormattingService`'s own output shapes bound these to a
-handful of characters). None of these were caught overflowing in any
-screenshot inspected this session, but that is not the same guarantee
-truncation provides — flagged for a follow-up pass, not asserted safe.
+| Widget | Classification | Truncation added | Notes |
+|---|---|---|---|
+| `LabelWidget` | production-visible dynamic text | Yes (Engineering Session 2) | scene/media title, primary state, controls |
+| `StatusBadgeWidget` | production-visible dynamic text | Yes (Architecture-Closure Session) | health/state badges |
+| `MetadataCardWidget` | production-visible dynamic text | Yes (Architecture-Closure Session) | |
+| `EffectChipsWidget` | production-visible dynamic text | Yes (Architecture-Closure Session) | per-chip backstop, see §3 |
+| `ChannelStripWidget` | production-visible dynamic text | Yes (Architecture-Closure Session) | per-cell budget |
+| `ProgressBarWidget` | production-visible dynamic text | Yes (Architecture-Closure Session) | caption + value |
+| `TimelineWidget` | production-visible dynamic text | Yes (Architecture-Closure Session) | caption + phase |
+| `NumericValueWidget` | production-visible dynamic text | **Yes (Final Narrow Closure Patch)** | caption + formatted value |
+| `ProgressRingWidget` | production-visible dynamic text | **Yes (Final Narrow Closure Patch)** | bottom caption + centered value |
+| `SparklineWidget` | production-visible dynamic text | **Yes (Final Narrow Closure Patch)** | caption only — the plotted line/event-pulse dot carry no text |
+| `AmbientFieldWidget` | production-visible dynamic text | **Yes (Final Narrow Closure Patch)** | caption only — the wobble lines carry no text |
+| `BindingPlaceholderWidget` | **tooling-only** | Not added (out of scope by its own classification) | Never instantiated by production rendering — see its own header comment ("Never instantiated by production rendering: production skips an invalid optional binding entirely... only the studio substitutes this widget"). Draws `"BINDING ERROR"`, `input.bindingId`, and `input.compileIssueSummaries` at fixed positions with a hard `break` once content exceeds the region height — a Validation-Studio-only diagnostic surface, not a production overflow risk by construction |
+
+No production-visible dynamic text path in this widget layer remains
+unaudited. Every one was verified to: use explicit pixel-space typography
+(no `ofScale()` dependency — see §1), use the shared `HudTextMetricsCache`
+for measurement AND draw (same assumptions, no divergence), have a live
+width budget derived from its own region's real pixel bounds, and
+truncate deterministically via the same algorithm (§2). No real
+production overflow defect was found in these five widgets during this
+audit — none of them displays a bound value long enough to have
+overflowed even before truncation was added (see §5's exact per-widget
+budgets, all comfortably wider than any value `HudFormattingService`
+actually produces for these bindings), so this closes the audit
+proactively rather than in response to an observed defect.
 
 **The inert-`ofScale()` finding is repo-wide**: every widget above still
 threads a `wu()`-derived `scale` value through to `drawText()`'s unused
@@ -128,7 +147,26 @@ fourth parameter, retained only for call-site self-documentation (see
 `HudWidgetDrawUtils.h`'s own comment). No widget's rendered glyph size
 has ever depended on it, in this session or any prior one.
 
-## 5. Tests
+## 5. `flexible.secondary_a` / `flexible.secondary_b` — per-widget typography breakdown
+
+Both regions are identical in size (192.0×43.2px), differing only in `x`
+(844.8 for `_a`, 1062.4 for `_b`). Every widget type the region catalog
+allows there, with its exact truncation budget at this size:
+
+| Widget | Padding formula | Live-content width (px) |
+|---|---|---|
+| NumericValue | `wu(bounds,4)`=1.44/side | 189.12 |
+| ProgressBar | none subtracted | 192.0 |
+| ProgressRing | `wu(bounds,4)`=1.44 (one side only — centered value) | 190.56 |
+| StatusBadge | `wu(bounds,4)`=1.44/side | 189.12 |
+| Sparkline | none subtracted (caption only) | 192.0 |
+| AmbientField | `wu(bounds,3)`=1.08 (one side only) | 190.92 |
+
+All six were audited in Task 4 (§4) and now truncate deterministically.
+See `docs/reviews/hud-wireframe-bounds-v1.md` §1 for the full padding/
+inset/safe-area table these numbers feed into.
+
+## 6. Tests
 
 `shared/src/hud-compositor-test/hud_typography_tests.cpp` — 14/14 passing,
 dependency-free (no OF headers, no GL context): width determinism/caching,

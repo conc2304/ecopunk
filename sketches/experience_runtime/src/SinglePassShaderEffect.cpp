@@ -1,0 +1,1 @@
+../../../shared/src/video-effects/effects/SinglePassShaderEffect.cpp
