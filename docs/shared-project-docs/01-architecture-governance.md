@@ -50,6 +50,7 @@ Every domain-manager chat must:
 6. Require coding agents to report deviations before changing shared APIs.
 7. Maintain a short domain decision log.
 8. Send cross-domain questions through a written handoff.
+9. Read the [Work Registry](03-work-registry.md) before assuming any work status, and close meaningful sessions with the [session-close report](02-cross-domain-handoff-protocol.md#session-close-report).
 
 ## Architecture review triggers
 
@@ -92,3 +93,62 @@ Mandatory reviews after:
 - Skin Package Spec,
 - Dark Moss skin,
 - art-production pipeline.
+
+## Project state and Work Registry
+
+> **Plans describe intent. Reports describe evidence. The Work Registry describes accepted current reality.**
+
+The [Canonical Work Registry](03-work-registry.md) is the single authoritative record of current work state, gates, dependencies, evidence, and source-control durability. It defines the lifecycle, status vocabulary, gate values, Source State values, and update template; this section defines who owns project truth and how conflicts resolve.
+
+**Status is evidence-derived, never conversation-derived.** Absence of an acceptance/evidence artifact means absence of proof. Never infer completion from elapsed time, authorization, or a generated prompt.
+
+### Ownership of project truth
+
+```text
+Coding agents
+→ implementation + test/runtime evidence
+
+Domain managers
+→ interpret evidence + recommend status transitions
+
+Architecture & Program Coordination
+→ approves Architecture-gated transitions
+
+Canonical Work Registry
+→ records accepted current project reality
+```
+
+- Coding agents must not declare Architecture acceptance. They may propose `IMPLEMENTED` / `VERIFIED` with evidence; they edit the registry only to apply an approved Registry Update.
+- Domain managers must not mark implementation complete merely because they generated a prompt. They may approve `ACCEPTED` for work without an Architecture gate.
+- Architecture approves every transition of Architecture-gated work to `AUTHORIZED`, `ACCEPTED`, or `CLOSED`.
+
+### Precedence for current-state reconciliation
+
+When artifacts disagree:
+
+```text
+frozen shared contract
+→ later Architecture decision
+→ accepted evidence
+→ Work Registry
+→ roadmap / planning documents
+```
+
+1. Frozen/shared contracts win over proposals.
+2. Later Architecture decisions win over older planning artifacts.
+3. Accepted evidence wins over stale roadmap checkboxes.
+4. The Work Registry must then be reconciled.
+
+Update the registry when accepted evidence proves it stale. Do not rewrite historical reports to match current state.
+
+### Return from hiatus
+
+If a domain has been inactive long enough that repository or dependency state may have changed, do not resume from the last generated prompt. Instead:
+
+1. read the Work Registry;
+2. read the latest accepted evidence;
+3. read relevant frozen contracts / Architecture decisions;
+4. inspect current repository state where necessary;
+5. reconcile a restart status before implementation.
+
+**The last generated prompt is never proof of current state.**

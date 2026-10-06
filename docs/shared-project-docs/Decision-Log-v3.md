@@ -2,6 +2,8 @@
 
 Use one entry per approved project-level decision.
 
+**Role:** Decision Log → approved project-level decisions. [Work Registry](03-work-registry.md) → current work state, gates, dependencies, and evidence. Do not record work status here; when a decision changes work state, the registry references the decision by its DEC ID.
+
 ## Template
 
 ### DEC-XXX — Title

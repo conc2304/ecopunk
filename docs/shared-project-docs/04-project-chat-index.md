@@ -41,8 +41,13 @@ Create scene-migration chats when their prerequisites approach readiness:
 ## Every chat should begin with
 
 - its domain startup prompt,
-- the shared project context,
-- Architecture Governance,
-- Cross-Domain Handoff Protocol,
+- the shared project context ([00](00-shared-project-context.md)),
+- Architecture Governance ([01](01-architecture-governance.md)),
+- Cross-Domain Handoff Protocol ([02](02-cross-domain-handoff-protocol.md)),
+- the Canonical Work Registry ([03](03-work-registry.md)),
 - the Master Roadmap,
-- relevant domain-specific source documents.
+- relevant frozen and domain-specific source documents.
+
+The Work Registry must be read before assuming any roadmap status. The roadmap describes planned sequence, not current completion.
+
+A chat resuming after inactivity follows the return-from-hiatus rule in [Architecture Governance](01-architecture-governance.md#return-from-hiatus): reconcile a restart status from the registry, accepted evidence, and the repository before generating implementation prompts. The last generated prompt is never proof of current state.

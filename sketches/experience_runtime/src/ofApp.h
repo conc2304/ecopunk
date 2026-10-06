@@ -4,6 +4,7 @@
 #include "BlobLifecycleHarness.h"
 #include "ExperienceRuntime.h"
 #include "GlRestorationHarness.h"
+#include "SceneSwitchHarness.h"
 #include "TemporalLifecycleHarness.h"
 
 #include <memory>
@@ -21,10 +22,11 @@
 // exclusive with each other and with the normal run (see setup()): the GL
 // harness always exercises FakeScene, the Blob lifecycle/soak harnesses
 // always exercise the installed BlobProductionScene, the Temporal lifecycle
-// harness always exercises the installed TemporalProductionScene, and a
-// normal run installs BlobProductionScene (the default) OR
-// TemporalProductionScene (EXPERIENCE_RUNTIME_TEMPORAL_SCENE=1 — Temporal
-// Production Scene #2 Migration) as the resident production scene.
+// harness always exercises the installed TemporalProductionScene, the RT-003
+// scene-switch harness drives real Blob <-> Temporal switching, and a normal
+// run registers both production scenes (RT-003) starting in Blob (the
+// default) OR Temporal (EXPERIENCE_RUNTIME_TEMPORAL_SCENE=1), switchable at
+// runtime with ']' (NextScene) / '[' (PreviousScene).
 class ofApp : public ofBaseApp {
 public:
 	void setup() override;
@@ -39,4 +41,5 @@ private:
 	std::unique_ptr<GlRestorationHarness> harness;
 	std::unique_ptr<BlobLifecycleHarness> blobHarness;
 	std::unique_ptr<TemporalLifecycleHarness> temporalHarness;
+	std::unique_ptr<SceneSwitchHarness> switchHarness;
 };

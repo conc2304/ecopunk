@@ -18,6 +18,17 @@ ExperienceRuntime::ExperienceRuntime()
 	// happens later, in setup() below, before either scene is activated.
 }
 
+void ExperienceRuntime::installProductionScenePair(const std::string& startupSceneId) {
+	if (!productionScenesInstalled_) {
+		// Fixed registry order = NextScene ring order: Blob, then Temporal.
+		sceneManager_.registerProductionScene(&blobScene_); // no canonical effect producer -> effects = nullopt
+		sceneManager_.registerProductionScene(
+			&temporalScene_, [this] { return temporalScene_.currentEffectActivitySnapshot(); });
+		productionScenesInstalled_ = true;
+	}
+	sceneManager_.setStartupScene(startupSceneId);
+}
+
 void ExperienceRuntime::establishGlobalRenderingBaseline() {
 	// Moved out of scene setup() code per the placement/readiness probe's
 	// discovery report §6 — every one of these was previously set
@@ -52,12 +63,10 @@ void ExperienceRuntime::setup() {
 	videoConfig.automaticAdvance = true;
 	runtimeServices_.setup(videoConfig);
 
-	// Blob First Complete Production Migration: whether blobScene_ (vs.
-	// fakeScene_) is the scene that gets set up/activated below is decided
-	// by the CALLER, before this method runs — see
-	// installBlobProductionScene()'s own comment for why (GlRestorationHarness
-	// must keep exercising fakeScene_ unmodified). Nothing here forces one
-	// or the other.
+	// Whether the production scene pair (vs. the tooling-only FakeScene) is
+	// what gets set up/activated below is decided by the CALLER, before this
+	// method runs — see installBlobProductionScene()'s own comment for why
+	// (GlRestorationHarness must keep exercising FakeScene unmodified).
 
 	// SceneServices construction.
 	//
@@ -80,30 +89,15 @@ void ExperienceRuntime::setup() {
 	services.canvasSize = glm::ivec2(1280, 720);
 
 	// Canonical-shaped paths per Scene-HUD-Contract-v1.md §12's asset
-	// tree. sceneAssetRoot/sharedEffectAssetRoot still do not exist in
-	// this repo and neither FakeScene nor BlobProductionScene reads from
-	// them in this increment (Blob consumes runtimeServices_.video()
-	// directly instead — see BlobProductionScene::setup()'s own comment).
-	// sharedMediaRoot resolves to a REAL, populated directory
-	// (Shared Video Playback Engineering Session 2, Task C established
-	// assets/shared/media/ as the canonical physical media root) — the
-	// value's *meaning* is unchanged from the draft placeholder this
-	// replaces (still "the shared media root"), only whether it actually
-	// resolves to real content changed. videoConfig.mediaRoot above is
-	// populated independently, not derived from this field, since
+	// tree. sharedMediaRoot resolves to the REAL canonical media root
+	// (assets/shared/media/, Shared Video Playback Engineering Session 2,
+	// Task C); videoConfig.mediaRoot above is populated independently, since
 	// VideoPlaybackService takes an already-OF-resolved path via its own
-	// Config, not a raw SceneServices field.
-	//
-	// Blob First Complete Production Migration / Temporal Production Scene
-	// #2 Migration: still an inert, unread value regardless of which scene
-	// ends up installed (neither FakeScene nor BlobProductionScene nor
-	// TemporalProductionScene reads it) — derived from whichever real
-	// scene installTemporalProductionScene()/installBlobProductionScene()
-	// most recently selected (see installedTemporalScene_'s own comment);
-	// the harness path (fakeScene_ actually resident) is unaffected either
-	// way.
-	services.sceneAssetRoot =
-		"assets/scenes/" + (installedTemporalScene_ ? temporalScene_.sceneId() : blobScene_.sceneId()) + "/";
+	// Config. RT-003: sceneAssetRoot is filled in per scene by SceneManager
+	// ("assets/scenes/<sceneId>/", derived from each registered scene's own
+	// stable ID when that scene is set up) — still an inert, unread value
+	// for every current scene.
+	services.sceneAssetRoot = "";
 	services.sharedMediaRoot = ofToDataPath("../../../../assets/shared/media", true);
 	services.sharedEffectAssetRoot = "assets/shared/video-effects/";
 
@@ -111,11 +105,12 @@ void ExperienceRuntime::setup() {
 	// null rather than invented here.
 	services.perf = nullptr;
 
-	sceneManager_.setup(services);
-	sceneManager_.activateScene(); // caches SceneCapabilities exactly once here
+	sceneManager_.setup(services);        // sets up the startup scene only
+	sceneManager_.activateScene();        // caches SceneCapabilities exactly once here
 
 	glm::ivec2 nativeSize = sceneManager_.activeSceneNativeRenderSize();
 	sceneFbo_.allocate(nativeSize.x, nativeSize.y, GL_RGBA);
+	presentationCounters_.sceneFboAllocations++;
 
 	// Engineering Session 2: real HudCompositor bridge setup — establishes
 	// the canonical 1280x720 canvas (see HudCompositorBridge's own header
@@ -135,12 +130,22 @@ void ExperienceRuntime::update(float dt) {
 	// per-frame pseudocode into OF's idiomatic separate event/update/draw
 	// callbacks, same as the original ExperienceRuntime skeleton did.
 
-	sceneManager_.updateActiveScene(dt); // step 3
+	// Step 3 (RT-003): advance any scene transition by one frame. Performs
+	// that frame's lifecycle calls (incoming setup()/activate(), capability
+	// caching) and reports whether the active scene runs live this frame.
+	bool live = sceneManager_.beginFrame();
 
-	sceneManager_.captureSceneStatus();  // step 4 — hudStatus() pulled
-	                                      // exactly once for this frame;
-	                                      // nothing else may call it again
-	                                      // until the next updateActiveScene().
+	if (live) {
+		sceneManager_.updateActiveScene(dt); // step 3
+
+		sceneManager_.captureSceneStatus();  // step 4 — hudStatus() pulled
+		                                      // exactly once for this frame;
+		                                      // nothing else may call it again
+		                                      // until the next updateActiveScene().
+	}
+	// Transition-only static frames (FadingOut/Loading/Failed) neither update
+	// any scene nor pull its status — SceneManager publishes the frozen
+	// outgoing snapshot (FadingOut) or a neutral transition status instead.
 
 	// step 5: SceneManager::activeCapabilities() is a cached getter, not
 	// a poll — deliberately not called again here; it's read directly
@@ -155,26 +160,60 @@ void ExperienceRuntime::update(float dt) {
 	                                              // SceneHudStatus::activeEffects.
 }
 
-void ExperienceRuntime::draw() {
-	// Step 8: bind + clear the scene FBO, sized to the active scene's
-	// nativeRenderSize() (allocated once in setup() for this increment).
-	sceneFbo_.begin();
-	ofClear(0, 0, 0, 0);
+void ExperienceRuntime::reallocateSceneFboForActiveSceneIfNeeded() {
+	glm::ivec2 size = sceneManager_.activeSceneNativeRenderSize();
+	if (sceneFbo_.isAllocated() && static_cast<int>(sceneFbo_.getWidth()) == size.x
+		&& static_cast<int>(sceneFbo_.getHeight()) == size.y) {
+		return; // same native size: keep the existing allocation
+	}
+	// Drop the published reference before the texture behind it is
+	// replaced; the new SceneFrame is built below only after the new FBO is
+	// allocated and drawn.
+	currentHudFrameData_.sceneFrame = SceneFrame{};
+	sceneFbo_.allocate(size.x, size.y, GL_RGBA);
+	presentationCounters_.sceneFboAllocations++;
+	presentationCounters_.sceneFboSwitchReallocations++;
+	ofLogNotice("ExperienceRuntime") << "scene FBO reallocated to " << size.x << "x" << size.y
+									 << " for incoming scene \"" << lastSceneManagerStatus_.activeSceneId << "\"";
+}
 
-	// Steps 9-10: scene draws to whatever's currently bound (the
-	// just-bound SceneFbo), wrapped by SceneRenderGuard so the approved
-	// GL baseline (Scene-HUD-Contract-v1.md §5) is restored afterward
-	// regardless of what the scene left behind. Drawing must not trigger
-	// another status pull — drawActiveScene() only calls
-	// drawToCurrentTarget(), never hudStatus().
-	{
-		SceneRenderGuard guard(sceneFbo_);
-		sceneManager_.drawActiveScene();
+void ExperienceRuntime::draw() {
+	// RT-003: the incoming scene's first active frame — make the runtime-owned
+	// scene FBO match its native size before it draws.
+	if (sceneManager_.activationSucceededThisFrame()) {
+		reallocateSceneFboForActiveSceneIfNeeded();
 	}
 
-	// Step 11: unbind SceneFbo.
-	sceneFbo_.end();
-	frameNumber_++; // monotonically increasing, only after a completed draw
+	if (sceneManager_.activeSceneLiveThisFrame()) {
+		// Step 8: bind + clear the scene FBO, sized to the active scene's
+		// nativeRenderSize().
+		sceneFbo_.begin();
+		ofClear(0, 0, 0, 0);
+
+		// Steps 9-10: scene draws to whatever's currently bound (the
+		// just-bound SceneFbo), wrapped by SceneRenderGuard so the approved
+		// GL baseline (Scene-HUD-Contract-v1.md §5) is restored afterward
+		// regardless of what the scene left behind. Drawing must not trigger
+		// another status pull — drawActiveScene() only calls
+		// drawToCurrentTarget(), never hudStatus().
+		{
+			SceneRenderGuard guard(sceneFbo_);
+			sceneManager_.drawActiveScene();
+		}
+
+		// Step 11: unbind SceneFbo.
+		sceneFbo_.end();
+		presentationCounters_.liveSceneFrames++;
+	} else {
+		// RT-003 static-frame transition: no scene is asked to render. The
+		// runtime-owned scene FBO still holds the outgoing scene's last live
+		// frame (nothing has drawn into it since), which is exactly the
+		// approved static outgoing content — retained in runtime-owned
+		// state, never a pointer into a scene-owned texture/FBO, and never
+		// a dual-live-scene render.
+		presentationCounters_.staticSceneFrames++;
+	}
+	frameNumber_++; // monotonically increasing, once per presented frame
 
 	// Step 12: construct this frame's read-only SceneFrame.
 	SceneFrame frame;
@@ -202,6 +241,7 @@ void ExperienceRuntime::draw() {
 	// snapshot, transported unchanged. std::nullopt here means "no
 	// snapshot available," not "zero effects" — see HudFrameData.h.
 	currentHudFrameData_.effects = sceneManager_.currentEffectActivityStatus();
+	presentationCounters_.hudFrameDataAssemblies++;
 
 	// Step 16: hand the ONE assembled HudFrameData to the compositor
 	// bridge, by const& — it never receives the FBO, and never polls
@@ -222,6 +262,7 @@ void ExperienceRuntime::draw() {
 	long long hudDeallocBefore = alloccounter::deleteCount();
 	hudCompositorBridge_.update(lastDt_, currentHudFrameData_);
 	hudCompositorBridge_.draw();
+	presentationCounters_.hudDraws++;
 	lastHudOnlyNewCount_ = alloccounter::newCount() - hudAllocBefore;
 	lastHudOnlyDeleteCount_ = alloccounter::deleteCount() - hudDeallocBefore;
 
@@ -230,7 +271,7 @@ void ExperienceRuntime::draw() {
 
 void ExperienceRuntime::exit() {
 	sceneManager_.deactivateScene();
-	sceneManager_.shutdown();
+	sceneManager_.shutdown(); // every registered scene that was ever set up
 	runtimeServices_.shutdown();
 }
 
@@ -327,6 +368,10 @@ void ExperienceRuntime::handleRuntimeCommand(RuntimeCommand command) {
 			// Scene-switch commands: per the contract's draw-order note,
 			// SceneManager "handles any pending RuntimeCommands itself"
 			// — read here as specifically the scene-selection subset.
+			// RT-003: accepted only while Idle; the outgoing scene's last
+			// rendered frame is already retained in sceneFbo_ (this runs
+			// between frames, after that frame's draw), and SceneManager
+			// deactivates the outgoing scene as part of acceptance.
 			sceneManager_.handleSceneSwitchCommand(command);
 			break;
 		case RuntimeCommand::ToggleHud:

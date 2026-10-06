@@ -1,10 +1,15 @@
 # Ecopunk HUD System — Master Roadmap
 
+> **Authority notice:** This document defines planned sequence and intended milestones.
+> It is not the authoritative source of current completion status.
+> For current state, see the [Canonical Work Registry](shared-project-docs/03-work-registry.md).
+> Checkboxes and the "Current State" section below are not updated after every engineering session and may be stale.
+
 **Purpose:** This document is the high-level execution plan for delivering the complete Ecopunk HUD system, from shared runtime contracts through scene integration, Raspberry Pi validation, and a repeatable art-production pipeline for generating additional HUD skins.
 
 It is intended to serve as:
 
-- the project tracker for where the initiative currently stands,
+- the planned milestone sequence (current status lives in the Work Registry, not here),
 - the source document for generating phase-specific engineering prompts,
 - the boundary between runtime engineering and art production,
 - the reference for ownership, dependencies, and completion criteria,
@@ -120,6 +125,8 @@ Purely arbitrary looping decoration should be minimized.
 ---
 
 # 3. Current State
+
+> Historical snapshot from roadmap authoring — superseded. See the [Canonical Work Registry](shared-project-docs/03-work-registry.md) for current state.
 
 ## Completed
 

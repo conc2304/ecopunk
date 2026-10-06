@@ -31,7 +31,12 @@ void ofApp::setup() {
 	bool blobSoakRequested = !glHarnessRequested && !blobLifecycleRequested && BlobLifecycleHarness::isSoakRequested();
 	bool temporalLifecycleRequested =
 		!glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested && TemporalLifecycleHarness::isRequested();
-	bool wantTemporalScene = temporalLifecycleRequested || std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr;
+	// RT-003: lowest-priority harness; always starts in Blob (RT-002's
+	// deterministic startup), so it never selects the Temporal startup.
+	bool switchHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && SceneSwitchHarness::isRequested();
+	bool wantTemporalScene = temporalLifecycleRequested
+		|| (!switchHarnessRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
 	if (!glHarnessRequested) {
 		if (wantTemporalScene) {
@@ -50,11 +55,13 @@ void ofApp::setup() {
 		blobHarness = std::make_unique<BlobLifecycleHarness>(runtime, BlobLifecycleHarness::Mode::Soak);
 	} else if (temporalLifecycleRequested) {
 		temporalHarness = std::make_unique<TemporalLifecycleHarness>(runtime);
+	} else if (switchHarnessRequested) {
+		switchHarness = std::make_unique<SceneSwitchHarness>(runtime);
 	}
 }
 
 void ofApp::update() {
-	if (!blobHarness && !temporalHarness) {
+	if (!blobHarness && !temporalHarness && !switchHarness) {
 		// Normal path and GL-harness path both want runtime.update()
 		// called exactly once per real tick, unconditionally, here — see
 		// GlRestorationHarness.h's own "call step() AFTER runtime.update()"
@@ -76,10 +83,13 @@ void ofApp::update() {
 	if (temporalHarness) {
 		temporalHarness->step(ofGetLastFrameTime());
 	}
+	if (switchHarness) {
+		switchHarness->step(ofGetLastFrameTime());
+	}
 }
 
 void ofApp::draw() {
-	if (!harness && !blobHarness && !temporalHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness) {
 		runtime.draw();
 	}
 	// When a harness is active, it drives runtime.draw() itself (see

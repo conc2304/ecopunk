@@ -96,3 +96,5 @@ This rule applies to:
 - all review and handoff work.
 
 Domain chats should treat downloadable Markdown artifacts as the default unit of collaboration.
+
+Work Registry updates and reconciliation artifacts are project-state artifacts and should be preserved in repository/project documentation (see `docs/shared-project-docs/03-work-registry.md`).

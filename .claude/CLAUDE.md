@@ -6,6 +6,7 @@ Work as a safety-first autonomous engineering agent. Complete routine repository
 
 ## Default workflow
 
+0. Read `docs/shared-project-docs/03-work-registry.md` (Canonical Work Registry) before assuming any work status. Rules for status, evidence, and return-from-hiatus live in `docs/shared-project-docs/01-architecture-governance.md`.
 1. Read the task and relevant project documents.
 2. Inspect before editing.
 3. Establish the smallest safe implementation plan.
@@ -51,3 +52,5 @@ Every implementation report must include:
 7. Newly discovered risks
 8. Contract changes requested
 9. Recommended next step
+
+followed by the session-close block defined in `docs/shared-project-docs/02-cross-domain-handoff-protocol.md` (Session-close report). Never report `ACCEPTED` or `CLOSED`; those are domain-manager/Architecture transitions.

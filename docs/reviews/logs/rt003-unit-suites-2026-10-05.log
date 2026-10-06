@@ -1,0 +1,29 @@
+c++ -std=c++17 -Wall -Wextra lifecycle_state_tests.cpp -o lifecycle_state_tests
+c++ -std=c++17 -Wall -Wextra -I../../../shared/src/video-effects/core -I../../../shared/src/video-effects/evolution -I../../../shared/src/video-effects/knowledge -I../../../../../../libs/glm/include session2_integration_tests.cpp ../../../shared/src/video-effects/knowledge/EffectActivityStatus.cpp -o session2_integration_tests
+c++ -std=c++17 -Wall -Wextra -I../../../shared/src/scene blob_semantic_mapping_tests.cpp ../src/BlobSemanticMapping.cpp -o blob_semantic_mapping_tests
+c++ -std=c++17 -Wall -Wextra -I../../../shared/src/scene temporal_semantic_mapping_tests.cpp ../src/TemporalSemanticMapping.cpp -o temporal_semantic_mapping_tests
+c++ -std=c++17 -Wall -Wextra scene_switch_controller_tests.cpp -o scene_switch_controller_tests
+./lifecycle_state_tests
+78/78 checks passed
+./session2_integration_tests
+42/42 checks passed
+./blob_semantic_mapping_tests
+68/68 checks passed
+./temporal_semantic_mapping_tests
+PASS — 34 checks, 0 failures
+./scene_switch_controller_tests
+PASS — 127 checks, 0 failures
+./media_catalog_tests
+38/38 checks passed
+./video_selection_policy_tests
+113/113 checks passed
+./effect_knowledge_extension_tests
+93/93 checks passed
+./hud_presentation_tests
+713/713 checks passed.
+./hud_real_frame_tests
+140/140 checks passed.
+./hud_media_viewport_tests
+357/357 checks passed.
+./hud_typography_tests
+14/14 checks passed.

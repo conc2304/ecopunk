@@ -73,13 +73,21 @@ TEMPORAL_SEMANTIC_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/scene
 TEMPORAL_SEMANTIC_SRC = temporal_semantic_mapping_tests.cpp ../src/TemporalSemanticMapping.cpp
 TEMPORAL_SEMANTIC_BIN = temporal_semantic_mapping_tests
 
+# RT-003: sceneswitch::Controller (../src/SceneSwitchController.h) is the
+# header-only, OF-free production state machine behind SceneManager's
+# Blob <-> Temporal switching — same bare-compiler convention as
+# LIFECYCLE_BIN above (no -I needed, no .cpp to link).
+SCENE_SWITCH_SRC = scene_switch_controller_tests.cpp
+SCENE_SWITCH_BIN = scene_switch_controller_tests
+
 .PHONY: test session2 clean
 
-test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN)
+test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(SCENE_SWITCH_BIN)
 	./$(LIFECYCLE_BIN)
 	./$(SESSION2_BIN)
 	./$(BLOB_SEMANTIC_BIN)
 	./$(TEMPORAL_SEMANTIC_BIN)
+	./$(SCENE_SWITCH_BIN)
 
 session2: $(SESSION2_BIN)
 	./$(SESSION2_BIN)
@@ -96,5 +104,8 @@ $(BLOB_SEMANTIC_BIN): $(BLOB_SEMANTIC_SRC) ../src/BlobSemanticMapping.h
 $(TEMPORAL_SEMANTIC_BIN): $(TEMPORAL_SEMANTIC_SRC) ../src/TemporalSemanticMapping.h
 	$(CXX) $(TEMPORAL_SEMANTIC_CXXFLAGS) $(TEMPORAL_SEMANTIC_SRC) -o $(TEMPORAL_SEMANTIC_BIN)
 
+$(SCENE_SWITCH_BIN): $(SCENE_SWITCH_SRC) ../src/SceneSwitchController.h
+	$(CXX) $(CXXFLAGS) $(SCENE_SWITCH_SRC) -o $(SCENE_SWITCH_BIN)
+
 clean:
-	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN)
+	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(SCENE_SWITCH_BIN)

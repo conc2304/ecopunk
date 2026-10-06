@@ -36,8 +36,9 @@
 //
 //   1. Resolve raw input.
 //   2. Dispatch accepted RuntimeCommand and SceneCommand values.
-//   3. SceneManager updates the active FakeScene.
-//   4. SceneManager captures SceneHudStatus exactly once.
+//   3. SceneManager advances any scene transition (RT-003) and, on live
+//      frames only, updates the active scene.
+//   4. SceneManager captures SceneHudStatus exactly once (live frames only).
 //   5. Obtain cached SceneCapabilities.
 //   6. Obtain SceneManagerStatus.
 //   7. Update and capture RuntimeServices/RuntimeTelemetry.
@@ -45,7 +46,8 @@
 //   9. Capture the authoritative EffectActivityStatus exactly once
 //      (Architecture-Closure Session, DEC-015) — a separate pull from
 //      step 4, never derived from SceneHudStatus::activeEffects.
-//  10. Bind and clear the runtime-owned scene FBO.
+//  10. Bind and clear the runtime-owned scene FBO (live frames only —
+//      transition-only frames retain the outgoing scene's last frame).
 //  11. SceneManager calls drawToCurrentTarget().
 //  12. SceneRenderGuard restores the approved GL baseline.
 //  13. Unbind the scene FBO.
@@ -65,36 +67,25 @@ public:
 	// members in declaration order, not initializer-list order).
 	ExperienceRuntime();
 
-	// Installs blobScene_ as the scene SceneManager actually drives.
-	// Caller-controlled (not called automatically inside setup() below) so
-	// GlRestorationHarness's existing FakeScene-only proofs keep running
-	// unmodified: ofApp only calls this when the harness is NOT requested
-	// (see ofApp.cpp), and it MUST be called before setup() (matches
-	// SceneManager::installProductionScene()'s own requirement) — setup()
-	// activates and caches capabilities for whichever scene is installed
-	// at the time it runs.
-	void installBlobProductionScene() {
-		installedTemporalScene_ = false;
-		sceneManager_.installProductionScene(&blobScene_);
-	}
-
-	// Temporal Production Scene #2 Migration: same contract as
-	// installBlobProductionScene() above, for temporalScene_. Mutually
-	// exclusive with it — SceneManager has exactly one productionScene_
-	// slot (see that class's own comment); this session hosts Temporal as
-	// a complete, independently launchable production scene, not
-	// simultaneously alongside Blob (real Blob<->Temporal switching is the
-	// separate, later two-scene acceptance milestone — see this
-	// migration's completion report). Also installs temporalScene_'s own
-	// real canonical-effect-activity source (currentEffectActivitySnapshot())
-	// through SceneManager's generic production seam — see
-	// SceneManager::installProductionScene()'s EffectActivitySource
-	// parameter comment.
-	void installTemporalProductionScene() {
-		installedTemporalScene_ = true;
-		sceneManager_.installProductionScene(
-			&temporalScene_, [this] { return temporalScene_.currentEffectActivitySnapshot(); });
-	}
+	// RT-003: registers the real production scene pair — BlobProductionScene
+	// then TemporalProductionScene (fixed, deterministic NextScene ring
+	// order) — in SceneManager's registry, both simultaneously, and selects
+	// the startup scene. Caller-controlled (not called automatically inside
+	// setup() below) so GlRestorationHarness's existing FakeScene-only proofs
+	// keep running unmodified: ofApp only calls one of these when that
+	// harness is NOT requested, and it MUST be called before setup().
+	//
+	// Blob has no approved canonical effect producer: it is registered with
+	// no effect source, so its frames publish HudFrameData.effects =
+	// std::nullopt directly (no FakeScene involvement). Temporal's source is
+	// its real TFEffectPicker-backed currentEffectActivitySnapshot().
+	//
+	// installBlobProductionScene() starts in Blob (the default normal run and
+	// RT-002's deterministic startup); installTemporalProductionScene()
+	// registers the same pair but starts in Temporal (the
+	// EXPERIENCE_RUNTIME_TEMPORAL_SCENE run and TemporalLifecycleHarness).
+	void installBlobProductionScene() { installProductionScenePair(BlobProductionScene::kSceneId); }
+	void installTemporalProductionScene() { installProductionScenePair(TemporalProductionScene::kSceneId); }
 
 	// Temporal Production Scene #2 Migration: development/test-only access
 	// to the real TemporalProductionScene instance — same rationale as
@@ -148,13 +139,14 @@ public:
 
 	// Development/test-only: forces the runtime-owned scene FBO to
 	// reallocate at a different size, to prove "FBO reallocation replaces
-	// the old SceneFrame before any consumer accesses it" (§10). No real
-	// scene-switch path triggers this in this increment (single resident
-	// scene, no multi-scene switching) — see the implementation report's
-	// "known limitations" for why this is a synthetic, harness-only proof
-	// rather than one exercised through real scene-switch behavior.
+	// the old SceneFrame before any consumer accesses it" (§10). RT-003's
+	// real switch path reallocates on its own (see
+	// reallocateSceneFboForActiveSceneIfNeeded()); SceneSwitchHarness also
+	// uses this hook to give the real switch path a genuine size difference
+	// to correct, since Blob and Temporal share the same native size.
 	void forceSceneFboReallocationForTesting(glm::ivec2 newSize) {
 		sceneFbo_.allocate(newSize.x, newSize.y, GL_RGBA);
+		presentationCounters_.sceneFboAllocations++;
 	}
 
 	// Blob First Production Acceptance narrow patch: saves the
@@ -179,6 +171,33 @@ public:
 		return img.save(path);
 	}
 
+	// RT-003 evidence counters — test/report instrumentation only, never read
+	// by production logic.
+	struct PresentationCounters {
+		uint64_t hudFrameDataAssemblies = 0;
+		uint64_t hudDraws = 0;
+		uint64_t liveSceneFrames = 0;   // the active scene drew into sceneFbo_ this frame
+		uint64_t staticSceneFrames = 0; // transition-only: sceneFbo_ retained the last outgoing frame
+		uint64_t sceneFboAllocations = 0; // every allocate(), including setup()'s
+		uint64_t sceneFboSwitchReallocations = 0; // incoming native size differed on activation
+	};
+	const PresentationCounters& presentationCountersForTesting() const { return presentationCounters_; }
+
+	// Development/test-only: the runtime-owned scene FBO's GL texture id, so a
+	// harness can prove a reallocation replaced the texture SceneFrame points at.
+	unsigned int sceneFboTextureIdForTesting() const {
+		return sceneFbo_.isAllocated() ? sceneFbo_.getTexture().getTextureData().textureID : 0;
+	}
+
+	// Development/test-only: reads back the runtime-owned scene FBO, so a
+	// harness can prove the outgoing frame is retained (unchanged) across
+	// transition-only frames.
+	bool readSceneFboPixelsForTesting(ofPixels& out) const {
+		if (!sceneFbo_.isAllocated()) return false;
+		sceneFbo_.getTexture().readToPixels(out);
+		return true;
+	}
+
 	// Provisional development frame rate. NOT the Raspberry Pi 3B
 	// production target — the six existing runtime scenes set 24/30/unset
 	// inconsistently (see the placement/readiness probe §6). This value
@@ -190,6 +209,15 @@ public:
 private:
 	void establishGlobalRenderingBaseline();
 	void handleRuntimeCommand(RuntimeCommand command);
+	void installProductionScenePair(const std::string& startupSceneId);
+
+	// RT-003: on the frame an incoming scene's activation succeeds, reallocate
+	// the runtime-owned scene FBO iff its native size differs. Clears the
+	// published SceneFrame texture reference first so no consumer can read a
+	// texture that is being replaced. Never called on any other frame — a
+	// per-frame auto-resize would undo GlRestorationHarness's deliberate
+	// forced-size proof.
+	void reallocateSceneFboForActiveSceneIfNeeded();
 
 	ofFbo sceneFbo_;
 	uint64_t frameNumber_ = 0;
@@ -215,19 +243,12 @@ private:
 
 	// Temporal Production Scene #2 Migration: the second real production
 	// scene, same construction-order rule as blobScene_ above (must stay
-	// declared after runtimeServices_). Only one of blobScene_/
-	// temporalScene_ is ever actually installed into sceneManager_ at a
-	// time in this session — see installBlobProductionScene()/
-	// installTemporalProductionScene() above.
+	// declared after runtimeServices_). RT-003: registered alongside
+	// blobScene_ (see installProductionScenePair()); set up lazily, at most
+	// once, the first time it becomes active.
 	TemporalProductionScene temporalScene_;
 
-	// Set by whichever of installBlobProductionScene()/
-	// installTemporalProductionScene() was called last — read by setup()
-	// below to derive services.sceneAssetRoot from the actually-installed
-	// scene's own sceneId() (neither scene currently reads that field —
-	// see BlobProductionScene::setup()'s own comment — so this only
-	// affects an inert value either way).
-	bool installedTemporalScene_ = false;
+	bool productionScenesInstalled_ = false;
 
 	// The one current aggregate — replaced once per completed runtime
 	// frame in draw(), valid for the whole compositor draw call, passed
@@ -246,6 +267,8 @@ private:
 
 	long long lastHudOnlyNewCount_ = 0;
 	long long lastHudOnlyDeleteCount_ = 0;
+
+	PresentationCounters presentationCounters_;
 
 	bool didSetup_ = false;
 };

@@ -1,0 +1,342 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-05 19:57:16.830 experience_runtime[21059:436006] video file loaded at 960 x 540 @ 29.970030 fps
+2026-10-05 19:57:16.876 experience_runtime[21059:436006] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_lilly-flower-blooming-time-lapse-on-black-background_23006120_1.mp4
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] TFAmbientTextureLayer: loaded 19 background texture(s) from backgrounds
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFImageCycler: no images found in backgrounds
+[notice ] TFComposition: pattern -> BSP seed=575530
+[notice ] TemporalLifecycleHarness: starting deterministic Temporal lifecycle/reactivation self-test (EXPERIENCE_RUNTIME_TEMPORAL_LIFECYCLE_HARNESS set) — 2 cycles
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=1
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 0, now 1
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=2
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 1, now 2
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=3
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 2, now 3
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=4
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 3, now 4
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=5
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 4, now 5
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=6
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 5, now 6
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=7
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 6, now 7
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=8
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 7, now 8
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=9
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 8, now 9
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=10
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 9, now 10
+[notice ] TemporalLifecycleHarness: PASS — Setup once + first activate + first update/draw sequence completed: 10 frames, sceneId=temporal-fields
+[notice ] TemporalLifecycleHarness: PASS — HudFrameData.effects present after first completed Temporal frame (DEC-015 forwarding path)
+[notice ] TemporalLifecycleHarness: captured captures/temporal_lifecycle_00_warmup.png
+[notice ] TemporalLifecycleHarness: PASS — saveSceneFrameCaptureForTesting() succeeds (00_warmup): captures/temporal_lifecycle_00_warmup_scene_only.png
+[notice ] TemporalLifecycleHarness: PASS — No dedicated-decoder/history advance while deactivated: history frame count stayed 0 across 5 idle frames (now 0)
+2026-10-05 19:57:22.853 experience_runtime[21059:436253] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_lilly-flower-blooming-time-lapse-on-black-background_23006120_1.mp4
+[notice ] TFComposition: pattern -> BSP seed=548562
+[notice ] TemporalLifecycleHarness: PASS — Reactivation does not surface stale inactive-period history as current (cycle 0): history frame count immediately after activate()=0 (was 0 at deactivate — must not already be higher from stale carryover before any new frame has been captured)
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=16
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 10, now 16
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=17
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 16, now 17
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=18
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 17, now 18
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=19
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 18, now 19
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=20
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 19, now 20
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=21
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 20, now 21
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=22
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 21, now 22
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=23
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 22, now 23
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=24
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 23, now 24
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=25
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 24, now 25
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=26
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 25, now 26
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=27
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 26, now 27
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=28
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 27, now 28
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=29
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 28, now 29
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=30
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 29, now 30
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=31
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 30, now 31
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=32
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 31, now 32
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=33
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 32, now 33
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=34
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 33, now 34
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=35
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 34, now 35
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=36
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 35, now 36
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=37
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 36, now 37
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=38
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 37, now 38
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=39
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 38, now 39
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=40
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 39, now 40
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=41
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 40, now 41
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=42
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 41, now 42
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=43
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 42, now 43
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=44
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 43, now 44
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=45
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 44, now 45
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=46
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 45, now 46
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=47
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 46, now 47
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=48
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 47, now 48
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=49
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 48, now 49
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=50
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 49, now 50
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=51
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 50, now 51
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=52
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 51, now 52
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=53
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 52, now 53
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=54
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 53, now 54
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=55
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 54, now 55
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=56
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 55, now 56
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=57
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 56, now 57
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=58
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 57, now 58
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=59
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 58, now 59
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=60
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 59, now 60
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=61
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 60, now 61
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=62
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 61, now 62
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=63
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 62, now 63
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=64
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 63, now 64
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=65
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 64, now 65
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=66
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 65, now 66
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=67
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 66, now 67
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=68
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 67, now 68
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=69
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 68, now 69
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=70
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 69, now 70
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=71
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 70, now 71
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=72
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 71, now 72
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=73
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 72, now 73
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=74
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 73, now 74
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=75
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 74, now 75
+[notice ] TemporalLifecycleHarness: PASS — Playhead pool valid again after reactivation (cycle 0): numPlayheads=6
+[notice ] TemporalLifecycleHarness: PASS — Canonical effect snapshot remains coherent after reactivation (cycle 0)
+[notice ] TemporalLifecycleHarness: captured captures/temporal_lifecycle_cycle0_end.png
+[notice ] TemporalLifecycleHarness: PASS — saveSceneFrameCaptureForTesting() succeeds (cycle0_end): captures/temporal_lifecycle_cycle0_end_scene_only.png
+2026-10-05 19:57:25.410 experience_runtime[21059:436260] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_lilly-flower-blooming-time-lapse-on-black-background_23006120_1.mp4
+[notice ] TFComposition: pattern -> BSP seed=502143
+[notice ] TemporalLifecycleHarness: PASS — Reactivation does not surface stale inactive-period history as current (cycle 1): history frame count immediately after activate()=0 (was 52 at deactivate — must not already be higher from stale carryover before any new frame has been captured)
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=76
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 75, now 76
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=77
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 76, now 77
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=78
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 77, now 78
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=79
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 78, now 79
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=80
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 79, now 80
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=81
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 80, now 81
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=82
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 81, now 82
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=83
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 82, now 83
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=84
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 83, now 84
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=85
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 84, now 85
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=86
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 85, now 86
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=87
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 86, now 87
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=88
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 87, now 88
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=89
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 88, now 89
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=90
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 89, now 90
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=91
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 90, now 91
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=92
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 91, now 92
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=93
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 92, now 93
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=94
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 93, now 94
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=95
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 94, now 95
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=96
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 95, now 96
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=97
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 96, now 97
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=98
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 97, now 98
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=99
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 98, now 99
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=100
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 99, now 100
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=101
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 100, now 101
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=102
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 101, now 102
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=103
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 102, now 103
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=104
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 103, now 104
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=105
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 104, now 105
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=106
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 105, now 106
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=107
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 106, now 107
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=108
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 107, now 108
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=109
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 108, now 109
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=110
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 109, now 110
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=111
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 110, now 111
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=112
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 111, now 112
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=113
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 112, now 113
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=114
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 113, now 114
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=115
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 114, now 115
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=116
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 115, now 116
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=117
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 116, now 117
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=118
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 117, now 118
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=119
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 118, now 119
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=120
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 119, now 120
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=121
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 120, now 121
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=122
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 121, now 122
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=123
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 122, now 123
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=124
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 123, now 124
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=125
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 124, now 125
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=126
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 125, now 126
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=127
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 126, now 127
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=128
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 127, now 128
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=129
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 128, now 129
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=130
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 129, now 130
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=131
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 130, now 131
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=132
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 131, now 132
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=133
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 132, now 133
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=134
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 133, now 134
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=135
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 134, now 135
+[notice ] TemporalLifecycleHarness: PASS — Playhead pool valid again after reactivation (cycle 1): numPlayheads=6
+[notice ] TemporalLifecycleHarness: PASS — Canonical effect snapshot remains coherent after reactivation (cycle 1)
+[notice ] TemporalLifecycleHarness: captured captures/temporal_lifecycle_cycle1_end.png
+[notice ] TemporalLifecycleHarness: PASS — saveSceneFrameCaptureForTesting() succeeds (cycle1_end): captures/temporal_lifecycle_cycle1_end_scene_only.png
+2026-10-05 19:57:28.116 experience_runtime[21059:436260] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_lilly-flower-blooming-time-lapse-on-black-background_23006120_1.mp4
+[notice ] TFComposition: pattern -> BSP seed=496369
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=136
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 135, now 136
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=137
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 136, now 137
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=138
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 137, now 138
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=139
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 138, now 139
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=140
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 139, now 140
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=141
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 140, now 141
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=142
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 141, now 142
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=143
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 142, now 143
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=144
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 143, now 144
+[notice ] TemporalLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=145
+[notice ] TemporalLifecycleHarness: PASS — frameNumber() strictly increasing: was 144, now 145
+[notice ] TemporalLifecycleHarness: captured captures/temporal_lifecycle_99_final.png
+[notice ] TemporalLifecycleHarness: PASS — saveSceneFrameCaptureForTesting() succeeds (99_final): captures/temporal_lifecycle_99_final_scene_only.png
+[notice ] TemporalLifecycleHarness: PASS — shutdown() completed without error
+[notice ] TemporalLifecycleHarness: PASS — Commands rejected after shutdown()
+[notice ] TemporalLifecycleHarness: ==================================================
+[notice ] TemporalLifecycleHarness: TEMPORAL LIFECYCLE HARNESS SUMMARY
+[notice ] TemporalLifecycleHarness: total checks: 295
+[notice ] TemporalLifecycleHarness: failures: 0
+[notice ] TemporalLifecycleHarness: RESULT: PASS
+[notice ] TemporalLifecycleHarness: ==================================================

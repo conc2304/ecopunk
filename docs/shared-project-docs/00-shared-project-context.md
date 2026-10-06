@@ -114,6 +114,7 @@ All domain chats should have access to:
 - Scene/HUD Contract v1
 - Scene Observability Profile
 - HUD Scope and Product-Direction Addendum
+- Canonical Work Registry (`03-work-registry.md`) — current project state; read before the roadmap
 - Ecopunk HUD System Master Roadmap
 - Architecture Governance
 - Cross-Domain Handoff Protocol
