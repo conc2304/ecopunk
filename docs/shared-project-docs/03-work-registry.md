@@ -2,7 +2,7 @@
 
 **Owner:** Architecture & Program Coordination (records); all domains (propose updates)
 **Purpose:** The authoritative record of *accepted current project reality* — what work exists, what state it is in, what evidence supports that state, what is NOW / NEXT / LATER, what is blocked, and how durable it is in source control.
-**Last reconciled:** 2026-10-05 (initial population — see [`../reviews/work-registry-protocol-implementation-report.md`](../reviews/work-registry-protocol-implementation-report.md))
+**Last reconciled:** 2026-10-06 (first-two-scene durability closure — see [`../reviews/first-two-scene-milestone-durability-closure-report.md`](../reviews/first-two-scene-milestone-durability-closure-report.md)); initial population 2026-10-05 ([`../reviews/work-registry-protocol-implementation-report.md`](../reviews/work-registry-protocol-implementation-report.md))
 
 > **Plans describe intent. Reports describe evidence. The Work Registry describes accepted current reality.**
 >
@@ -17,33 +17,35 @@ This is not a roadmap. Planned sequence lives in the [Master Roadmap](../Ecopunk
 ```text
 Current Phase:
 Roadmap Phase 7 — Integrate the Second Scene and Prove Scene Switching.
-Temporal (scene #2) is implemented and desktop-verified; the first real
-two-scene switching proof has not been executed.
+Technically accepted 2026-10-06; durability closure in progress.
 
 Last Architecture-Accepted Milestone:
-Blob as production scene #1, together with ExperienceRuntime and HUD Runtime
-infrastructure (BLOB-001, RT-001, HUD-001).
+First two-scene milestone — Blob ↔ Temporal in-process switching, 20 cycles
+on the production stack (RT-003, RT-002; TEMP-004 and FX-004 VERIFIED).
+Record: Architecture-Acceptance-First-Two-Scene-Milestone.md (2026-10-06).
 
 Furthest Implemented Milestone:
-Temporal production scene #2 + Temporal runtime asset reproducibility
-(TEMP-001, TEMP-002) — commit d25cc13, 2026-08-10.
+Same — commits 59c24f4 (RT-003) and 597ee65 (TEMP-004 + RT-002 harness),
+2026-10-05/06, on blueprint-emergence-updates. NOT YET PUSHED.
 
 Furthest Verified Milestone:
-Temporal production scene #2 under ExperienceRuntime on macOS desktop —
-295/295 lifecycle/reactivation checks (TEMP-001). Not re-run since 2026-08-10.
+RT-002 rerun after TEMP-004 — 20/20 cycles, 115,726 checks, 0 failures,
+macOS desktop, 2026-10-05.
 
 Next Architecture Gate:
-TEMP-001 Architecture acceptance → then authorization of RT-002
-(Blob ↔ Temporal 20-cycle switching acceptance).
+DURABLE MILESTONE: push 59c24f4..597ee65 (plus this reconciliation) to origin,
+then RT-003 / RT-002 → CLOSED.
 
 Current Blocking Uncertainty:
-1. Whether Temporal scene #2 was accepted by Architecture outside the
-   repository (no acceptance artifact exists in-repo or in ~/Downloads).
-2. Raspberry Pi 3B+ feasibility — nothing has ever been built or measured on
+1. Raspberry Pi 3B+ feasibility — nothing has ever been built or measured on
    Pi hardware (PI-001).
+2. Original Architecture ruling documents for RT-003 / TEMP-004 were never
+   saved as files; their relayed decision text is now recorded verbatim in
+   Architecture-Rulings-Relay-First-Two-Scene-Milestone.md (ARCH-003).
 
 Current NOW Item:
-TEMP-001 — Architecture acceptance review of Temporal production scene #2.
+First-two-scene durability: commit + push (owner: repository owner; agents
+are prohibited from Git mutation by .claude/CLAUDE.md).
 ```
 
 ---
@@ -117,7 +119,7 @@ Allowed values: `NOT_STARTED` · `PENDING` · `PASS` · `FAIL` · `NOT_REQUIRED`
 - Architecture must not treat required work as durable while it is `UNTRACKED` or `WORKTREE_ONLY`.
 - An item may state the durability its dependents require (`Required Durability:`). **Interim default** until BUILD-001 is decided: `COMMITTED` on a branch pushed to `origin`.
 
-**Current repository fact (2026-10-05):** all committed work lives on `blueprint-emergence-updates` (pushed to `origin`, HEAD `d25cc13`, clean working tree, no stashes). Local `main` is at `e12b39b`, 14 commits behind, and has never been pushed. No integration branch is designated, so no item is `MERGED` — see BUILD-001.
+**Current repository fact (2026-10-06):** all committed work lives on `blueprint-emergence-updates`. Local HEAD is `597ee65`; `origin/blueprint-emergence-updates` is still at `d25cc13`. Local is **2 commits ahead and unpushed**: `59c24f4` (RT-003) and `597ee65` (TEMP-004 + RT-002). The working tree was clean before this reconciliation, with no stashes. Local `main` and `initial-draft` are at `e12b39b` and have never been pushed. No integration branch is designated, so no item is `MERGED` — see BUILD-001.
 
 ## Work IDs
 
@@ -133,24 +135,24 @@ Off-repo evidence is cited as `OFF-REPO: ~/Downloads/<file>` and is never suffic
 
 | | Items |
 |---|---|
-| **NOW** | TEMP-001 Architecture acceptance |
-| **NEXT** | RT-002 Blob ↔ Temporal 20-cycle switching · PI-001 Pi build + baseline · ARCH-003 import off-repo evidence · BUILD-001 integration-branch policy |
-| **LATER** | PI-002/PI-003 Pi measurements · HUD Blueprint / Skin Package freeze (HUD-004, HUD-006) · scene #3 (BLUE-001) · remaining scene migrations · Dark Moss and remaining skins |
+| **NOW** | First-two-scene durability: commit + push `blueprint-emergence-updates` → RT-003 / RT-002 `CLOSED` |
+| **NEXT** | PI-001 Pi build + baseline · ARCH-003 import off-repo evidence · BUILD-001 integration-branch policy · TEMP-004 acceptance · BLUE-001 planning |
+| **LATER** | PI-002/PI-003 Pi measurements · TEMP-005 Temporal shutdown release · HUD Blueprint / Skin Package freeze (HUD-004, HUD-006) · remaining scene migrations · Dark Moss and remaining skins |
 
 ## Per domain
 
 | Domain | NOW | NEXT | LATER |
 |---|---|---|---|
-| Architecture & Program Coordination | TEMP-001 acceptance | ARCH-002 accept protocol · ARCH-003 · BUILD-001 · authorize RT-002 | ARCH-004 doc reconciliation |
-| ExperienceRuntime & SceneManager | — (awaiting RT-002 authorization) | RT-002 | Scene #3 hosting (BLUE-001) |
+| Architecture & Program Coordination | First-two-scene durability → CLOSED | ARCH-002 accept protocol · ARCH-003 · BUILD-001 | ARCH-004 doc reconciliation |
+| ExperienceRuntime & SceneManager | — (RT-003 / RT-002 accepted; awaiting push) | Scene #3 hosting (BLUE-001) | — |
 | HUD Runtime & Validation Studio | — | HUD-003 profile binding · HUD-002 domain acceptance | HUD-004 · HUD-005 · HUD-006 |
 | Shared Video Playback | — | — | VIDEO-003 retire compatibility paths |
-| Shared Effects & Shader Debugger | — | FX-004 (optional) | — |
+| Shared Effects & Shader Debugger | — | FX-004 domain acceptance | — |
 | Raspberry Pi Runtime & Performance | PI-001 | PI-002 · PI-003 | Quality profiles, thermal soak |
 | HUD Art Pipeline & Skin Production | HUD-004 (locate state) | — | ART-001 · ART-002 · ART-003 |
-| Blob Scene Migration | — (accepted) | Support RT-002 | — |
-| Temporal Fields Scene Migration | TEMP-001 acceptance support | Support RT-002 | TEMP-003 (deferred) |
-| Blueprint Emergence Scene Migration | — | BLUE-001 planning (after RT-002) | — |
+| Blob Scene Migration | — (accepted) | — | — |
+| Temporal Fields Scene Migration | — | TEMP-004 domain acceptance | TEMP-005 · TEMP-003 (deferred) |
+| Blueprint Emergence Scene Migration | — | BLUE-001 planning (RT-002 accepted) | — |
 | Contour Portrait Scene Migration | — | — | CONTOUR-001 |
 | Fragment Trail Scene Migration | — | — | FRAG-001 |
 | Quadrant Crosshair Scene Migration | — | — | QUAD-001 |
@@ -164,12 +166,13 @@ Off-repo evidence is cited as `OFF-REPO: ~/Downloads/<file>` and is never suffic
 | ID | Status | Impl | Desk | Integ | Arch | Pi | Docs | SC |
 |---|---|---|---|---|---|---|---|---|
 | ARCH-001 | ACCEPTED | PASS | NOT_REQUIRED | NOT_REQUIRED | PASS | NOT_REQUIRED | PENDING | COMMITTED |
-| ARCH-002 | IMPLEMENTED | PASS | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_REQUIRED | PASS | WORKTREE_ONLY |
-| ARCH-003 | READY | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | UNTRACKED |
+| ARCH-002 | IMPLEMENTED | PASS | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_REQUIRED | PASS | COMMITTED |
+| ARCH-003 | IN_PROGRESS | PENDING | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | PENDING | WORKTREE_ONLY |
 | ARCH-004 | READY | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
 | BUILD-001 | READY | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
 | RT-001 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PENDING | COMMITTED |
-| RT-002 | READY | NOT_STARTED | NOT_STARTED | NOT_STARTED | PENDING | NOT_STARTED | PENDING | UNTRACKED |
+| RT-002 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_REQUIRED | PASS | COMMITTED |
+| RT-003 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PASS | COMMITTED |
 | HUD-001 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PASS | COMMITTED |
 | HUD-002 | VERIFIED | PASS | PASS | UNKNOWN | NOT_REQUIRED | NOT_STARTED | PENDING | COMMITTED |
 | HUD-003 | READY | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
@@ -184,12 +187,14 @@ Off-repo evidence is cited as `OFF-REPO: ~/Downloads/<file>` and is never suffic
 | VIDEO-003 | BACKLOG | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
 | FX-001 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PASS | COMMITTED |
 | FX-002 | ACCEPTED | PASS | PASS | NOT_REQUIRED | PASS | NOT_STARTED | UNKNOWN | COMMITTED |
-| FX-003 | ACCEPTED | PASS | PASS | PENDING | PASS | NOT_STARTED | PASS | COMMITTED |
-| FX-004 | READY | NOT_REQUIRED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
+| FX-003 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PASS | COMMITTED |
+| FX-004 | VERIFIED | NOT_REQUIRED | PASS | PASS | NOT_REQUIRED | NOT_REQUIRED | PASS | COMMITTED |
 | BLOB-001 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PENDING | COMMITTED |
-| TEMP-001 | VERIFIED | PASS | PASS | PASS | PENDING | NOT_STARTED | PASS | COMMITTED |
+| TEMP-001 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PASS | COMMITTED |
 | TEMP-002 | VERIFIED | PASS | PASS | NOT_REQUIRED | PENDING | NOT_REQUIRED | PENDING | COMMITTED |
 | TEMP-003 | DEFERRED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
+| TEMP-004 | VERIFIED | PASS | PASS | PASS | NOT_REQUIRED | NOT_STARTED | PASS | COMMITTED |
+| TEMP-005 | BACKLOG | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
 | PI-001 | READY | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
 | PI-002 | BLOCKED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
 | PI-003 | BLOCKED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
@@ -256,14 +261,14 @@ Blocked By:
 None
 
 Source State:
-WORKTREE_ONLY
+COMMITTED (`59c24f4`, `blueprint-emergence-updates`; not pushed)
 
 Last Updated:
-2026-10-05
+2026-10-06
 
 ### ARCH-003 — Bring off-repo Architecture evidence into the repository
 
-Status: READY
+Status: IN_PROGRESS
 Owner: Architecture & Program Coordination
 Architecture Gate: NO
 
@@ -271,20 +276,29 @@ Depends On:
 - None
 
 Current Evidence:
-- The following accepted/authoritative artifacts exist only in `~/Downloads` (UNTRACKED): `experience-runtime-architecture-closure-review.md`, `blob-post-acceptance-hardening-architecture-handoff.md`, `shared-video-temporal-adapter-architecture-handoff.md`, `temporal-production-migration-two-scene-runtime-acceptance-requirements.md`, `temporal-runtime-asset-reproducibility-architecture-handoff.md`, `temporal-pattern-vocabulary-architecture-handoff.md`, `blob-temporal-20-cycle-production-switching-acceptance.md`, `Pre-Blob-Cross-Domain-Current-State-Baseline.md`, `Ecopunk-Architecture-Program-Coordination-Domain-Restart-Status-Report.md`, `experience-runtime-domain-restart-status-report.md`
+- **Imported 2026-10-06** (first-two-scene durability closure; copied unmodified, byte-identical to `~/Downloads`):
+  - [temporal-production-migration-two-scene-runtime-acceptance-requirements.md](temporal-production-migration-two-scene-runtime-acceptance-requirements.md)
+  - [blob-temporal-20-cycle-production-switching-acceptance.md](blob-temporal-20-cycle-production-switching-acceptance.md)
+- **Recorded 2026-10-06:** the relayed decision text of the chat-only RT-003 authorization, RT-003 acceptance / RT-002 readiness, TEMP-004 authorization and RT-002 rerun instruction, in [Architecture-Rulings-Relay-First-Two-Scene-Milestone.md](Architecture-Rulings-Relay-First-Two-Scene-Milestone.md).
+- The following accepted/authoritative artifacts still exist only in `~/Downloads` (UNTRACKED; outside the first-two-scene milestone scope): `experience-runtime-architecture-closure-review.md`, `blob-post-acceptance-hardening-architecture-handoff.md`, `shared-video-temporal-adapter-architecture-handoff.md`, `temporal-runtime-asset-reproducibility-architecture-handoff.md`, `temporal-pattern-vocabulary-architecture-handoff.md`, `Pre-Blob-Cross-Domain-Current-State-Baseline.md`, `Ecopunk-Architecture-Program-Coordination-Domain-Restart-Status-Report.md`, `experience-runtime-domain-restart-status-report.md`
 - The "Shared Effect Knowledge v1 Freeze Specification" cited by the restart audit was not found in the repository or `~/Downloads`.
+- Original documents never saved anywhere (only their relayed decision text survives — see the relay record above):
+  - "Architecture Ruling — Blob + Temporal Stage B / RT-003 Authorization";
+  - the TEMP-004 Architecture authorization;
+  - the RT-003 ExperienceRuntime domain acceptance review (content never relayed; **not recoverable**).
+- Resolved 2026-10-06: the first-two-scene acceptance grant is in-repo as [Architecture-Acceptance-First-Two-Scene-Milestone.md](Architecture-Acceptance-First-Two-Scene-Milestone.md) (full grant text appended from the second relay).
 
 Next Gate:
 None (documentation durability only).
 
 Next Action:
-Architecture designates which of these are canonical; a coding agent copies them unmodified into `docs/shared-project-docs/` and the registry evidence links are updated.
+Repository owner commits the imported/recorded files. Architecture decides whether the remaining `~/Downloads` artifacts above should be imported in a later pass.
 
 Blocked By:
 None
 
 Source State:
-UNTRACKED
+WORKTREE_ONLY (2026-10-06 imports + relay record); remaining items UNTRACKED
 
 Last Updated:
 2026-10-05
@@ -379,35 +393,80 @@ Last Updated:
 
 ### RT-002 — Blob ↔ Temporal 20-cycle production switching acceptance
 
-Status: READY
+Status: ACCEPTED
 Owner: ExperienceRuntime & SceneManager
 Architecture Gate: YES
+Required Durability: COMMITTED, pushed to `origin` (interim default)
 
 Depends On:
 - BLOB-001 [ACCEPTED]
-- TEMP-001 [VERIFIED] — must be ACCEPTED before authorization
+- TEMP-001 [ACCEPTED]
 - RT-001 [ACCEPTED]
+- RT-003 [ACCEPTED]
+- TEMP-004 [VERIFIED]
 - HUD-001 [ACCEPTED]
 
 Current Evidence:
-- OFF-REPO: `~/Downloads/blob-temporal-20-cycle-production-switching-acceptance.md` — §1: "PENDING EXECUTION EVIDENCE"
-- [blob-temporal-blob-hud-acceptance-matrix.md](blob-temporal-blob-hud-acceptance-matrix.md)
-- No switching harness exists: `sketches/experience_runtime/src` contains only `BlobLifecycleHarness` and `TemporalLifecycleHarness` (searched 2026-10-05).
+- [Architecture-Acceptance-First-Two-Scene-Milestone.md](Architecture-Acceptance-First-Two-Scene-Milestone.md) — "RT-002: ACCEPTED", "CONTRACT IMPACT: NONE", "DURABLE MILESTONE: PENDING" (2026-10-06)
+- [../reviews/rt-002-rerun-after-temp004-report.md](../reviews/rt-002-rerun-after-temp004-report.md) — acceptance record (clean run B): 20/20 cycles, 115,726 checks, 0 failures; harness unchanged. Contaminated rerun 1 and clean run A are disclosed there.
+- [../reviews/rt-002-blob-temporal-20-cycle-acceptance-report.md](../reviews/rt-002-blob-temporal-20-cycle-acceptance-report.md) — original run 4: 80,600 checks, 20 failures, all traced to TEMP-004 (historical)
+- `sketches/experience_runtime/src/TwoSceneAcceptanceHarness.*` (`EXPERIENCE_RUNTIME_TWO_SCENE_ACCEPTANCE`, test-only); logs `docs/reviews/logs/rt002-*.log`; captures `docs/reviews/rt002-captures/`
+- Governing specs (in-repo since 2026-10-06): [blob-temporal-20-cycle-production-switching-acceptance.md](blob-temporal-20-cycle-production-switching-acceptance.md), [temporal-production-migration-two-scene-runtime-acceptance-requirements.md](temporal-production-migration-two-scene-runtime-acceptance-requirements.md), [blob-temporal-blob-hud-acceptance-matrix.md](blob-temporal-blob-hud-acceptance-matrix.md); rerun instruction in [Architecture-Rulings-Relay-First-Two-Scene-Milestone.md](Architecture-Rulings-Relay-First-Two-Scene-Milestone.md) §4
+- Pi Verification: **NOT_REQUIRED for this desktop acceptance** (Architecture, 2026-10-06). Pi behavior of the two-scene runtime remains open under PI-001/PI-002.
 
 Next Gate:
-AUTHORIZED — per the Temporal authorization: "After Temporal itself is accepted, Architecture will authorize/execute the repeated two-scene switching acceptance milestone."
+CLOSED — once `597ee65` and this reconciliation are pushed to `origin`.
 
 Next Action:
-Commit the acceptance spec (ARCH-003); after TEMP-001 acceptance, Architecture authorizes; then generate the harness implementation prompt.
+Repository owner commits the closure docs and pushes `blueprint-emergence-updates`; Architecture records CLOSED.
 
 Blocked By:
-TEMP-001 Architecture acceptance
+None (durability action only)
 
 Source State:
-UNTRACKED (spec only; no implementation)
+COMMITTED (`597ee65`, `blueprint-emergence-updates`; **not pushed**)
 
 Last Updated:
-2026-10-05
+2026-10-06
+
+### RT-003 — Blob + Temporal in-process SceneManager switching
+
+Status: ACCEPTED
+Owner: ExperienceRuntime & SceneManager
+Architecture Gate: YES
+Required Durability: COMMITTED, pushed to `origin` (interim default)
+
+Depends On:
+- RT-001 [ACCEPTED]
+- BLOB-001 [ACCEPTED]
+- TEMP-001 [ACCEPTED]
+
+Current Evidence:
+- [Architecture-Acceptance-First-Two-Scene-Milestone.md](Architecture-Acceptance-First-Two-Scene-Milestone.md) — "RT-003: ACCEPTED" (2026-10-06)
+- [../reviews/rt-003-blob-temporal-scenemanager-switching-report.md](../reviews/rt-003-blob-temporal-scenemanager-switching-report.md):
+  - `scene_switch_controller_tests` 127/127;
+  - `SceneSwitchHarness` 3 cycles, 5,351/5,351;
+  - Blob lifecycle 895/895, Temporal lifecycle 295/295, all unit suites green;
+  - no frozen-contract diff.
+- Code: `sketches/experience_runtime/src/SceneManager.*`, `SceneSwitchController.h`, `ExperienceRuntime.*`, `SceneSwitchHarness.cpp`; logs `docs/reviews/logs/rt003-*.log`
+- Domain Acceptance: PASS · Architecture Acceptance: PASS (Architecture, 2026-10-06). Authorization and acceptance decisions: [Architecture-Rulings-Relay-First-Two-Scene-Milestone.md](Architecture-Rulings-Relay-First-Two-Scene-Milestone.md) §1–§2. The RT-003 ExperienceRuntime domain review document itself is not recoverable (ARCH-003).
+
+Next Gate:
+CLOSED — once `59c24f4` is pushed to `origin`.
+
+Next Action:
+Same push as RT-002. Non-blocking follow-ups, not yet registered (not authorized):
+- `Failed`-phase recovery policy;
+- a scene-availability signal for the HUD scene controls. This one would need a contract proposal.
+
+Blocked By:
+None (durability action only)
+
+Source State:
+COMMITTED (`59c24f4`, `blueprint-emergence-updates`; **not pushed**)
+
+Last Updated:
+2026-10-06
 
 ## HUD Runtime & Validation Studio
 
@@ -447,7 +506,7 @@ Owner: HUD Runtime & Validation Studio
 Architecture Gate: NO
 
 Depends On:
-- TEMP-001 [VERIFIED]
+- TEMP-001 [ACCEPTED]
 
 Current Evidence:
 - `shared/src/hud-compositor/HudVocabularyResolver.cpp` (Temporal pattern IDs, `d25cc13`)
@@ -822,7 +881,7 @@ Current Evidence:
 - [../shared-effects-production-selector-eligibility-increment-2-report.md](../shared-effects-production-selector-eligibility-increment-2-report.md)
 
 Next Gate:
-Integration Verification completes via FX-004 (non-blocking).
+None. Integration Verification PASS via FX-004 (2026-10-06).
 
 Next Action:
 None.
@@ -834,35 +893,36 @@ Source State:
 COMMITTED (`d25cc13`; pushed)
 
 Last Updated:
-2026-10-05
+2026-10-06
 
 ### FX-004 — Live authored-preset observation in Temporal
 
-Status: READY
+Status: VERIFIED
 Owner: Shared Effects & Shader Debugger
 Architecture Gate: NO
 
 Depends On:
-- TEMP-001 [VERIFIED]
+- TEMP-001 [ACCEPTED]
 
 Current Evidence:
+- [Architecture-Acceptance-First-Two-Scene-Milestone.md](Architecture-Acceptance-First-Two-Scene-Milestone.md) — "FX-004: VERIFIED" (2026-10-06)
+- [../reviews/rt-002-rerun-after-temp004-report.md](../reviews/rt-002-rerun-after-temp004-report.md) — `preset.dither.20260809_172713_1` naturally selected, applied and rendered under ExperienceRuntime
 - [Architecture-Authorization-Temporal-Production-Scene-2.md](Architecture-Authorization-Temporal-Production-Scene-2.md) — "desirable … not a migration gate"
-- [../temporal-production-scene-2-migration-report.md](../temporal-production-scene-2-migration-report.md) — "A live authored-preset selection was not specifically observed"
 
 Next Gate:
-Domain acceptance.
+Domain acceptance (Shared Effects manager).
 
 Next Action:
-Capture opportunistically during RT-002.
+Shared Effects manager records acceptance.
 
 Blocked By:
 None
 
 Source State:
-NOT_APPLICABLE
+COMMITTED (`597ee65` evidence; not pushed)
 
 Last Updated:
-2026-10-05
+2026-10-06
 
 ## Blob Scene Migration
 
@@ -902,7 +962,7 @@ Last Updated:
 
 ### TEMP-001 — Temporal as production scene #2
 
-Status: VERIFIED
+Status: ACCEPTED
 Owner: Temporal Fields Scene Migration
 Architecture Gate: YES
 
@@ -913,16 +973,18 @@ Depends On:
 - TEMP-002 [VERIFIED]
 
 Current Evidence:
+- Acceptance: "TEMP-001: ACCEPTED" is an Architecture decision in the RT-003 authorization relay, now recorded in-repo verbatim in [Architecture-Rulings-Relay-First-Two-Scene-Milestone.md](Architecture-Rulings-Relay-First-Two-Scene-Milestone.md) §1 (Documentation gate PASS as of 2026-10-06; the original ruling document was never saved). The 2026-10-06 [first-two-scene acceptance](Architecture-Acceptance-First-Two-Scene-Milestone.md) of RT-002, which depends on TEMP-001, is consistent with it.
+- Re-verified 2026-10-05: Temporal lifecycle harness 295/295 (`docs/reviews/logs/temporal-lifecycle-harness-2026-10-05.log`, `rt003-temporal-lifecycle-harness-2026-10-05.log`)
 - [Architecture-Authorization-Temporal-Production-Scene-2.md](Architecture-Authorization-Temporal-Production-Scene-2.md) — AUTHORIZED; lists the 10 acceptance proofs
 - [../temporal-production-scene-2-migration-report.md](../temporal-production-scene-2-migration-report.md) — real launch, 295/295 lifecycle/reactivation checks, semantic mapping 34/34, Release builds green (macOS, reported 2026-08-10; not re-run since)
 - `sketches/experience_runtime/src/TemporalProductionScene.*`, `TemporalLifecycleHarness.*` in `d25cc13`
 - OFF-REPO: restart audit — "Temporal manager recommended conditional acceptance … unconditional Architecture acceptance not safely proven"; its open condition was source-control persistence, now confirmed (see Source State)
 
 Next Gate:
-Architecture acceptance.
+CLOSED — once the relay record is committed and pushed (Architecture to confirm the relay suffices as the in-repo ruling).
 
 Next Action:
-Architecture reviews the migration report against the authorization's 10 acceptance proofs. Optionally re-run the Temporal lifecycle harness on the current checkout first.
+Repository owner commits/pushes the closure; Architecture records CLOSED.
 
 Blocked By:
 None
@@ -931,7 +993,7 @@ Source State:
 COMMITTED (`d25cc13`, 2026-08-10; pushed to `origin/blueprint-emergence-updates`)
 
 Last Updated:
-2026-10-05
+2026-10-06
 
 ### TEMP-002 — Temporal runtime asset reproducibility
 
@@ -969,7 +1031,7 @@ Owner: Temporal Fields Scene Migration
 Architecture Gate: NO
 
 Depends On:
-- TEMP-001 [VERIFIED]
+- TEMP-001 [ACCEPTED]
 
 Current Evidence:
 - OFF-REPO: restart audit — Architecture accepted omission of `TFPresetTimeline` from production v1 as non-blocking.
@@ -988,6 +1050,65 @@ NOT_APPLICABLE
 
 Last Updated:
 2026-10-05
+
+### TEMP-004 — Temporal stale playhead invalidation
+
+Status: VERIFIED
+Owner: Temporal Fields Scene Migration
+Architecture Gate: NO — Architecture authorized the work (relay: [Architecture-Rulings-Relay-First-Two-Scene-Milestone.md](Architecture-Rulings-Relay-First-Two-Scene-Milestone.md) §3) and on 2026-10-06 specified "Architecture Review: NOT REQUIRED" for its status
+
+Depends On:
+- TEMP-001 [ACCEPTED]
+- VIDEO-002 [ACCEPTED]
+
+Current Evidence:
+- [Architecture-Acceptance-First-Two-Scene-Milestone.md](Architecture-Acceptance-First-Two-Scene-Milestone.md) — "TEMP-004: VERIFIED — FOCUSED + INTEGRATED" (2026-10-06)
+- Focused: [../reviews/temp-004-temporal-stale-playhead-fix-report.md](../reviews/temp-004-temporal-stale-playhead-fix-report.md) — 139/139, 0 stale frames over 5 reactivations + 3 media changes; `docs/reviews/logs/temp004-*.log`
+- Integrated: [../reviews/rt-002-rerun-after-temp004-report.md](../reviews/rt-002-rerun-after-temp004-report.md) — 0 stale playhead presentations, 0 `texture is not allocated` warnings across 20 Temporal activations
+- Code: `shared/src/TimeOffsetVideoBuffer.{h,cpp}`, `sketches/temporal-fields/src/TFFragmentTransition.cpp`, `TFVideoAdapterSelfTest.*`. No public API change; DEC-014 unchanged.
+- Focused Verification: PASS · Integration Verification: PASS · Architecture Review: NOT REQUIRED (Architecture, 2026-10-06). Status stays VERIFIED as granted; under the lifecycle, a non-Architecture-gated item moves to ACCEPTED only by domain-manager acceptance.
+
+Next Gate:
+Optional: Temporal domain-manager acceptance (→ ACCEPTED). Not required for the first-two-scene milestone.
+
+Next Action:
+Push `597ee65` (durability).
+
+Blocked By:
+None
+
+Source State:
+COMMITTED (`597ee65`, `blueprint-emergence-updates`; **not pushed**)
+
+Last Updated:
+2026-10-06
+
+### TEMP-005 — Temporal `shutdown()` resource release
+
+Status: BACKLOG
+Owner: Temporal Fields Scene Migration
+Architecture Gate: NO
+
+Depends On:
+- TEMP-001 [ACCEPTED]
+
+Current Evidence:
+- `TemporalSceneCore::shutdown()` releases nothing; the decoder and history live until destruction ([TEMP-004 report](../reviews/temp-004-temporal-stale-playhead-fix-report.md) §9 risk 1; [RT-002 report](../reviews/rt-002-blob-temporal-20-cycle-acceptance-report.md) Risk 2). Proposed by both reports; non-blocking for the two-scene milestone.
+
+Next Gate:
+READY once the Temporal manager scopes it.
+
+Next Action:
+None.
+
+Blocked By:
+None
+
+Source State:
+NOT_APPLICABLE
+
+Last Updated:
+2026-10-06
 
 ## Raspberry Pi Runtime & Performance
 
@@ -1085,14 +1206,14 @@ Owner: Blueprint Emergence Scene Migration
 Architecture Gate: YES
 
 Depends On:
-- RT-002 [READY]
+- RT-002 [ACCEPTED]
 
 Current Evidence:
 - Standalone sketch already consumes `VideoPlaybackService` (`sketches/blueprint_emergence/src/ofApp.cpp:53-56`); DEC-018 retired the seek-and-capture requirement.
 - Known risks: `bypassErosion = true` temp diagnostic (`ofApp.h:69`); nested-FBO hazard under an outer runtime FBO ([../hud-layout-integration-probe.md](../hud-layout-integration-probe.md)).
 
 Next Gate:
-READY after RT-002 (restart audit: "best after first two-scene milestone is proven").
+READY after RT-002 (restart audit: "best after first two-scene milestone is proven"). Condition met 2026-10-06 (RT-002 ACCEPTED); the move to READY is Architecture's call.
 
 Next Action:
 None.
@@ -1113,7 +1234,7 @@ Owner: Contour Portrait Scene Migration
 Architecture Gate: YES
 
 Depends On:
-- RT-002 [READY]
+- RT-002 [ACCEPTED]
 
 Current Evidence:
 - Still contains `ofVideoGrabber` camera path (`sketches/contour-portrait/src/ContourSource.h:35`); DEC-002 requires prerecorded-only. Not on the shared effects service ([../video-effect-second-wave-evaluation.md](../video-effect-second-wave-evaluation.md)).
@@ -1140,7 +1261,7 @@ Owner: Fragment Trail Scene Migration
 Architecture Gate: YES
 
 Depends On:
-- RT-002 [READY]
+- RT-002 [ACCEPTED]
 
 Current Evidence:
 - Local `ShaderLibrary`/`LFOBank`/`TriggerBus` forks collide with `shared/src` (root `CLAUDE.md`); chat index gates it on "shared-crosshair/fork prerequisites".
@@ -1167,7 +1288,7 @@ Owner: Quadrant Crosshair Scene Migration
 Architecture Gate: YES
 
 Depends On:
-- RT-002 [READY]
+- RT-002 [ACCEPTED]
 
 Current Evidence:
 - Production path migrated to shared effect catalog; `DebugMode` deliberately not migrated (root `CLAUDE.md`); same fork prerequisites as FRAG-001; [../quadrant-crosshair-reuse-analysis.md](../quadrant-crosshair-reuse-analysis.md).

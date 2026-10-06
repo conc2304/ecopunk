@@ -185,8 +185,19 @@ PROJECT_CFLAGS = -I../../shared/src/scene -I../../shared/src/hud-runtime \
 # unresolved symbols) as unreachable BEFORE symbol resolution fails on them --
 # confirmed empirically: build only fails to resolve symbols for code paths
 # actually reachable from this sketch's real call graph after enabling this.
+#
+# -dead_strip is ld64-only (GNU ld would misparse it as -d -e ad_strip). On
+# Linux the GNU equivalent, --gc-sections (same -ffunction-sections/
+# -fdata-sections pairing), is selected instead. OF's config.linux.common.mk
+# already adds it to PLATFORM_LDFLAGS; it's repeated here so this sketch's
+# link doesn't silently depend on that. `uname -s` rather than PLATFORM_OS
+# because this file is included before OF's config.shared.mk defines it.
 ################################################################################
-PROJECT_LDFLAGS = -Wl,-dead_strip
+ifeq ($(shell uname -s),Darwin)
+	PROJECT_LDFLAGS = -Wl,-dead_strip
+else
+	PROJECT_LDFLAGS = -Wl,--gc-sections
+endif
 
 ################################################################################
 # TEMPORAL RUNTIME ASSET REPRODUCIBILITY (Temporal Production Scene #2,
