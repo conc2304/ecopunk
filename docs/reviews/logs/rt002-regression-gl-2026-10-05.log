@@ -1,0 +1,67 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-05 21:30:11.410 experience_runtime[36668:556806] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] GlRestorationHarness: starting deterministic self-test (EXPERIENCE_RUNTIME_GL_HARNESS set)
+[notice ] GlRestorationHarness: PASS — SceneManagerStatus valid in the one-scene idle case, agrees with scene ID: activeSceneId=fake-scene
+[notice ] GlRestorationHarness: PASS — currentHudFrameData().scene is the same captured value across repeated reads (no re-poll)
+[notice ] GlRestorationHarness: PASS — fake scene renders into the runtime-owned scene FBO: texture allocated=yes, frameNumber=4, nativeSize=320x180 (window is 1280x720 — deliberately different)
+[notice ] GlRestorationHarness: PASS — HudCompositorBridge consumed HudFrameData without touching the FBO directly: draw() completed using only HudFrameData's fields
+[notice ] GlRestorationHarness: PASS — scissor test disabled after guarded draw
+[notice ] GlRestorationHarness: PASS — stencil test disabled after guarded draw
+[notice ] GlRestorationHarness: PASS — no shader bound after guarded draw: GL_CURRENT_PROGRAM=0
+[notice ] GlRestorationHarness: PASS — no texture manually bound after guarded draw: GL_TEXTURE_BINDING_2D=0
+[notice ] GlRestorationHarness: PASS — default framebuffer (0) bound after draw(), despite raw framebuffer-binding contamination: GL_FRAMEBUFFER_BINDING=0
+[notice ] GlRestorationHarness: PASS — viewport not left at deliberately-wrong contaminated value: viewport=1280x720
+[notice ] GlRestorationHarness: PASS — scissor/blend/shader/texture/style/framebuffer-nesting contamination does not corrupt the subsequent compositor draw: pixel buffers identical
+[notice ] GlRestorationHarness: PASS — capabilities() queried exactly once, at activation (not re-polled per frame): capabilityPollCount=1
+[notice ] GlRestorationHarness: PASS — hudStatus() queried exactly once per runtime frame: statusPollCount=7, expected=7
+[notice ] GlRestorationHarness: PASS — captured status is unaffected by later scene mutation (same frame, before next draw)
+[notice ] GlRestorationHarness: PASS — SceneFrame::frameNumber increases monotonically after a completed draw: 7 -> 8
+[notice ] GlRestorationHarness: PASS — SemanticVariant::Complete reflected correctly in captured status: metrics=5
+[notice ] GlRestorationHarness: PASS — SemanticVariant::MissingSignals reflected correctly in captured status: metrics=0
+[notice ] GlRestorationHarness: PASS — SemanticVariant::ZeroSignals reflected correctly in captured status: metrics=0
+[notice ] GlRestorationHarness: PASS — SemanticVariant::ZeroMetrics reflected correctly in captured status: metrics=0
+[notice ] GlRestorationHarness: PASS — SemanticVariant::ManyMetrics (16, boundary) reflected correctly in captured status: metrics=16
+[notice ] GlRestorationHarness: PASS — SemanticVariant::Absent -> hudStatus().semantic is std::nullopt
+[notice ] GlRestorationHarness: PASS — FBO reallocation replaces the old SceneFrame (new size reflected, not stale): nativeSize=160x90, expected=160x90
+[notice ] GlRestorationHarness: PASS — HudFrameData.video uses the real VideoPlaybackStatus and is populated once RuntimeServices' VideoPlaybackService is configured: health=2 (0=Unavailable,1=Loading,2=Ready,3=Degraded,4=Failed)
+[notice ] GlRestorationHarness: PASS — playback progress presence matches health (never a fabricated default, per VideoPlaybackStatus.h's own invariant): health=2 playbackProgress=0.0321077 holdProgress=0.0224274
+[notice ] GlRestorationHarness: PASS — real videoeffects::EffectActivityStatus resolves through SceneHudStatus::activeEffects (compatibility field, no new HudFrameData field): activeEffects.size()=2 ["Heatmap Recolor", "Channel Shift"]
+[notice ] GlRestorationHarness: PASS — present-but-empty effect activity is valid (zero slots, a real state of the underlying type, not a placeholder): activeEffects.size()=0
+[notice ] GlRestorationHarness: PASS — HudFrameData.effects == std::nullopt for NoSnapshot ("no authoritative Shared Effects snapshot available")
+[notice ] GlRestorationHarness: PASS — HudFrameData.effects present with empty slots is distinct from missing ("snapshot exists, zero active effects", health not inferred as failure): slots=0
+[notice ] GlRestorationHarness: PASS — HudFrameData.effects present-active: real slots (health/slots) survive transport: slots=2
+[notice ] GlRestorationHarness: PASS — canonical resolveDominantEffectIds() on transported HudFrameData.effects orders by prominence (not vector order/names): front=heatmap_recolor
+[notice ] GlRestorationHarness: PASS — SceneHudStatus::activeEffects remains independently populated alongside HudFrameData.effects (neither derived from the other): activeEffects.size()=2
+[notice ] GlRestorationHarness: PASS — exactly one production HUD draw occurred per runtime frame (HudCompositorBridge::drawCallCount() == frames rendered): drawCallCount=23, framesRendered=23
+[notice ] GlRestorationHarness: MEASURED cumulative allocation @ 50 frames: 9024 operator-new / 9024 operator-delete (outstanding=0, 180.48 allocs/frame cumulative avg). This counts the WHOLE process (openFrameworks-internal calls included), not just this scaffold's own code — see the implementation report for the cross-window comparison and per-frame-rate-stability conclusion.
+[notice ] GlRestorationHarness: MEASURED HUD-ONLY cumulative allocation @ 50 frames: 8450 operator-new / 8450 operator-delete (outstanding=0, 169 allocs/frame cumulative avg). Isolated to ONLY hudCompositorBridge_.update()+draw() (ExperienceRuntime::draw()'s own before/after read) — excludes SceneManager/RuntimeServices/video-decode work in the same frame; this IS attributable to this scaffold's own HUD path, unlike the whole-process figure above.
+[notice ] GlRestorationHarness: MEASURED cumulative allocation @ 500 frames: 88692 operator-new / 88691 operator-delete (outstanding=1, 177.384 allocs/frame cumulative avg). This counts the WHOLE process (openFrameworks-internal calls included), not just this scaffold's own code — see the implementation report for the cross-window comparison and per-frame-rate-stability conclusion.
+[notice ] GlRestorationHarness: MEASURED HUD-ONLY cumulative allocation @ 500 frames: 84501 operator-new / 84501 operator-delete (outstanding=0, 169.002 allocs/frame cumulative avg). Isolated to ONLY hudCompositorBridge_.update()+draw() (ExperienceRuntime::draw()'s own before/after read) — excludes SceneManager/RuntimeServices/video-decode work in the same frame; this IS attributable to this scaffold's own HUD path, unlike the whole-process figure above.
+2026-10-05 21:30:41.485 experience_runtime[36668:556756] video file loaded at 960 x 540 @ 30.000000 fps
+2026-10-05 21:31:11.515 experience_runtime[36668:557047] video file loaded at 960 x 540 @ 24.000000 fps
+2026-10-05 21:31:41.555 experience_runtime[36668:557045] video file loaded at 960 x 540 @ 29.970030 fps
+2026-10-05 21:32:11.586 experience_runtime[36668:556802] video file loaded at 960 x 540 @ 23.976025 fps
+2026-10-05 21:32:41.618 experience_runtime[36668:556978] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] GlRestorationHarness: MEASURED cumulative allocation @ 5000 frames: 885380 operator-new / 885324 operator-delete (outstanding=56, 177.076 allocs/frame cumulative avg). This counts the WHOLE process (openFrameworks-internal calls included), not just this scaffold's own code — see the implementation report for the cross-window comparison and per-frame-rate-stability conclusion.
+[notice ] GlRestorationHarness: MEASURED HUD-ONLY cumulative allocation @ 5000 frames: 845044 operator-new / 845004 operator-delete (outstanding=40, 169.009 allocs/frame cumulative avg). Isolated to ONLY hudCompositorBridge_.update()+draw() (ExperienceRuntime::draw()'s own before/after read) — excludes SceneManager/RuntimeServices/video-decode work in the same frame; this IS attributable to this scaffold's own HUD path, unlike the whole-process figure above.
+[notice ] GlRestorationHarness: allocation investigation complete — see the three MEASURED lines above for the 50/500/5000-frame cumulative comparison this increment's report interprets.
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] GlRestorationHarness: PASS — Seam Proof: activityStatus() called exactly once per frame (frame 1 since install): seamProofCaptureCalls_=1
+[notice ] GlRestorationHarness: PASS — Seam Proof: TFEffectPicker::update() called before activityStatus() every frame (update/capture counters stay paired 1:1, by construction): updateCalls=1, captureCalls=1
+[notice ] GlRestorationHarness: PASS — Seam Proof: TFEffectPicker Raw/No-Effect forwards as HudFrameData.effects present-with-empty-slots (not absent, not a fabricated failure): slots=0
+[notice ] GlRestorationHarness: PASS — Seam Proof: HudFrameData.effects is byte-for-byte what TFEffectPicker authored (forwarded without reconstruction) — raw state
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.dither.20260809_172713_1' for effect 'dither'
+[notice ] GlRestorationHarness: PASS — Seam Proof: real active effect forwards with the correct canonical effect id (not a display name, not FakeScene's own demo id): effectId=dither
+[notice ] GlRestorationHarness: PASS — Seam Proof: TFEffectPicker's real Degraded health (shaderLib==nullptr, non-raw pick) propagates unchanged through HudFrameData.effects: health=1 messageId=effect.shader_unavailable
+[notice ] GlRestorationHarness: PASS — Seam Proof: HudFrameData.effects is byte-for-byte what TFEffectPicker authored (forwarded without reconstruction) — active/degraded state
+[notice ] GlRestorationHarness: PASS — Seam Proof: SceneHudStatus::activeEffects (FakeScene's own compat labels) cannot override or leak into the canonical HudFrameData.effects snapshot (independently sourced): activeEffects=["Heatmap Recolor", "Channel Shift"]
+[notice ] GlRestorationHarness: PASS — Seam Proof: activityStatus() called exactly once per frame (cumulative): seamProofCaptureCalls_=2
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.dither.20260809_172713_1' for effect 'dither'
+[notice ] GlRestorationHarness: PASS — Seam Proof: capabilities() caching is unaffected by the override (still queried exactly once, ever): capabilityPollCount=1
+[notice ] GlRestorationHarness: PASS — Seam Proof: hudStatus() still queried exactly once per runtime frame (delta since seam-proof phase began): statusPollDelta=3, framesRenderedDelta=3
+[notice ] GlRestorationHarness: PASS — Seam Proof: still exactly one production HUD draw per runtime frame (cumulative): drawCallCount=5028, framesRendered=5028
+[notice ] GlRestorationHarness: PASS — Seam Proof: capture-call counters exactly track frames since override install (no missed frame, no double-pull): updateCalls=3, captureCalls=3
+[notice ] GlRestorationHarness: PASS — Seam Proof: removing the override cleanly restores the production-default forwarding path (FakeScene's own NoSnapshot -> HudFrameData.effects == std::nullopt)
+[notice ] GlRestorationHarness: self-test complete: ALL CHECKS PASSED
+exit=0

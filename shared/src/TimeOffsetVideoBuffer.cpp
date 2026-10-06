@@ -8,7 +8,22 @@
 void TimeOffsetVideoBuffer::configure(const Settings& settings_) {
 	settings = settings_;
 	playheads.assign(std::max(1, settings.numPlayheads), Playhead{});
+	resetHistoryAndPlayheadTextures();
+}
+
+void TimeOffsetVideoBuffer::resetHistoryAndPlayheadTextures() {
 	history.clear();
+	// TEMP-004: the GPU-side playhead textures are part of the history's
+	// presentable state. Leaving them allocated across a reset let callers
+	// (whose contract is "unallocated => no frame yet, skip") draw the last
+	// pre-reset frame — previous activation or previous media — for every
+	// frame until the new history refilled.
+	for (auto& ph : playheads) {
+		if (ph.texture.isAllocated()) {
+			ph.texture.clear();
+		}
+		ph.uploadedThisFrame = false;
+	}
 }
 
 void TimeOffsetVideoBuffer::setup(const std::string& mediaFolderPath, const Settings& settings_) {
@@ -79,7 +94,7 @@ void TimeOffsetVideoBuffer::advanceToNextMedia() {
 			std::swap(mediaFiles[0], mediaFiles[1 + static_cast<int>(ofRandom(mediaFiles.size() - 1))]);
 		}
 	}
-	history.clear(); // buffered frames are from the previous source — stale, discard
+	resetHistoryAndPlayheadTextures(); // buffered frames are from the previous source — stale, discard
 
 	player.close();
 	mediaLoaded = player.load(mediaFiles[currentFileIndex]);
@@ -98,7 +113,7 @@ void TimeOffsetVideoBuffer::advanceToNextMedia() {
 bool TimeOffsetVideoBuffer::loadExplicit(const std::string& absolutePath) {
 	// No scan, no shuffle, no playlist mutation, no fallback selection —
 	// mediaFiles/currentFileIndex are deliberately untouched here (DEC-014).
-	history.clear();
+	resetHistoryAndPlayheadTextures();
 
 	player.close();
 	mediaLoaded = player.load(absolutePath);

@@ -12,3 +12,6 @@
 !**/bin/data/media
 **/bin/data/media/*
 !**/bin/data/media/.gitkeep
+
+# Raspberry Pi deployment
+scripts/deploy.local.env

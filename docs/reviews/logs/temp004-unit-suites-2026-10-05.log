@@ -1,0 +1,27 @@
+./lifecycle_state_tests
+78/78 checks passed
+./session2_integration_tests
+42/42 checks passed
+./blob_semantic_mapping_tests
+68/68 checks passed
+./temporal_semantic_mapping_tests
+PASS — 34 checks, 0 failures
+./scene_switch_controller_tests
+PASS — 127 checks, 0 failures
+./tf_timeline_tests
+96/96 checks passed
+ALL PASSED
+./media_catalog_tests
+38/38 checks passed
+./video_selection_policy_tests
+113/113 checks passed
+./effect_knowledge_extension_tests
+93/93 checks passed
+./hud_presentation_tests
+713/713 checks passed.
+./hud_real_frame_tests
+140/140 checks passed.
+./hud_media_viewport_tests
+357/357 checks passed.
+./hud_typography_tests
+14/14 checks passed.

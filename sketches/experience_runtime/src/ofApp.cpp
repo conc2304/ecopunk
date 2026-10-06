@@ -35,8 +35,11 @@ void ofApp::setup() {
 	// deterministic startup), so it never selects the Temporal startup.
 	bool switchHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
 		&& !temporalLifecycleRequested && SceneSwitchHarness::isRequested();
+	// RT-002: lowest priority; always starts in Blob (deterministic startup).
+	bool acceptanceRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && TwoSceneAcceptanceHarness::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
-		|| (!switchHarnessRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
+		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
 	if (!glHarnessRequested) {
 		if (wantTemporalScene) {
@@ -57,11 +60,13 @@ void ofApp::setup() {
 		temporalHarness = std::make_unique<TemporalLifecycleHarness>(runtime);
 	} else if (switchHarnessRequested) {
 		switchHarness = std::make_unique<SceneSwitchHarness>(runtime);
+	} else if (acceptanceRequested) {
+		acceptanceHarness = std::make_unique<TwoSceneAcceptanceHarness>(runtime);
 	}
 }
 
 void ofApp::update() {
-	if (!blobHarness && !temporalHarness && !switchHarness) {
+	if (!blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness) {
 		// Normal path and GL-harness path both want runtime.update()
 		// called exactly once per real tick, unconditionally, here — see
 		// GlRestorationHarness.h's own "call step() AFTER runtime.update()"
@@ -86,10 +91,13 @@ void ofApp::update() {
 	if (switchHarness) {
 		switchHarness->step(ofGetLastFrameTime());
 	}
+	if (acceptanceHarness) {
+		acceptanceHarness->step(ofGetLastFrameTime());
+	}
 }
 
 void ofApp::draw() {
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness) {
 		runtime.draw();
 	}
 	// When a harness is active, it drives runtime.draw() itself (see

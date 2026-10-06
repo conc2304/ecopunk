@@ -144,6 +144,12 @@ class TimeOffsetVideoBuffer {
 		// Uploads (once per frame, at most) and returns the texture for a
 		// playhead's current buffered frame. Safe to call from multiple
 		// fragments referencing the same playhead in the same frame.
+		//
+		// While history is empty — before the first decoded frame, and
+		// after every history reset (load, media change, reactivation
+		// reload) — the returned texture is UNALLOCATED. Callers already
+		// treat !isAllocated() as "no valid frame yet, draw nothing";
+		// imagery uploaded before a reset is never returned (TEMP-004).
 		const ofTexture& getPlayheadTexture(int playheadIndex);
 
 		// The live ofVideoPlayer's own texture directly — full resolution,
@@ -195,6 +201,14 @@ class TimeOffsetVideoBuffer {
 		};
 
 		int offsetToHistoryIndex(float quantizedOffset) const;
+
+		// The only way history is ever reset. Clears the CPU history AND
+		// releases every playhead's GPU texture, so a frame uploaded before
+		// the reset (previous media, previous activation) can never be
+		// presented as current while the new history is still empty.
+		// Playhead offsets/motion are untouched; textures are re-allocated
+		// by getPlayheadTexture() from the first new history frame.
+		void resetHistoryAndPlayheadTextures();
 
 		// Fisher-Yates shuffle of mediaFiles via ofRandom (same idiom as
 		// TFHudLayer::respawnLayout()'s corner shuffle) — called once in

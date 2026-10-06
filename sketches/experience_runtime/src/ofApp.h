@@ -6,6 +6,7 @@
 #include "GlRestorationHarness.h"
 #include "SceneSwitchHarness.h"
 #include "TemporalLifecycleHarness.h"
+#include "TwoSceneAcceptanceHarness.h"
 
 #include <memory>
 
@@ -42,4 +43,5 @@ private:
 	std::unique_ptr<BlobLifecycleHarness> blobHarness;
 	std::unique_ptr<TemporalLifecycleHarness> temporalHarness;
 	std::unique_ptr<SceneSwitchHarness> switchHarness;
+	std::unique_ptr<TwoSceneAcceptanceHarness> acceptanceHarness; // RT-002
 };

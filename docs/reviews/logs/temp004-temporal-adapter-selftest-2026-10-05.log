@@ -1,0 +1,222 @@
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFActivityStatusSelfTest: PASS: 25/25 checks passed
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.dither.selftest_compatible' for effect 'dither'
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.pixel_sorting.selftest_override_good' for effect 'pixel_sorting'
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.dither.selftest_effect_default' for effect 'dither'
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_b' for effect 'channelshift'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.channelshift.selftest_multi_a' for effect 'channelshift'
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.dither.selftest_not_blocked' for effect 'dither'
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEffectPicker: applying canonical eligible preset 'preset.hue_rotate.selftest_clean_a' for effect 'hue_rotate'
+[notice ] TFEligibilitySelfTest: PASS: 19/19 checks passed
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-05 22:36:31.678 temporal-fields[44018:624778] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] TFVideoAdapterSelfTest: startup selection: /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_ladybug-among-plants-in-green-nature_23796343.mp4 (960x540)
+[notice ] TFParameterPanel: new waypoint -> /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/temporal-fields/bin/data/presets/manifest.json (bsp)
+[notice ] TFAmbientTextureLayer: loaded 19 background texture(s) from backgrounds
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-05 22:36:34.312 temporal-fields[44018:624778] video file loaded at 960 x 540 @ 24.000000 fps
+2026-10-05 22:36:34.329 temporal-fields[44018:624778] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/2025-06-24T03-56-10_orbit_left_make_the.mp4
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFImageCycler: no images found in backgrounds
+[notice ] TFComposition: pattern -> BSP seed=46598
+[notice ] ofApp: active pattern -> BSP
+2026-10-05 22:36:35.049 temporal-fields[44018:624704] video file loaded at 960 x 540 @ 29.970030 fps
+2026-10-05 22:36:35.064 temporal-fields[44018:624704] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4
+2026-10-05 22:36:35.209 temporal-fields[44018:624778] video file loaded at 960 x 540 @ 24.000000 fps
+2026-10-05 22:36:35.232 temporal-fields[44018:625034] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_ladybug-among-plants-in-green-nature_23796343.mp4
+2026-10-05 22:36:35.251 temporal-fields[44018:624778] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_ladybug-among-plants-in-green-nature_23796343.mp4
+2026-10-05 22:36:35.438 temporal-fields[44018:625084] video file loaded at 960 x 540 @ 29.970030 fps
+2026-10-05 22:36:35.461 temporal-fields[44018:625084] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4
+[notice ] TFVideoAdapterSelfTest: TEMP-004 EVENT 1 type=media-change mediaId=media.auto.97b545fd path=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4 (pre-clear=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_ladybug-among-plants-in-green-nature_23796343.mp4) staleFrames=0 firstValidHistoryFrame=4 history=1/72 playheads=6 allocated=6 reloads=4
+2026-10-05 22:36:35.774 temporal-fields[44018:624778] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4
+[notice ] TFVideoAdapterSelfTest: TEMP-004 EVENT 2 type=reactivation mediaId=media.auto.97b545fd path=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4 (pre-clear=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4) staleFrames=0 firstValidHistoryFrame=7 history=1/72 playheads=6 allocated=6 reloads=5
+2026-10-05 22:36:36.035 temporal-fields[44018:625081] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4
+[notice ] TFVideoAdapterSelfTest: TEMP-004 EVENT 3 type=reactivation mediaId=media.auto.97b545fd path=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4 (pre-clear=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4) staleFrames=0 firstValidHistoryFrame=7 history=1/72 playheads=6 allocated=6 reloads=6
+2026-10-05 22:36:36.361 temporal-fields[44018:624778] video file loaded at 960 x 540 @ 29.970030 fps
+2026-10-05 22:36:36.385 temporal-fields[44018:624778] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turquoise-waves-rolled-on-the-rocks-beach-of-koh-miang_11120414.mp4
+[notice ] TFHudLayer: connection threads: 1 reassign events/2s (1 spawned, 0 throttled), 3 alive now
+[notice ] TFVideoAdapterSelfTest: TEMP-004 EVENT 4 type=media-change mediaId=media.auto.9a8649a1 path=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turquoise-waves-rolled-on-the-rocks-beach-of-koh-miang_11120414.mp4 (pre-clear=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4) staleFrames=0 firstValidHistoryFrame=5 history=1/72 playheads=6 allocated=6 reloads=7
+2026-10-05 22:36:36.690 temporal-fields[44018:624778] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turquoise-waves-rolled-on-the-rocks-beach-of-koh-miang_11120414.mp4
+[notice ] TFVideoAdapterSelfTest: TEMP-004 EVENT 5 type=reactivation mediaId=media.auto.9a8649a1 path=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turquoise-waves-rolled-on-the-rocks-beach-of-koh-miang_11120414.mp4 (pre-clear=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turquoise-waves-rolled-on-the-rocks-beach-of-koh-miang_11120414.mp4) staleFrames=0 firstValidHistoryFrame=6 history=1/72 playheads=6 allocated=6 reloads=8
+2026-10-05 22:36:36.962 temporal-fields[44018:624705] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turquoise-waves-rolled-on-the-rocks-beach-of-koh-miang_11120414.mp4
+[notice ] TFVideoAdapterSelfTest: TEMP-004 EVENT 6 type=reactivation mediaId=media.auto.9a8649a1 path=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turquoise-waves-rolled-on-the-rocks-beach-of-koh-miang_11120414.mp4 (pre-clear=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turquoise-waves-rolled-on-the-rocks-beach-of-koh-miang_11120414.mp4) staleFrames=0 firstValidHistoryFrame=7 history=1/72 playheads=6 allocated=6 reloads=9
+2026-10-05 22:36:37.224 temporal-fields[44018:625081] video file loaded at 960 x 540 @ 23.976025 fps
+2026-10-05 22:36:37.256 temporal-fields[44018:624741] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_arashiyama-bamboo-grove-which-is-a-natural-forest-of-bamboo_12932507.mp4
+[notice ] TFVideoAdapterSelfTest: TEMP-004 EVENT 7 type=media-change mediaId=media.auto.cba6721d path=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_arashiyama-bamboo-grove-which-is-a-natural-forest-of-bamboo_12932507.mp4 (pre-clear=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turquoise-waves-rolled-on-the-rocks-beach-of-koh-miang_11120414.mp4) staleFrames=0 firstValidHistoryFrame=6 history=1/72 playheads=6 allocated=6 reloads=10
+2026-10-05 22:36:37.729 temporal-fields[44018:625127] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_arashiyama-bamboo-grove-which-is-a-natural-forest-of-bamboo_12932507.mp4
+[notice ] TFVideoAdapterSelfTest: TEMP-004 EVENT 8 type=reactivation mediaId=media.auto.cba6721d path=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_arashiyama-bamboo-grove-which-is-a-natural-forest-of-bamboo_12932507.mp4 (pre-clear=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_arashiyama-bamboo-grove-which-is-a-natural-forest-of-bamboo_12932507.mp4) staleFrames=0 firstValidHistoryFrame=7 history=1/72 playheads=6 allocated=6 reloads=11
+[notice ] TFVideoAdapterSelfTest: TEMP-004 SUMMARY reactivations=5 mediaChanges=3 staleAfterReactivation=0 staleAfterMediaChange=0
+2026-10-05 22:36:37.955 temporal-fields[44018:625084] error loading asset tracks: The operation could not be completed
+[warning] TimeOffsetVideoBuffer: loadExplicit: failed to load /this/path/does/not/exist/on/disk/selftest.mp4
+[notice ] TFVideoAdapterSelfTest: PASS: 139/139 checks passed
+[notice ] TFHudLayer: connection threads: 2 reassign events/2s (0 spawned, 2 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 5 reassign events/2s (1 spawned, 4 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 10 reassign events/2s (1 spawned, 9 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 2 reassign events/2s (1 spawned, 1 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 1 reassign events/2s (1 spawned, 0 throttled), 3 alive now
+[notice ] TFHudLayer: connection threads: 7 reassign events/2s (0 spawned, 7 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+2026-10-05 22:37:04.498 temporal-fields[44018:625035] video file loaded at 960 x 540 @ 29.970030 fps
+2026-10-05 22:37:04.524 temporal-fields[44018:624778] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_lilly-flower-blooming-time-lapse-on-black-background_23006120_1.mp4
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 9 reassign events/2s (1 spawned, 8 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 1 reassign events/2s (0 spawned, 1 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 7 reassign events/2s (1 spawned, 6 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 17 reassign events/2s (1 spawned, 16 throttled), 0 alive now
+[notice ] TFParameterPanel: new waypoint -> /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/temporal-fields/bin/data/presets/quiet_canopy.json (blobgrid)
+[notice ] TFComposition: pattern -> BLOB_GRID seed=711882
+[notice ] ofApp: active pattern -> BLOB_GRID
+[notice ] TFHudLayer: connection threads: 1 reassign events/2s (1 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 0 reassign events/2s (0 spawned, 0 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 28 reassign events/2s (1 spawned, 27 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 115 reassign events/2s (1 spawned, 114 throttled), 0 alive now
+2026-10-05 22:37:34.538 temporal-fields[44018:625083] video file loaded at 960 x 540 @ 30.000000 fps
+2026-10-05 22:37:34.569 temporal-fields[44018:625045] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_closeup-and-moving-slowly-over-lush-foliage-fern-near-the_42675446.mp4
+[notice ] TFHudLayer: connection threads: 10 reassign events/2s (1 spawned, 9 throttled), 0 alive now
+[notice ] TFHudLayer: connection threads: 201 reassign events/2s (1 spawned, 200 throttled), 0 alive now
+exit=124

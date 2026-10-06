@@ -1,0 +1,619 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-05 21:15:36.409 experience_runtime[32287:534206] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] TwoSceneAcceptance: RT-002 Blob <-> Temporal 20-cycle production switching acceptance (EXPERIENCE_RUNTIME_TWO_SCENE_ACCEPTANCE)
+[notice ] TwoSceneAcceptance: PASS — [frame 0] §1 registry = [blob-region-prototype, temporal-fields] (order fixed): registry=blob-region-prototype,temporal-fields
+[notice ] TwoSceneAcceptance: PASS — [frame 0] §1 FakeScene not in production registry: fake=fake-scene
+[notice ] TwoSceneAcceptance: REGISTRY [0] id=blob-region-prototype displayName="Blob Region Prototype" native=1280x720
+[notice ] TwoSceneAcceptance: REGISTRY [1] id=temporal-fields displayName="Temporal Fields" native=1280x720
+[notice ] TwoSceneAcceptance: PASS — [frame 0] §1 startup scene = Blob, Idle: active=blob-region-prototype
+[notice ] TwoSceneAcceptance: STARTUP capabilities (Blob): Next Previous 
+[notice ] TwoSceneAcceptance: PASS — [frame 0] §1 startup: Blob setup=1 activate=1 capabilityQueries=1; Temporal not yet set up
+[notice ] TwoSceneAcceptance: BASELINE gl={scissor=0 stencil=0 program=0 tex2D=0 fbo=0 | blend=1/770/771 viewport=0,0,1280x720 mv=1.00,0.00,-0.00,0.00,-0.00,1.00,-0.00,0.00,0.00,0.00,1.00,0.00,-640.00,-360.00,-623.54,1.00, style=1/1/1/1,1,1,1} hudGeometry=54v [25.6,115.2]-[793.6,619.2]
+[notice ] TwoSceneAcceptance: PASS — [frame 60] warmup: 60 live Blob frames, effects missing, GL fixed baseline
+[notice ] TwoSceneAcceptance: PASS — [frame 60] [cycle1_blob_to_temporal] outgoing owner is blob-region-prototype
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] TwoSceneAcceptance: PASS — [frame 60] [cycle1_blob_to_temporal] NextScene accepted via InputRouter: FadingOut, pending=temporal-fields, active=blob-region-prototype, outgoing deactivated once, outgoing capabilities withdrawn
+[notice ] TwoSceneAcceptance: PASS — [frame 61] [cycle1_blob_to_temporal] FadingOut 1/12: retained static outgoing frame unchanged; outgoing identity current; progress=0.08
+[notice ] TwoSceneAcceptance: captured captures/rt002_cycle1_blob_to_temporal_1_fadingout.png (1280x720 window)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 62] [cycle1_blob_to_temporal] §3 switch commands during FadingOut rejected; no queued second switch
+[notice ] TwoSceneAcceptance: PASS — [frame 72] [cycle1_blob_to_temporal] FadingOut 12/12: retained static outgoing frame unchanged; outgoing identity current; progress=1.00
+2026-10-05 21:15:38.480 experience_runtime[32287:534132] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_aerial-view-of-white-sand-beach-and-water-surface-texture_7536781.mp4
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] TFAmbientTextureLayer: loaded 19 background texture(s) from backgrounds
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFImageCycler: no images found in backgrounds
+[notice ] TwoSceneAcceptance: PASS — [frame 73] [cycle1_blob_to_temporal] Loading: ownership released (no identity/semantics/effects/capabilities), pending=temporal-fields, static frame retained, incoming setup<=1 and not yet active: setup=1
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 73] [cycle1_blob_to_temporal] §3 switch command during Loading rejected
+[notice ] TwoSceneAcceptance: captured captures/rt002_cycle1_blob_to_temporal_2_loading.png (1280x720 window)
+[notice ] TFComposition: pattern -> BSP seed=396309
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] TwoSceneAcceptance: PASS — [frame 74] [cycle1_blob_to_temporal] first incoming frame: owner=temporal-fields, status/HUD profile from incoming only
+[notice ] TwoSceneAcceptance: PASS — [frame 74] [cycle1_blob_to_temporal] §4 incoming activated once; capabilities queried once; capabilityQueries == successfulActivations: activations=1 capabilityQueries=1
+[notice ] TwoSceneAcceptance: PASS — [frame 74] [cycle1_blob_to_temporal] §2 first incoming frame: one update, one status pull, one draw; setup total=1
+[notice ] TwoSceneAcceptance: PASS — [frame 74] [cycle1_blob_to_temporal] §4 capabilities = incoming scene's own (not merged); unsupported not advertised: commands=2
+[notice ] TwoSceneAcceptance: PASS — [frame 74] [cycle1_blob_to_temporal] §6 effects: Blob missing -> Temporal present
+[notice ] TwoSceneAcceptance: PASS — [frame 74] [cycle1_blob_to_temporal] §7/§12 Temporal history follows current canonical media on activation: adapter=media.auto.4a618eef canonical=media.auto.4a618eef
+[notice ] TwoSceneAcceptance: PASS — [frame 74] [cycle1_blob_to_temporal] §10 incoming live frame replaced the static outgoing frame at FadingIn (no stale outgoing image)
+[notice ] TwoSceneAcceptance: PASS — [frame 74] [cycle1_blob_to_temporal] same-size switch: no scene FBO reallocation
+[notice ] TwoSceneAcceptance: captured captures/rt002_cycle1_blob_to_temporal_3_first_incoming.png (1280x720 window)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 75] [cycle1_blob_to_temporal] §3 switch command during FadingIn rejected
+[notice ] TwoSceneAcceptance: PASS — [frame 86] [cycle1_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: PASS — [frame 87] [cycle1_blob_to_temporal] §9 semantic payload is temporal-fields's only (state + metrics), absent values not zero-filled; HUD profile = temporal-fields: state=scene.temporal.state.running metrics=scene.temporal.metric.pattern,scene.temporal.metric.history_fill,scene.temporal.metric.playhead_count
+[notice ] TwoSceneAcceptance: MEDIA intentional NextMedia during Temporal dwell (key -> InputRouter -> SceneCommand -> active scene -> VideoPlaybackService) at frame 116: from=media.auto.4a618eef file=/Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_aerial-view-of-white-sand-beach-and-water-surface-texture_7536781.mp4 history=39
+2026-10-05 21:15:43.247 experience_runtime[32287:534508] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] ExperienceRuntime: SceneCommand dispatched, accepted=1
+2026-10-05 21:15:43.270 experience_runtime[32287:534508] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turbulent-stormy-ocean-waves-detail-slow-motion_68288030.mp4
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 117 (active=temporal-fields): media.auto.4a618eef -> media.auto.0c211943
+[notice ] TwoSceneAcceptance: captured captures/rt002_cycle1_blob_to_temporal_4_steady.png (1280x720 window)
+[notice ] TwoSceneAcceptance: PASS — [frame 146] [cycle1_blob_to_temporal] §2 no inactive updates/draws/status pulls for blob-region-prototype across transition + dwell
+[notice ] TwoSceneAcceptance: PASS — [frame 146] [cycle1_blob_to_temporal] §5 incoming: status pulls == updates == draws == live frames; >= 60 active frames: activeFrames=73
+[notice ] TwoSceneAcceptance: PASS — [frame 146] §7 mandatory live media change while Temporal active: selection -> adapter follow -> history clear -> refill from new media: from=media.auto.4a618eef to=media.auto.0c211943 issued@116 selection@117 adapter@117 historyClear@117 refilled(>=10)@133 file /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_aerial-view-of-white-sand-beach-and-water-surface-texture_7536781.mp4 -> /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turbulent-stormy-ocean-waves-detail-slow-motion_68288030.mp4
+[notice ] TwoSceneAcceptance: PASS — [frame 146] [cycle1_temporal_to_blob] outgoing owner is temporal-fields
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] TwoSceneAcceptance: PASS — [frame 146] [cycle1_temporal_to_blob] PreviousScene accepted via InputRouter: FadingOut, pending=blob-region-prototype, active=temporal-fields, outgoing deactivated once, outgoing capabilities withdrawn
+[notice ] TwoSceneAcceptance: PASS — [frame 147] [cycle1_temporal_to_blob] FadingOut 1/12: retained static outgoing frame unchanged; outgoing identity current; progress=0.08
+[notice ] TwoSceneAcceptance: captured captures/rt002_cycle1_temporal_to_blob_1_fadingout.png (1280x720 window)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 148] [cycle1_temporal_to_blob] §3 switch commands during FadingOut rejected; no queued second switch
+[notice ] TwoSceneAcceptance: PASS — [frame 158] [cycle1_temporal_to_blob] FadingOut 12/12: retained static outgoing frame unchanged; outgoing identity current; progress=1.00
+[notice ] TwoSceneAcceptance: PASS — [frame 159] [cycle1_temporal_to_blob] Loading: ownership released (no identity/semantics/effects/capabilities), pending=blob-region-prototype, static frame retained, incoming setup<=1 and not yet active: setup=1
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 159] [cycle1_temporal_to_blob] §3 switch command during Loading rejected
+[notice ] TwoSceneAcceptance: captured captures/rt002_cycle1_temporal_to_blob_2_loading.png (1280x720 window)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] TwoSceneAcceptance: PASS — [frame 160] [cycle1_temporal_to_blob] first incoming frame: owner=blob-region-prototype, status/HUD profile from incoming only
+[notice ] TwoSceneAcceptance: PASS — [frame 160] [cycle1_temporal_to_blob] §4 incoming activated once; capabilities queried once; capabilityQueries == successfulActivations: activations=2 capabilityQueries=2
+[notice ] TwoSceneAcceptance: PASS — [frame 160] [cycle1_temporal_to_blob] §2 first incoming frame: one update, one status pull, one draw; setup total=1
+[notice ] TwoSceneAcceptance: PASS — [frame 160] [cycle1_temporal_to_blob] §4 capabilities = incoming scene's own (not merged); unsupported not advertised: commands=2
+[notice ] TwoSceneAcceptance: PASS — [frame 160] [cycle1_temporal_to_blob] §6 effects: Temporal present -> Blob missing (no stale Temporal effects)
+[notice ] TwoSceneAcceptance: FAIL — [frame 160] [cycle1_temporal_to_blob] §12 Blob scratch FBOs valid after Temporal (fragment allocated; background unallocated per accepted Blob state): fragment=0x0 background=0x0
+[notice ] TwoSceneAcceptance: PASS — [frame 160] [cycle1_temporal_to_blob] §10 incoming live frame replaced the static outgoing frame at FadingIn (no stale outgoing image)
+[notice ] TwoSceneAcceptance: PASS — [frame 160] [cycle1_temporal_to_blob] same-size switch: no scene FBO reallocation
+[notice ] TwoSceneAcceptance: captured captures/rt002_cycle1_temporal_to_blob_3_first_incoming.png (1280x720 window)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 161] [cycle1_temporal_to_blob] §3 switch command during FadingIn rejected
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 160x64
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 164x68
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 216x68
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 216x84
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 216x152
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 224x152
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 228x152
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 240x268
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1224x268
+[notice ] TwoSceneAcceptance: PASS — [frame 172] [cycle1_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: PASS — [frame 173] [cycle1_temporal_to_blob] §9 semantic payload is blob-region-prototype's only (state + metrics), absent values not zero-filled; HUD profile = blob-region-prototype: state=scene.blob.state.fragmenting metrics=scene.blob.metric.region_count,scene.blob.metric.fragment_count,scene.blob.metric.occupied_area
+[notice ] TwoSceneAcceptance: captured captures/rt002_cycle1_temporal_to_blob_4_steady.png (1280x720 window)
+[notice ] TwoSceneAcceptance: PASS — [frame 232] [cycle1_temporal_to_blob] §2 no inactive updates/draws/status pulls for temporal-fields across transition + dwell
+[notice ] TwoSceneAcceptance: PASS — [frame 232] [cycle1_temporal_to_blob] §5 incoming: status pulls == updates == draws == live frames; >= 60 active frames: activeFrames=73
+[notice ] TwoSceneAcceptance: RESOURCE cycle=1 frame=232 residentMB=390 netAllocs=3332 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1224x268 blobBgScratch=0x0 temporalHistory=23/72 playheads=6 adapterReloads=2 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:15:50.277 experience_runtime[32287:534704] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_turbulent-stormy-ocean-waves-detail-slow-motion_68288030.mp4
+[notice ] TFComposition: pattern -> BSP seed=194317
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 258] [cycle2_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 344] [cycle2_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+2026-10-05 21:15:51.419 experience_runtime[32287:534704] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] ExperienceRuntime: SceneCommand dispatched, accepted=1
+[notice ] TwoSceneAcceptance: MEDIA intentional NextMedia during Blob dwell at frame 374 from=media.auto.0c211943
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 375 (active=blob-region-prototype): media.auto.0c211943 -> media.auto.e281a2b4
+[notice ] TwoSceneAcceptance: PASS — [frame 376] §7 canonical media change during Blob dwell (HudFrameData.video follows the canonical service): media.auto.0c211943 -> media.auto.e281a2b4
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1224x368
+[notice ] TwoSceneAcceptance: RESOURCE cycle=2 frame=404 residentMB=409 netAllocs=3430 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1224x368 blobBgScratch=0x0 temporalHistory=66/72 playheads=6 adapterReloads=3 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:15:51.815 experience_runtime[32287:534704] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_waves-crashing-on-rocky-shore-in-tenerife-spain-during_78086617.mp4
+[notice ] TFComposition: pattern -> BSP seed=158873
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] TwoSceneAcceptance: PASS — [frame 418] §7 media changed during Blob dwell is followed by the next Temporal activation: changedDuringBlob=media.auto.e281a2b4 canonicalNow=media.auto.e281a2b4 adapter=media.auto.e281a2b4
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 430] [cycle3_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 516] [cycle3_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=3 frame=576 residentMB=414 netAllocs=3425 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1224x368 blobBgScratch=0x0 temporalHistory=66/72 playheads=6 adapterReloads=4 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:15:54.657 experience_runtime[32287:534511] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_waves-crashing-on-rocky-shore-in-tenerife-spain-during_78086617.mp4
+[notice ] TFComposition: pattern -> BSP seed=29557
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 602] [cycle4_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 688] [cycle4_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=4 frame=748 residentMB=414 netAllocs=3434 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1224x368 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=5 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:16:00.454 experience_runtime[32287:534510] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_waves-crashing-on-rocky-shore-in-tenerife-spain-during_78086617.mp4
+[notice ] TFComposition: pattern -> BSP seed=550091
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 774] [cycle5_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 860] [cycle5_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=5 frame=920 residentMB=417 netAllocs=3439 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1224x368 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=6 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:16:06.254 experience_runtime[32287:534710] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_waves-crashing-on-rocky-shore-in-tenerife-spain-during_78086617.mp4
+[notice ] TFComposition: pattern -> BSP seed=629285
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 946] [cycle6_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 1032] [cycle6_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=6 frame=1092 residentMB=417 netAllocs=3436 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1224x368 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=7 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:16:12.054 experience_runtime[32287:534507] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_waves-crashing-on-rocky-shore-in-tenerife-spain-during_78086617.mp4
+[notice ] TFComposition: pattern -> BSP seed=139240
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 1118] [cycle7_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 1204] [cycle7_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=7 frame=1264 residentMB=417 netAllocs=3488 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1224x368 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=8 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:16:17.857 experience_runtime[32287:534704] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_waves-crashing-on-rocky-shore-in-tenerife-spain-during_78086617.mp4
+[notice ] TFComposition: pattern -> BSP seed=904603
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 1290] [cycle8_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 1376] [cycle8_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+2026-10-05 21:16:21.793 experience_runtime[32287:535268] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 1395 (active=blob-region-prototype): media.auto.e281a2b4 -> media.auto.e50e19fd
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1224x512
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1272x712
+[notice ] TwoSceneAcceptance: RESOURCE cycle=8 frame=1436 residentMB=415 netAllocs=3472 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=9 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:16:23.654 experience_runtime[32287:534510] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_close-up-of-a-snail-on-a-green-grass_12322900.mp4
+[notice ] TFComposition: pattern -> BSP seed=237543
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 1462] [cycle9_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 1548] [cycle9_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=9 frame=1608 residentMB=415 netAllocs=3469 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=10 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:16:29.457 experience_runtime[32287:535267] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_close-up-of-a-snail-on-a-green-grass_12322900.mp4
+[notice ] TFComposition: pattern -> BSP seed=377971
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 1634] [cycle10_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+2026-10-05 21:16:51.929 experience_runtime[32287:534604] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 2296 (active=temporal-fields): media.auto.e50e19fd -> media.auto.65b7fdf1
+2026-10-05 21:16:51.955 experience_runtime[32287:534206] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_bottom-up-view-of-lush-foliage-big-trees-with-blue-sky_36250205.mp4
+2026-10-05 21:17:21.962 experience_runtime[32287:534710] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 3197 (active=temporal-fields): media.auto.65b7fdf1 -> media.auto.cba6721d
+2026-10-05 21:17:21.991 experience_runtime[32287:534604] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_arashiyama-bamboo-grove-which-is-a-natural-forest-of-bamboo_12932507.mp4
+2026-10-05 21:17:51.998 experience_runtime[32287:534509] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 4098 (active=temporal-fields): media.auto.cba6721d -> media.auto.1a8db9c7
+2026-10-05 21:17:52.028 experience_runtime[32287:534206] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/nature-path-in-lined-with-trees-in-forest.mp4
+[notice ] TFComposition: pattern -> BLOB_GRID seed=202479
+[notice ] TwoSceneAcceptance: PATTERN natural change #1 at frame 4322: type 0 -> 1 (observed 0 PATTERN_TRANSITION frames observed before this frame; transition length is logged when the phase ends)
+[notice ] TwoSceneAcceptance: PATTERN_TRANSITION ended at frame 4323 after 1 frames (max progress~0.00)
+2026-10-05 21:18:22.029 experience_runtime[32287:534170] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 4999 (active=temporal-fields): media.auto.1a8db9c7 -> media.auto.5c185454
+2026-10-05 21:18:22.057 experience_runtime[32287:534705] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_ladybug-among-plants-in-green-nature_23796343.mp4
+2026-10-05 21:18:52.065 experience_runtime[32287:534604] video file loaded at 960 x 540 @ 30.000002 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 5900 (active=temporal-fields): media.auto.5c185454 -> media.auto.479b063e
+2026-10-05 21:18:52.090 experience_runtime[32287:534604] video file loaded at 960 x 540 @ 30.000002 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_burning-bonfire-in-nature-burning-firewood-slow-motion_39404124.mp4
+2026-10-05 21:19:22.098 experience_runtime[32287:534506] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 6801 (active=temporal-fields): media.auto.479b063e -> media.auto.dfe053fb
+2026-10-05 21:19:22.127 experience_runtime[32287:534506] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_closeup-and-moving-slowly-over-lush-foliage-fern-near-the_42675446.mp4
+[notice ] TFComposition: pattern -> BANDS seed=729244
+[notice ] TwoSceneAcceptance: PATTERN natural change #2 at frame 7024: type 1 -> 2 (observed 0 PATTERN_TRANSITION frames observed before this frame; transition length is logged when the phase ends)
+[notice ] TwoSceneAcceptance: PATTERN_TRANSITION ended at frame 7025 after 1 frames (max progress~0.00)
+2026-10-05 21:19:52.131 experience_runtime[32287:534604] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 7702 (active=temporal-fields): media.auto.dfe053fb -> media.auto.1f0329b7
+2026-10-05 21:19:52.160 experience_runtime[32287:537607] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/2025-06-23T18-22-21_the_flower_is.mp4
+2026-10-05 21:20:22.167 experience_runtime[32287:534604] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 8603 (active=temporal-fields): media.auto.1f0329b7 -> media.auto.97b545fd
+2026-10-05 21:20:22.195 experience_runtime[32287:534604] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4
+2026-10-05 21:20:52.200 experience_runtime[32287:535267] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 9504 (active=temporal-fields): media.auto.97b545fd -> media.auto.9fc43161
+2026-10-05 21:20:52.226 experience_runtime[32287:534710] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_black-centipede-in-the-wild_1971372.mp4
+[notice ] TFComposition: pattern -> COLUMN_GRID seed=929191
+[notice ] TwoSceneAcceptance: PATTERN natural change #3 at frame 9726: type 2 -> 3 (observed 0 PATTERN_TRANSITION frames observed before this frame; transition length is logged when the phase ends)
+[notice ] TwoSceneAcceptance: MID-TFFRAGMENTTRANSITION frame=9734 active=temporal-fields patternType=3 semanticState=scene.temporal.state.transitioning phaseElapsed=0.267s progress~0.33 sceneFbo=1280x720 windowViewport=1280x720 framebuffer=0 hudProfile=temporal-fields hudBindings=19 hudDraws=9734 hudGeometry=54v [25.6,115.2]-[793.6,619.2] gl={scissor=0 stencil=0 program=0 tex2D=0 fbo=0 | blend=1/770/771 viewport=0,0,1280x720 mv=1.00,0.00,-0.00,0.00,-0.00,1.00,-0.00,0.00,0.00,0.00,1.00,0.00,-640.00,-360.00,-623.54,1.00, style=1/1/1/1,1,1,1}
+[notice ] TwoSceneAcceptance: PASS — [frame 9734] §11 mid-TFFragmentTransition captured under ExperienceRuntime: Temporal active, HUD geometry unchanged, no scissor/shader/texture/framebuffer leak, viewport correct: progress~0.33
+[notice ] TwoSceneAcceptance: PASS — [frame 9734] §11 mid-transition: no stale Blob content (scene FBO differs from last Blob static frame)
+[notice ] TwoSceneAcceptance: captured captures/rt002_mid_tffragmenttransition.png (1280x720 window)
+[notice ] TwoSceneAcceptance: PASS — [frame 9734] §11 frame after mid-TFFragmentTransition valid (texture, GL/FBO baseline, HUD geometry): scissor=0 stencil=0 program=0 tex2D=0 fbo=0 | blend=1/770/771 viewport=0,0,1280x720 mv=1.00,0.00,-0.00,0.00,-0.00,1.00,-0.00,0.00,0.00,0.00,1.00,0.00,-640.00,-360.00,-623.54,1.00, style=1/1/1/1,1,1,1
+[notice ] TwoSceneAcceptance: PATTERN_TRANSITION ended at frame 9735 after 9 frames (max progress~0.33)
+[notice ] TwoSceneAcceptance: PASS — [frame 9735] §11 natural mid-TFFragmentTransition captured during the extended cycle-10 Temporal activation: dwellFrames=8101 naturalPatternChanges=3
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 9761] [cycle10_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=10 frame=9821 residentMB=436 netAllocs=3957 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=72/72 playheads=6 adapterReloads=20 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:21:03.299 experience_runtime[32287:534604] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_black-centipede-in-the-wild_1971372.mp4
+[notice ] TFComposition: pattern -> BSP seed=894029
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 9847] [cycle11_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 9933] [cycle11_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=11 frame=9993 residentMB=420 netAllocs=3715 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=21 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:21:09.098 experience_runtime[32287:534704] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_black-centipede-in-the-wild_1971372.mp4
+[notice ] TFComposition: pattern -> BSP seed=382188
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10019] [cycle12_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10105] [cycle12_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=12 frame=10165 residentMB=420 netAllocs=3670 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=22 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:21:14.899 experience_runtime[32287:534208] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_black-centipede-in-the-wild_1971372.mp4
+[notice ] TFComposition: pattern -> BSP seed=865933
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10191] [cycle13_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10277] [cycle13_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=13 frame=10337 residentMB=420 netAllocs=3687 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=23 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:21:20.699 experience_runtime[32287:535267] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_black-centipede-in-the-wild_1971372.mp4
+[notice ] TFComposition: pattern -> BSP seed=305619
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10363] [cycle14_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+2026-10-05 21:21:22.533 experience_runtime[32287:534509] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 10406 (active=temporal-fields): media.auto.9fc43161 -> media.auto.7fb8cbf1
+2026-10-05 21:21:22.563 experience_runtime[32287:534604] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_aerial-view-of-sea-waves-crashing-on-rocks-cliff-in-the-blue_11518567.mp4
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10449] [cycle14_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=14 frame=10509 residentMB=386 netAllocs=3623 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=12/72 playheads=6 adapterReloads=25 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:21:26.494 experience_runtime[32287:534208] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_aerial-view-of-sea-waves-crashing-on-rocks-cliff-in-the-blue_11518567.mp4
+[notice ] TFComposition: pattern -> BSP seed=142602
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10535] [cycle15_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10621] [cycle15_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=15 frame=10681 residentMB=425 netAllocs=3680 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=68/72 playheads=6 adapterReloads=26 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:21:32.293 experience_runtime[32287:534704] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_aerial-view-of-sea-waves-crashing-on-rocks-cliff-in-the-blue_11518567.mp4
+[notice ] TFComposition: pattern -> BSP seed=740611
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10707] [cycle16_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10793] [cycle16_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=16 frame=10853 residentMB=425 netAllocs=3695 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=68/72 playheads=6 adapterReloads=27 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:21:38.098 experience_runtime[32287:534704] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_aerial-view-of-sea-waves-crashing-on-rocks-cliff-in-the-blue_11518567.mp4
+[notice ] TFComposition: pattern -> BSP seed=926622
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10879] [cycle17_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 10965] [cycle17_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=17 frame=11025 residentMB=426 netAllocs=3688 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=68/72 playheads=6 adapterReloads=28 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:21:43.893 experience_runtime[32287:534706] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_aerial-view-of-sea-waves-crashing-on-rocks-cliff-in-the-blue_11518567.mp4
+[notice ] TFComposition: pattern -> BSP seed=301240
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 11051] [cycle18_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 11137] [cycle18_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=18 frame=11197 residentMB=426 netAllocs=3692 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=29 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:21:49.695 experience_runtime[32287:534506] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_aerial-view-of-sea-waves-crashing-on-rocks-cliff-in-the-blue_11518567.mp4
+[notice ] TFComposition: pattern -> BSP seed=441331
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 11223] [cycle19_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:21:52.932 experience_runtime[32287:534509] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TwoSceneAcceptance: MEDIA canonical selection changed at frame 11307 (active=blob-region-prototype): media.auto.7fb8cbf1 -> media.auto.014b1a8c
+[notice ] TwoSceneAcceptance: PASS — [frame 11309] [cycle19_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=19 frame=11369 residentMB=422 netAllocs=3709 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=30 temporalHasMedia=1 textureWarnings=0
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+2026-10-05 21:21:55.494 experience_runtime[32287:539614] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/Timelapse of Hurricane Milton  NOAA Satellite Images with Gulf water hydro.mp4
+[notice ] TFComposition: pattern -> BSP seed=235849
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 11395] [cycle20_blob_to_temporal] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] TwoSceneAcceptance: PASS — [frame 11481] [cycle20_temporal_to_blob] transition Idle -> FadingOut -> Loading -> FadingIn -> Idle (fadeOut=12 loading=1 fadeIn=12)
+[notice ] TwoSceneAcceptance: RESOURCE cycle=20 frame=11541 residentMB=421 netAllocs=3727 fboAllocs=1 fboSwitchReallocs=0 blobFragScratch=1272x712 blobBgScratch=0x0 temporalHistory=69/72 playheads=6 adapterReloads=31 temporalHasMedia=1 textureWarnings=0
+[notice ] TwoSceneAcceptance: PASS — [frame 11551] §15 final validation: Blob active + Idle, status Ready, live render, effects missing, canonical video valid, HUD profile Blob, GL/FBO baseline: video health=2
+[notice ] TwoSceneAcceptance: captured captures/rt002_final_blob.png (1280x720 window)
+[notice ] TwoSceneAcceptance: PASS — [frame 11551] §2 totals: setup once per scene (Blob=1, Temporal=1)
+[notice ] TwoSceneAcceptance: PASS — [frame 11551] §2/§4 totals: Blob activations=21, Temporal activations=20; capabilityQueries == successfulActivations: blob 21/21 temporal 20/20
+[notice ] TwoSceneAcceptance: COUNTERS pre-shutdown blob setup=1 activate=21 success=21 deactivate=20 capQ=21 statusPulls=1530 update=1530 draw=1530 effectPulls=0
+[notice ] TwoSceneAcceptance: COUNTERS pre-shutdown temporal setup=1 activate=20 success=20 deactivate=20 capQ=20 statusPulls=9501 update=9501 draw=9501 effectPulls=9501
+[notice ] TwoSceneAcceptance: PASS — [frame 11551] §15 shutdown: active Blob deactivated; every activation matched by a deactivation: blob 21/21 temporal 20/20
+[notice ] TwoSceneAcceptance: PASS — [frame 11551] §15 shutdown: both set-up scenes shut down exactly once
+[notice ] TwoSceneAcceptance: PASS — [frame 11551] §15 post-shutdown: scene commands and scene switches rejected
+[notice ] TwoSceneAcceptance: PASS — [frame 11551] §15 post-shutdown: no scene work runs (beginFrame reports no live scene)
+[notice ] TwoSceneAcceptance: SHUTDOWN observation: temporal history after shutdown=69 temporal buffer hasMedia=1 sceneFbo still allocated=1 (released by destructors at process teardown) textureWarningsDuringExit=0
+[notice ] TwoSceneAcceptance: TABLE activations: cycle | scene | activeFrames | warningFrames | warnings | firstWarn | lastWarn | firstValid | historyAtWarnings | rawVideoAllocatedAtWarnings | staleOutgoing | backgroundOnly | hud | gl || stalePlayheadFrames | playheadReusedFromPrevious | canonicalMediaChangedSincePrevious | mediaAtStart
+[notice ] TwoSceneAcceptance: ACT | -1 | blob-region-prototype | 60 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 1 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 7 | 0 | 0 | media.auto.4a618eef
+[notice ] TwoSceneAcceptance: ACT | 1 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 2 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 7 |  |  | 0 | 1 | 1 | 1 || 7 | 1 | 0 | media.auto.0c211943
+[notice ] TwoSceneAcceptance: ACT | 2 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 3 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 7 |  |  | 0 | 1 | 1 | 1 || 7 | 1 | 1 | media.auto.e281a2b4
+[notice ] TwoSceneAcceptance: ACT | 3 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 4 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 0 | media.auto.e281a2b4
+[notice ] TwoSceneAcceptance: ACT | 4 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 5 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 0 | media.auto.e281a2b4
+[notice ] TwoSceneAcceptance: ACT | 5 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 6 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 0 | media.auto.e281a2b4
+[notice ] TwoSceneAcceptance: ACT | 6 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 7 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 0 | media.auto.e281a2b4
+[notice ] TwoSceneAcceptance: ACT | 7 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 8 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 0 | media.auto.e281a2b4
+[notice ] TwoSceneAcceptance: ACT | 8 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 9 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 1 | media.auto.e50e19fd
+[notice ] TwoSceneAcceptance: ACT | 9 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 10 | temporal-fields | 8114 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 40 | 1 | 0 | media.auto.e50e19fd
+[notice ] TwoSceneAcceptance: ACT | 10 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 11 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 0 | media.auto.9fc43161
+[notice ] TwoSceneAcceptance: ACT | 11 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 12 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 0 | media.auto.9fc43161
+[notice ] TwoSceneAcceptance: ACT | 12 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 13 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 0 | media.auto.9fc43161
+[notice ] TwoSceneAcceptance: ACT | 13 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 14 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 9 | 1 | 0 | media.auto.9fc43161
+[notice ] TwoSceneAcceptance: ACT | 14 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 15 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 5 |  |  | 0 | 1 | 1 | 1 || 5 | 1 | 0 | media.auto.7fb8cbf1
+[notice ] TwoSceneAcceptance: ACT | 15 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 16 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 5 |  |  | 0 | 1 | 1 | 1 || 5 | 1 | 0 | media.auto.7fb8cbf1
+[notice ] TwoSceneAcceptance: ACT | 16 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 17 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 5 |  |  | 0 | 1 | 1 | 1 || 5 | 1 | 0 | media.auto.7fb8cbf1
+[notice ] TwoSceneAcceptance: ACT | 17 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 18 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 0 | media.auto.7fb8cbf1
+[notice ] TwoSceneAcceptance: ACT | 18 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 19 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 0 | media.auto.7fb8cbf1
+[notice ] TwoSceneAcceptance: ACT | 19 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: ACT | 20 | temporal-fields | 73 | 0 | 0 | -1 | -1 | 4 |  |  | 0 | 1 | 1 | 1 || 4 | 1 | 1 | media.auto.014b1a8c
+[notice ] TwoSceneAcceptance: ACT | 20 | blob-region-prototype | 73 | 0 | 0 | -1 | -1 | -1 |  |  | 0 | 0 | 1 | 1 || 0 | 0 | 0 | 
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=117 active=temporal-fields media.auto.4a618eef -> media.auto.0c211943 (intentional)
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=375 active=blob-region-prototype media.auto.0c211943 -> media.auto.e281a2b4 (intentional)
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=1395 active=blob-region-prototype media.auto.e281a2b4 -> media.auto.e50e19fd
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=2296 active=temporal-fields media.auto.e50e19fd -> media.auto.65b7fdf1
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=3197 active=temporal-fields media.auto.65b7fdf1 -> media.auto.cba6721d
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=4098 active=temporal-fields media.auto.cba6721d -> media.auto.1a8db9c7
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=4999 active=temporal-fields media.auto.1a8db9c7 -> media.auto.5c185454
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=5900 active=temporal-fields media.auto.5c185454 -> media.auto.479b063e
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=6801 active=temporal-fields media.auto.479b063e -> media.auto.dfe053fb
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=7702 active=temporal-fields media.auto.dfe053fb -> media.auto.1f0329b7
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=8603 active=temporal-fields media.auto.1f0329b7 -> media.auto.97b545fd
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=9504 active=temporal-fields media.auto.97b545fd -> media.auto.9fc43161
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=10406 active=temporal-fields media.auto.9fc43161 -> media.auto.7fb8cbf1
+[notice ] TwoSceneAcceptance: MEDIACHANGE frame=11307 active=blob-region-prototype media.auto.7fb8cbf1 -> media.auto.014b1a8c
+[notice ] TwoSceneAcceptance: EFFECTS temporal presentEmptyFrames=5396 (first@74) presentActiveFrames=4105 (first@3692) effectIds={chromatic_aberration heatmap_recolor hue_rotate water_refraction } blobFramesWithEffects=0
+[notice ] TwoSceneAcceptance: TOTALS frames=11551 live=11031 static=520 statusPulls=11031 hudFrameData=11551 hudDraws=11551 bridgeDraws=11551 glFailureFrames=0 minActiveFramesPerActivation=73 maxAdapterMismatchStreak=1 textureWarnings=0 otherWarnings=0
+[notice ] TwoSceneAcceptance: ==================================================
+[notice ] TwoSceneAcceptance: RT-002 TWO-SCENE ACCEPTANCE SUMMARY
+[notice ] TwoSceneAcceptance: complete cycles: 20/20
+[notice ] TwoSceneAcceptance: total checks: 150832
+[notice ] TwoSceneAcceptance: failures: 1
+[notice ] TwoSceneAcceptance: RESULT: FAIL
+[notice ] TwoSceneAcceptance: ==================================================
+exit=0

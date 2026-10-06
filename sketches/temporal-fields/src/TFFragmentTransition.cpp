@@ -32,9 +32,15 @@ void TFFragmentTransition::begin(Style style_, float duration_, const ofRectangl
 
 	snapshotFbo.begin();
 	ofClear(0, 0, 0, 0);
-	ofSetColor(255);
-	oldTex.drawSubsection(0, 0, static_cast<float>(w), static_cast<float>(h),
-		oldSrcRect.x, oldSrcRect.y, oldSrcRect.width, oldSrcRect.height);
+	// TEMP-004: an unallocated outgoing texture means "no valid frame" (the
+	// playhead's history was reset). The outgoing snapshot stays cleared, so
+	// the transition reveals the new content from empty rather than drawing
+	// an invalid texture.
+	if (oldTex.isAllocated()) {
+		ofSetColor(255);
+		oldTex.drawSubsection(0, 0, static_cast<float>(w), static_cast<float>(h),
+			oldSrcRect.x, oldSrcRect.y, oldSrcRect.width, oldSrcRect.height);
+	}
 	snapshotFbo.end();
 }
 

@@ -1,0 +1,928 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-05 21:32:59.207 experience_runtime[36758:559596] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] BlobLifecycleHarness: starting deterministic Blob lifecycle/reactivation self-test (EXPERIENCE_RUNTIME_BLOB_LIFECYCLE_HARNESS set) — 20 cycles
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=1
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 0, now 1
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=2
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 1, now 2
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=3
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 2, now 3
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=4
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 3, now 4
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=5
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 4, now 5
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=6
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 5, now 6
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=7
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 6, now 7
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=8
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 7, now 8
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=9
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 8, now 9
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=10
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 9, now 10
+[notice ] BlobLifecycleHarness: PASS — Setup once + first activate + first update/draw sequence completed: 10 frames, sceneId=blob-region-prototype
+[notice ] BlobLifecycleHarness: captured captures/blob_lifecycle_00_warmup.png
+[notice ] BlobLifecycleHarness: PASS — saveSceneFrameCaptureForTesting() succeeds (00_warmup): captures/blob_lifecycle_00_warmup_scene_only.png
+[notice ] BlobLifecycleHarness: PASS — Cycle 0: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=11
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 10, now 11
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=12
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 11, now 12
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=13
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 12, now 13
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=14
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 13, now 14
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=15
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 14, now 15
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=16
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 15, now 16
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=17
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 16, now 17
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=18
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 17, now 18
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=19
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 18, now 19
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=20
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 19, now 20
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=21
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 20, now 21
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=22
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 21, now 22
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=23
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 22, now 23
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=24
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 23, now 24
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=25
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 24, now 25
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=26
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 25, now 26
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=27
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 26, now 27
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=28
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 27, now 28
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=29
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 28, now 29
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=30
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 29, now 30
+[notice ] BlobLifecycleHarness: PASS — Cycle 0: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: captured captures/blob_lifecycle_cycle_0.png
+[notice ] BlobLifecycleHarness: PASS — saveSceneFrameCaptureForTesting() succeeds (cycle_0): captures/blob_lifecycle_cycle_0_scene_only.png
+[notice ] BlobLifecycleHarness: PASS — Cycle 1: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=31
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 30, now 31
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=32
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 31, now 32
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=33
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 32, now 33
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=34
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 33, now 34
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=35
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 34, now 35
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=36
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 35, now 36
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=37
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 36, now 37
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=38
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 37, now 38
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=39
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 38, now 39
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=40
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 39, now 40
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=41
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 40, now 41
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=42
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 41, now 42
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=43
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 42, now 43
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=44
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 43, now 44
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=45
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 44, now 45
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=46
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 45, now 46
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=47
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 46, now 47
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=48
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 47, now 48
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=49
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 48, now 49
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=50
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 49, now 50
+[notice ] BlobLifecycleHarness: PASS — Cycle 1: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 2: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=51
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 50, now 51
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=52
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 51, now 52
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=53
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 52, now 53
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=54
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 53, now 54
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=55
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 54, now 55
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=56
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 55, now 56
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=57
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 56, now 57
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=58
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 57, now 58
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=59
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 58, now 59
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=60
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 59, now 60
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=61
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 60, now 61
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=62
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 61, now 62
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=63
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 62, now 63
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=64
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 63, now 64
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=65
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 64, now 65
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=66
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 65, now 66
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=67
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 66, now 67
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=68
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 67, now 68
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=69
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 68, now 69
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=70
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 69, now 70
+[notice ] BlobLifecycleHarness: PASS — Cycle 2: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 3: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=71
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 70, now 71
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=72
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 71, now 72
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=73
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 72, now 73
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=74
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 73, now 74
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=75
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 74, now 75
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=76
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 75, now 76
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=77
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 76, now 77
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=78
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 77, now 78
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=79
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 78, now 79
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=80
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 79, now 80
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=81
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 80, now 81
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=82
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 81, now 82
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=83
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 82, now 83
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=84
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 83, now 84
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=85
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 84, now 85
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=86
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 85, now 86
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=87
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 86, now 87
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=88
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 87, now 88
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=89
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 88, now 89
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=90
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 89, now 90
+[notice ] BlobLifecycleHarness: PASS — Cycle 3: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 4: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=91
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 90, now 91
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=92
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 91, now 92
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=93
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 92, now 93
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=94
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 93, now 94
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=95
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 94, now 95
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=96
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 95, now 96
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=97
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 96, now 97
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=98
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 97, now 98
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=99
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 98, now 99
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=100
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 99, now 100
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=101
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 100, now 101
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=102
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 101, now 102
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=103
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 102, now 103
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=104
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 103, now 104
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=105
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 104, now 105
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=106
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 105, now 106
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=107
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 106, now 107
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=108
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 107, now 108
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=109
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 108, now 109
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=110
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 109, now 110
+[notice ] BlobLifecycleHarness: PASS — Cycle 4: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 5: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=111
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 110, now 111
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=112
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 111, now 112
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=113
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 112, now 113
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=114
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 113, now 114
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=115
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 114, now 115
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=116
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 115, now 116
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=117
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 116, now 117
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=118
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 117, now 118
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=119
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 118, now 119
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=120
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 119, now 120
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=121
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 120, now 121
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=122
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 121, now 122
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=123
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 122, now 123
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=124
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 123, now 124
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=125
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 124, now 125
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=126
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 125, now 126
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=127
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 126, now 127
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=128
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 127, now 128
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=129
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 128, now 129
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=130
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 129, now 130
+[notice ] BlobLifecycleHarness: PASS — Cycle 5: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 6: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=131
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 130, now 131
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=132
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 131, now 132
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=133
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 132, now 133
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=134
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 133, now 134
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=135
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 134, now 135
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=136
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 135, now 136
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=137
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 136, now 137
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=138
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 137, now 138
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=139
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 138, now 139
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=140
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 139, now 140
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=141
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 140, now 141
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=142
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 141, now 142
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=143
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 142, now 143
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=144
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 143, now 144
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=145
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 144, now 145
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=146
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 145, now 146
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=147
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 146, now 147
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=148
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 147, now 148
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=149
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 148, now 149
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=150
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 149, now 150
+[notice ] BlobLifecycleHarness: PASS — Cycle 6: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 7: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=151
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 150, now 151
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=152
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 151, now 152
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=153
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 152, now 153
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=154
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 153, now 154
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=155
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 154, now 155
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=156
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 155, now 156
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=157
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 156, now 157
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=158
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 157, now 158
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=159
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 158, now 159
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=160
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 159, now 160
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=161
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 160, now 161
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=162
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 161, now 162
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=163
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 162, now 163
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=164
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 163, now 164
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=165
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 164, now 165
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=166
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 165, now 166
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=167
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 166, now 167
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=168
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 167, now 168
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=169
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 168, now 169
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=170
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 169, now 170
+[notice ] BlobLifecycleHarness: PASS — Cycle 7: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 8: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=171
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 170, now 171
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=172
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 171, now 172
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=173
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 172, now 173
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=174
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 173, now 174
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=175
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 174, now 175
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=176
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 175, now 176
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=177
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 176, now 177
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=178
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 177, now 178
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=179
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 178, now 179
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=180
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 179, now 180
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=181
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 180, now 181
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=182
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 181, now 182
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=183
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 182, now 183
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=184
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 183, now 184
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=185
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 184, now 185
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=186
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 185, now 186
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=187
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 186, now 187
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=188
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 187, now 188
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=189
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 188, now 189
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=190
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 189, now 190
+[notice ] BlobLifecycleHarness: PASS — Cycle 8: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 9: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=191
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 190, now 191
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=192
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 191, now 192
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=193
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 192, now 193
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=194
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 193, now 194
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=195
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 194, now 195
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=196
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 195, now 196
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=197
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 196, now 197
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=198
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 197, now 198
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=199
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 198, now 199
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=200
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 199, now 200
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=201
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 200, now 201
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=202
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 201, now 202
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=203
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 202, now 203
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=204
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 203, now 204
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=205
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 204, now 205
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=206
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 205, now 206
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=207
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 206, now 207
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=208
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 207, now 208
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=209
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 208, now 209
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=210
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 209, now 210
+[notice ] BlobLifecycleHarness: PASS — Cycle 9: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 10: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=211
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 210, now 211
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=212
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 211, now 212
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=213
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 212, now 213
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=214
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 213, now 214
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=215
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 214, now 215
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=216
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 215, now 216
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=217
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 216, now 217
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=218
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 217, now 218
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=219
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 218, now 219
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=220
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 219, now 220
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=221
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 220, now 221
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=222
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 221, now 222
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=223
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 222, now 223
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=224
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 223, now 224
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=225
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 224, now 225
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=226
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 225, now 226
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=227
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 226, now 227
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=228
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 227, now 228
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=229
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 228, now 229
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=230
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 229, now 230
+[notice ] BlobLifecycleHarness: PASS — Cycle 10: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: captured captures/blob_lifecycle_cycle_10.png
+[notice ] BlobLifecycleHarness: PASS — saveSceneFrameCaptureForTesting() succeeds (cycle_10): captures/blob_lifecycle_cycle_10_scene_only.png
+[notice ] BlobLifecycleHarness: PASS — Cycle 11: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=231
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 230, now 231
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=232
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 231, now 232
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=233
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 232, now 233
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=234
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 233, now 234
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=235
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 234, now 235
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=236
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 235, now 236
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=237
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 236, now 237
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=238
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 237, now 238
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=239
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 238, now 239
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=240
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 239, now 240
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=241
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 240, now 241
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=242
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 241, now 242
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=243
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 242, now 243
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=244
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 243, now 244
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=245
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 244, now 245
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=246
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 245, now 246
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=247
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 246, now 247
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=248
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 247, now 248
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=249
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 248, now 249
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=250
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 249, now 250
+[notice ] BlobLifecycleHarness: PASS — Cycle 11: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 12: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=251
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 250, now 251
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=252
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 251, now 252
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=253
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 252, now 253
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=254
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 253, now 254
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=255
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 254, now 255
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=256
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 255, now 256
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=257
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 256, now 257
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=258
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 257, now 258
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=259
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 258, now 259
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=260
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 259, now 260
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=261
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 260, now 261
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=262
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 261, now 262
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=263
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 262, now 263
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=264
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 263, now 264
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=265
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 264, now 265
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=266
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 265, now 266
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=267
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 266, now 267
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=268
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 267, now 268
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=269
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 268, now 269
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=270
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 269, now 270
+[notice ] BlobLifecycleHarness: PASS — Cycle 12: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 13: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=271
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 270, now 271
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=272
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 271, now 272
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=273
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 272, now 273
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=274
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 273, now 274
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=275
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 274, now 275
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=276
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 275, now 276
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=277
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 276, now 277
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=278
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 277, now 278
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=279
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 278, now 279
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=280
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 279, now 280
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=281
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 280, now 281
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=282
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 281, now 282
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=283
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 282, now 283
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=284
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 283, now 284
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=285
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 284, now 285
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=286
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 285, now 286
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=287
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 286, now 287
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=288
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 287, now 288
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=289
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 288, now 289
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=290
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 289, now 290
+[notice ] BlobLifecycleHarness: PASS — Cycle 13: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 14: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=291
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 290, now 291
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=292
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 291, now 292
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=293
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 292, now 293
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=294
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 293, now 294
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=295
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 294, now 295
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=296
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 295, now 296
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=297
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 296, now 297
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=298
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 297, now 298
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=299
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 298, now 299
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=300
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 299, now 300
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=301
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 300, now 301
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=302
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 301, now 302
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=303
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 302, now 303
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=304
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 303, now 304
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=305
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 304, now 305
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=306
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 305, now 306
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=307
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 306, now 307
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=308
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 307, now 308
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=309
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 308, now 309
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=310
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 309, now 310
+[notice ] BlobLifecycleHarness: PASS — Cycle 14: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 15: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=311
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 310, now 311
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=312
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 311, now 312
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=313
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 312, now 313
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=314
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 313, now 314
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=315
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 314, now 315
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=316
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 315, now 316
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=317
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 316, now 317
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=318
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 317, now 318
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=319
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 318, now 319
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=320
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 319, now 320
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=321
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 320, now 321
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=322
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 321, now 322
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=323
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 322, now 323
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=324
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 323, now 324
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=325
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 324, now 325
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=326
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 325, now 326
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=327
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 326, now 327
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=328
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 327, now 328
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=329
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 328, now 329
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=330
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 329, now 330
+[notice ] BlobLifecycleHarness: PASS — Cycle 15: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 16: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=331
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 330, now 331
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=332
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 331, now 332
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=333
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 332, now 333
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=334
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 333, now 334
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=335
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 334, now 335
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=336
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 335, now 336
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=337
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 336, now 337
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=338
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 337, now 338
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=339
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 338, now 339
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=340
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 339, now 340
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=341
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 340, now 341
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=342
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 341, now 342
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=343
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 342, now 343
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=344
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 343, now 344
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=345
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 344, now 345
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=346
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 345, now 346
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=347
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 346, now 347
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=348
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 347, now 348
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=349
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 348, now 349
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=350
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 349, now 350
+[notice ] BlobLifecycleHarness: PASS — Cycle 16: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 17: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=351
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 350, now 351
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=352
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 351, now 352
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=353
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 352, now 353
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=354
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 353, now 354
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=355
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 354, now 355
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=356
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 355, now 356
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=357
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 356, now 357
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=358
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 357, now 358
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=359
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 358, now 359
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=360
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 359, now 360
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=361
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 360, now 361
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=362
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 361, now 362
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=363
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 362, now 363
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=364
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 363, now 364
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=365
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 364, now 365
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=366
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 365, now 366
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=367
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 366, now 367
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=368
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 367, now 368
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=369
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 368, now 369
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=370
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 369, now 370
+[notice ] BlobLifecycleHarness: PASS — Cycle 17: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 18: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=371
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 370, now 371
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=372
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 371, now 372
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=373
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 372, now 373
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=374
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 373, now 374
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=375
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 374, now 375
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=376
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 375, now 376
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=377
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 376, now 377
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=378
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 377, now 378
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=379
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 378, now 379
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=380
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 379, now 380
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=381
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 380, now 381
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=382
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 381, now 382
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=383
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 382, now 383
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 24x60
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=384
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 383, now 384
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=385
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 384, now 385
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=386
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 385, now 386
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=387
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 386, now 387
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=388
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 387, now 388
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=389
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 388, now 389
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=390
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 389, now 390
+[notice ] BlobLifecycleHarness: PASS — Cycle 18: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: PASS — Cycle 19: no stale region/fragment carryover immediately after reactivation: region=0 fragment=0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=391
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 390, now 391
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=392
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 391, now 392
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=393
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 392, now 393
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=394
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 393, now 394
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=395
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 394, now 395
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=396
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 395, now 396
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=397
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 396, now 397
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=398
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 397, now 398
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=399
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 398, now 399
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=400
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 399, now 400
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=401
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 400, now 401
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=402
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 401, now 402
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=403
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 402, now 403
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=404
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 403, now 404
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=405
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 404, now 405
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=406
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 405, now 406
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=407
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 406, now 407
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=408
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 407, now 408
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=409
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 408, now 409
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=410
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 409, now 410
+[notice ] BlobLifecycleHarness: PASS — Cycle 19: update/draw succeeded for 20 frames after reactivation
+[notice ] BlobLifecycleHarness: captured captures/blob_lifecycle_cycle_19.png
+[notice ] BlobLifecycleHarness: PASS — saveSceneFrameCaptureForTesting() succeeds (cycle_19): captures/blob_lifecycle_cycle_19_scene_only.png
+[notice ] BlobLifecycleHarness: PASS — 20 deactivate/reactivate cycles completed: peak activeItemCount=1, peak region_count=1
+[notice ] BlobLifecycleHarness: PASS — Peak fragment_count stays within the real configured maxActiveFragments across 20 cycles: peak=1 maxActiveFragments=10
+[notice ] BlobLifecycleHarness: PASS — Peak region_count observed across 20 cycles (informational — see report): peak=1, BlobDetector maxBlobs=12 (bounds new detections/frame only, not accumulated track count)
+[notice ] BlobLifecycleHarness: PASS — Scratch-FBO high-water stays within a generous sanity bound across 20 cycles: fragment=24x60 background=0x0
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=411
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 410, now 411
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=412
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 411, now 412
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=413
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 412, now 413
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=414
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 413, now 414
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=415
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 414, now 415
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=416
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 415, now 416
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=417
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 416, now 417
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=418
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 417, now 418
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=419
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 418, now 419
+[notice ] BlobLifecycleHarness: PASS — SceneFrame texture non-null after draw: frameNumber=420
+[notice ] BlobLifecycleHarness: PASS — frameNumber() strictly increasing: was 419, now 420
+[notice ] BlobLifecycleHarness: PASS — Final activate + update/draw sequence (after all 20 cycles) succeeded
+[notice ] BlobLifecycleHarness: captured captures/blob_lifecycle_final_active.png
+[notice ] BlobLifecycleHarness: PASS — saveSceneFrameCaptureForTesting() succeeds (final_active): captures/blob_lifecycle_final_active_scene_only.png
+[notice ] BlobLifecycleHarness: PASS — shutdown() completed without error
+[notice ] BlobLifecycleHarness: PASS — Post-shutdown command rejection: NextMedia returns false
+[notice ] BlobLifecycleHarness: PASS — Post-shutdown command rejection: (hidden) Reset returns false
+[notice ] BlobLifecycleHarness: PASS — Post-shutdown command rejection: PreviousMedia returns false
+[notice ] BlobLifecycleHarness: ==================================================
+[notice ] BlobLifecycleHarness: RESULT: 895/895 checks passed
+[notice ] BlobLifecycleHarness: fragment scratch FBO peak=24x60, background scratch FBO peak=0x0
+[notice ] BlobLifecycleHarness: No callback/listener/timer registration exists anywhere in BlobSceneCore/BlobDetector/BlobTracker/VideoRegionController/VideoRegionEffectRenderer/BlobProductionScene — verified by direct inspection (zero ofAddListener/callback-registration call sites in any of those files), not by a runtime counter, since there is nothing to count.
+[notice ] BlobLifecycleHarness: ==================================================
+exit=0

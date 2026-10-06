@@ -1,0 +1,314 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-05 21:33:26.094 experience_runtime[36794:560729] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] SceneSwitchHarness: starting RT-003 switching mechanism self-test (EXPERIENCE_RUNTIME_SWITCH_HARNESS set) — 3 Blob -> Temporal -> Blob cycles
+[notice ] SceneSwitchHarness: PASS — registry holds exactly the two real production scenes, in order [Blob, Temporal]: registry=blob-region-prototype,temporal-fields
+[notice ] SceneSwitchHarness: PASS — FakeScene is not a production registry entry: fake id=fake-scene
+[notice ] SceneSwitchHarness: PASS — deterministic startup scene is Blob: activeSceneId=blob-region-prototype
+[notice ] SceneSwitchHarness: PASS — startup: Blob set up once + activated once, capabilities queried once
+[notice ] SceneSwitchHarness: PASS — startup: Temporal registered but not set up (lazy, at first switch)
+[notice ] SceneSwitchHarness: PASS — startup: no transition in progress
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 104x120
+[notice ] SceneSwitchHarness: PASS — warmup: 60 live Blob frames, effects nullopt (no FakeScene source)
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (warmup): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+[notice ] SceneSwitchHarness: COUNTERS [warmup] blob-region-prototype setup=1 activate=1 successfulActivations=1 deactivate=0 shutdown=0 capabilityQueries=1 statusPulls=60 effectPulls=0 update=60 draw=60
+[notice ] SceneSwitchHarness: COUNTERS [warmup] temporal-fields setup=0 activate=0 successfulActivations=0 deactivate=0 shutdown=0 capabilityQueries=0 statusPulls=0 effectPulls=0 update=0 draw=0
+[notice ] SceneSwitchHarness: COUNTERS [warmup] runtime frames=60 hudFrameDataAssemblies=60 hudDraws=60 liveSceneFrames=60 staticSceneFrames=0 sceneFboAllocations=1 sceneFboSwitchReallocations=0 neutralStatusPublications=0
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] outgoing owner before switch is blob-region-prototype: activeSceneId=blob-region-prototype
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] NextScene accepted: FadingOut, pending=temporal-fields, active still blob-region-prototype: FadingOut pending=temporal-fields active=blob-region-prototype
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] outgoing deactivate() called exactly once at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] outgoing capabilities no longer advertised after handoff start
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] incoming not activated at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] FadingOut frame 1: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=blob-region-prototype progress=0.08
+[notice ] SceneSwitchHarness: captured captures/scene_switch_cycle0_blob_to_temporal_1_fadingout.png
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] switch input during FadingOut suppressed (no queue, no second switch)
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] FadingOut frame 12: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=blob-region-prototype progress=1.00
+2026-10-05 21:33:27.312 experience_runtime[36794:560729] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_bottom-up-view-of-lush-foliage-big-trees-with-blue-sky_36250205.mp4
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] TFAmbientTextureLayer: loaded 19 background texture(s) from backgrounds
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFImageCycler: no images found in backgrounds
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] Loading: ownership released — no outgoing/incoming identity, semantics, effects or capabilities; pending=incoming: scene='' active=''
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] Loading: static outgoing frame still retained
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] Loading: incoming setup() at most once per instance (setup=1)
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] Loading: incoming not yet activated
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] switch input during Loading suppressed
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle0_blob_to_temporal Loading frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+[notice ] SceneSwitchHarness: captured captures/scene_switch_cycle0_blob_to_temporal_2_loading.png
+[notice ] TFComposition: pattern -> BSP seed=252534
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[warning] ofGLRenderer: draw(): texture is not allocated
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] first incoming frame: active owner=temporal-fields, status/identity from incoming only, no pending: scene=temporal-fields
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] incoming activated once; capabilities queried once; capabilityQueries == successfulActivations: activations=1 capabilityQueries=1
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] first incoming frame: one update, one status pull, one draw
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] published capabilities are the incoming scene's own (not merged): commands=2
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] effects nullopt -> present on first Temporal frame
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] same-size activation: no FBO reallocation, same texture
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] incoming frame rendered live into the runtime FBO (static frame replaced)
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle0_blob_to_temporal first incoming frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+[notice ] SceneSwitchHarness: captured captures/scene_switch_cycle0_blob_to_temporal_3_first_incoming.png
+[warning] ofGLRenderer: draw(): texture is not allocated
+[warning] ofGLRenderer: draw(): texture is not allocated
+[warning] ofGLRenderer: draw(): texture is not allocated
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] switch input during FadingIn suppressed
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] transition completed: Idle -> FadingOut -> Loading -> FadingIn -> Idle: fadeOut=12 loading=1 fadeIn=12
+[notice ] SceneSwitchHarness: captured captures/scene_switch_cycle0_blob_to_temporal_4_steady.png
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] no inactive updates: outgoing untouched through transition + 60 dwell frames
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] incoming: exactly one status pull / update / draw per live frame: liveFrames=73 pulls=73
+[notice ] SceneSwitchHarness: PASS — [cycle0_blob_to_temporal] Temporal effect source pulled once per live Temporal frame
+[notice ] SceneSwitchHarness: COUNTERS [cycle0_blob_to_temporal] blob-region-prototype setup=1 activate=1 successfulActivations=1 deactivate=1 shutdown=0 capabilityQueries=1 statusPulls=60 effectPulls=0 update=60 draw=60
+[notice ] SceneSwitchHarness: COUNTERS [cycle0_blob_to_temporal] temporal-fields setup=1 activate=1 successfulActivations=1 deactivate=0 shutdown=0 capabilityQueries=1 statusPulls=73 effectPulls=73 update=73 draw=73
+[notice ] SceneSwitchHarness: COUNTERS [cycle0_blob_to_temporal] runtime frames=146 hudFrameDataAssemblies=146 hudDraws=146 liveSceneFrames=133 staticSceneFrames=13 sceneFboAllocations=1 sceneFboSwitchReallocations=0 neutralStatusPublications=1
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] outgoing owner before switch is temporal-fields: activeSceneId=temporal-fields
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] PreviousScene accepted: FadingOut, pending=blob-region-prototype, active still temporal-fields: FadingOut pending=blob-region-prototype active=temporal-fields
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] outgoing deactivate() called exactly once at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] outgoing capabilities no longer advertised after handoff start
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] incoming not activated at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] FadingOut frame 1: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=temporal-fields progress=0.08
+[notice ] SceneSwitchHarness: captured captures/scene_switch_cycle0_temporal_to_blob_1_fadingout.png
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] switch input during FadingOut suppressed (no queue, no second switch)
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] FadingOut frame 12: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=temporal-fields progress=1.00
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] Loading: ownership released — no outgoing/incoming identity, semantics, effects or capabilities; pending=incoming: scene='' active=''
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] Loading: static outgoing frame still retained
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] Loading: incoming setup() at most once per instance (setup=1)
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] Loading: incoming not yet activated
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] switch input during Loading suppressed
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle0_temporal_to_blob Loading frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+[notice ] SceneSwitchHarness: captured captures/scene_switch_cycle0_temporal_to_blob_2_loading.png
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] first incoming frame: active owner=blob-region-prototype, status/identity from incoming only, no pending: scene=blob-region-prototype
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] incoming activated once; capabilities queried once; capabilityQueries == successfulActivations: activations=2 capabilityQueries=2
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] first incoming frame: one update, one status pull, one draw
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] published capabilities are the incoming scene's own (not merged): commands=2
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] effects present -> nullopt on first Blob frame (no stale Temporal effects)
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] same-size activation: no FBO reallocation, same texture
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] incoming frame rendered live into the runtime FBO (static frame replaced)
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle0_temporal_to_blob first incoming frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+[notice ] SceneSwitchHarness: captured captures/scene_switch_cycle0_temporal_to_blob_3_first_incoming.png
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] switch input during FadingIn suppressed
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] transition completed: Idle -> FadingOut -> Loading -> FadingIn -> Idle: fadeOut=12 loading=1 fadeIn=12
+[notice ] SceneSwitchHarness: captured captures/scene_switch_cycle0_temporal_to_blob_4_steady.png
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] no inactive updates: outgoing untouched through transition + 60 dwell frames
+[notice ] SceneSwitchHarness: PASS — [cycle0_temporal_to_blob] incoming: exactly one status pull / update / draw per live frame: liveFrames=73 pulls=73
+[notice ] SceneSwitchHarness: COUNTERS [cycle0_temporal_to_blob] blob-region-prototype setup=1 activate=2 successfulActivations=2 deactivate=1 shutdown=0 capabilityQueries=2 statusPulls=133 effectPulls=0 update=133 draw=133
+[notice ] SceneSwitchHarness: COUNTERS [cycle0_temporal_to_blob] temporal-fields setup=1 activate=1 successfulActivations=1 deactivate=1 shutdown=0 capabilityQueries=1 statusPulls=73 effectPulls=73 update=73 draw=73
+[notice ] SceneSwitchHarness: COUNTERS [cycle0_temporal_to_blob] runtime frames=232 hudFrameDataAssemblies=232 hudDraws=232 liveSceneFrames=206 staticSceneFrames=26 sceneFboAllocations=1 sceneFboSwitchReallocations=0 neutralStatusPublications=2
+[notice ] SceneSwitchHarness: RESOURCES after cycle0_temporal_to_blob: net live allocations=3440 resident=417 MB
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] outgoing owner before switch is blob-region-prototype: activeSceneId=blob-region-prototype
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] NextScene accepted: FadingOut, pending=temporal-fields, active still blob-region-prototype: FadingOut pending=temporal-fields active=blob-region-prototype
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] outgoing deactivate() called exactly once at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] outgoing capabilities no longer advertised after handoff start
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] incoming not activated at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] FadingOut frame 1: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=blob-region-prototype progress=0.08
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] switch input during FadingOut suppressed (no queue, no second switch)
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] FadingOut frame 12: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=blob-region-prototype progress=1.00
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] Loading: ownership released — no outgoing/incoming identity, semantics, effects or capabilities; pending=incoming: scene='' active=''
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] Loading: static outgoing frame still retained
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] Loading: incoming setup() at most once per instance (setup=1)
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] Loading: incoming not yet activated
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] switch input during Loading suppressed
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle1_blob_to_temporal Loading frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+2026-10-05 21:33:33.258 experience_runtime[36794:561018] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_bottom-up-view-of-lush-foliage-big-trees-with-blue-sky_36250205.mp4
+[notice ] TFComposition: pattern -> BSP seed=530682
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] first incoming frame: active owner=temporal-fields, status/identity from incoming only, no pending: scene=temporal-fields
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] incoming activated once; capabilities queried once; capabilityQueries == successfulActivations: activations=2 capabilityQueries=2
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] first incoming frame: one update, one status pull, one draw
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] published capabilities are the incoming scene's own (not merged): commands=2
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] effects nullopt -> present on first Temporal frame
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] same-size activation: no FBO reallocation, same texture
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] incoming frame rendered live into the runtime FBO (static frame replaced)
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle1_blob_to_temporal first incoming frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] switch input during FadingIn suppressed
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] transition completed: Idle -> FadingOut -> Loading -> FadingIn -> Idle: fadeOut=12 loading=1 fadeIn=12
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] no inactive updates: outgoing untouched through transition + 60 dwell frames
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] incoming: exactly one status pull / update / draw per live frame: liveFrames=73 pulls=73
+[notice ] SceneSwitchHarness: PASS — [cycle1_blob_to_temporal] Temporal effect source pulled once per live Temporal frame
+[notice ] SceneSwitchHarness: COUNTERS [cycle1_blob_to_temporal] blob-region-prototype setup=1 activate=2 successfulActivations=2 deactivate=2 shutdown=0 capabilityQueries=2 statusPulls=133 effectPulls=0 update=133 draw=133
+[notice ] SceneSwitchHarness: COUNTERS [cycle1_blob_to_temporal] temporal-fields setup=1 activate=2 successfulActivations=2 deactivate=1 shutdown=0 capabilityQueries=2 statusPulls=146 effectPulls=146 update=146 draw=146
+[notice ] SceneSwitchHarness: COUNTERS [cycle1_blob_to_temporal] runtime frames=318 hudFrameDataAssemblies=318 hudDraws=318 liveSceneFrames=279 staticSceneFrames=39 sceneFboAllocations=1 sceneFboSwitchReallocations=0 neutralStatusPublications=3
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] outgoing owner before switch is temporal-fields: activeSceneId=temporal-fields
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] PreviousScene accepted: FadingOut, pending=blob-region-prototype, active still temporal-fields: FadingOut pending=blob-region-prototype active=temporal-fields
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] outgoing deactivate() called exactly once at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] outgoing capabilities no longer advertised after handoff start
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] incoming not activated at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] FadingOut frame 1: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=temporal-fields progress=0.08
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] switch input during FadingOut suppressed (no queue, no second switch)
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] FadingOut frame 12: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=temporal-fields progress=1.00
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] Loading: ownership released — no outgoing/incoming identity, semantics, effects or capabilities; pending=incoming: scene='' active=''
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] Loading: static outgoing frame still retained
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] Loading: incoming setup() at most once per instance (setup=1)
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] Loading: incoming not yet activated
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] switch input during Loading suppressed
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle1_temporal_to_blob Loading frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] first incoming frame: active owner=blob-region-prototype, status/identity from incoming only, no pending: scene=blob-region-prototype
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] incoming activated once; capabilities queried once; capabilityQueries == successfulActivations: activations=3 capabilityQueries=3
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] first incoming frame: one update, one status pull, one draw
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] published capabilities are the incoming scene's own (not merged): commands=2
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] effects present -> nullopt on first Blob frame (no stale Temporal effects)
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] same-size activation: no FBO reallocation, same texture
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] incoming frame rendered live into the runtime FBO (static frame replaced)
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle1_temporal_to_blob first incoming frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] switch input during FadingIn suppressed
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] transition completed: Idle -> FadingOut -> Loading -> FadingIn -> Idle: fadeOut=12 loading=1 fadeIn=12
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] no inactive updates: outgoing untouched through transition + 60 dwell frames
+[notice ] SceneSwitchHarness: PASS — [cycle1_temporal_to_blob] incoming: exactly one status pull / update / draw per live frame: liveFrames=73 pulls=73
+[notice ] SceneSwitchHarness: COUNTERS [cycle1_temporal_to_blob] blob-region-prototype setup=1 activate=3 successfulActivations=3 deactivate=2 shutdown=0 capabilityQueries=3 statusPulls=206 effectPulls=0 update=206 draw=206
+[notice ] SceneSwitchHarness: COUNTERS [cycle1_temporal_to_blob] temporal-fields setup=1 activate=2 successfulActivations=2 deactivate=2 shutdown=0 capabilityQueries=2 statusPulls=146 effectPulls=146 update=146 draw=146
+[notice ] SceneSwitchHarness: COUNTERS [cycle1_temporal_to_blob] runtime frames=404 hudFrameDataAssemblies=404 hudDraws=404 liveSceneFrames=352 staticSceneFrames=52 sceneFboAllocations=1 sceneFboSwitchReallocations=0 neutralStatusPublications=4
+[notice ] SceneSwitchHarness: RESOURCES after cycle1_temporal_to_blob: net live allocations=3430 resident=415 MB
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] outgoing owner before switch is blob-region-prototype: activeSceneId=blob-region-prototype
+[notice ] SceneManager: NextScene accepted: "blob-region-prototype" -> "temporal-fields"
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] NextScene accepted: FadingOut, pending=temporal-fields, active still blob-region-prototype: FadingOut pending=temporal-fields active=blob-region-prototype
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] outgoing deactivate() called exactly once at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] outgoing capabilities no longer advertised after handoff start
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] incoming not activated at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] FadingOut frame 1: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=blob-region-prototype progress=0.08
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] switch input during FadingOut suppressed (no queue, no second switch)
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] FadingOut frame 12: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=blob-region-prototype progress=1.00
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] Loading: ownership released — no outgoing/incoming identity, semantics, effects or capabilities; pending=incoming: scene='' active=''
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] Loading: static outgoing frame still retained
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] Loading: incoming setup() at most once per instance (setup=1)
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] Loading: incoming not yet activated
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] switch input during Loading suppressed
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle2_blob_to_temporal Loading frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+2026-10-05 21:33:38.267 experience_runtime[36794:560835] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/vecteezy_bottom-up-view-of-lush-foliage-big-trees-with-blue-sky_36250205.mp4
+[notice ] TFComposition: pattern -> BSP seed=952896
+[notice ] SceneManager: scene "temporal-fields" is now the active owner
+[notice ] ExperienceRuntime: scene FBO reallocated to 1280x720 for incoming scene "temporal-fields"
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] first incoming frame: active owner=temporal-fields, status/identity from incoming only, no pending: scene=temporal-fields
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] incoming activated once; capabilities queried once; capabilityQueries == successfulActivations: activations=3 capabilityQueries=3
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] first incoming frame: one update, one status pull, one draw
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] published capabilities are the incoming scene's own (not merged): commands=2
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] effects nullopt -> present on first Temporal frame
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] different-size activation: runtime FBO reallocated 640x360 -> incoming native 1280x720 before the incoming draw; SceneFrame reflects the new texture: reallocations=1 nativeSize=1280x720 (GL name before=5, after=5 — names are recycled)
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] incoming frame rendered live into the runtime FBO (static frame replaced)
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle2_blob_to_temporal first incoming frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] switch input during FadingIn suppressed
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] transition completed: Idle -> FadingOut -> Loading -> FadingIn -> Idle: fadeOut=12 loading=1 fadeIn=12
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] no inactive updates: outgoing untouched through transition + 60 dwell frames
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] incoming: exactly one status pull / update / draw per live frame: liveFrames=73 pulls=73
+[notice ] SceneSwitchHarness: PASS — [cycle2_blob_to_temporal] Temporal effect source pulled once per live Temporal frame
+[notice ] SceneSwitchHarness: COUNTERS [cycle2_blob_to_temporal] blob-region-prototype setup=1 activate=3 successfulActivations=3 deactivate=3 shutdown=0 capabilityQueries=3 statusPulls=206 effectPulls=0 update=206 draw=206
+[notice ] SceneSwitchHarness: COUNTERS [cycle2_blob_to_temporal] temporal-fields setup=1 activate=3 successfulActivations=3 deactivate=2 shutdown=0 capabilityQueries=3 statusPulls=219 effectPulls=219 update=219 draw=219
+[notice ] SceneSwitchHarness: COUNTERS [cycle2_blob_to_temporal] runtime frames=490 hudFrameDataAssemblies=490 hudDraws=490 liveSceneFrames=425 staticSceneFrames=65 sceneFboAllocations=3 sceneFboSwitchReallocations=1 neutralStatusPublications=5
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] outgoing owner before switch is temporal-fields: activeSceneId=temporal-fields
+[notice ] SceneManager: PreviousScene accepted: "temporal-fields" -> "blob-region-prototype"
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] PreviousScene accepted: FadingOut, pending=blob-region-prototype, active still temporal-fields: FadingOut pending=blob-region-prototype active=temporal-fields
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] outgoing deactivate() called exactly once at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] outgoing capabilities no longer advertised after handoff start
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] incoming not activated at acceptance
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] FadingOut frame 1: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=temporal-fields progress=0.08
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] switch input during FadingOut suppressed (no queue, no second switch)
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] FadingOut frame 12: retained outgoing frame unchanged (pixel hash + texture id), outgoing identity still current: scene=temporal-fields progress=1.00
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] Loading: ownership released — no outgoing/incoming identity, semantics, effects or capabilities; pending=incoming: scene='' active=''
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] Loading: static outgoing frame still retained
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] Loading: incoming setup() at most once per instance (setup=1)
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] Loading: incoming not yet activated
+[notice ] SceneManager: NextScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] switch input during Loading suppressed
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle2_temporal_to_blob Loading frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+[notice ] SceneManager: scene "blob-region-prototype" is now the active owner
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] first incoming frame: active owner=blob-region-prototype, status/identity from incoming only, no pending: scene=blob-region-prototype
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] incoming activated once; capabilities queried once; capabilityQueries == successfulActivations: activations=4 capabilityQueries=4
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] first incoming frame: one update, one status pull, one draw
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] published capabilities are the incoming scene's own (not merged): commands=2
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] effects present -> nullopt on first Blob frame (no stale Temporal effects)
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] same-size activation: no FBO reallocation, same texture
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] incoming frame rendered live into the runtime FBO (static frame replaced)
+[notice ] SceneSwitchHarness: PASS — GL baseline after full draw (cycle2_temporal_to_blob first incoming frame): scissor=0 stencil=0 program=0 tex2D=0 fbo=0
+[notice ] SceneManager: PreviousScene rejected (transition in progress)
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] switch input during FadingIn suppressed
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] transition completed: Idle -> FadingOut -> Loading -> FadingIn -> Idle: fadeOut=12 loading=1 fadeIn=12
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] no inactive updates: outgoing untouched through transition + 60 dwell frames
+[notice ] SceneSwitchHarness: PASS — [cycle2_temporal_to_blob] incoming: exactly one status pull / update / draw per live frame: liveFrames=73 pulls=73
+[notice ] SceneSwitchHarness: COUNTERS [cycle2_temporal_to_blob] blob-region-prototype setup=1 activate=4 successfulActivations=4 deactivate=3 shutdown=0 capabilityQueries=4 statusPulls=279 effectPulls=0 update=279 draw=279
+[notice ] SceneSwitchHarness: COUNTERS [cycle2_temporal_to_blob] temporal-fields setup=1 activate=3 successfulActivations=3 deactivate=3 shutdown=0 capabilityQueries=3 statusPulls=219 effectPulls=219 update=219 draw=219
+[notice ] SceneSwitchHarness: COUNTERS [cycle2_temporal_to_blob] runtime frames=576 hudFrameDataAssemblies=576 hudDraws=576 liveSceneFrames=498 staticSceneFrames=78 sceneFboAllocations=3 sceneFboSwitchReallocations=1 neutralStatusPublications=6
+[notice ] SceneSwitchHarness: RESOURCES after cycle2_temporal_to_blob: net live allocations=3486 resident=417 MB
+[notice ] SceneSwitchHarness: COUNTERS [before-shutdown] blob-region-prototype setup=1 activate=4 successfulActivations=4 deactivate=3 shutdown=0 capabilityQueries=4 statusPulls=279 effectPulls=0 update=279 draw=279
+[notice ] SceneSwitchHarness: COUNTERS [before-shutdown] temporal-fields setup=1 activate=3 successfulActivations=3 deactivate=3 shutdown=0 capabilityQueries=3 statusPulls=219 effectPulls=219 update=219 draw=219
+[notice ] SceneSwitchHarness: COUNTERS [before-shutdown] runtime frames=576 hudFrameDataAssemblies=576 hudDraws=576 liveSceneFrames=498 staticSceneFrames=78 sceneFboAllocations=3 sceneFboSwitchReallocations=1 neutralStatusPublications=6
+[notice ] SceneSwitchHarness: RESOURCES net live allocation growth per full cycle: cycle1->2=-10 cycle2->3=56; resident MB: 417 -> 415 -> 417
+[notice ] SceneSwitchHarness: PASS — lifecycle totals: Blob setup=1, Temporal setup=1 across all switches
+[notice ] SceneSwitchHarness: PASS — lifecycle totals: capabilityQueries == successfulActivations for both scenes: blob 4/4, temporal 3/3
+[notice ] SceneSwitchHarness: PASS — lifecycle totals: Blob activations=4, Temporal activations=3
+[notice ] SceneSwitchHarness: PASS — shutdown: both set-up scenes shut down exactly once, after deactivation: blob deact/act=4/4 temporal deact/act=3/3
+[notice ] SceneSwitchHarness: PASS — commands rejected after shutdown()
+[notice ] SceneSwitchHarness: PASS — scene switch rejected after shutdown()
+[notice ] SceneSwitchHarness: COUNTERS [final] blob-region-prototype setup=1 activate=4 successfulActivations=4 deactivate=4 shutdown=1 capabilityQueries=4 statusPulls=279 effectPulls=0 update=279 draw=279
+[notice ] SceneSwitchHarness: COUNTERS [final] temporal-fields setup=1 activate=3 successfulActivations=3 deactivate=3 shutdown=1 capabilityQueries=3 statusPulls=219 effectPulls=219 update=219 draw=219
+[notice ] SceneSwitchHarness: COUNTERS [final] runtime frames=576 hudFrameDataAssemblies=576 hudDraws=576 liveSceneFrames=498 staticSceneFrames=78 sceneFboAllocations=3 sceneFboSwitchReallocations=1 neutralStatusPublications=6
+[notice ] SceneSwitchHarness: ==================================================
+[notice ] SceneSwitchHarness: RT-003 SCENE SWITCH HARNESS SUMMARY
+[notice ] SceneSwitchHarness: cycles: 3 (Blob -> Temporal -> Blob)
+[notice ] SceneSwitchHarness: total checks: 5351
+[notice ] SceneSwitchHarness: failures: 0
+[notice ] SceneSwitchHarness: RESULT: PASS
+[notice ] SceneSwitchHarness: ==================================================
+exit=0

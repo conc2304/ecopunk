@@ -2,7 +2,9 @@
 
 #include "VideoPlaybackService.h"
 #include "TimeOffsetPlaybackAdapter.h"
+#include <cstdint>
 #include <string>
+#include <vector>
 
 // Shared Video — Temporal Fields Specialized Adapter Seam session's
 // required real-decoder proof (prompt §8/§11): exercises the REAL,
@@ -41,10 +43,40 @@ private:
 		AfterFirstFrame,
 		WaitForHistoryFill,
 		AfterHistoryFill,
+		WaitForRefillAfterReactivation, // TEMP-004
+		RepetitionTrigger,              // TEMP-004: 5 reactivations + 3 canonical media changes
+		RepetitionWaitForRefill,
+		RepetitionHold,
 		Done
 	};
 
+	// TEMP-004 repetition phase
+	enum class RepEvent { Reactivation, MediaChange };
+	void triggerRepetitionEvent();
+	void finishRepetitionEvent();
+	std::vector<RepEvent> repPlan_;
+	size_t repIndex_ = 0;
+	int repFramesWaited_ = 0;
+	int repStaleFrames_ = 0;
+	int repHoldFrames_ = 0;
+	int repReloadsAfterTrigger_ = 0;
+	uint64_t repPreClearHash_ = 0;
+	std::string repPreClearFile_;
+	std::string repMediaId_;
+	std::string repPath_;
+	std::vector<float> repOffsets_;
+	int totalStaleAfterReactivation_ = 0;
+	int totalStaleAfterMediaChange_ = 0;
+	int reactivationCount_ = 0;
+	int mediaChangeCount_ = 0;
+
 	void finish();
+	void finalize();
+
+	// TEMP-004 helpers/state
+	int allocatedPlayheadCount();
+	uint64_t firstAllocatedPlayheadHash();
+	uint64_t preChangePlayheadHash_ = 0;
 
 	Stage stage_ = Stage::WaitForFirstFrame;
 	float stageElapsedSeconds_ = 0.0f;
