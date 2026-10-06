@@ -33,8 +33,9 @@ RT-002 rerun after TEMP-004 — 20/20 cycles, 115,726 checks, 0 failures,
 macOS desktop, 2026-10-05.
 
 Next Architecture Gate:
-DURABLE MILESTONE: push 59c24f4..597ee65 (plus this reconciliation) to origin,
-then RT-003 / RT-002 → CLOSED.
+DURABLE MILESTONE: push blueprint-emergence-updates (59c24f4, 597ee65, 6cefb46
++ the closure-reconciliation commit) to origin; Architecture then records the
+durable milestone and RT-003 / RT-002 / TEMP-001 → CLOSED.
 
 Current Blocking Uncertainty:
 1. Raspberry Pi 3B+ feasibility — nothing has ever been built or measured on
@@ -44,8 +45,9 @@ Current Blocking Uncertainty:
    Architecture-Rulings-Relay-First-Two-Scene-Milestone.md (ARCH-003).
 
 Current NOW Item:
-First-two-scene durability: commit + push (owner: repository owner; agents
-are prohibited from Git mutation by .claude/CLAUDE.md).
+First-two-scene durability: push (closure docs committed in 6cefb46; owner
+commits the reconciliation follow-up and pushes — agents are prohibited from
+Git mutation by .claude/CLAUDE.md).
 ```
 
 ---
@@ -119,7 +121,12 @@ Allowed values: `NOT_STARTED` · `PENDING` · `PASS` · `FAIL` · `NOT_REQUIRED`
 - Architecture must not treat required work as durable while it is `UNTRACKED` or `WORKTREE_ONLY`.
 - An item may state the durability its dependents require (`Required Durability:`). **Interim default** until BUILD-001 is decided: `COMMITTED` on a branch pushed to `origin`.
 
-**Current repository fact (2026-10-06):** all committed work lives on `blueprint-emergence-updates`. Local HEAD is `597ee65`; `origin/blueprint-emergence-updates` is still at `d25cc13`. Local is **2 commits ahead and unpushed**: `59c24f4` (RT-003) and `597ee65` (TEMP-004 + RT-002). The working tree was clean before this reconciliation, with no stashes. Local `main` and `initial-draft` are at `e12b39b` and have never been pushed. No integration branch is designated, so no item is `MERGED` — see BUILD-001.
+**Current repository fact (2026-10-06, re-verified after the owner's commit):** all committed work lives on `blueprint-emergence-updates`. `origin/blueprint-emergence-updates` is still at `d25cc13`. Local is **3 commits ahead and unpushed**:
+- `59c24f4` (RT-003);
+- `597ee65` (TEMP-004 + RT-002);
+- `6cefb46` "document status and pi build", 2026-10-06 09:37. It contains the first-two-scene closure documents (registry, acceptance record, rulings relay, two imported specs, closure report) **and** the Raspberry Pi pipeline's `sketches/experience_runtime/config.make` Linux linker branch.
+
+The working tree was clean at verification, with no stashes. Local `main` and `initial-draft` are at `e12b39b` and have never been pushed. No integration branch is designated, so no item is `MERGED` — see BUILD-001.
 
 ## Work IDs
 
@@ -167,7 +174,7 @@ Off-repo evidence is cited as `OFF-REPO: ~/Downloads/<file>` and is never suffic
 |---|---|---|---|---|---|---|---|---|
 | ARCH-001 | ACCEPTED | PASS | NOT_REQUIRED | NOT_REQUIRED | PASS | NOT_REQUIRED | PENDING | COMMITTED |
 | ARCH-002 | IMPLEMENTED | PASS | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_REQUIRED | PASS | COMMITTED |
-| ARCH-003 | IN_PROGRESS | PENDING | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | PENDING | WORKTREE_ONLY |
+| ARCH-003 | IN_PROGRESS | PASS | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | PASS | COMMITTED |
 | ARCH-004 | READY | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
 | BUILD-001 | READY | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
 | RT-001 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PENDING | COMMITTED |
@@ -292,13 +299,13 @@ Next Gate:
 None (documentation durability only).
 
 Next Action:
-Repository owner commits the imported/recorded files. Architecture decides whether the remaining `~/Downloads` artifacts above should be imported in a later pass.
+Push `blueprint-emergence-updates`. Architecture decides whether the remaining `~/Downloads` artifacts above should be imported in a later pass. Architecture has ruled (2026-10-06) that the clearly labeled relay record is sufficient durable documentation for the missing original RT-003/TEMP-004 rulings, and that the unrecoverable RT-003 domain review is not a durability blocker.
 
 Blocked By:
 None
 
 Source State:
-WORKTREE_ONLY (2026-10-06 imports + relay record); remaining items UNTRACKED
+COMMITTED (`6cefb46`, 2026-10-06 imports + relay record; **not pushed**); remaining items UNTRACKED
 
 Last Updated:
 2026-10-05
@@ -981,10 +988,10 @@ Current Evidence:
 - OFF-REPO: restart audit — "Temporal manager recommended conditional acceptance … unconditional Architecture acceptance not safely proven"; its open condition was source-control persistence, now confirmed (see Source State)
 
 Next Gate:
-CLOSED — once the relay record is committed and pushed (Architecture to confirm the relay suffices as the in-repo ruling).
+CLOSED — prepared. Architecture ruled (2026-10-06) the labeled relay record sufficient documentation; the relay is committed in `6cefb46`. The only outstanding condition is the push.
 
 Next Action:
-Repository owner commits/pushes the closure; Architecture records CLOSED.
+Repository owner pushes; Architecture records CLOSED.
 
 Blocked By:
 None

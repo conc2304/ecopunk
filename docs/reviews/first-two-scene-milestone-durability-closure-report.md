@@ -298,3 +298,59 @@ ARCHITECTURE HANDOFF REQUIRED: YES
 
 **DURABILITY CLOSURE: PARTIAL**
 **REMAINING REQUIREMENT: owner commit of the 6 closure files (A6) and push of `blueprint-emergence-updates` (`59c24f4`, `597ee65` + closure commit) to `origin`**
+
+---
+
+# Addendum B — correction after the owner's commit (2026-10-06, final reconciliation)
+
+Addendum A recorded the repository as observed at about 09:35. Shortly after, the owner committed. That state is superseded as follows, verified directly from Git. Addendum A is kept unchanged as the record of what was observed at the time.
+
+## B1. Corrections to Addendum A
+
+| Addendum A said | Repository now says |
+|---|---|
+| The 6 closure files are `WORKTREE_ONLY`; the owner should `git add` them (A6) | **COMMITTED** in `6cefb46` "document status and pi build" (Jose Conchello, 2026-10-06 09:37:12). The committed versions include Addendum A. Both imported specs are still byte-identical to their `~/Downloads` sources. |
+| `config.make` is uncommitted, apparently Pi/Linux work, to remain dirty and be excluded | **Not dirty.** The same 13-line Linux `--gc-sections` linker branch was committed in that **same commit `6cefb46`**. `git diff HEAD` and `git diff --cached` are empty for it. It is owned by the Raspberry Pi Runtime & Performance pipeline. It was not committed in a separate Pi-only commit; it shares `6cefb46` with the closure documents. This closure did not modify, revert or absorb it. |
+| "expect only config.make left unstaged" | The working tree was **clean** at verification. No working-tree change is expected after the owner commits this addendum. |
+| Branch 2 ahead of origin | **3 ahead, unpushed**: `59c24f4`, `597ee65`, `6cefb46`. |
+
+## B2. Verified state
+
+| Check | Result |
+|---|---|
+| `59c24f4` | Ancestor of HEAD; 31 files: RT-003 code/tests/harness/report/logs, plus the Work Registry protocol docs (ARCH-002) and the committed controller test binary |
+| `597ee65` | Ancestor of HEAD; 41 files: TEMP-004 code + focused self-test, RT-002 harness + `ofApp` wiring, RT-002/TEMP-004/rerun reports, logs, 11 curated captures, `.gitignore` (`scripts/deploy.local.env`) |
+| TEMP-004 source, RT-002 harness, logs, captures, rerun report | **Unchanged** since `597ee65` (`git diff 597ee65 HEAD` empty) |
+| Clean PASS evidence (committed log) | 20/20 cycles, 115,726 checks, 0 failures, `RESULT: PASS`; 20 Temporal activations, 0 stale frames, 0 reuse, 0 `texture is not allocated`; mid-transition frame 7032; preset frame 2321. The rerun report still marks clean run B as the acceptance record. |
+| Frozen contracts | No change since `d25cc13` |
+| Curated captures | 11 committed (clean-B mid-transition, first-incoming both directions, final Blob; original-run set incl. loading). `bin/data/captures/` (41 MB) stays git-ignored. |
+
+## B3. Changes made in this final reconciliation (uncommitted)
+
+- `docs/shared-project-docs/03-work-registry.md`:
+  - repository-fact paragraph, Frontier and NOW now say 3 ahead / `6cefb46`;
+  - ARCH-003 is `IN_PROGRESS` with SC `COMMITTED` (`6cefb46`, not pushed) and records Architecture's ruling that the relay is sufficient and the missing domain review is not a blocker;
+  - TEMP-001 Next Gate is "CLOSED — prepared; push outstanding".
+- `docs/reviews/first-two-scene-milestone-durability-closure-report.md`: this addendum.
+
+No other file was touched. The relay record keeps its "verbatim relay record" identity, and no original document was fabricated.
+
+## B4. Owner commands (supersede A6)
+
+```bash
+git add docs/shared-project-docs/03-work-registry.md \
+        docs/reviews/first-two-scene-milestone-durability-closure-report.md
+git status --short     # expect: nothing besides the two staged files
+git commit -m "Reconcile first-two-scene durability closure with 6cefb46"
+git push origin blueprint-emergence-updates
+git status -sb         # expect: ## blueprint-emergence-updates...origin/blueprint-emergence-updates (no "ahead")
+```
+
+Return to Architecture:
+- **closure commit hash:** the new commit's hash (also: `6cefb46` holds the closure docs);
+- **push result:** the `git push` output, including the `d25cc13..<new hash>` range;
+- **`git status -sb`:** the line from the last command.
+
+Architecture then decides on `FIRST DURABLE TWO-SCENE MILESTONE: ACCEPTED` and the terminal registry states (RT-003, RT-002, TEMP-001 → CLOSED; Source States → pushed). This report does not declare the milestone durable.
+
+**DURABILITY CLOSURE: READY FOR OWNER COMMIT/PUSH**
