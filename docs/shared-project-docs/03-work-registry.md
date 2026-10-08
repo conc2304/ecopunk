@@ -185,7 +185,7 @@ Off-repo evidence is cited as `OFF-REPO: ~/Downloads/<file>` and is never suffic
 | HUD-003 | READY | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
 | HUD-004 | UNKNOWN | UNKNOWN | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_REQUIRED | UNKNOWN | UNKNOWN |
 | HUD-005 | BACKLOG | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
-| HUD-006 | BLOCKED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
+| HUD-006 | ACCEPTED | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | PASS | NOT_REQUIRED | PENDING | WORKTREE_ONLY |
 | ART-001 | BLOCKED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
 | ART-002 | BACKLOG | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
 | ART-003 | BACKLOG | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
@@ -594,7 +594,7 @@ Next Action:
 HUD Art / HUD Runtime managers record the loader-contract draft's real state here (resolves UNKNOWN to IN_PROGRESS or BACKLOG). Separately, the authorized repository owner pushes `4bc1be7` when ready.
 
 Blocked By:
-None (evidence gap). Production compatibility remains blocked on HUD-006.
+None (evidence gap). Canonical Blueprint identity now frozen by HUD-006 / DEC-019 (`ecopunk-hud-blueprint` / `1`); the tools-only validator still takes it as an explicit caller input (no default), and any compatibility reconciliation is a separate, unauthorized proposal.
 
 Source State:
 UNKNOWN (overall item). Foundation sub-evidence: COMMITTED (`4bc1be7`, `blueprint-emergence-updates`; not pushed).
@@ -631,31 +631,36 @@ Last Updated:
 
 ### HUD-006 — HUD Blueprint v1 freeze
 
-Status: BLOCKED
+Status: ACCEPTED
 Owner: HUD Art Pipeline & Skin Production
 Architecture Gate: YES
 
 Depends On:
-- HUD-004 [UNKNOWN]
-- PI-003 [BLOCKED]
+- HUD-001 [ACCEPTED]
+- (HUD-004 and PI-003 released as HUD-006 prerequisites by the identity freeze record: Pi budgets do not gate the identity freeze, and HUD-004 remains a separate open item.)
 
 Current Evidence:
-- DEC-012 (one canonical Blueprint policy); [../reviews/hud-runtime-architecture-closure-review.md](../reviews/hud-runtime-architecture-closure-review.md) — "No Blueprint freeze claimed"
+- [Architecture-Freeze-HUD-006-Canonical-Blueprint-Identity-v1.md](Architecture-Freeze-HUD-006-Canonical-Blueprint-Identity-v1.md) — **APPROVED** 2026-10-08: `blueprintId` `ecopunk-hud-blueprint`, `blueprintVersion` `1`, exact-match compatibility; baseline 1280×720, 19 regions (`HudRegionCatalog.cpp`, `557edc3`; "20" is an erratum), geometry `hud-wireframe-bounds-v1.md` and wireframe typography `hud-typography-metrics-v1.md` (both `d25cc13`), `MediaViewportMesh` clipping; production `MinimalSlice` (13) is a permitted subset; region gaps are the v1 safe-area policy. Imported unmodified from `~/Downloads`. DEC-019.
+- [Architecture-Acceptance-HUD-006-Blueprint-Construction-Crosswalk-v1.md](Architecture-Acceptance-HUD-006-Blueprint-Construction-Crosswalk-v1.md) — **ACCEPTED — REVIEW COMPLETE** (verbatim relay, 2026-10-08) of [HUD-006-Blueprint-Construction-Crosswalk-v1-Runtime-Reviewed.md](HUD-006-Blueprint-Construction-Crosswalk-v1-Runtime-Reviewed.md) as the authoritative HUD Art construction reference (imported unmodified; checked against source at `dfbe169` in the relay record).
+- [../reviews/hud-006-hud-004-source-verification-report.md](../reviews/hud-006-hud-004-source-verification-report.md) — read-only source verification at `dfbe169` cited by the freeze record (no builds/tests run).
+- DEC-012 (one canonical Blueprint policy) — now identified by DEC-019.
+- Deferred, nonblocking: `universal.timing` inset/text-budget documentation.
+- Not established: final skin typography, Skin Package v1 (HUD-004), production loader (HUD-005), Pi skin budgets, explicit active-binding configuration per profile.
 
 Next Gate:
-Architecture freeze review (checkpoint "HUD Blueprint").
+CLOSED once the filing is committed and pushed by the repository owner.
 
 Next Action:
-None until dependencies resolve.
+Repository owner reviews and commits this filing (freeze record, crosswalk, relay record, verification report, DEC-019, this entry); then set Docs PASS and Source State COMMITTED with the hash. Push to `origin` for CLOSED. An optional validator compatibility reconciliation may be proposed separately; not authorized.
 
 Blocked By:
-HUD-004, PI-003
+None. CLOSED awaits repository-owner durability only.
 
 Source State:
-NOT_APPLICABLE
+WORKTREE_ONLY (filed 2026-10-08 in the working tree; not committed, not pushed).
 
 Last Updated:
-2026-10-05
+2026-10-08
 
 ## HUD Art Pipeline & Skin Production
 
@@ -666,7 +671,7 @@ Owner: HUD Art Pipeline & Skin Production
 Architecture Gate: YES
 
 Depends On:
-- HUD-006 [BLOCKED]
+- HUD-006 [ACCEPTED]
 - HUD-004 [UNKNOWN]
 - PI-003 [BLOCKED]
 

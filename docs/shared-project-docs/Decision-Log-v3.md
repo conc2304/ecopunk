@@ -163,3 +163,39 @@ There shall be exactly one canonical HUD Blueprint. All HUD skins implement the 
 - **Decision:** Blueprint Emergence's production behavior does not depend on the unused `VideoSampler::requestCapture()` seek/callback path. Future Blueprint migration work should preserve continuous live texture/pixel sampling and crop behavior, not rebuild an unused capture subsystem unless a new product requirement intentionally reintroduces it.
 - **Rationale:** Repository-wide call-site inspection found no production callers.
 - **Consequences:** Future Blueprint prompts should remove still-frame capture preservation from required scope.
+
+---
+
+## DEC-019 — Canonical HUD Blueprint Identity v1 (HUD-006)
+
+- **Status:** Approved
+- **Date:** 2026-10-08
+- **Owner:** Architecture & Program Coordination
+- **Affected domains:** HUD Runtime, HUD Art Pipeline & Skin Production, Skin Package (HUD-004/HUD-005)
+- **Decision:**
+  - The canonical Blueprint identity is `blueprintId` = `ecopunk-hud-blueprint`, `blueprintVersion` = `1`.
+  - Compatibility is an exact match of both values: no ranges, aliases, implicit defaults or fallback identity.
+  - `skinId`/`skinVersion` independently identify a skin package and its release.
+  - The source baseline is:
+    - the 1280×720 logical canvas;
+    - 19 distinct regions in `HudRegionCatalog.cpp` (`557edc3`); the earlier claim of 20 regions is an erratum;
+    - geometry from `hud-wireframe-bounds-v1.md` (`d25cc13`);
+    - wireframe typography from `hud-typography-metrics-v1.md` (`d25cc13`), which does not freeze final skin typography;
+    - `MediaViewportMesh` mesh clipping with no raster media mask.
+  - Production `MinimalSlice` (13 regions) is a permitted presentation subset of the one 19-region Blueprint.
+  - Region rectangles and their separation gaps are the v1 safe-area policy.
+- **Consequences:**
+  - Changes to region IDs, geometry, region semantics/bindings, the viewport contract or the meaning of presentation scopes require Architecture review and an explicit compatibility-version decision.
+  - Enabling or disabling existing regions does not by itself require a version bump.
+  - No skin may redefine geometry or region IDs.
+  - No production default exists for the expected Blueprint pair. The tools-only validator keeps requiring explicit caller inputs and fails closed.
+  - Pi budgets do not gate this identity freeze; they gate later skin production acceptance.
+  - Historic dotted art IDs and runtime raster-mask requirements are superseded as construction requirements.
+- **Source documents:**
+  - [Architecture-Freeze-HUD-006-Canonical-Blueprint-Identity-v1.md](Architecture-Freeze-HUD-006-Canonical-Blueprint-Identity-v1.md);
+  - [Architecture-Acceptance-HUD-006-Blueprint-Construction-Crosswalk-v1.md](Architecture-Acceptance-HUD-006-Blueprint-Construction-Crosswalk-v1.md);
+  - [../reviews/hud-006-hud-004-source-verification-report.md](../reviews/hud-006-hud-004-source-verification-report.md).
+- **Follow-up actions:**
+  - `universal.timing` inset/text-budget documentation (nonblocking).
+  - An optional, separately proposed validator compatibility reconciliation.
+  - HUD-004, HUD-005, image decoding, fallback, Studio loader parity, GPU residency and asset-root delivery remain open and unauthorized.
