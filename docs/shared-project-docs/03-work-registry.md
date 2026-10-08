@@ -185,7 +185,7 @@ Off-repo evidence is cited as `OFF-REPO: ~/Downloads/<file>` and is never suffic
 | HUD-003 | READY | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
 | HUD-004 | UNKNOWN | UNKNOWN | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_REQUIRED | UNKNOWN | UNKNOWN |
 | HUD-005 | BACKLOG | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
-| HUD-006 | ACCEPTED | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | PASS | NOT_REQUIRED | PENDING | WORKTREE_ONLY |
+| HUD-006 | ACCEPTED | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | PASS | NOT_REQUIRED | PASS | COMMITTED |
 | ART-001 | BLOCKED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
 | ART-002 | BACKLOG | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
 | ART-003 | BACKLOG | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
@@ -648,16 +648,16 @@ Current Evidence:
 - Not established: final skin typography, Skin Package v1 (HUD-004), production loader (HUD-005), Pi skin budgets, explicit active-binding configuration per profile.
 
 Next Gate:
-CLOSED once the filing is committed and pushed by the repository owner.
+CLOSED once `1e5334f` is pushed to `origin` (interim durability default).
 
 Next Action:
-Repository owner reviews and commits this filing (freeze record, crosswalk, relay record, verification report, DEC-019, this entry); then set Docs PASS and Source State COMMITTED with the hash. Push to `origin` for CLOSED. An optional validator compatibility reconciliation may be proposed separately; not authorized.
+Repository owner pushes `blueprint-emergence-updates`. An optional validator compatibility reconciliation may be proposed separately; not authorized.
 
 Blocked By:
-None. CLOSED awaits repository-owner durability only.
+None. CLOSED awaits push only.
 
 Source State:
-WORKTREE_ONLY (filed 2026-10-08 in the working tree; not committed, not pushed).
+COMMITTED (`1e5334f`, `blueprint-emergence-updates`; **not pushed**).
 
 Last Updated:
 2026-10-08
