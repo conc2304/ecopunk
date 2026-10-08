@@ -576,23 +576,31 @@ Depends On:
 - HUD-001 [ACCEPTED]
 
 Current Evidence:
-- No specification or loader-contract artifact in the repository or `~/Downloads`.
+- OFF-REPO (UNTRACKED): `~/Downloads/skin-package-loader-contract-v1-first-draft.md` — Skin Package Loader Contract v1, **first draft only**; not accepted or frozen. No Skin Package Specification v1 artifact located.
 - OFF-REPO: restart audit §4 — "Skin Package Specification still in draft/freeze work"; `MediaViewportMesh` is the runtime clipping authority (no raster media mask).
+
+Accepted sub-evidence — tools-only manifest validation foundation (does NOT complete HUD-004):
+- Scope: OF-free, nonproduction `skin.json` parser/validator, shell-only fixture and headless tests in `tools/hud-skin-manifest/`. Compiled by no openFrameworks app (not `experience_runtime`, not Validation Studio, not any `shared/src` sweep).
+- Acceptance: [Architecture-Acceptance-HUD-Skin-Manifest-Final-Schema-Alignment.md](Architecture-Acceptance-HUD-Skin-Manifest-Final-Schema-Alignment.md) — **ACCEPTED — Bounded tools-only implementation** (verbatim relay record, 2026-10-08). Earlier increments: foundation provisionally accepted, then hardened, under `~/Downloads` artifacts (UNTRACKED) cited in that record.
+- Verification (desktop, macOS, 2026-10-08, reported by coding agent): `make -f Makefile.tests test` 394/394, 0 warnings; ASan/UBSan `-Wpedantic` 394/394, 0 warnings, exit 0.
+- Implements the Architecture-ruled schema subset only: explicit caller-supplied Blueprint ID/version (fail-closed `SKIN_POLICY_BLUEPRINT_UNSET`, no default); strict JSON; unknown fields/classes rejected; shell required; `coordinateSpace: "canvas"`; mandatory `expectedWidth` = 1280 and `expectedHeight` = 720 on every declared shell/decoration/emissive asset; `skinId`/`skinVersion` grammar; all `..` segments and all symlinks rejected; atlas temporarily rejected.
+- Does NOT establish: Skin Package v1 freeze, canonical Blueprint compatibility (HUD-006), image decoding/alpha/dimension validity, atlas/icon roles, production loader (HUD-005), Studio parity, GPU residency, or any Pi evidence.
+- Durability: COMMITTED in `4bc1be7` on `blueprint-emergence-updates`, **not pushed**. Not durable under the interim default (pushed to `origin`) until pushed.
 
 Next Gate:
 Architecture freeze review (Governance review checkpoint "Skin Package Spec").
 
 Next Action:
-HUD Art / HUD Runtime managers locate the latest draft and record its real state here. Resolves to IN_PROGRESS or BACKLOG.
+HUD Art / HUD Runtime managers record the loader-contract draft's real state here (resolves UNKNOWN to IN_PROGRESS or BACKLOG). Separately, the authorized repository owner pushes `4bc1be7` when ready.
 
 Blocked By:
-None (evidence gap)
+None (evidence gap). Production compatibility remains blocked on HUD-006.
 
 Source State:
-UNKNOWN
+UNKNOWN (overall item). Foundation sub-evidence: COMMITTED (`4bc1be7`, `blueprint-emergence-updates`; not pushed).
 
 Last Updated:
-2026-10-05
+2026-10-08
 
 ### HUD-005 — Skin Loader implementation
 
