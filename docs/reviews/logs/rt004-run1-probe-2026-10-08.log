@@ -1,0 +1,231 @@
+=== RT-004 stall probe enabled: thresholdMs=200 sampleStacks=1 ===
+  NOTE frame=0 t=5.70793ms canonical.load: media.auto.61933905
+  NOTE frame=0 t=236.097ms scene.setup: blob-region-prototype
+  NOTE frame=0 t=296.034ms scene.activate: blob-region-prototype
+  NOTE frame=0 t=322.503ms probe.scopeOverheadNs: 129.709225
+
+--- LONG FRAME #1 frame=1 start=322.728ms interval=483.812ms covered=26.6919ms uncovered=457.12ms
+  context: live=1 phase=0 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.61933905 
+  previous frames:
+  scope tree (start offset ms, duration ms):
+    ofApp.update @0.000263 dur=0.067516
+      SceneManager.beginFrame @0.001053 dur=0.010447
+      SceneManager.updateActiveScene @0.012902 dur=0.031188
+      SceneManager.captureSceneStatus @0.045654 dur=0.015407
+      RuntimeServices.update @0.063825 dur=0.002369
+      SceneManager.captureEffectActivityStatus @0.0665 dur=0.000175
+    ofApp.draw @8.9157 dur=25.4815
+      ExperienceRuntime.sceneFboPass @8.91589 dur=12.5001
+        SceneManager.drawActiveScene @8.95976 dur=12.4335
+          Blob.core.draw @8.96141 dur=12.4297
+      Hud.update @21.4293 dur=0.267536
+      Hud.draw @21.6975 dur=12.6979
+    ofApp.draw @53.2346 dur=1.14287
+      ExperienceRuntime.sceneFboPass @53.235 dur=0.109385
+      Hud.update @53.3575 dur=0.322192
+      Hud.draw @53.6803 dur=0.695604
+  NOTE frame=525 t=15354.6ms driver.action: cycle1:Blob->Temporal (activation with media as currently selected)
+  NOTE frame=525 t=15354.7ms scene.deactivate: blob-region-prototype
+  NOTE frame=538 t=15786.6ms scene.setup: temporal-fields
+  NOTE frame=538 t=15786.8ms temporal.loadExplicit: vecteezy_closeup-and-moving-slowly-over-lush-foliage-fern-near-the_42675446 (1).mp4
+
+!!! WATCHDOG frame=538 main thread 1049.69ms into frame; open scopes: ofApp.update > SceneManager.beginFrame > SceneManager.setupEntry
+
+--- LONG FRAME #2 frame=538 start=15786.5ms interval=2475.63ms covered=2445.37ms uncovered=30.2633ms
+  context: live=0 phase=2 canonicalOrigin=0 owner= canonicalMedia=media.auto.61933905 
+  previous frames:
+    frame=530 interval=33.1079ms covered=2.31808ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.61933905 
+    frame=531 interval=33.5414ms covered=2.03171ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.61933905 
+    frame=532 interval=33.5702ms covered=2.47569ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.61933905 
+    frame=533 interval=33.2765ms covered=2.49772ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.61933905 
+    frame=534 interval=33.1181ms covered=2.42504ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.61933905 
+    frame=535 interval=33.3448ms covered=2.13961ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.61933905 
+    frame=536 interval=33.572ms covered=2.41459ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.61933905 
+    frame=537 interval=33.2036ms covered=2.26089ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.61933905 
+  scope tree (start offset ms, duration ms):
+    ofApp.update @0.008314 dur=2444.86
+      SceneManager.beginFrame @0.0092 dur=2342.35
+        SceneManager.setupEntry @0.011515 dur=2342.34
+          Temporal.synchronizeSelectedMedia @0.233353 dur=19.3436
+            TimeOffsetVideoBuffer.loadExplicit @0.233492 dur=19.3422
+              TimeOffsetVideoBuffer.player.load @0.848427 dur=18.6829
+      RuntimeServices.update @2342.36 dur=102.499
+        VideoPlaybackService.decoder.update @2342.36 dur=102.496
+          OfVideoDecoder.ofVideoPlayer.update @2342.36 dur=102.495
+      SceneManager.captureEffectActivityStatus @2444.86 dur=0.000416
+    ofApp.draw @2444.88 dur=0.51232
+      Hud.update @2444.89 dur=0.153832
+      Hud.draw @2445.04 dur=0.349677
+  NOTE frame=539 t=18262.4ms scene.activate: temporal-fields
+  NOTE frame=975 t=30359.1ms canonical.load: media.auto.1f0329b7
+  NOTE frame=975 t=30380ms driver.action: cycle1:next media while Temporal active
+  NOTE frame=975 t=30380ms canonical.load: media.auto.9fc43161
+  NOTE frame=976 t=30405.9ms temporal.loadExplicit: vecteezy_black-centipede-in-the-wild_1971372.mp4
+!!! WATCHDOG native stack sample -> /private/tmp/claude-501/-Users-joseconchello-openFrameworks/77663075-4629-42de-9c89-8f7cf58f5316/scratchpad/rt004/run1-probe.log.sample-frame538.txt rc=0
+  NOTE frame=1425 t=45360.8ms driver.action: cycle1:Temporal->Blob
+  NOTE frame=1425 t=45360.8ms scene.deactivate: temporal-fields
+  NOTE frame=1439 t=45819.4ms scene.activate: blob-region-prototype
+  NOTE frame=1725 t=55354.9ms driver.action: cycle1:next media during Blob dwell
+  NOTE frame=1725 t=55355ms canonical.load: media.auto.e8a7768a
+  NOTE frame=2025 t=65355.4ms driver.action: cycle1:Blob->Temporal (reactivation after Blob-dwell media change)
+  NOTE frame=2025 t=65355.5ms scene.deactivate: blob-region-prototype
+  NOTE frame=2039 t=65819.5ms scene.activate: temporal-fields
+  NOTE frame=2039 t=65819.7ms temporal.loadExplicit: vecteezy_slow-motion-rain-background_29105578.mp4
+  NOTE frame=2475 t=80360.8ms driver.action: cycle1:Temporal->Blob
+  NOTE frame=2475 t=80361.5ms scene.deactivate: temporal-fields
+  NOTE frame=2489 t=80819.1ms scene.activate: blob-region-prototype
+  NOTE frame=2626 t=85389.4ms canonical.load: media.auto.47d1cd1b
+  NOTE frame=2775 t=90354.9ms driver.action: cycle1:Blob->Temporal (reactivation, no manual media change)
+  NOTE frame=2775 t=90355.1ms scene.deactivate: blob-region-prototype
+  NOTE frame=2789 t=90819.2ms scene.activate: temporal-fields
+  NOTE frame=2789 t=90819.5ms temporal.loadExplicit: vecteezy_calm-ocean-background_68288092.mp4
+  NOTE frame=3225 t=105360ms driver.action: cycle1:Temporal->Blob
+  NOTE frame=3225 t=105360ms scene.deactivate: temporal-fields
+  NOTE frame=3239 t=105819ms scene.activate: blob-region-prototype
+  NOTE frame=3525 t=115354ms driver.action: cycle2:Blob->Temporal (activation with media as currently selected)
+  NOTE frame=3525 t=115354ms scene.deactivate: blob-region-prototype
+  NOTE frame=3527 t=115420ms canonical.load: media.auto.96a08d04
+  NOTE frame=3539 t=115819ms scene.activate: temporal-fields
+  NOTE frame=3539 t=115819ms temporal.loadExplicit:  ElectricLightning Storm (time lapse) - water hydro atmosphere sky.mp4
+
+--- LONG FRAME #3 frame=3622 start=118587ms interval=256.456ms covered=255.621ms uncovered=0.834212ms
+  context: temporalEpoch=4 canonicalOrigin=1 live=1 phase=0 owner=temporal-fields canonicalMedia=media.auto.96a08d04 
+  previous frames:
+    frame=3614 interval=32.9689ms covered=7.95522ms temporalEpoch=4 canonicalOrigin=1 live=1 phase=0 owner=temporal-fields canonicalMedia=media.auto.96a08d04 
+    frame=3615 interval=33.3823ms covered=6.71956ms temporalEpoch=4 canonicalOrigin=1 live=1 phase=0 owner=temporal-fields canonicalMedia=media.auto.96a08d04 
+    frame=3616 interval=33.4347ms covered=7.63633ms temporalEpoch=4 canonicalOrigin=1 live=1 phase=0 owner=temporal-fields canonicalMedia=media.auto.96a08d04 
+    frame=3617 interval=33.4431ms covered=7.38242ms temporalEpoch=4 canonicalOrigin=1 live=1 phase=0 owner=temporal-fields canonicalMedia=media.auto.96a08d04 
+    frame=3618 interval=33.1269ms covered=8.07075ms temporalEpoch=4 canonicalOrigin=1 live=1 phase=0 owner=temporal-fields canonicalMedia=media.auto.96a08d04 
+    frame=3619 interval=33.7564ms covered=6.5965ms temporalEpoch=4 canonicalOrigin=1 live=1 phase=0 owner=temporal-fields canonicalMedia=media.auto.96a08d04 
+    frame=3620 interval=33.3344ms covered=8.42713ms temporalEpoch=4 canonicalOrigin=1 live=1 phase=0 owner=temporal-fields canonicalMedia=media.auto.96a08d04 
+    frame=3621 interval=33.3448ms covered=9.74393ms temporalEpoch=4 canonicalOrigin=1 live=1 phase=0 owner=temporal-fields canonicalMedia=media.auto.96a08d04 
+  scope tree (start offset ms, duration ms):
+    ofApp.update @0.011898 dur=253.943
+      SceneManager.beginFrame @0.012624 dur=0.003174
+      SceneManager.updateActiveScene @0.016594 dur=6.04489
+        Temporal.adapter.update @0.026024 dur=6.02444
+          TimeOffsetVideoBuffer.player.update @0.026281 dur=2.00141
+          TimeOffsetVideoBuffer.historyPush(copy+resize) @2.02866 dur=4.02012
+      SceneManager.captureSceneStatus @6.06186 dur=0.012024
+      RuntimeServices.update @6.07458 dur=247.868
+        VideoPlaybackService.decoder.update @6.07739 dur=247.864
+          OfVideoDecoder.ofVideoPlayer.update @6.07771 dur=247.862
+      SceneManager.captureEffectActivityStatus @253.943 dur=0.007279
+    ofApp.draw @253.979 dur=1.67863
+      ExperienceRuntime.sceneFboPass @253.979 dur=1.03428
+        SceneManager.drawActiveScene @254 dur=0.999707
+          Temporal.core.draw @254 dur=0.998678
+            TemporalCore.ambient.underlay @254.002 dur=0.163108
+            TemporalCore.composition.draw @254.166 dur=0.728085
+              TimeOffsetVideoBuffer.playheadUpload @254.169 dur=0.375881
+              TimeOffsetVideoBuffer.playheadUpload @254.571 dur=0.307557
+            TemporalCore.ambient.overlay @254.895 dur=0.103248
+      Hud.update @255.028 dur=0.104634
+      Hud.draw @255.133 dur=0.522562
+  NOTE frame=3975 t=130357ms driver.action: cycle2:next media while Temporal active
+  NOTE frame=3975 t=130358ms canonical.load: media.auto.9a8649a1
+  NOTE frame=3976 t=130387ms temporal.loadExplicit: vecteezy_turquoise-waves-rolled-on-the-rocks-beach-of-koh-miang_11120414.mp4
+  NOTE frame=4425 t=145359ms driver.action: cycle2:Temporal->Blob
+  NOTE frame=4425 t=145359ms scene.deactivate: temporal-fields
+  NOTE frame=4439 t=145818ms scene.activate: blob-region-prototype
+  NOTE frame=4725 t=155353ms driver.action: cycle2:next media during Blob dwell
+  NOTE frame=4725 t=155354ms canonical.load: media.auto.65b7fdf1
+  NOTE frame=5025 t=165353ms driver.action: cycle2:Blob->Temporal (reactivation after Blob-dwell media change)
+  NOTE frame=5025 t=165354ms scene.deactivate: blob-region-prototype
+  NOTE frame=5039 t=165819ms scene.activate: temporal-fields
+  NOTE frame=5039 t=165819ms temporal.loadExplicit: vecteezy_bottom-up-view-of-lush-foliage-big-trees-with-blue-sky_36250205.mp4
+  NOTE frame=5475 t=180359ms driver.action: cycle2:Temporal->Blob
+  NOTE frame=5475 t=180360ms scene.deactivate: temporal-fields
+  NOTE frame=5489 t=180818ms scene.activate: blob-region-prototype
+  NOTE frame=5626 t=185388ms canonical.load: media.auto.014b1a8c
+  NOTE frame=5775 t=190353ms driver.action: cycle2:Blob->Temporal (reactivation, no manual media change)
+  NOTE frame=5775 t=190354ms scene.deactivate: blob-region-prototype
+  NOTE frame=5789 t=190818ms scene.activate: temporal-fields
+  NOTE frame=5789 t=190818ms temporal.loadExplicit: Timelapse of Hurricane Milton  NOAA Satellite Images with Gulf water hydro.mp4
+  NOTE frame=6225 t=205359ms driver.action: cycle2:Temporal->Blob
+  NOTE frame=6225 t=205359ms scene.deactivate: temporal-fields
+  NOTE frame=6239 t=205818ms scene.activate: blob-region-prototype
+  NOTE frame=6525 t=215353ms driver.action: cycle3:Blob->Temporal (activation with media as currently selected)
+  NOTE frame=6525 t=215353ms scene.deactivate: blob-region-prototype
+  NOTE frame=6527 t=215420ms canonical.load: media.auto.4a618eef
+  NOTE frame=6539 t=215818ms scene.activate: temporal-fields
+  NOTE frame=6539 t=215818ms temporal.loadExplicit: vecteezy_aerial-view-of-white-sand-beach-and-water-surface-texture_7536781.mp4
+  NOTE frame=6975 t=230359ms driver.action: cycle3:next media while Temporal active
+  NOTE frame=6975 t=230359ms canonical.load: media.auto.e281a2b4
+  NOTE frame=6976 t=230386ms temporal.loadExplicit: vecteezy_waves-crashing-on-rocky-shore-in-tenerife-spain-during_78086617.mp4
+  NOTE frame=7425 t=245359ms driver.action: cycle3:Temporal->Blob
+  NOTE frame=7425 t=245359ms scene.deactivate: temporal-fields
+  NOTE frame=7439 t=245818ms scene.activate: blob-region-prototype
+  NOTE frame=7725 t=255353ms driver.action: cycle3:next media during Blob dwell
+  NOTE frame=7725 t=255353ms canonical.load: media.auto.dfe053fb
+  NOTE frame=8025 t=265353ms driver.action: cycle3:Blob->Temporal (reactivation after Blob-dwell media change)
+  NOTE frame=8025 t=265354ms scene.deactivate: blob-region-prototype
+  NOTE frame=8039 t=265817ms scene.activate: temporal-fields
+  NOTE frame=8039 t=265818ms temporal.loadExplicit: vecteezy_closeup-and-moving-slowly-over-lush-foliage-fern-near-the_42675446.mp4
+  NOTE frame=8475 t=280358ms driver.action: cycle3:Temporal->Blob
+  NOTE frame=8475 t=280358ms scene.deactivate: temporal-fields
+  NOTE frame=8489 t=280817ms scene.activate: blob-region-prototype
+  NOTE frame=8626 t=285387ms canonical.load: media.auto.97b545fd
+  NOTE frame=8775 t=290353ms driver.action: cycle3:Blob->Temporal (reactivation, no manual media change)
+  NOTE frame=8775 t=290353ms scene.deactivate: blob-region-prototype
+  NOTE frame=8789 t=290818ms scene.activate: temporal-fields
+  NOTE frame=8789 t=290818ms temporal.loadExplicit: vecteezy_beautiful-rain-drops-falling-on-to-tree-slow-motion-video_21921750.mp4
+  NOTE frame=9225 t=305359ms driver.action: cycle3:Temporal->Blob
+  NOTE frame=9225 t=305360ms scene.deactivate: temporal-fields
+  NOTE frame=9239 t=305817ms scene.activate: blob-region-prototype
+  NOTE frame=9527 t=315419ms canonical.load: media.auto.e20beffd
+  NOTE frame=9675 t=320352ms driver.action: exit
+  NOTE frame=9675 t=320384ms scene.deactivate: blob-region-prototype
+
+=== RT-004 SUMMARY frames=9675 longFrames=3 thresholdMs=200 ===
+label,count,totalMs,meanMs,p95Ms,p99Ms,maxMs
+ofApp.update,9675,45505.3,4.70339,6.60337,7.54406,2444.86
+SceneManager.beginFrame,9675,2566.94,0.265316,0.002876,0.005779,2342.35
+SceneManager.setupEntry,2,2402.28,1201.14,2342.34,2342.34,2342.34
+RuntimeServices.update,9675,16159.1,1.6702,1.94821,2.29605,247.868
+VideoPlaybackService.decoder.update,9675,15991.6,1.65288,1.94621,2.24704,247.864
+OfVideoDecoder.ofVideoPlayer.update,9675,15980.2,1.6517,1.94491,2.24619,247.862
+VideoPlaybackService.setup,1,235.523,235.523,235.523,235.523,235.523
+VideoPlaybackService.activateCandidate(decoder.load),14,512.028,36.5735,229.908,229.908,229.908
+OfVideoDecoder.ofVideoPlayer.load,14,507.498,36.2498,229.894,229.894,229.894
+VideoPlaybackService.next,6,237.214,39.5357,130.048,130.048,130.048
+SceneManager.updateActiveScene,9441,26348.2,2.79083,4.93004,5.44349,59.4223
+Temporal.adapter.update,5283,22560.9,4.27048,5.03259,5.88662,59.3988
+TimeOffsetVideoBuffer.player.update,5283,8819.58,1.66943,1.98787,2.44067,53.5111
+ofApp.draw,9676,13068.1,1.35056,2.45278,2.73422,36.211
+ExperienceRuntime.sceneFboPass,9442,8140.91,0.862202,1.91615,2.16573,35.8785
+SceneManager.drawActiveScene,9442,7784.26,0.824429,1.87197,2.11453,35.6361
+Temporal.core.draw,5283,7264.28,1.37503,1.9771,2.17704,35.6293
+TemporalCore.composition.draw,5274,6215.72,1.17856,1.70193,1.89226,32.1933
+Temporal.synchronizeSelectedMedia,5293,294.12,0.0555678,0.000564,0.000763,29.8034
+TimeOffsetVideoBuffer.loadExplicit,12,292.126,24.3438,29.8018,29.8018,29.8018
+SceneManager.activateEntry,19,201.508,10.6057,28.5914,28.5914,28.5914
+Temporal.activate,9,197.494,21.9438,28.3588,28.3588,28.3588
+TimeOffsetVideoBuffer.player.load,12,232.377,19.3647,24.5939,24.5939,24.5939
+VideoPlaybackService.automaticAdvance,7,149.273,21.3248,22.9407,22.9407,22.9407
+Hud.draw,9676,3919.42,0.405066,0.589751,0.747465,12.6979
+Blob.core.draw,4159,505.933,0.121648,0.427089,0.665749,12.4297
+TimeOffsetVideoBuffer.playheadUpload,27662,5749.7,0.207856,0.283405,0.369107,10.4047
+TemporalCore.ambient.underlay,5274,607.755,0.115236,0.191112,0.202869,7.24738
+TimeOffsetVideoBuffer.historyPush(copy+resize),5232,13731.3,2.62448,3.18487,4.00014,5.88391
+TimeOffsetVideoBuffer.resetHistory,12,52.4864,4.37387,5.60166,5.60166,5.60166
+VideoPlaybackService.listMediaDir,1,4.9982,4.9982,4.9982,4.9982,4.9982
+Hud.update,9676,896.254,0.0926265,0.147961,0.164637,2.45805
+Blob.core.update,4158,3536.31,0.850484,2.02617,2.10172,2.38177
+Temporal.core.update,5283,128.553,0.0243333,0.022613,0.355338,2.00048
+TemporalCore.composition.update,5283,120.303,0.0227718,0.020934,0.347301,1.99916
+TemporalCore.ambient.overlay,5274,320.846,0.0608355,0.079144,0.102556,0.882834
+TemporalCore.background.update,5283,3.2044,0.000606549,0.000772,0.000934,0.570943
+OfVideoDecoder.close,14,4.46934,0.319239,0.545364,0.545364,0.545364
+TemporalCore.background.draw,5274,105.677,0.0200374,0.063372,0.075353,0.45693
+SceneManager.deactivateEntry,19,3.28634,0.172965,0.422998,0.422998,0.422998
+TimeOffsetVideoBuffer.player.close,12,3.06765,0.255637,0.356535,0.356535,0.356535
+SceneManager.captureSceneStatus,9441,85.4605,0.00905206,0.011422,0.019435,0.053013
+SceneManager.captureEffectActivityStatus,9675,15.1876,0.00156978,0.005792,0.007499,0.040613
+SceneManager.queryCapabilities,19,0.022933,0.001207,0.002111,0.002111,0.002111
+ExperienceRuntime.reallocateSceneFbo,18,0.019739,0.00109661,0.001829,0.001829,0.001829
+OfVideoDecoder.play,14,0.006799,0.000485643,0.001106,0.001106,0.001106
+frameIntervalMs[owner=temporal-fields] n=5391 p50=33.3185 p95=34.1318 p99=34.7268 max=256.456
+frameIntervalMs[owner=] n=18 p50=33.3885 p95=2475.63 p99=2475.63 max=2475.63
+frameIntervalMs[owner=blob-region-prototype] n=4265 p50=33.3264 p95=33.8219 p99=34.1103 max=483.812
+frameIntervalMs p50=33.3232 p95=34.0087 p99=34.5498 max=2475.63

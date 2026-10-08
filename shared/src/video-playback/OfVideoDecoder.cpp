@@ -1,18 +1,20 @@
 #include "OfVideoDecoder.h"
+#include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 
 bool OfVideoDecoder::load(const std::string& absolutePath) {
-	player_.close();
-	bool ok = player_.load(absolutePath);
+	{ RT004_SCOPE("OfVideoDecoder.close"); player_.close(); }
+	bool ok;
+	{ RT004_SCOPE("OfVideoDecoder.ofVideoPlayer.load"); ok = player_.load(absolutePath); }
 	if (!ok) return false;
 	player_.setLoopState(OF_LOOP_NORMAL);
 	player_.setVolume(0);
-	player_.play();
+	{ RT004_SCOPE("OfVideoDecoder.play"); player_.play(); }
 	return true;
 }
 
 void OfVideoDecoder::update(float dt) {
 	(void)dt;  // ofVideoPlayer::update() paces itself from the system clock
-	if (player_.isLoaded()) player_.update();
+	if (player_.isLoaded()) { RT004_SCOPE("OfVideoDecoder.ofVideoPlayer.update"); player_.update(); }
 }
 
 void OfVideoDecoder::close() {

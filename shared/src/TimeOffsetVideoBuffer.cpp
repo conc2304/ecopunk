@@ -1,4 +1,5 @@
 #include "TimeOffsetVideoBuffer.h"
+#include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 #include "ofFileUtils.h"
 #include "ofLog.h"
 #include "ofMath.h"
@@ -113,10 +114,12 @@ void TimeOffsetVideoBuffer::advanceToNextMedia() {
 bool TimeOffsetVideoBuffer::loadExplicit(const std::string& absolutePath) {
 	// No scan, no shuffle, no playlist mutation, no fallback selection —
 	// mediaFiles/currentFileIndex are deliberately untouched here (DEC-014).
-	resetHistoryAndPlayheadTextures();
+	RT004_SCOPE("TimeOffsetVideoBuffer.loadExplicit");
+	rt004::Probe::get().note("temporal.loadExplicit", ofFilePath::getFileName(absolutePath));
+	{ RT004_SCOPE("TimeOffsetVideoBuffer.resetHistory"); resetHistoryAndPlayheadTextures(); }
 
-	player.close();
-	mediaLoaded = player.load(absolutePath);
+	{ RT004_SCOPE("TimeOffsetVideoBuffer.player.close"); player.close(); }
+	{ RT004_SCOPE("TimeOffsetVideoBuffer.player.load"); mediaLoaded = player.load(absolutePath); }
 	mediaElapsedTime = 0.0f;
 	mediaLoopCount = 0;
 	lastMediaPosition = 0.0f;
@@ -158,9 +161,10 @@ void TimeOffsetVideoBuffer::update(float dt) {
 		return;
 	}
 
-	player.update();
+	{ RT004_SCOPE("TimeOffsetVideoBuffer.player.update"); player.update(); }
 
 	if (player.isFrameNew()) {
+		RT004_SCOPE("TimeOffsetVideoBuffer.historyPush(copy+resize)");
 		ofPixels frame = player.getPixels();
 		frame.resize(settings.bufferWidth, settings.bufferHeight);
 		history.push_front(std::move(frame));
@@ -225,6 +229,7 @@ const ofTexture& TimeOffsetVideoBuffer::getPlayheadTexture(int playheadIndex) {
 	Playhead& ph = playheads[playheadIndex];
 
 	if (!ph.uploadedThisFrame) {
+		RT004_SCOPE("TimeOffsetVideoBuffer.playheadUpload");
 		int idx = offsetToHistoryIndex(ph.currentOffset);
 		if (idx >= 0) {
 			const ofPixels& px = history[idx];

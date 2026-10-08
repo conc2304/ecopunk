@@ -68,6 +68,7 @@ public:
 	int getManagedRegionCount() const { return static_cast<int>(managed.size()); }
 	int getScratchFboWidth() const { return effectRenderer.getScratchWidth(); }
 	int getScratchFboHeight() const { return effectRenderer.getScratchHeight(); }
+	VideoRegionEffectRenderer & renderer() { return effectRenderer; }
 
 	Params params;
 

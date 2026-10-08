@@ -127,6 +127,7 @@ void VideoRegionEffectRenderer::render(const RenderRequest & req, ShaderLibrary 
 	int w = std::max(1, static_cast<int>(std::round(req.destinationBounds.width)));
 	int h = std::max(1, static_cast<int>(std::round(req.destinationBounds.height)));
 
+	uint64_t tStart = ofGetElapsedTimeMicros();
 	ensureScratchFbos(w, h);
 
 	// 1. Capture this region's crop into the scratch source FBO's top-left
@@ -138,6 +139,9 @@ void VideoRegionEffectRenderer::render(const RenderRequest & req, ShaderLibrary 
 	req.sourceTexture->drawSubsection(0, 0, w, h,
 		req.sourceCropPixels.x, req.sourceCropPixels.y, req.sourceCropPixels.width, req.sourceCropPixels.height);
 	scratchSourceFbo.end();
+
+	uint64_t tSourceDone = ofGetElapsedTimeMicros();
+	stageTimings.sourceMs += static_cast<double>(tSourceDone - tStart) / 1000.0;
 
 	bool hasEffect = !req.effectName.empty() && shaderLib.has(req.effectName);
 
@@ -157,6 +161,41 @@ void VideoRegionEffectRenderer::render(const RenderRequest & req, ShaderLibrary 
 	// ofGetWidth()/ofGetHeight() (the bug this class exists to avoid; see
 	// Quadrant.cpp:276 for the sketch-local example that gets it wrong).
 	ofShader & sh = shaderLib.get(req.effectName);
+
+	// 2a. Direct output: run the shader straight into the currently bound
+	// target at destinationBounds, skipping the scratch result FBO and the
+	// separate composite draw. Only taken when it is pixel-equivalent to
+	// the 2-3 path below under the standard OF_BLENDMODE_ALPHA blend
+	// (SRC_ALPHA, ONE_MINUS_SRC_ALPHA on all four channels): that path
+	// blends the shader's output alpha a twice (once into the cleared
+	// result FBO, once more in the composite, times req.alpha), giving
+	// c*a^3*alpha over dst*(1 - a^2*alpha); a single direct blend gives
+	// c*a over dst*(1 - a). Those agree only when req.alpha == 1 and the
+	// shader's own alpha is 0 or 1 — which every catalog effect's output
+	// is at effectAmount == 1 (the production default). Fading fragments
+	// (Fragment DISSOLVING, alpha < 1) or a reduced effectAmount keep the
+	// 3-stage path, so no shader or uniform contract changes are needed.
+	// Uniforms and texcoords are identical to step 2 (same local
+	// resolution, same 0..w/scratchW source sub-rect); only the vertex
+	// rect moves, and no catalog shader reads gl_FragCoord.
+	bool direct = directOutputEnabled && req.alpha >= 1.0f && req.effectAmount >= 1.0f;
+	if (direct) {
+		sh.begin();
+		sh.setUniformTexture("tex", scratchSourceFbo.getTexture(), 0);
+		sh.setUniformTexture("tex0", scratchSourceFbo.getTexture(), 0);
+		sh.setUniform2f("resolution", static_cast<float>(w), static_cast<float>(h));
+		setEffectUniforms(sh, req.effectName, ofClamp(req.effectAmount, 0.0f, 1.0f));
+		ofSetColor(255);
+		scratchSourceFbo.getTexture().drawSubsection(
+			req.destinationBounds.x, req.destinationBounds.y, req.destinationBounds.width, req.destinationBounds.height,
+			0, 0, w, h);
+		sh.end();
+
+		stageTimings.directDraws++;
+		stageTimings.shaderDirectMs += static_cast<double>(ofGetElapsedTimeMicros() - tSourceDone) / 1000.0;
+		return;
+	}
+
 	scratchResultFbo.begin();
 	ofClear(0, 0, 0, 0);
 	sh.begin();
@@ -169,6 +208,9 @@ void VideoRegionEffectRenderer::render(const RenderRequest & req, ShaderLibrary 
 	sh.end();
 	scratchResultFbo.end();
 
+	uint64_t tShaderDone = ofGetElapsedTimeMicros();
+	stageTimings.shaderResultMs += static_cast<double>(tShaderDone - tSourceDone) / 1000.0;
+
 	// 3. Composite into the destination rect with a plain textured draw (no
 	// shader bound), so req.alpha blends correctly even for effects whose
 	// own "alpha" uniform is being used for something other than opacity.
@@ -177,4 +219,7 @@ void VideoRegionEffectRenderer::render(const RenderRequest & req, ShaderLibrary 
 		req.destinationBounds.x, req.destinationBounds.y, req.destinationBounds.width, req.destinationBounds.height,
 		0, 0, w, h);
 	ofSetColor(255);
+
+	stageTimings.legacyDraws++;
+	stageTimings.compositeMs += static_cast<double>(ofGetElapsedTimeMicros() - tShaderDone) / 1000.0;
 }

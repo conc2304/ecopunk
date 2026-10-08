@@ -1,4 +1,5 @@
 #include "VideoPlaybackService.h"
+#include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 
 #include "OfVideoDecoder.h"
 
@@ -33,9 +34,11 @@ bool VideoPlaybackService::setup(const Config& config) {
 	// (see docs/video-playback-ownership-probe-report.md §B — VideoSampler,
 	// TimeOffsetVideoBuffer, and VideoSystem all filter to .mp4 only).
 	std::vector<std::string> discoveredRelativePaths;
+	RT004_SCOPE("VideoPlaybackService.setup");
 	ofDirectory dir;
 	dir.allowExt("mp4");
 	if (dir.doesDirectoryExist(mediaRoot_)) {
+		RT004_SCOPE("VideoPlaybackService.listMediaDir");
 		dir.listDir(mediaRoot_);
 		for (const auto& file : dir.getFiles()) {
 			// relativePath is stored relative to mediaRoot_ so a later
@@ -83,6 +86,8 @@ bool VideoPlaybackService::activateCandidate(int catalogIndex) {
 	if (catalogIndex < 0 || catalogIndex >= static_cast<int>(catalog_.size())) return false;
 	const MediaMetadata& item = catalog_[static_cast<size_t>(catalogIndex)];
 	std::string absolutePath = ofFilePath::join(mediaRoot_, item.relativePath);
+	rt004::Probe::get().note("canonical.load", item.mediaId);
+	RT004_SCOPE("VideoPlaybackService.activateCandidate(decoder.load)");
 	bool ok = decoder_->load(absolutePath);
 	if (!ok) {
 		ofLogWarning(kLogName) << "failed to load: " << absolutePath;
@@ -100,6 +105,8 @@ bool VideoPlaybackService::attemptSelection(const std::function<std::optional<in
 		if (activateCandidate(*candidate)) {
 			MediaSelectionOrigin finalOrigin = anyFailure ? MediaSelectionOrigin::Recovery : baseOrigin;
 			policy_.confirmActivationSucceeded(*candidate, finalOrigin);
+			rt004::Probe::get().setContext("canonicalMedia", catalog_[static_cast<size_t>(*candidate)].mediaId);
+			rt004::Probe::get().setContext("canonicalOrigin", std::to_string(static_cast<int>(finalOrigin)));
 			health_ = VideoPlaybackHealth::Ready;
 			messageId_.reset();
 			errorCode_.reset();
@@ -119,11 +126,12 @@ bool VideoPlaybackService::attemptSelection(const std::function<std::optional<in
 
 void VideoPlaybackService::update(float dt) {
 	if (!setupComplete_) return;
-	if (decoder_->isLoaded()) decoder_->update(dt);
+	if (decoder_->isLoaded()) { RT004_SCOPE("VideoPlaybackService.decoder.update"); decoder_->update(dt); }
 
 	if (health_ == VideoPlaybackHealth::Ready) {
 		policy_.updateHold(dt);
 		if (policy_.isHoldComplete()) {
+			RT004_SCOPE("VideoPlaybackService.automaticAdvance");
 			attemptSelection([this] { return policy_.requestAutomaticAdvanceCandidate(); }, MediaSelectionOrigin::Automatic);
 		}
 	}
@@ -138,6 +146,7 @@ void VideoPlaybackService::shutdown() {
 bool VideoPlaybackService::next() {
 	if (!setupComplete_ || catalog_.empty()) return false;
 	if (!policy_.canSelectNext()) return false;
+	RT004_SCOPE("VideoPlaybackService.next");
 	return attemptSelection([this] { return policy_.requestManualNextCandidate(); }, MediaSelectionOrigin::ManualNext);
 }
 

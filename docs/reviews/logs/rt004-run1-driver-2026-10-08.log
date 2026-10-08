@@ -1,0 +1,89 @@
+=== RT-004 stall driver: 25 actions, probe ON ===
+WINDOW t=5.02052s frames=225 meanFrameMs=22.3134 maxFrameMs=432.186
+WINDOW t=10.0538s frames=151 meanFrameMs=33.3329 maxFrameMs=33.3834
+ACTION t=15.0204s probeFrame=525 cycle1:Blob->Temporal (activation with media as currently selected)
+WINDOW t=15.0871s frames=151 meanFrameMs=33.333 maxFrameMs=33.3538
+WINDOW t=20.1204s frames=151 meanFrameMs=33.333 maxFrameMs=2446.02
+WINDOW t=25.1537s frames=151 meanFrameMs=33.333 maxFrameMs=33.3683
+ACTION t=30.0203s probeFrame=975 cycle1:next media while Temporal active
+WINDOW t=30.1869s frames=151 meanFrameMs=33.333 maxFrameMs=50.1367
+WINDOW t=35.2202s frames=151 meanFrameMs=33.3331 maxFrameMs=33.3825
+WINDOW t=40.2535s frames=151 meanFrameMs=33.333 maxFrameMs=57.9781
+ACTION t=45.0201s probeFrame=1425 cycle1:Temporal->Blob
+WINDOW t=45.2868s frames=151 meanFrameMs=33.333 maxFrameMs=37.648
+WINDOW t=50.3201s frames=151 meanFrameMs=33.333 maxFrameMs=33.3572
+ACTION t=55.02s probeFrame=1725 cycle1:next media during Blob dwell
+WINDOW t=55.3534s frames=151 meanFrameMs=33.333 maxFrameMs=133.422
+WINDOW t=60.3867s frames=151 meanFrameMs=33.333 maxFrameMs=33.3658
+ACTION t=65.02s probeFrame=2025 cycle1:Blob->Temporal (reactivation after Blob-dwell media change)
+WINDOW t=65.42s frames=151 meanFrameMs=33.333 maxFrameMs=33.3625
+WINDOW t=70.4532s frames=151 meanFrameMs=33.333 maxFrameMs=33.3816
+WINDOW t=75.4865s frames=151 meanFrameMs=33.333 maxFrameMs=33.3719
+ACTION t=80.0199s probeFrame=2475 cycle1:Temporal->Blob
+WINDOW t=80.5198s frames=151 meanFrameMs=33.333 maxFrameMs=33.3606
+WINDOW t=85.5531s frames=151 meanFrameMs=33.333 maxFrameMs=33.3666
+ACTION t=90.0198s probeFrame=2775 cycle1:Blob->Temporal (reactivation, no manual media change)
+WINDOW t=90.5864s frames=151 meanFrameMs=33.333 maxFrameMs=33.3622
+WINDOW t=95.6197s frames=151 meanFrameMs=33.333 maxFrameMs=33.3604
+WINDOW t=100.653s frames=151 meanFrameMs=33.333 maxFrameMs=33.3746
+ACTION t=105.02s probeFrame=3225 cycle1:Temporal->Blob
+WINDOW t=105.686s frames=151 meanFrameMs=33.3329 maxFrameMs=33.3607
+WINDOW t=110.72s frames=151 meanFrameMs=33.333 maxFrameMs=33.3508
+ACTION t=115.02s probeFrame=3525 cycle2:Blob->Temporal (activation with media as currently selected)
+WINDOW t=115.753s frames=151 meanFrameMs=33.333 maxFrameMs=33.3696
+WINDOW t=120.786s frames=151 meanFrameMs=33.333 maxFrameMs=256.199
+WINDOW t=125.819s frames=151 meanFrameMs=33.333 maxFrameMs=33.3635
+ACTION t=130.019s probeFrame=3975 cycle2:next media while Temporal active
+WINDOW t=130.853s frames=151 meanFrameMs=33.333 maxFrameMs=104.376
+WINDOW t=135.886s frames=151 meanFrameMs=33.333 maxFrameMs=33.3687
+WINDOW t=140.919s frames=151 meanFrameMs=33.333 maxFrameMs=33.3845
+ACTION t=145.019s probeFrame=4425 cycle2:Temporal->Blob
+WINDOW t=145.953s frames=151 meanFrameMs=33.333 maxFrameMs=36.3851
+WINDOW t=150.986s frames=151 meanFrameMs=33.333 maxFrameMs=33.3643
+ACTION t=155.019s probeFrame=4725 cycle2:next media during Blob dwell
+WINDOW t=156.019s frames=151 meanFrameMs=33.333 maxFrameMs=33.3944
+WINDOW t=161.053s frames=151 meanFrameMs=33.333 maxFrameMs=33.3672
+ACTION t=165.019s probeFrame=5025 cycle2:Blob->Temporal (reactivation after Blob-dwell media change)
+WINDOW t=166.086s frames=151 meanFrameMs=33.333 maxFrameMs=33.3772
+WINDOW t=171.119s frames=151 meanFrameMs=33.3331 maxFrameMs=33.3689
+WINDOW t=176.152s frames=151 meanFrameMs=33.3331 maxFrameMs=33.362
+ACTION t=180.019s probeFrame=5475 cycle2:Temporal->Blob
+WINDOW t=181.186s frames=151 meanFrameMs=33.3329 maxFrameMs=33.3644
+WINDOW t=186.219s frames=151 meanFrameMs=33.333 maxFrameMs=33.3687
+ACTION t=190.019s probeFrame=5775 cycle2:Blob->Temporal (reactivation, no manual media change)
+WINDOW t=191.252s frames=151 meanFrameMs=33.333 maxFrameMs=33.3506
+WINDOW t=196.286s frames=151 meanFrameMs=33.333 maxFrameMs=33.3756
+WINDOW t=201.319s frames=151 meanFrameMs=33.333 maxFrameMs=33.3647
+ACTION t=205.019s probeFrame=6225 cycle2:Temporal->Blob
+WINDOW t=206.352s frames=151 meanFrameMs=33.333 maxFrameMs=33.3651
+WINDOW t=211.385s frames=151 meanFrameMs=33.333 maxFrameMs=33.4098
+ACTION t=215.019s probeFrame=6525 cycle3:Blob->Temporal (activation with media as currently selected)
+WINDOW t=216.419s frames=151 meanFrameMs=33.333 maxFrameMs=33.3791
+WINDOW t=221.452s frames=151 meanFrameMs=33.3331 maxFrameMs=33.4033
+WINDOW t=226.485s frames=151 meanFrameMs=33.333 maxFrameMs=33.3827
+ACTION t=230.019s probeFrame=6975 cycle3:next media while Temporal active
+WINDOW t=231.519s frames=151 meanFrameMs=33.3329 maxFrameMs=33.4715
+WINDOW t=236.552s frames=151 meanFrameMs=33.3332 maxFrameMs=33.4053
+WINDOW t=241.585s frames=151 meanFrameMs=33.3329 maxFrameMs=33.3878
+ACTION t=245.018s probeFrame=7425 cycle3:Temporal->Blob
+WINDOW t=246.618s frames=151 meanFrameMs=33.3331 maxFrameMs=33.396
+WINDOW t=251.652s frames=151 meanFrameMs=33.3329 maxFrameMs=33.3597
+ACTION t=255.018s probeFrame=7725 cycle3:next media during Blob dwell
+WINDOW t=256.685s frames=151 meanFrameMs=33.333 maxFrameMs=33.36
+WINDOW t=261.718s frames=151 meanFrameMs=33.333 maxFrameMs=33.3535
+ACTION t=265.018s probeFrame=8025 cycle3:Blob->Temporal (reactivation after Blob-dwell media change)
+WINDOW t=266.751s frames=151 meanFrameMs=33.333 maxFrameMs=33.3687
+WINDOW t=271.783s frames=151 meanFrameMs=33.333 maxFrameMs=33.3673
+WINDOW t=276.816s frames=151 meanFrameMs=33.333 maxFrameMs=42.5281
+ACTION t=280.016s probeFrame=8475 cycle3:Temporal->Blob
+WINDOW t=281.849s frames=151 meanFrameMs=33.333 maxFrameMs=33.3707
+WINDOW t=286.881s frames=151 meanFrameMs=33.3331 maxFrameMs=33.3659
+ACTION t=290.014s probeFrame=8775 cycle3:Blob->Temporal (reactivation, no manual media change)
+WINDOW t=291.914s frames=151 meanFrameMs=33.3329 maxFrameMs=33.3615
+WINDOW t=296.947s frames=151 meanFrameMs=33.333 maxFrameMs=33.3687
+WINDOW t=301.98s frames=151 meanFrameMs=33.333 maxFrameMs=33.3705
+ACTION t=305.013s probeFrame=9225 cycle3:Temporal->Blob
+WINDOW t=307.012s frames=151 meanFrameMs=33.333 maxFrameMs=33.3549
+WINDOW t=312.045s frames=151 meanFrameMs=33.333 maxFrameMs=33.3654
+WINDOW t=317.078s frames=151 meanFrameMs=33.333 maxFrameMs=33.5013
+ACTION t=320.011s probeFrame=9675 exit

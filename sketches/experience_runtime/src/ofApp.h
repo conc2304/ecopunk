@@ -4,6 +4,7 @@
 #include "BlobLifecycleHarness.h"
 #include "ExperienceRuntime.h"
 #include "GlRestorationHarness.h"
+#include "Rt004StallDriver.h"
 #include "SceneSwitchHarness.h"
 #include "TemporalLifecycleHarness.h"
 #include "TwoSceneAcceptanceHarness.h"
@@ -44,4 +45,5 @@ private:
 	std::unique_ptr<TemporalLifecycleHarness> temporalHarness;
 	std::unique_ptr<SceneSwitchHarness> switchHarness;
 	std::unique_ptr<TwoSceneAcceptanceHarness> acceptanceHarness; // RT-002
+	std::unique_ptr<Rt004StallDriver> stallDriver; // RT-004 diagnostic, normal path only
 };

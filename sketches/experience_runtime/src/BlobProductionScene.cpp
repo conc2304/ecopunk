@@ -1,5 +1,11 @@
 #include "BlobProductionScene.h"
+#include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 #include "BlobSemanticMapping.h"
+#include "ofAppRunner.h"
+#include "ofLog.h"
+#include "ofUtils.h"
+#include <algorithm>
+#include <cstdlib>
 
 BlobProductionScene::BlobProductionScene(VideoPlaybackService & video)
 	: video_(video) {
@@ -16,6 +22,12 @@ void BlobProductionScene::setup(const SceneServices & services) {
 	(void)services;
 	core_.setup(video_);
 	didSetup_ = true;
+
+	renderProfileEnabled_ = std::getenv("EXPERIENCE_RUNTIME_BLOB_RENDER_PROFILE") != nullptr;
+	if (std::getenv("EXPERIENCE_RUNTIME_BLOB_RENDER_LEGACY") != nullptr) {
+		core_.regionController().renderer().setDirectOutputEnabled(false);
+		ofLogNotice("BlobRenderProfile") << "EXPERIENCE_RUNTIME_BLOB_RENDER_LEGACY set: fragment renderer forced to 3-stage path";
+	}
 }
 
 void BlobProductionScene::activate() {
@@ -34,7 +46,8 @@ void BlobProductionScene::update(float dt) {
 	}
 	activeSeconds_ += dt;
 	ofRectangle destRect(0, 0, static_cast<float>(kNativeWidth), static_cast<float>(kNativeHeight));
-	core_.update(dt, destRect);
+	RT004_SCOPE("Blob.core.update");
+	lastUpdateTimings_ = core_.update(dt, destRect);
 }
 
 void BlobProductionScene::drawToCurrentTarget() {
@@ -45,7 +58,75 @@ void BlobProductionScene::drawToCurrentTarget() {
 	// (see class header comment / docs/hud-double-hud-prevention-and-
 	// migration-matrix.md's Blob row).
 	ofRectangle destRect(0, 0, static_cast<float>(kNativeWidth), static_cast<float>(kNativeHeight));
+	RT004_SCOPE("Blob.core.draw");
+	if (!renderProfileEnabled_) {
+		core_.draw(destRect);
+		return;
+	}
+	core_.regionController().renderer().resetStageTimings();
+	uint64_t t0 = ofGetElapsedTimeMicros();
 	core_.draw(destRect);
+	recordRenderProfileFrame(static_cast<float>(ofGetElapsedTimeMicros() - t0) / 1000.0f);
+}
+
+void BlobProductionScene::recordRenderProfileFrame(float drawMs) {
+	VideoRegionEffectRenderer & renderer = core_.regionController().renderer();
+	const VideoRegionEffectRenderer::StageTimings & frameStages = renderer.getStageTimings();
+	RenderProfileWindow & w = profileWindow_;
+	float frameSeconds = static_cast<float>(ofGetLastFrameTime());
+	w.elapsedSeconds += frameSeconds;
+
+	if (frameSeconds > kProfileStallSeconds) {
+		// Keep media-load stalls out of the renderer averages entirely.
+		w.stalls++;
+		w.maxStallMs = std::max(w.maxStallMs, static_cast<double>(frameSeconds) * 1000.0);
+	} else {
+		w.frames++;
+		w.frameMs += frameSeconds * 1000.0;
+		w.detectorMs += lastUpdateTimings_.detectorMs;
+		w.trackerMs += lastUpdateTimings_.trackerMs;
+		w.regionUpdateMs += lastUpdateTimings_.regionUpdateMs;
+		w.drawMs += drawMs;
+		w.fragments += core_.activeFragmentCount();
+		w.stages.directDraws += frameStages.directDraws;
+		w.stages.legacyDraws += frameStages.legacyDraws;
+		w.stages.sourceMs += frameStages.sourceMs;
+		w.stages.shaderDirectMs += frameStages.shaderDirectMs;
+		w.stages.shaderResultMs += frameStages.shaderResultMs;
+		w.stages.compositeMs += frameStages.compositeMs;
+	}
+
+	if (w.elapsedSeconds < kProfileWindowSeconds) {
+		return;
+	}
+
+	const VideoRegionEffectRenderer::StageTimings & st = w.stages;
+	int draws = st.directDraws + st.legacyDraws;
+	auto perFrame = [&](double total) { return w.frames > 0 ? total / w.frames : 0.0; };
+	auto perDraw = [](double total, int n) { return n > 0 ? total / n : 0.0; };
+
+	ofLogNotice("BlobRenderProfile")
+		<< "path=" << (renderer.isDirectOutputEnabled() ? "direct" : "legacy")
+		<< " frames=" << w.frames
+		<< " fps=" << (w.frameMs > 0.0 ? 1000.0 * w.frames / w.frameMs : 0.0)
+		<< " frameMs=" << perFrame(w.frameMs)
+		<< " detectorMs=" << perFrame(w.detectorMs)
+		<< " trackerMs=" << perFrame(w.trackerMs)
+		<< " regionUpdateMs=" << perFrame(w.regionUpdateMs)
+		<< " sceneDrawMs=" << perFrame(w.drawMs)
+		<< " fragments=" << perFrame(w.fragments)
+		<< " directDraws=" << st.directDraws
+		<< " legacyDraws=" << st.legacyDraws
+		<< " sourceMsPerDraw=" << perDraw(st.sourceMs, draws)
+		<< " shaderDirectMsPerDraw=" << perDraw(st.shaderDirectMs, st.directDraws)
+		<< " shaderResultMsPerDraw=" << perDraw(st.shaderResultMs, st.legacyDraws)
+		<< " compositeMsPerDraw=" << perDraw(st.compositeMs, st.legacyDraws)
+		<< " regionRenderMsPerFrame=" << perFrame(st.sourceMs + st.shaderDirectMs + st.shaderResultMs + st.compositeMs)
+		<< " scratch=" << renderer.getScratchWidth() << "x" << renderer.getScratchHeight()
+		<< " stalls=" << w.stalls
+		<< " maxStallMs=" << w.maxStallMs;
+
+	profileWindow_ = RenderProfileWindow {};
 }
 
 glm::ivec2 BlobProductionScene::nativeRenderSize() const {

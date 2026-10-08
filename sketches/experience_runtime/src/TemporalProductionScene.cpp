@@ -1,4 +1,5 @@
 #include "TemporalProductionScene.h"
+#include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 #include "TemporalSemanticMapping.h"
 #include "TFSettings.h"
 
@@ -51,6 +52,7 @@ void TemporalProductionScene::syncVideoAdapter() {
 	if (!absolutePath.has_value()) {
 		return; // should be impossible whenever mediaId is set, but never assume
 	}
+	RT004_SCOPE("Temporal.synchronizeSelectedMedia");
 	temporalVideoAdapter_.synchronizeSelectedMedia(*status.mediaId, *absolutePath);
 }
 
@@ -73,17 +75,23 @@ void TemporalProductionScene::setup(const SceneServices& services) {
 	bufferSettings.maxHistorySeconds = TIME_OFFSET_MAX_HISTORY_SECONDS;
 	bufferSettings.minPlaytimeSeconds = MEDIA_MIN_PLAYTIME_SECONDS;
 	bufferSettings.minLoopCount = MEDIA_MIN_LOOP_COUNT;
+	{ RT004_SCOPE("Temporal.setup.adapterConfigure");
 	temporalVideoAdapter_.setup(bufferSettings);
+	}
 
 	// Load the startup selection before the first update/draw — same
 	// ordering as the standalone sketch's own setup().
 	syncVideoAdapter();
 
+	{ RT004_SCOPE("Temporal.setup.core");
 	core_.setup(&temporalVideoAdapter_.buffer(), kNativeWidth, kNativeHeight);
+	}
 	didSetup_ = true;
 }
 
 void TemporalProductionScene::activate() {
+	RT004_SCOPE("Temporal.activate");
+	rt004::Probe::get().setContext("temporalEpoch", std::to_string(generation_ + 1));
 	if (hasActivatedBefore_) {
 		// Reactivation, not the first activation — force a fresh
 		// TimeOffsetPlaybackAdapter reload/history-refill against whatever
@@ -128,14 +136,14 @@ void TemporalProductionScene::update(float dt) {
 	// dedicated decoder/history update happen here, exactly once, as the
 	// sole owner of the Temporal-specialized side of the pipeline.
 	syncVideoAdapter();
-	temporalVideoAdapter_.update(dt);
+	{ RT004_SCOPE("Temporal.adapter.update"); temporalVideoAdapter_.update(dt); }
 
 	// Composition/pattern/background/effect update — TFEffectPicker's
 	// state for this frame is finalized inside this call (via
 	// TFBackgroundLayer::update()), before ExperienceRuntime's later
 	// captureEffectActivityStatus() step reads it through
 	// currentEffectActivitySnapshot() below.
-	core_.update(dt);
+	{ RT004_SCOPE("Temporal.core.update"); core_.update(dt); }
 }
 
 void TemporalProductionScene::drawToCurrentTarget() {
@@ -145,6 +153,7 @@ void TemporalProductionScene::drawToCurrentTarget() {
 	// TemporalSceneCore::draw()). No GUI, no debug overlay, no local HUD
 	// (TFHudLayer/hud_overlay are never constructed by this scene at all
 	// — see class header comment).
+	RT004_SCOPE("Temporal.core.draw");
 	core_.draw();
 }
 

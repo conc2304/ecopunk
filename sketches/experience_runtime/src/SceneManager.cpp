@@ -1,4 +1,5 @@
 #include "SceneManager.h"
+#include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 
 #include "ofLog.h"
 
@@ -120,12 +121,16 @@ void SceneManager::setupEntry(int index) {
 	SceneServices services = baseServices_;
 	services.sceneAssetRoot = "assets/scenes/" + e.scene->sceneId() + "/";
 	e.counters.setupCalls++;
+	RT004_SCOPE("SceneManager.setupEntry");
+	rt004::Probe::get().note("scene.setup", e.scene->sceneId());
 	e.scene->setup(services);
 }
 
 void SceneManager::activateEntry(int index) {
 	Entry& e = entries_[static_cast<size_t>(index)];
 	e.counters.activateCalls++;
+	RT004_SCOPE("SceneManager.activateEntry");
+	rt004::Probe::get().note("scene.activate", e.scene->sceneId());
 	e.scene->activate(); // an exception here leaves the entry inactive (controller handles failure)
 	e.lifecycleActive = true;
 	e.counters.successfulActivations++;
@@ -136,11 +141,14 @@ void SceneManager::deactivateEntry(int index) {
 	if (!e.lifecycleActive) return; // never double-deactivate
 	e.lifecycleActive = false;
 	e.counters.deactivateCalls++;
+	RT004_SCOPE("SceneManager.deactivateEntry");
+	rt004::Probe::get().note("scene.deactivate", e.scene->sceneId());
 	e.scene->deactivate();
 }
 
 void SceneManager::queryAndCacheCapabilities(int index) {
 	Entry& e = entries_[static_cast<size_t>(index)];
+	RT004_SCOPE("SceneManager.queryCapabilities");
 	cachedCapabilities_ = e.scene->capabilities();
 	e.counters.capabilityQueries++;
 }
@@ -196,6 +204,11 @@ bool SceneManager::beginFrame() {
 	}
 
 	sceneswitch::FramePlan plan = controller_.beginFrame(target_);
+	if (rt004::Probe::get().enabled()) {
+		rt004::Probe::get().setContext("phase", std::to_string(static_cast<int>(controller_.phase())));
+		rt004::Probe::get().setContext("owner", sceneIdAt(controller_.ownerIndex()));
+		rt004::Probe::get().setContext("live", plan.runActiveScene ? "1" : "0");
+	}
 	lastPublication_ = plan.publication;
 	lastPlanLive_ = plan.runActiveScene;
 

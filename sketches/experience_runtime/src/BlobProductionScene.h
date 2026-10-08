@@ -102,9 +102,35 @@ public:
 
 private:
 	SceneSemanticData buildSemanticData() const;
+	void recordRenderProfileFrame(float drawMs);
 
 	VideoPlaybackService & video_; // not owned, see constructor comment
 	BlobSceneCore core_;
+
+	// Opt-in Pi profiling of the fragment renderer
+	// (EXPERIENCE_RUNTIME_BLOB_RENDER_PROFILE): accumulates a window of
+	// frames and logs one averaged line every kProfileWindowSeconds. Frames
+	// longer than kProfileStallSeconds (media-load stalls) are counted
+	// separately and kept out of the averages.
+	// EXPERIENCE_RUNTIME_BLOB_RENDER_LEGACY forces the 3-stage path for A/B.
+	struct RenderProfileWindow {
+		int frames = 0;
+		double frameMs = 0.0;
+		double detectorMs = 0.0;
+		double trackerMs = 0.0;
+		double regionUpdateMs = 0.0;
+		double drawMs = 0.0;
+		double fragments = 0.0;
+		VideoRegionEffectRenderer::StageTimings stages;
+		int stalls = 0;
+		double maxStallMs = 0.0;
+		float elapsedSeconds = 0.0f;
+	};
+	static constexpr float kProfileWindowSeconds = 5.0f;
+	static constexpr float kProfileStallSeconds = 0.25f;
+	bool renderProfileEnabled_ = false;
+	BlobSceneCore::UpdateTimings lastUpdateTimings_;
+	RenderProfileWindow profileWindow_;
 
 	// Real, scene-owned timing state for SceneSemanticData.timing — reset
 	// on every activate()/reset(), never fabricated.

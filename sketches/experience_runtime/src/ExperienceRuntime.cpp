@@ -1,4 +1,5 @@
 #include "ExperienceRuntime.h"
+#include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 
 #include "SceneRenderGuard.h"
 
@@ -133,12 +134,13 @@ void ExperienceRuntime::update(float dt) {
 	// Step 3 (RT-003): advance any scene transition by one frame. Performs
 	// that frame's lifecycle calls (incoming setup()/activate(), capability
 	// caching) and reports whether the active scene runs live this frame.
-	bool live = sceneManager_.beginFrame();
+	bool live;
+	{ RT004_SCOPE("SceneManager.beginFrame"); live = sceneManager_.beginFrame(); }
 
 	if (live) {
-		sceneManager_.updateActiveScene(dt); // step 3
+		{ RT004_SCOPE("SceneManager.updateActiveScene"); sceneManager_.updateActiveScene(dt); } // step 3
 
-		sceneManager_.captureSceneStatus();  // step 4 — hudStatus() pulled
+		{ RT004_SCOPE("SceneManager.captureSceneStatus"); sceneManager_.captureSceneStatus(); }  // step 4 — hudStatus() pulled
 		                                      // exactly once for this frame;
 		                                      // nothing else may call it again
 		                                      // until the next updateActiveScene().
@@ -153,9 +155,9 @@ void ExperienceRuntime::update(float dt) {
 
 	lastSceneManagerStatus_ = sceneManager_.status(); // step 6
 
-	runtimeServices_.update(dt); // step 7 — also drives step 8's VideoPlaybackStatus
+	{ RT004_SCOPE("RuntimeServices.update"); runtimeServices_.update(dt); } // step 7 — also drives step 8's VideoPlaybackStatus
 
-	sceneManager_.captureEffectActivityStatus(); // step 9 — a separate pull from
+	{ RT004_SCOPE("SceneManager.captureEffectActivityStatus"); sceneManager_.captureEffectActivityStatus(); } // step 9 — a separate pull from
 	                                              // step 4; never derived from
 	                                              // SceneHudStatus::activeEffects.
 }
@@ -181,12 +183,14 @@ void ExperienceRuntime::draw() {
 	// RT-003: the incoming scene's first active frame — make the runtime-owned
 	// scene FBO match its native size before it draws.
 	if (sceneManager_.activationSucceededThisFrame()) {
+		RT004_SCOPE("ExperienceRuntime.reallocateSceneFbo");
 		reallocateSceneFboForActiveSceneIfNeeded();
 	}
 
 	if (sceneManager_.activeSceneLiveThisFrame()) {
 		// Step 8: bind + clear the scene FBO, sized to the active scene's
 		// nativeRenderSize().
+		RT004_SCOPE("ExperienceRuntime.sceneFboPass");
 		sceneFbo_.begin();
 		ofClear(0, 0, 0, 0);
 
@@ -198,6 +202,7 @@ void ExperienceRuntime::draw() {
 		// drawToCurrentTarget(), never hudStatus().
 		{
 			SceneRenderGuard guard(sceneFbo_);
+			RT004_SCOPE("SceneManager.drawActiveScene");
 			sceneManager_.drawActiveScene();
 		}
 
@@ -260,8 +265,8 @@ void ExperienceRuntime::draw() {
 	// nothing else changes).
 	long long hudAllocBefore = alloccounter::newCount();
 	long long hudDeallocBefore = alloccounter::deleteCount();
-	hudCompositorBridge_.update(lastDt_, currentHudFrameData_);
-	hudCompositorBridge_.draw();
+	{ RT004_SCOPE("Hud.update"); hudCompositorBridge_.update(lastDt_, currentHudFrameData_); }
+	{ RT004_SCOPE("Hud.draw"); hudCompositorBridge_.draw(); }
 	presentationCounters_.hudDraws++;
 	lastHudOnlyNewCount_ = alloccounter::newCount() - hudAllocBefore;
 	lastHudOnlyDeleteCount_ = alloccounter::deleteCount() - hudDeallocBefore;

@@ -153,11 +153,11 @@ Off-repo evidence is cited as `OFF-REPO: ~/Downloads/<file>` and is never suffic
 | Architecture & Program Coordination | First-two-scene durability → CLOSED | ARCH-002 accept protocol · ARCH-003 · BUILD-001 | ARCH-004 doc reconciliation |
 | ExperienceRuntime & SceneManager | — (RT-003 / RT-002 accepted; awaiting push) | Scene #3 hosting (BLUE-001) | — |
 | HUD Runtime & Validation Studio | — | HUD-003 profile binding · HUD-002 domain acceptance | HUD-004 · HUD-005 · HUD-006 |
-| Shared Video Playback | — | — | VIDEO-003 retire compatibility paths |
+| Shared Video Playback | — | — | VIDEO-003 retire compatibility paths · VIDEO-004 media-load stalls (owner TBD) |
 | Shared Effects & Shader Debugger | — | FX-004 domain acceptance | — |
 | Raspberry Pi Runtime & Performance | PI-001 | PI-002 · PI-003 | Quality profiles, thermal soak |
 | HUD Art Pipeline & Skin Production | HUD-004 (locate state) | — | ART-001 · ART-002 · ART-003 |
-| Blob Scene Migration | — (accepted) | — | — |
+| Blob Scene Migration | BLOB-002 durability (commit + push, Pi evidence in-repo) → CLOSED | BLOB-003 detector hot path | — |
 | Temporal Fields Scene Migration | — | TEMP-004 domain acceptance | TEMP-005 · TEMP-003 (deferred) |
 | Blueprint Emergence Scene Migration | — | BLUE-001 planning (RT-002 accepted) | — |
 | Contour Portrait Scene Migration | — | — | CONTOUR-001 |
@@ -192,11 +192,14 @@ Off-repo evidence is cited as `OFF-REPO: ~/Downloads/<file>` and is never suffic
 | VIDEO-001 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PASS | COMMITTED |
 | VIDEO-002 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PENDING | COMMITTED |
 | VIDEO-003 | BACKLOG | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
+| VIDEO-004 | BACKLOG | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
 | FX-001 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PASS | COMMITTED |
 | FX-002 | ACCEPTED | PASS | PASS | NOT_REQUIRED | PASS | NOT_STARTED | UNKNOWN | COMMITTED |
 | FX-003 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PASS | COMMITTED |
 | FX-004 | VERIFIED | NOT_REQUIRED | PASS | PASS | NOT_REQUIRED | NOT_REQUIRED | PASS | COMMITTED |
 | BLOB-001 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PENDING | COMMITTED |
+| BLOB-002 | ACCEPTED | PASS | PASS | PASS | NOT_REQUIRED | PASS | PENDING | WORKTREE_ONLY |
+| BLOB-003 | READY | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
 | TEMP-001 | ACCEPTED | PASS | PASS | PASS | PASS | NOT_STARTED | PASS | COMMITTED |
 | TEMP-002 | VERIFIED | PASS | PASS | NOT_REQUIRED | PENDING | NOT_REQUIRED | PENDING | COMMITTED |
 | TEMP-003 | DEFERRED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
@@ -816,6 +819,34 @@ NOT_APPLICABLE
 Last Updated:
 2026-10-05
 
+### VIDEO-004 — Multi-second media-load stalls
+
+Status: BACKLOG
+Owner: TBD (Shared Video Playback / Raspberry Pi Runtime & Performance — separate workstream from Blob rendering)
+Architecture Gate: NO
+
+Depends On:
+- VIDEO-001 [ACCEPTED]
+
+Current Evidence:
+- BLOB-002 prompt: multi-second media-load stalls observed on Pi, explicitly out of scope there.
+- Desktop: one 656 ms stall at Blob lifecycle harness startup (BLOB-002 lifecycle log, 2026-10-06).
+
+Next Gate:
+READY once an owner is assigned.
+
+Next Action:
+Assign ownership.
+
+Blocked By:
+None
+
+Source State:
+NOT_APPLICABLE
+
+Last Updated:
+2026-10-07
+
 ## Shared Effects & Shader Debugger
 
 ### FX-001 — Canonical shared effect-activity transport
@@ -964,6 +995,63 @@ COMMITTED (`557edc3`, `d25cc13`; pushed)
 
 Last Updated:
 2026-10-05
+
+### BLOB-002 — Blob fragment renderer result-FBO / composite bypass
+
+Status: ACCEPTED
+Owner: Blob Scene Migration
+Architecture Gate: NO (Architecture-authorized increment inside the existing renderer boundary; no contract change)
+
+Depends On:
+- BLOB-001 [ACCEPTED]
+
+Current Evidence:
+- `VideoRegionEffectRenderer::render()` draws the effect shader straight into the bound scene target when fragment alpha and `effectAmount` are both 1 (production default). Fading fragments and reduced `effectAmount` keep the 3-stage path. `scratchSourceFbo` is retained. The direct path is now canonical production behavior; `EXPERIENCE_RUNTIME_BLOB_RENDER_LEGACY=1` forces the 3-stage path, and `EXPERIENCE_RUNTIME_BLOB_RENDER_PROFILE=1` logs stage timing.
+- Desktop, 2026-10-06: A/B pixel harness 1404/1404 (production effect near-identical; fades bit-identical), [../reviews/logs/blob-render-direct-output-ab-harness-2026-10-06.log](../reviews/logs/blob-render-direct-output-ab-harness-2026-10-06.log)
+- Desktop regressions, 2026-10-06: Blob lifecycle 895/895, GL restoration pass, RT-003 switch 5,351/0, RT-002 80,600/0 (logs `../reviews/logs/blob-render-direct-output-*-2026-10-06.log`)
+- Pi A/B (operator-run, 2026-10-07) and Blob-domain acceptance: OFF-REPO (chat). The Pi numbers are not yet recorded in the repository.
+
+Next Gate:
+CLOSED — needs the Pi before/after numbers and the acceptance recorded in-repo, and the change committed and pushed.
+
+Next Action:
+Record Pi A/B results in-repo; owner commits and pushes.
+
+Blocked By:
+None
+
+Source State:
+WORKTREE_ONLY (`blueprint-emergence-updates`, uncommitted)
+
+Last Updated:
+2026-10-07
+
+### BLOB-003 — Blob detector hot-path investigation and optimization
+
+Status: READY
+Owner: Blob Scene Migration
+Architecture Gate: NO
+
+Depends On:
+- BLOB-002 [ACCEPTED]
+
+Current Evidence:
+- Pi profiling cited in the BLOB-002 prompt: detector ~14–15 ms/frame; tracker/region update negligible.
+
+Next Gate:
+Domain authorization of a detector investigation prompt.
+
+Next Action:
+Blob manager scopes the detector investigation.
+
+Blocked By:
+None
+
+Source State:
+NOT_APPLICABLE
+
+Last Updated:
+2026-10-07
 
 ## Temporal Fields Scene Migration
 

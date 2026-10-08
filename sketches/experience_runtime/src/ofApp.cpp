@@ -1,4 +1,6 @@
 #include "ofApp.h"
+#include "BlobRenderPathAbHarness.h"
+#include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated)
 
 #include <cstdlib>
 
@@ -50,6 +52,14 @@ void ofApp::setup() {
 	}
 	runtime.setup();
 
+	// Blob render-path A/B pixel check: self-contained, runs once here
+	// (needs only a live GL context) and exits — see BlobRenderPathAbHarness.h.
+	if (BlobRenderPathAbHarness::isRequested()) {
+		BlobRenderPathAbHarness::run();
+		ofExit();
+		return;
+	}
+
 	if (glHarnessRequested) {
 		harness = std::make_unique<GlRestorationHarness>(runtime);
 	} else if (blobLifecycleRequested) {
@@ -62,10 +72,17 @@ void ofApp::setup() {
 		switchHarness = std::make_unique<SceneSwitchHarness>(runtime);
 	} else if (acceptanceRequested) {
 		acceptanceHarness = std::make_unique<TwoSceneAcceptanceHarness>(runtime);
+	} else if (Rt004StallDriver::isRequested()) {
+		stallDriver = std::make_unique<Rt004StallDriver>(runtime);
+	}
+	if (rt004::Probe::get().enabled()) {
+		rt004::Probe::get().note("probe.scopeOverheadNs", std::to_string(rt004::Probe::get().measureScopeOverheadNs()));
 	}
 }
 
 void ofApp::update() {
+	rt004::Probe::get().beginFrame();
+	RT004_SCOPE("ofApp.update");
 	if (!blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness) {
 		// Normal path and GL-harness path both want runtime.update()
 		// called exactly once per real tick, unconditionally, here — see
@@ -94,9 +111,13 @@ void ofApp::update() {
 	if (acceptanceHarness) {
 		acceptanceHarness->step(ofGetLastFrameTime());
 	}
+	if (stallDriver) {
+		stallDriver->step(ofGetLastFrameTime());
+	}
 }
 
 void ofApp::draw() {
+	RT004_SCOPE("ofApp.draw");
 	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness) {
 		runtime.draw();
 	}
@@ -108,6 +129,7 @@ void ofApp::draw() {
 
 void ofApp::exit() {
 	runtime.exit();
+	rt004::Probe::get().writeSummary();
 }
 
 void ofApp::keyPressed(int key) {

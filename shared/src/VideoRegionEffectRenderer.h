@@ -55,6 +55,26 @@ public:
 	int getScratchWidth() const { return scratchW; }
 	int getScratchHeight() const { return scratchH; }
 
+	// Per-stage CPU-side timing, accumulated across render() calls until
+	// resetStageTimings() — for Pi profiling of the direct-output vs
+	// 3-stage paths (see render()). CPU wall time around GL submission,
+	// not GPU time: driver stalls land in whichever stage triggers them.
+	struct StageTimings {
+		int directDraws = 0; // shader straight into the bound target
+		int legacyDraws = 0; // shader -> scratchResultFbo -> composite
+		double sourceMs = 0.0; // crop into scratchSourceFbo (every draw)
+		double shaderDirectMs = 0.0;
+		double shaderResultMs = 0.0;
+		double compositeMs = 0.0;
+	};
+	const StageTimings & getStageTimings() const { return stageTimings; }
+	void resetStageTimings() { stageTimings = StageTimings {}; }
+
+	// false forces every effect draw through the 3-stage path — exists so
+	// the same binary can A/B both paths on the Pi.
+	void setDirectOutputEnabled(bool enabled) { directOutputEnabled = enabled; }
+	bool isDirectOutputEnabled() const { return directOutputEnabled; }
+
 private:
 	void ensureScratchFbos(int neededW, int neededH);
 	// Looks up shared/src/video-effects' canonical catalog (DefaultVideoEffectCatalog.h)
@@ -68,4 +88,6 @@ private:
 	ofFbo scratchResultFbo;
 	int scratchW = 0;
 	int scratchH = 0;
+	bool directOutputEnabled = true;
+	StageTimings stageTimings;
 };

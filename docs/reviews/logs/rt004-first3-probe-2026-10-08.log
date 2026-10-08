@@ -1,0 +1,134 @@
+=== RT-004 stall probe enabled: thresholdMs=200 sampleStacks=0 ===
+  NOTE frame=0 t=4.22044ms canonical.load: media.auto.e8a7768a
+  NOTE frame=0 t=151.094ms scene.setup: blob-region-prototype
+  NOTE frame=0 t=200.146ms scene.activate: blob-region-prototype
+  NOTE frame=0 t=227.025ms probe.scopeOverheadNs: 131.960975
+
+--- LONG FRAME #1 frame=1 start=227.211ms interval=230.602ms covered=18.5123ms uncovered=212.09ms
+  context: live=1 phase=0 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.e8a7768a 
+  previous frames:
+  scope tree (start offset ms, duration ms):
+    ofApp.update @0.000191 dur=0.056114
+      SceneManager.beginFrame @0.00111 dur=0.009174
+      SceneManager.updateActiveScene @0.010763 dur=0.02471
+      SceneManager.captureSceneStatus @0.037243 dur=0.012993
+      RuntimeServices.update @0.052593 dur=0.002505
+      SceneManager.captureEffectActivityStatus @0.055343 dur=9.9e-05
+    ofApp.draw @7.29744 dur=17.9465
+      ExperienceRuntime.sceneFboPass @7.29802 dur=9.08871
+        SceneManager.drawActiveScene @7.3284 dur=9.04148
+          Blob.core.draw @7.32908 dur=9.039
+      Hud.update @16.4001 dur=0.254036
+      Hud.draw @16.6548 dur=8.58793
+    ofApp.draw @39.7331 dur=0.50968
+      ExperienceRuntime.sceneFboPass @39.7334 dur=0.056887
+      Hud.update @39.7973 dur=0.062464
+      Hud.draw @39.8603 dur=0.381762
+  NOTE frame=301 t=8243.1ms driver.action: Blob->Temporal (first activation)
+  NOTE frame=301 t=8243.2ms scene.deactivate: blob-region-prototype
+  NOTE frame=314 t=8674.51ms scene.setup: temporal-fields
+  NOTE frame=314 t=8674.76ms temporal.loadExplicit: vecteezy_slow-motion-rain-background_29105578.mp4
+
+!!! WATCHDOG frame=314 main thread 1021.95ms into frame; open scopes: ofApp.update > SceneManager.beginFrame > SceneManager.setupEntry > Temporal.setup.core > TemporalCore.setup.ambientTextures
+
+--- LONG FRAME #2 frame=314 start=8674.49ms interval=2362.79ms covered=2361.99ms uncovered=0.797321ms
+  context: live=0 phase=2 canonicalOrigin=0 owner= canonicalMedia=media.auto.e8a7768a 
+  previous frames:
+    frame=306 interval=33.3118ms covered=2.67026ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.e8a7768a 
+    frame=307 interval=33.6205ms covered=2.49695ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.e8a7768a 
+    frame=308 interval=32.8836ms covered=2.59884ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.e8a7768a 
+    frame=309 interval=33.5581ms covered=2.42157ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.e8a7768a 
+    frame=310 interval=33.2045ms covered=2.36583ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.e8a7768a 
+    frame=311 interval=33.2632ms covered=2.29927ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.e8a7768a 
+    frame=312 interval=33.4599ms covered=2.27129ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.e8a7768a 
+    frame=313 interval=33.4306ms covered=2.50168ms live=0 phase=1 canonicalOrigin=0 owner=blob-region-prototype canonicalMedia=media.auto.e8a7768a 
+  scope tree (start offset ms, duration ms):
+    ofApp.update @0.009843 dur=2361.51
+      SceneManager.beginFrame @0.01058 dur=2256.58
+        SceneManager.setupEntry @0.013375 dur=2256.57
+          Temporal.synchronizeSelectedMedia @0.25841 dur=21.0828
+            TimeOffsetVideoBuffer.loadExplicit @0.25853 dur=21.0811
+              TimeOffsetVideoBuffer.player.load @0.872005 dur=20.4227
+          Temporal.setup.core @21.3425 dur=2235.24
+            TemporalCore.setup.shaderLib @21.3427 dur=47.3996
+            TemporalCore.setup.ambientTextures @68.7434 dur=2167.22
+            TemporalCore.setup.backgroundLayer @2235.96 dur=20.6086
+      RuntimeServices.update @2256.6 dur=104.92
+        VideoPlaybackService.decoder.update @2256.6 dur=104.915
+          OfVideoDecoder.ofVideoPlayer.update @2256.6 dur=104.913
+      SceneManager.captureEffectActivityStatus @2361.52 dur=0.000391
+    ofApp.draw @2361.53 dur=0.48254
+      Hud.update @2361.54 dur=0.134562
+      Hud.draw @2361.68 dur=0.340402
+  NOTE frame=315 t=11037.6ms scene.activate: temporal-fields
+  NOTE frame=541 t=16248.7ms driver.action: Temporal->Blob
+  NOTE frame=541 t=16248.8ms scene.deactivate: temporal-fields
+  NOTE frame=555 t=16707.9ms scene.activate: blob-region-prototype
+  NOTE frame=721 t=22243.1ms driver.action: exit
+  NOTE frame=721 t=22274.3ms scene.deactivate: blob-region-prototype
+
+=== RT-004 SUMMARY frames=721 longFrames=2 thresholdMs=200 ===
+label,count,totalMs,meanMs,p95Ms,p99Ms,maxMs
+ofApp.update,721,4794.62,6.64996,6.18917,6.4806,2361.51
+SceneManager.beginFrame,721,2259.12,3.13331,0.003363,0.004815,2256.58
+SceneManager.setupEntry,2,2305.63,1152.81,2256.57,2256.57,2256.57
+Temporal.setup.core,1,2235.24,2235.24,2235.24,2235.24,2235.24
+TemporalCore.setup.ambientTextures,1,2167.22,2167.22,2167.22,2167.22,2167.22
+VideoPlaybackService.setup,1,150.566,150.566,150.566,150.566,150.566
+VideoPlaybackService.activateCandidate(decoder.load),1,146.495,146.495,146.495,146.495,146.495
+OfVideoDecoder.ofVideoPlayer.load,1,146.483,146.483,146.483,146.483,146.483
+RuntimeServices.update,721,1228.85,1.70437,2.04674,2.53247,104.92
+VideoPlaybackService.decoder.update,721,1227.56,1.70258,2.04042,2.53139,104.915
+OfVideoDecoder.ofVideoPlayer.update,721,1226.75,1.70145,2.03929,2.53045,104.913
+TemporalCore.setup.shaderLib,1,47.3996,47.3996,47.3996,47.3996,47.3996
+Temporal.synchronizeSelectedMedia,229,21.163,0.0924149,0.000552,0.000779,21.0828
+TimeOffsetVideoBuffer.loadExplicit,1,21.0811,21.0811,21.0811,21.0811,21.0811
+TemporalCore.setup.backgroundLayer,1,20.6086,20.6086,20.6086,20.6086,20.6086
+TimeOffsetVideoBuffer.player.load,1,20.4227,20.4227,20.4227,20.4227,20.4227
+ofApp.draw,722,807.663,1.11865,2.32383,2.73535,17.9465
+ExperienceRuntime.sceneFboPass,696,426.338,0.612554,1.85123,2.19966,10.3604
+SceneManager.drawActiveScene,696,403.768,0.580126,1.81311,2.14994,10.3266
+Temporal.core.draw,227,342.161,1.50732,2.02878,4.91611,10.3257
+TemporalCore.composition.draw,226,292.585,1.29462,1.74887,1.96383,10.1434
+Blob.core.draw,469,60.7233,0.129474,0.212522,0.38756,9.039
+Hud.draw,722,309.446,0.428595,0.572857,0.737891,8.58793
+TemporalCore.ambient.underlay,226,26.9174,0.119103,0.146767,0.15358,7.08918
+SceneManager.updateActiveScene,695,1294.33,1.86235,4.60769,4.97925,5.72865
+Temporal.adapter.update,227,896.182,3.94794,4.76408,5.10963,5.35015
+VideoPlaybackService.listMediaDir,1,3.66181,3.66181,3.66181,3.66181,3.66181
+TimeOffsetVideoBuffer.historyPush(copy+resize),221,579.579,2.62253,2.89282,3.00642,3.11896
+TimeOffsetVideoBuffer.player.update,227,316.198,1.39294,2.00087,2.27715,2.40085
+Blob.core.update,468,388.695,0.830544,2.01532,2.19335,2.34538
+Temporal.core.update,227,7.17128,0.0315915,0.023424,0.410497,1.38969
+TemporalCore.composition.update,227,6.86335,0.030235,0.022061,0.409138,1.38808
+TimeOffsetVideoBuffer.playheadUpload,1356,261.714,0.193005,0.256696,0.352002,0.870659
+SceneManager.activateEntry,3,0.703241,0.234414,0.336614,0.336614,0.336614
+Hud.update,722,63.947,0.0885692,0.138167,0.162784,0.283367
+Temporal.activate,1,0.256666,0.256666,0.256666,0.256666,0.256666
+SceneManager.deactivateEntry,3,0.382947,0.127649,0.167526,0.167526,0.167526
+TemporalCore.background.draw,226,9.31324,0.041209,0.063791,0.065582,0.127199
+TemporalCore.ambient.overlay,226,12.851,0.0568626,0.074651,0.079906,0.09468
+SceneManager.captureSceneStatus,695,6.43253,0.00925543,0.012502,0.01775,0.030782
+SceneManager.captureEffectActivityStatus,721,0.540222,0.000749268,0.0015,0.001961,0.008449
+OfVideoDecoder.close,1,0.003953,0.003953,0.003953,0.003953,0.003953
+TemporalCore.setup.bandsPattern_,1,0.003834,0.003834,0.003834,0.003834,0.003834
+TemporalCore.setup.ecologicalSuccessionPattern_,1,0.001973,0.001973,0.001973,0.001973,0.001973
+Temporal.setup.adapterConfigure,1,0.001675,0.001675,0.001675,0.001675,0.001675
+SceneManager.queryCapabilities,3,0.003555,0.001185,0.001276,0.001276,0.001276
+OfVideoDecoder.play,1,0.001239,0.001239,0.001239,0.001239,0.001239
+ExperienceRuntime.reallocateSceneFbo,2,0.002382,0.001191,0.001216,0.001216,0.001216
+TimeOffsetVideoBuffer.player.close,1,0.001196,0.001196,0.001196,0.001196,0.001196
+TemporalCore.background.update,227,0.113732,0.000501022,0.000634,0.000854,0.000941
+TimeOffsetVideoBuffer.resetHistory,1,0.000777,0.000777,0.000777,0.000777,0.000777
+TemporalCore.setup.composition,1,0.000303,0.000303,0.000303,0.000303,0.000303
+TemporalCore.setup.blobGridPattern_,1,0.000222,0.000222,0.000222,0.000222,0.000222
+TemporalCore.setup.networkGrowthPattern_,1,0.000217,0.000217,0.000217,0.000217,0.000217
+TemporalCore.setup.bspPattern_,1,0.000211,0.000211,0.000211,0.000211,0.000211
+TemporalCore.setup.particleFieldPattern_,1,0.000206,0.000206,0.000206,0.000206,0.000206
+TemporalCore.setup.columnGridPattern_,1,0.000185,0.000185,0.000185,0.000185,0.000185
+TemporalCore.setup.temporalTidesPattern_,1,0.000162,0.000162,0.000162,0.000162,0.000162
+TemporalCore.setup.telescopingFramesPattern_,1,0.000159,0.000159,0.000159,0.000159,0.000159
+frameIntervalMs[owner=temporal-fields] n=239 p50=32.7094 p95=34.208 p99=34.5973 max=53.6553
+frameIntervalMs[owner=] n=2 p50=2362.79 p95=2362.79 p99=2362.79 max=2362.79
+frameIntervalMs[owner=blob-region-prototype] n=479 p50=33.273 p95=33.7582 p99=34.0558 max=230.602
+frameIntervalMs p50=33.2188 p95=33.8889 p99=34.5774 max=2362.79
