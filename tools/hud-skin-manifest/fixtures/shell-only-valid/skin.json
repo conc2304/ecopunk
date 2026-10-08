@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "skinId": "fixture-shell-only",
+  "displayName": "Fixture Shell Only (nonproduction)",
+  "skinVersion": "0.0.1",
+  "blueprintId": "test-fixture-blueprint-not-canonical",
+  "blueprintVersion": 1,
+  "assets": {
+    "shell": {
+      "path": "shell.png",
+      "required": true,
+      "coordinateSpace": "canvas",
+      "expectedWidth": 1280,
+      "expectedHeight": 720
+    }
+  }
+}

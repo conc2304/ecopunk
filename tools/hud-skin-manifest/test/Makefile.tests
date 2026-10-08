@@ -1,0 +1,31 @@
+# Standalone, openFrameworks-free test build for tools/hud-skin-manifest/
+# (NONPRODUCTION skin-manifest validation foundation). Links nothing from
+# openFrameworks; the only include outside this tree is the header-only
+# nlohmann/json.hpp openFrameworks already ships in libs/json/include/
+# (same facility shared/src/video-playback/MediaCatalogJsonLoader.cpp uses).
+#
+# Usage (from this directory):
+#   make -f Makefile.tests test
+
+CXX ?= c++
+
+ifndef OF_ROOT
+	OF_ROOT = ../../../../../..
+endif
+
+CXXFLAGS = -std=c++17 -Wall -Wextra -I$(OF_ROOT)/libs/json/include \
+	-DHUD_SKIN_FIXTURE_DIR='"$(abspath ../fixtures)"'
+
+SRC = hud_skin_manifest_tests.cpp ../HudSkinManifest.cpp
+BIN = hud_skin_manifest_tests
+
+.PHONY: test clean
+
+$(BIN): $(SRC) ../HudSkinManifest.h
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(BIN)
+
+test: $(BIN)
+	./$(BIN)
+
+clean:
+	rm -f $(BIN)
