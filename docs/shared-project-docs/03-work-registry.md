@@ -185,7 +185,7 @@ Off-repo evidence is cited as `OFF-REPO: ~/Downloads/<file>` and is never suffic
 | HUD-003 | READY | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
 | HUD-004 | UNKNOWN | UNKNOWN | NOT_REQUIRED | NOT_REQUIRED | PENDING | NOT_REQUIRED | UNKNOWN | UNKNOWN |
 | HUD-005 | BACKLOG | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
-| HUD-006 | ACCEPTED | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | PASS | NOT_REQUIRED | PASS | COMMITTED |
+| HUD-006 | CLOSED | NOT_REQUIRED | NOT_REQUIRED | NOT_REQUIRED | PASS | NOT_REQUIRED | PASS | COMMITTED |
 | ART-001 | BLOCKED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
 | ART-002 | BACKLOG | NOT_STARTED | NOT_REQUIRED | NOT_REQUIRED | NOT_STARTED | NOT_REQUIRED | NOT_STARTED | NOT_APPLICABLE |
 | ART-003 | BACKLOG | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_STARTED | NOT_APPLICABLE |
@@ -631,7 +631,7 @@ Last Updated:
 
 ### HUD-006 — HUD Blueprint v1 freeze
 
-Status: ACCEPTED
+Status: CLOSED
 Owner: HUD Art Pipeline & Skin Production
 Architecture Gate: YES
 
@@ -647,17 +647,22 @@ Current Evidence:
 - Deferred, nonblocking: `universal.timing` inset/text-budget documentation.
 - Not established: final skin typography, Skin Package v1 (HUD-004), production loader (HUD-005), Pi skin budgets, explicit active-binding configuration per profile.
 
+Closure:
+CLOSED 2026-10-08 at the repository owner's direction. Architecture acceptance (freeze record, crosswalk acceptance), documentation (DEC-019, filed records) and local commit `1e5334f` are complete. **The owner explicitly waived the interim push-to-`origin` durability default for this item**; the commit is local only. This waiver applies to HUD-006 alone and does not change the default for other items.
+
 Next Gate:
-CLOSED once `1e5334f` is pushed to `origin` (interim durability default).
+None.
 
 Next Action:
-Repository owner pushes `blueprint-emergence-updates`. An optional validator compatibility reconciliation may be proposed separately; not authorized.
+None for HUD-006. An optional validator compatibility reconciliation may be proposed separately; not authorized.
 
 Blocked By:
-None. CLOSED awaits push only.
+None
+
+Required Durability: COMMITTED (local) — owner waiver of the interim push default, HUD-006 only
 
 Source State:
-COMMITTED (`1e5334f`, `blueprint-emergence-updates`; **not pushed**).
+COMMITTED (`1e5334f`, `blueprint-emergence-updates`; not pushed — push waived by owner).
 
 Last Updated:
 2026-10-08
@@ -671,7 +676,7 @@ Owner: HUD Art Pipeline & Skin Production
 Architecture Gate: YES
 
 Depends On:
-- HUD-006 [ACCEPTED]
+- HUD-006 [CLOSED]
 - HUD-004 [UNKNOWN]
 - PI-003 [BLOCKED]
 
