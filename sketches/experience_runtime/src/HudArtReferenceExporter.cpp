@@ -36,10 +36,17 @@ const char* roleName(HudRegionRole r) {
 // Production presentation membership, from the renderer's own rules:
 // media_viewport is drawn unconditionally (HudWireframeRenderer::draw(), mesh
 // block runs before and independent of RenderScope); binding regions follow
-// regionInMinimalSlice().
+// regionInMinimalSlice(), whose original-13 part regionInOriginalMinimalSlice()
+// separates from the Living HUD v0.1 activations.
+const char* const kScopeMesh = "both (mesh, always drawn)";
+const char* const kScopeOriginal = "MinimalSlice-13+FullProfile";
+const char* const kScopeLivingHud = "LivingHUD-v0.1+FullProfile";
+const char* const kScopeFullOnly = "FullProfile only";
+
 std::string scopeOf(const std::string& id) {
-	if (id == "media_viewport") return "both (mesh, always drawn)";
-	return HudWireframeRenderer::regionInMinimalSlice(id) ? "MinimalSlice+FullProfile" : "FullProfile only";
+	if (id == "media_viewport") return kScopeMesh;
+	if (HudWireframeRenderer::regionInOriginalMinimalSlice(id)) return kScopeOriginal;
+	return HudWireframeRenderer::regionInMinimalSlice(id) ? kScopeLivingHud : kScopeFullOnly;
 }
 
 std::string rectText(const ofRectangle& r) {
@@ -120,6 +127,14 @@ void HudArtReferenceExporter::exportAll() {
 
 	check("no skin active (comparison frame is the plain wireframe)", !bridge.skinLoader().active().has_value());
 	check("catalog has 19 regions", regions.size() == 19, ofToString(regions.size()));
+	int originalCount = 0, productionCount = 0;
+	for (const auto& reg : regions) {
+		const std::string scope = scopeOf(reg.regionId);
+		originalCount += scope == kScopeMesh || scope == kScopeOriginal;
+		productionCount += scope != kScopeFullOnly;
+	}
+	check("original MinimalSlice presentation has 13 regions", originalCount == 13, ofToString(originalCount));
+	check("current production presentation has 15 regions", productionCount == 15, ofToString(productionCount));
 
 	// -- Real runtime frame (the frame just drawn by runtime_.draw()) ----------
 	ofImage runtimeFrame;
@@ -240,7 +255,8 @@ void HudArtReferenceExporter::exportAll() {
 	for (const auto& reg : regions) {
 		const ofRectangle b = r.pixelBoundsFor(reg.regionId);
 		const std::string scope = scopeOf(reg.regionId);
-		ofColor fill = scope == "FullProfile only" ? ofColor(230, 150, 40, 110)
+		ofColor fill = scope == kScopeFullOnly ? ofColor(230, 150, 40, 110)
+			: scope == kScopeLivingHud ? ofColor(150, 200, 60, 110)
 			: reg.role == HudRegionRole::Overlay ? ofColor(200, 90, 200, 120)
 			: ofColor(40, 170, 160, 100);
 		beginOverBlend(); // ofDrawBitmapString() (previous label) changes GL blend state
@@ -263,9 +279,11 @@ void HudArtReferenceExporter::exportAll() {
 	ly += 18;
 	for (const auto& l : legend) { ofDrawBitmapString(l, vp.x + 10, ly); ly += 15; }
 	ly += 6;
-	ofSetColor(40, 170, 160, 255); ofDrawBitmapString("teal = MinimalSlice+FullProfile", vp.x + 10, ly);
-	ofSetColor(230, 150, 40, 255); ofDrawBitmapString("amber = FullProfile only", vp.x + 290, ly);
-	ofSetColor(200, 90, 200, 255); ofDrawBitmapString("magenta = Overlay (both scopes)", vp.x + 490, ly);
+	ofSetColor(40, 170, 160, 255); ofDrawBitmapString("teal = original MinimalSlice (13)", vp.x + 10, ly);
+	ofSetColor(150, 200, 60, 255); ofDrawBitmapString("green = Living HUD v0.1 (production 15)", vp.x + 290, ly);
+	ly += 15;
+	ofSetColor(230, 150, 40, 255); ofDrawBitmapString("amber = FullProfile only", vp.x + 10, ly);
+	ofSetColor(200, 90, 200, 255); ofDrawBitmapString("magenta = Overlay (both scopes)", vp.x + 290, ly);
 	ofPopStyle();
 	fbo.end();
 	ofPixels schematic = readFbo(fbo); fix(schematic);
@@ -357,6 +375,8 @@ void HudArtReferenceExporter::exportAll() {
 	ofJson j;
 	j["source"] = "derived from live HudWireframeRenderer/HudRegionCatalog at export time; HUD-006 ecopunk-hud-blueprint / 1";
 	j["canvas"] = {{"width", kW}, {"height", kH}};
+	j["presentation"] = {{"canonicalRegions", regions.size()}, {"originalMinimalSlice", originalCount},
+		{"production", productionCount}, {"productionAdditions", "Living HUD v0.1"}};
 	j["mediaViewportMesh"] = {{"cornerRadius", 18}, {"bevel", 42}, {"roundedCorners", {"top-left", "top-right", "bottom-left"}},
 		{"bevelCorner", "bottom-right"}, {"outlineVertexCount", outline.size()}};
 	int n = 1;

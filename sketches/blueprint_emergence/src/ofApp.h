@@ -1,14 +1,6 @@
 #pragma once
 
-#include "AnnotationRenderer.h"
-#include "BEComposition.h"
-#include "ErosionFBO.h"
-#include "GridState.h"
-#include "GridSystem.h"
-#include "LFOBank.h"
-#include "MotionExtraction.h"
-#include "ShaderLibrary.h"
-#include "TriggerBus.h"
+#include "BlueprintSceneCore.h"
 #include "VideoPlaybackService.h"
 #include "HudOverlayLayer.h"
 #include "HudOverlayDialPanel.h"
@@ -38,36 +30,15 @@ public:
 
 private:
 	void drawOccupancyDebug() const;
-	void drawScene();
-	void wireTriggerResponses();
-	std::vector<std::string> loadCodeFragments() const;
 
-	GridSystem grid;
-	AnnotationRenderer annotations;
 	// Migrated from VideoSampler to the shared VideoPlaybackService
-	// (Shared Video Playback — Engineering Session 2, Task G). See
-	// ofApp.cpp's setup()/exit() and BEComposition::setupBE()/
-	// requestVideoTexture() for the call-site migration; see this
-	// session's implementation report ("Still-frame capture behavior
-	// before and after") for why VideoSampler's requestCapture()
-	// seek/settle/callback machinery was NOT ported — this scene never
-	// called it.
+	// (Shared Video Playback — Engineering Session 2, Task G). This
+	// standalone sketch owns its own instance; ExperienceRuntime's
+	// production scene uses the runtime's canonical one instead.
 	VideoPlaybackService videoPlayback;
-	BEComposition composition;
-
-	LFOBank lfoBank;
-	TriggerBus triggerBus;
-	GridState gridState;
-	ShaderLibrary shaderLib;
-	ErosionFBO erosionFBO;
-	MotionExtraction motionEx;
-
-	float gridPulseBoost = 0.0f;
-	float motionOverlayOpacity = 0.0f;
+	BlueprintSceneCore scene;
 
 	bool showOccupancyDebug = false;
-	bool bypassErosion = true; // TEMP DIAGNOSTIC, see ofApp::draw()
-	bool hadHudWidget = false;
 
 	// HUD Glitch Overlay System — standalone, isolated module (see
 	// shared/src/hud_overlay/README.md). Toggled with 'o'; while active it

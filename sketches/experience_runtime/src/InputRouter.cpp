@@ -20,6 +20,17 @@ std::optional<SceneCommand> InputRouter::translateToSceneCommand(int key) const 
 	}
 }
 
+std::optional<HudFocusInput> InputRouter::translateToFocusInput(int key) const {
+	switch (key) {
+		case OF_KEY_LEFT:
+		case OF_KEY_UP:     return HudFocusInput{HudFocusInput::Kind::Step, -1};
+		case OF_KEY_RIGHT:
+		case OF_KEY_DOWN:   return HudFocusInput{HudFocusInput::Kind::Step, +1};
+		case OF_KEY_RETURN: return HudFocusInput{HudFocusInput::Kind::Activate, 0};
+		default:            return std::nullopt;
+	}
+}
+
 std::optional<RuntimeCommand> InputRouter::translateToRuntimeCommand(int key) const {
 	switch (key) {
 		case 'f':

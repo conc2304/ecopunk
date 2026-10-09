@@ -22,6 +22,22 @@ void HudCompositorBridge::update(float dt, const HudFrameData& frame) {
 	// respectively — see HudWireframeRenderer::update(float, const
 	// HudFrameData&)'s own comment. This bridge adds no logic of its own.
 	renderer_.update(dt, frame);
+	refreshFocus(); // availability follows this frame's resolved controls
+}
+
+void HudCompositorBridge::refreshFocus() {
+	focus_.refresh([this](const std::string& regionId) {
+		const std::optional<bool> enabled = renderer_.controlEnabled(regionId);
+		if (!enabled) return HudControlAvailability::Hidden;
+		return *enabled ? HudControlAvailability::Enabled : HudControlAvailability::Disabled;
+	});
+	renderer_.setFocusedControl(focus_.focused());
+}
+
+bool HudCompositorBridge::stepFocus(int delta) {
+	const bool moved = focus_.step(delta);
+	renderer_.setFocusedControl(focus_.focused());
+	return moved;
 }
 
 void HudCompositorBridge::draw() const {

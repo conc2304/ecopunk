@@ -73,6 +73,11 @@ TEMPORAL_SEMANTIC_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/scene
 TEMPORAL_SEMANTIC_SRC = temporal_semantic_mapping_tests.cpp ../src/TemporalSemanticMapping.cpp
 TEMPORAL_SEMANTIC_BIN = temporal_semantic_mapping_tests
 
+# BLUE-001: blueprintsemantics::compute() — same OF-free shape as above.
+BLUEPRINT_SEMANTIC_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/scene
+BLUEPRINT_SEMANTIC_SRC = blueprint_semantic_mapping_tests.cpp ../src/BlueprintSemanticMapping.cpp
+BLUEPRINT_SEMANTIC_BIN = blueprint_semantic_mapping_tests
+
 # RT-003: sceneswitch::Controller (../src/SceneSwitchController.h) is the
 # header-only, OF-free production state machine behind SceneManager's
 # Blob <-> Temporal switching — same bare-compiler convention as
@@ -92,15 +97,33 @@ SKIN_LOADER_SRC = hud_skin_loader_tests.cpp ../src/HudSkinLoader.cpp ../src/HudS
 	../../../tools/hud-skin-manifest/HudSkinManifest.cpp
 SKIN_LOADER_BIN = hud_skin_loader_tests
 
-.PHONY: test session2 skin clean
+# Playable HUD Menu v0.1: HudFocusNavigator (OF-free, no -I needed).
+FOCUS_SRC = hud_focus_navigator_tests.cpp ../src/HudFocusNavigator.cpp
+FOCUS_BIN = hud_focus_navigator_tests
 
-test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN)
+.PHONY: test session2 skin focus clean
+
+focus: $(FOCUS_BIN)
+	./$(FOCUS_BIN)
+
+$(FOCUS_BIN): $(FOCUS_SRC) ../src/HudFocusNavigator.h
+	$(CXX) $(CXXFLAGS) $(FOCUS_SRC) -o $(FOCUS_BIN)
+
+test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN)
 	./$(LIFECYCLE_BIN)
 	./$(SESSION2_BIN)
 	./$(BLOB_SEMANTIC_BIN)
 	./$(TEMPORAL_SEMANTIC_BIN)
+	./$(BLUEPRINT_SEMANTIC_BIN)
 	./$(SCENE_SWITCH_BIN)
 	./$(SKIN_LOADER_BIN)
+	./$(FOCUS_BIN)
+
+blueprint-semantic: $(BLUEPRINT_SEMANTIC_BIN)
+	./$(BLUEPRINT_SEMANTIC_BIN)
+
+$(BLUEPRINT_SEMANTIC_BIN): $(BLUEPRINT_SEMANTIC_SRC) ../src/BlueprintSemanticMapping.h
+	$(CXX) $(BLUEPRINT_SEMANTIC_CXXFLAGS) $(BLUEPRINT_SEMANTIC_SRC) -o $(BLUEPRINT_SEMANTIC_BIN)
 
 skin: $(SKIN_LOADER_BIN)
 	./$(SKIN_LOADER_BIN)
@@ -127,4 +150,4 @@ $(SCENE_SWITCH_BIN): $(SCENE_SWITCH_SRC) ../src/SceneSwitchController.h
 	$(CXX) $(CXXFLAGS) $(SCENE_SWITCH_SRC) -o $(SCENE_SWITCH_BIN)
 
 clean:
-	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN)
+	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN)

@@ -14,6 +14,12 @@
             "bottom-left"
         ]
     },
+    "presentation": {
+        "canonicalRegions": 19,
+        "originalMinimalSlice": 13,
+        "production": 15,
+        "productionAdditions": "Living HUD v0.1"
+    },
     "regions": [
         {
             "id": "universal.scene_title",
@@ -31,7 +37,7 @@
                 43.20000076293945
             ],
             "role": "Universal",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         },
         {
             "id": "universal.media_title",
@@ -49,7 +55,7 @@
                 36.0
             ],
             "role": "Universal",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         },
         {
             "id": "universal.primary_state",
@@ -67,7 +73,7 @@
                 43.20000076293945
             ],
             "role": "Universal",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         },
         {
             "id": "universal.activity",
@@ -85,7 +91,7 @@
                 43.20000076293945
             ],
             "role": "Universal",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         },
         {
             "id": "universal.effect_summary",
@@ -103,7 +109,7 @@
                 43.20000076293945
             ],
             "role": "Universal",
-            "scope": "FullProfile only"
+            "scope": "LivingHUD-v0.1+FullProfile"
         },
         {
             "id": "universal.timing",
@@ -121,7 +127,7 @@
                 36.0
             ],
             "role": "Universal",
-            "scope": "FullProfile only"
+            "scope": "LivingHUD-v0.1+FullProfile"
         },
         {
             "id": "universal.activity_trace",
@@ -175,7 +181,7 @@
                 43.20000076293945
             ],
             "role": "Controls",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         },
         {
             "id": "controls.scene_next",
@@ -193,7 +199,7 @@
                 43.20000076293945
             ],
             "role": "Controls",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         },
         {
             "id": "controls.media_previous",
@@ -211,7 +217,7 @@
                 43.20000076293945
             ],
             "role": "Controls",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         },
         {
             "id": "controls.media_next",
@@ -229,7 +235,7 @@
                 43.20000076293945
             ],
             "role": "Controls",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         },
         {
             "id": "controls.reseed",
@@ -247,7 +253,7 @@
                 43.20000076293945
             ],
             "role": "Controls",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         },
         {
             "id": "flexible.primary",
@@ -265,7 +271,7 @@
                 115.19999694824219
             ],
             "role": "Flexible",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         },
         {
             "id": "flexible.secondary_a",
@@ -337,7 +343,7 @@
                 43.20000076293945
             ],
             "role": "Overlay",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         },
         {
             "id": "overlay.transition",
@@ -355,7 +361,7 @@
                 57.599998474121094
             ],
             "role": "Overlay",
-            "scope": "MinimalSlice+FullProfile"
+            "scope": "MinimalSlice-13+FullProfile"
         }
     ],
     "source": "derived from live HudWireframeRenderer/HudRegionCatalog at export time; HUD-006 ecopunk-hud-blueprint / 1"

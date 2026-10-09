@@ -50,14 +50,33 @@ void ofApp::setup() {
 	bool artExportRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
 		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
 		&& !skinHarnessRequested && HudArtReferenceExporter::isRequested();
+	// Playable HUD Menu v0.1 demonstration: lowest priority, normal production scene.
+	bool focusHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && FocusMenuHarness::isRequested();
+	// BLUE-001 roster verification: lowest priority; starts in Blueprint.
+	bool blueprintHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested
+		&& BlueprintRosterHarness::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
 		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
+
+	// BLUE-001: EXPERIENCE_RUNTIME_BLUEPRINT_SCENE starts a normal run in
+	// Blueprint Emergence (same opt-in pattern as the Temporal variable).
+	bool wantBlueprintScene = !wantTemporalScene && !switchHarnessRequested && !acceptanceRequested
+		&& !blobLifecycleRequested && !blobSoakRequested
+		&& (blueprintHarnessRequested || std::getenv("EXPERIENCE_RUNTIME_BLUEPRINT_SCENE") != nullptr);
 
 	if (!glHarnessRequested) {
 		if (wantTemporalScene) {
 			runtime.installTemporalProductionScene();
+		} else if (wantBlueprintScene) {
+			runtime.installBlueprintProductionScene();
 		} else {
-			runtime.installBlobProductionScene();
+			// RT-002/RT-003 acceptance harnesses keep the two-scene ring they
+			// were accepted against; every other run gets the full roster.
+			runtime.installBlobProductionScene(!(switchHarnessRequested || acceptanceRequested));
 		}
 	}
 	runtime.setup();
@@ -86,6 +105,10 @@ void ofApp::setup() {
 		skinHarness = std::make_unique<SkinLoaderHarness>(runtime);
 	} else if (artExportRequested) {
 		artExporter = std::make_unique<HudArtReferenceExporter>(runtime);
+	} else if (focusHarnessRequested) {
+		focusHarness = std::make_unique<FocusMenuHarness>(runtime);
+	} else if (blueprintHarnessRequested) {
+		blueprintHarness = std::make_unique<BlueprintRosterHarness>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
 		stallDriver = std::make_unique<Rt004StallDriver>(runtime);
 	}
@@ -119,6 +142,12 @@ void ofApp::update() {
 	if (artExporter) {
 		artExporter->step(ofGetLastFrameTime());
 	}
+	if (focusHarness) {
+		focusHarness->step(ofGetLastFrameTime());
+	}
+	if (blueprintHarness) {
+		blueprintHarness->step(ofGetLastFrameTime());
+	}
 	if (blobHarness) {
 		blobHarness->step(ofGetLastFrameTime());
 	}
@@ -138,7 +167,7 @@ void ofApp::update() {
 
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness) {
 		runtime.draw();
 	}
 	// When a harness is active, it drives runtime.draw() itself (see

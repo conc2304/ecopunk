@@ -86,8 +86,11 @@ ScenePresentationProfile buildUniversalProfile() {
 		// the fake-scenario path (no real EffectActivityStatus exists
 		// there, so this always resolves missing) — visible only via the
 		// real HudFrameData path, same as every other effects.* slot.
+		// Captioned ("EFFECTS") so the bare health value never reads as
+		// belonging to the universal.timing region directly below it.
 		auto b = makeBinding("universal.effect_summary.health", "universal.effect_summary",
-			HudWidgetType::StatusBadge, HudMissingPolicy::Hide);
+			HudWidgetType::StatusBadge, HudMissingPolicy::Hide, HudFormatKind::Automatic,
+			std::string("slot.effects.health.label"));
 		b.addSource({"value", "effects.health", true});
 		p.bindings.push_back(b);
 	}

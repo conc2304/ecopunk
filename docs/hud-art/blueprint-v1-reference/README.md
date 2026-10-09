@@ -5,7 +5,7 @@ These are reference images for authoring skins against `ecopunk-hud-blueprint` /
 All geometry is taken from the **live production renderer** at export time:
 - `HudWireframeRenderer::regionCatalog()`
 - `pixelBoundsFor()`
-- `regionInMinimalSlice()`
+- `regionInMinimalSlice()` / `regionInOriginalMinimalSlice()` (one production allowlist, split by provenance)
 - `mediaViewportMesh()`
 
 No layout is re-typed. `regions.json` is a **derived** export of that catalog, not an independent definition. If it ever disagrees with `shared/src/hud-compositor/HudRegionCatalog.cpp`, the source wins and these files must be regenerated.
@@ -15,9 +15,9 @@ No layout is re-typed. `regions.json` is a **derived** export of that catalog, n
 | File | Format | What it is |
 |---|---|---|
 | `hud_reference_wireframe_1280x720.png` | 1280×720 RGBA, transparent | Clean structural outlines: the 18 region rectangles plus the real `MediaViewportMesh` silhouette (green). No scene content, skin or text. Layer it over artwork. |
-| `hud_reference_schematic_1280x720.png` | 1280×720 RGB, opaque | All 19 regions with index, stable ID, exact px bounds, role and scope. Key: **teal** = MinimalSlice + FullProfile, **amber** = FullProfile only, **magenta** = Overlay. |
+| `hud_reference_schematic_1280x720.png` | 1280×720 RGB, opaque | All 19 regions with index, stable ID, exact px bounds, role and scope. Key: **teal** = original 13-region MinimalSlice, **green** = Living HUD v0.1 additions (`universal.effect_summary`, `universal.timing`; 15-region production presentation), **amber** = FullProfile only, **magenta** = Overlay. |
 | `hud_reference_constraints_1280x720.png` | 1280×720 RGBA, translucent | Artwork constraint map (key below). Layer it over artwork. |
-| `regions.json` | JSON | Derived catalog: id, role, normalized and px bounds, scope, viewport mesh facts |
+| `regions.json` | JSON | Derived catalog: id, role, normalized and px bounds, scope, viewport mesh facts, and `presentation` counts (19 canonical / 13 original MinimalSlice / 15 production) |
 | `runtime_wireframe_reference_1280x720.png` | 1280×720 | A real ExperienceRuntime frame (no skin) captured during the export run, used for comparison |
 | `verification.txt` | text | The export run's PASS/FAIL log |
 
@@ -65,4 +65,4 @@ env -u EXPERIENCE_RUNTIME_HUD_SKIN EXPERIENCE_RUNTIME_HUD_ART_EXPORT=1 \
 3. **No rule for the gaps themselves.** "Preserve the gaps" does not say whether art may sit *in* a gap (frame lines, ornament) or must leave it visually open. At `secondary_trace` / `flexible.primary` the gap is 0, so any separator art must sit inside one of the two regions.
 4. **Live-content insets vary by widget type** (`hud-wireframe-bounds-v1.md` §1 and §1a, typically about 1.44 px). They are not drawn here, because a region can host several widget types. The orange zone is therefore the full region rectangle, which is the conservative choice.
 5. **`universal.timing` text budget** is still undocumented: a deferred, nonblocking HUD-006 follow-up.
-6. **Scope-dependent treatment.** Six regions are drawn only in FullProfile. There is no rule for how art should treat regions that are empty in production; this is presentation policy, not geometry.
+6. **Scope-dependent treatment.** Four regions (`universal.activity_trace`, `universal.secondary_trace`, `flexible.secondary_a`, `flexible.secondary_b`) are drawn only in FullProfile; Living HUD v0.1 moved `universal.effect_summary` and `universal.timing` into production. There is no rule for how art should treat regions that are empty in production; this is presentation policy, not geometry.

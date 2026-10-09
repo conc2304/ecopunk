@@ -9,6 +9,7 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		// -- Universal slot captions ------------------------------------
 		{"slot.scene.activity.label", "ACTIVITY"},
 		{"slot.scene.timing.label", "ACTIVE TIME"},
+		{"slot.effects.health.label", "EFFECTS"},
 		{"overlay.transition.label", "TRANSITION"},
 
 		// -- Health (shared across scene.health/media.health/

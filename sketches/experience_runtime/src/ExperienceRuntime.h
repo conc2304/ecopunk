@@ -2,6 +2,7 @@
 
 #include "AllocationCounter.h"
 #include "BlobProductionScene.h"
+#include "BlueprintProductionScene.h"
 #include "HudCompositorBridge.h"
 #include "HudFrameData.h"
 #include "InputRouter.h"
@@ -82,10 +83,22 @@ public:
 	//
 	// installBlobProductionScene() starts in Blob (the default normal run and
 	// RT-002's deterministic startup); installTemporalProductionScene()
-	// registers the same pair but starts in Temporal (the
-	// EXPERIENCE_RUNTIME_TEMPORAL_SCENE run and TemporalLifecycleHarness).
-	void installBlobProductionScene() { installProductionScenePair(BlobProductionScene::kSceneId); }
-	void installTemporalProductionScene() { installProductionScenePair(TemporalProductionScene::kSceneId); }
+	// registers the same roster but starts in Temporal (the
+	// EXPERIENCE_RUNTIME_TEMPORAL_SCENE run and TemporalLifecycleHarness);
+	// installBlueprintProductionScene() starts in Blueprint.
+	//
+	// BLUE-001: the default roster (NextScene ring order) is [Blob, Temporal,
+	// Blueprint]. includeBlueprint=false keeps the original two-scene ring
+	// [Blob, Temporal] that RT-002's TwoSceneAcceptanceHarness and RT-003's
+	// SceneSwitchHarness were accepted against (both assert exactly that
+	// registry and step '['/']' assuming a two-entry ring).
+	void installBlobProductionScene(bool includeBlueprint = true) {
+		installProductionScenes(BlobProductionScene::kSceneId, includeBlueprint);
+	}
+	void installTemporalProductionScene() { installProductionScenes(TemporalProductionScene::kSceneId, true); }
+	void installBlueprintProductionScene() { installProductionScenes(BlueprintProductionScene::kSceneId, true); }
+
+	BlueprintProductionScene& blueprintSceneForTesting() { return blueprintScene_; }
 
 	// Temporal Production Scene #2 Migration: development/test-only access
 	// to the real TemporalProductionScene instance — same rationale as
@@ -210,7 +223,22 @@ public:
 private:
 	void establishGlobalRenderingBaseline();
 	void handleRuntimeCommand(RuntimeCommand command);
-	void installProductionScenePair(const std::string& startupSceneId);
+	void handleFocusInput(const HudFocusInput& input);
+
+public:
+	// Playable HUD Menu v0.1 — last focus activation, for logs/harness only.
+	struct FocusActivationRecord {
+		std::string region;      // focused control, "" if none focused
+		std::string command;     // command dispatched, "" if none
+		bool refused = false;    // focused control not enabled -> nothing dispatched
+		bool accepted = false;   // result from the existing command path
+		uint64_t serial = 0;     // increments on every Activate input
+	};
+	const FocusActivationRecord& lastFocusActivationForTesting() const { return lastFocusActivation_; }
+
+private:
+	FocusActivationRecord lastFocusActivation_;
+	void installProductionScenes(const std::string& startupSceneId, bool includeBlueprint);
 
 	// RT-003: on the frame an incoming scene's activation succeeds, reallocate
 	// the runtime-owned scene FBO iff its native size differs. Clears the
@@ -248,6 +276,10 @@ private:
 	// blobScene_ (see installProductionScenePair()); set up lazily, at most
 	// once, the first time it becomes active.
 	TemporalProductionScene temporalScene_;
+
+	// BLUE-001: the third real production scene, same construction-order
+	// rule (declared after runtimeServices_); set up lazily on first switch.
+	BlueprintProductionScene blueprintScene_;
 
 	bool productionScenesInstalled_ = false;
 

@@ -16,6 +16,8 @@ public:
 	void draw(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const override;
 
 private:
+	static constexpr float kMinChipHeight = 17.0f; // one 13 px native line + 2 px inset each side
+
 	mutable HudTextMetricsCache textCache_;
 };
 

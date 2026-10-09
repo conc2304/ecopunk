@@ -20,6 +20,9 @@ public:
 	void draw(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const override;
 
 private:
+	// Two stacked 13 px native bitmap lines plus breathing room.
+	static constexpr float kTwoLineMinHeight = 30.0f;
+
 	mutable HudTextMetricsCache textCache_;
 };
 

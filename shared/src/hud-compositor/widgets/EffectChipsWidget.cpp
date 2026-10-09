@@ -19,13 +19,19 @@ void EffectChipsWidget::draw(const ofRectangle& bounds, const HudWidgetColors& c
 		// via shouldRender==false). Drawn as muted placeholder text, not
 		// silently blank, so the empty-vs-missing distinction is visible
 		// in the Validation Studio too.
-		ofSetColor(scaledAlpha(colors.muted, opacity));
-		drawText("NONE ACTIVE", bounds.x + wu(bounds, 4.0f), bounds.y + wu(bounds, 14.0f), wu(bounds, 0.5f, 120.0f));
+		// Primary at reduced alpha: quieter than live chips, but legible
+		// on a skin shell (muted's alpha-90 vanished on Dark Moss).
+		// Vertically centred on the same line a chip row's text uses.
+		ofSetColor(scaledAlpha(colors.primary, 0.75f * opacity));
+		drawText("NONE ACTIVE", bounds.x + wu(bounds, 4.0f), bounds.y + std::min(bounds.height, kMinChipHeight + 2.0f) * 0.5f + 4.0f, wu(bounds, 0.5f, 120.0f));
 		ofPopStyle();
 		return;
 	}
 
-	float chipHeight = wu(bounds, 14.0f);
+	// Never shorter than one native 13 px bitmap line (see
+	// HudWidgetDrawUtils.h's fixed-native typography): the region-scaled
+	// height alone collapses to ~2.5 px in a 21.6 px slot.
+	float chipHeight = std::max(wu(bounds, 14.0f), kMinChipHeight);
 	float chipPad = wu(bounds, 4.0f);
 	float x = bounds.x;
 	float y = bounds.y + wu(bounds, 2.0f);

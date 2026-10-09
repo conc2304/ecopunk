@@ -1,5 +1,6 @@
 #pragma once
 
+#include "HudFocusNavigator.h"
 #include "HudFrameData.h"
 #include "HudSkinLoader.h"
 #include "HudSkinOfImageBackend.h"
@@ -94,6 +95,16 @@ public:
 	// while the GL context is still alive (ExperienceRuntime::exit()).
 	void shutdownSkins();
 
+	// -- Playable HUD Menu v0.1: focus over the existing controls -------------
+	// Focus is HUD presentation state only; it never dispatches anything.
+	// Moves focus (first call engages it). Returns false if no control is visible.
+	bool stepFocus(int delta);
+	// The focused control's region ID if it is enabled right now, else nullopt.
+	std::optional<std::string> focusActivationTarget() const { return focus_.activationTarget(); }
+	const HudFocusNavigator& focus() const { return focus_; }
+	// Shows the activation flash for the result ExperienceRuntime got back.
+	void reportActivation(bool accepted) { renderer_.triggerActivationFeedback(accepted); }
+
 	// Inspection / harness surface.
 	const hudskin::HudSkinLoader& skinLoader() const { return skinLoader_; }
 	const HudSkinOfImageBackend& skinBackend() const { return skinBackend_; }
@@ -102,6 +113,11 @@ public:
 
 private:
 	void syncShellTexture();
+	void refreshFocus();
+
+	// Traversal order = the HUD-006 controls row, left to right.
+	HudFocusNavigator focus_{{"controls.scene_previous", "controls.scene_next", "controls.media_previous",
+		"controls.media_next", "controls.reseed"}};
 
 	hudpresent::HudWireframeRenderer renderer_;
 	bool visible_ = true;

@@ -30,13 +30,41 @@ FakeSceneHealth toFakeSceneHealth(SceneHealth h) {
 	return FakeSceneHealth::Ready;
 }
 
-// This task's §13 first-vertical-slice region set.
-const std::unordered_set<std::string>& minimalSliceRegions() {
+// Chip text for one effects.active item: the curated displayName carried by
+// the same EffectActivityStatus slot (VideoEffectDefinition::displayName),
+// or the effect ID itself when no slot supplies one.
+const std::string& effectDisplayLabel(const HudFrameData& frame, const std::string& effectId) {
+	if (frame.effects) {
+		for (const auto& slot : frame.effects->slots) {
+			if (slot.effectId == effectId && !slot.displayName.empty()) return slot.displayName;
+		}
+	}
+	return effectId;
+}
+
+// The production presentation allowlist, kept as its two provenance parts so
+// tooling (HudArtReferenceExporter) can tell them apart without a second list.
+// Both together remain a permitted HUD-006 subset — no geometry or Blueprint
+// identity change.
+//
+// Part 1: this task's §13 first vertical slice (13 regions with media_viewport).
+const std::unordered_set<std::string>& originalSliceRegions() {
 	static const std::unordered_set<std::string> regions = {
 		"universal.scene_title", "universal.media_title", "universal.primary_state", "universal.activity",
 		"controls.scene_previous", "controls.scene_next", "controls.media_previous", "controls.media_next", "controls.reseed",
 		"flexible.primary",
 		"overlay.health", "overlay.transition",
+	};
+	return regions;
+}
+
+// Part 2: Living HUD v0.1 activations (15 regions in total) —
+// universal.effect_summary (real HudFrameData.effects; Hide when no
+// authoritative snapshot exists, "NONE ACTIVE" when present-empty) and
+// universal.timing (real semantic timing.activeSeconds).
+const std::unordered_set<std::string>& livingHudRegions() {
+	static const std::unordered_set<std::string> regions = {
+		"universal.effect_summary", "universal.timing",
 	};
 	return regions;
 }
@@ -73,7 +101,11 @@ void HudWireframeRenderer::setScene(const std::string& sceneId) {
 }
 
 bool HudWireframeRenderer::regionInMinimalSlice(const std::string& regionId) {
-	return minimalSliceRegions().count(regionId) != 0;
+	return originalSliceRegions().count(regionId) != 0 || livingHudRegions().count(regionId) != 0;
+}
+
+bool HudWireframeRenderer::regionInOriginalMinimalSlice(const std::string& regionId) {
+	return originalSliceRegions().count(regionId) != 0;
 }
 
 ofRectangle HudWireframeRenderer::pixelBoundsFor(const std::string& regionId) const {
@@ -319,8 +351,12 @@ void HudWireframeRenderer::resolveBindingReal(const HudCompiledBinding& compiled
 		if (outcome.shouldRender && !outcome.useAmbientFallback) {
 			roleValue.formattedText = HudFormattingService::format(outcome.valueToShow, binding.format, currentSceneId_, vocabulary_);
 			if (outcome.valueToShow.valueType == HudSourceValueType::IdentifierList) {
+				// effects.active (the one production IdentifierList source)
+				// stays a list of effect IDs semantically; the chip text is
+				// the same snapshot slot's curated displayName, falling back
+				// to the ID when absent.
 				for (size_t item = 0; item < outcome.valueToShow.listValue.count; ++item) {
-					roleValue.formattedItems.push_back(outcome.valueToShow.listValue.items[item]);
+					roleValue.formattedItems.push_back(effectDisplayLabel(frame, outcome.valueToShow.listValue.items[item]));
 				}
 			}
 		}
@@ -435,8 +471,53 @@ void HudWireframeRenderer::draw() const {
 		stats_.perWidgetMicros.emplace_back(compiled.binding.bindingId, static_cast<double>(widgetEnd - widgetStart));
 	}
 
+	// Playable HUD Menu v0.1 — focus indicator + activation flash, drawn last
+	// so it sits above the control's own label. Only for a control that is
+	// actually visible this frame (hidden controls cannot hold focus).
+	if (focusedControl_ && controlEnabled(*focusedControl_).has_value()) {
+		const ofRectangle b = pixelBoundsFor(*focusedControl_);
+		const HudWidgetColors colors;
+		ofPushStyle();
+		ofEnableAlphaBlending();
+		const float age = elapsedSeconds_ - activationStart_;
+		if (activationStart_ >= 0.0f && age >= 0.0f && age < kActivationFlashSeconds) {
+			const float fade = 1.0f - age / kActivationFlashSeconds;
+			ofColor c = activationAccepted_ ? colors.accent : colors.warning;
+			c.a = static_cast<unsigned char>(110.0f * fade);
+			ofFill();
+			ofSetColor(c);
+			ofDrawRectangle(b);
+		}
+		// Corner brackets 3 px outside the region (inside the existing gaps),
+		// so the label itself is never overdrawn.
+		const ofRectangle o(b.x - 3.0f, b.y - 3.0f, b.width + 6.0f, b.height + 6.0f);
+		const float arm = std::min(12.0f, o.height * 0.4f);
+		ofSetColor(colors.accent);
+		ofSetLineWidth(2.0f);
+		auto corner = [&](float x, float y, float dx, float dy) {
+			ofDrawLine(x, y, x + dx * arm, y);
+			ofDrawLine(x, y, x, y + dy * arm);
+		};
+		corner(o.x, o.y, 1, 1);
+		corner(o.getRight(), o.y, -1, 1);
+		corner(o.x, o.getBottom(), 1, -1);
+		corner(o.getRight(), o.getBottom(), -1, -1);
+		ofPopStyle();
+	}
+
 	uint64_t drawEnd = ofGetElapsedTimeMicros();
 	stats_.totalDrawMicros = static_cast<double>(drawEnd - drawStart);
+}
+
+std::optional<bool> HudWireframeRenderer::controlEnabled(const std::string& regionId) const {
+	for (const auto& [bindingId, input] : widgetInputs_) {
+		if (input.regionId != regionId) continue;
+		if (renderScope_ == RenderScope::MinimalSlice && !regionInMinimalSlice(regionId)) return std::nullopt;
+		const auto* enabled = input.findRole("enabled");
+		if (enabled == nullptr || !enabled->shouldRender) return std::nullopt; // not a control, or unsupported (hidden)
+		return enabled->value.boolValue;
+	}
+	return std::nullopt;
 }
 
 } // namespace hudpresent

@@ -41,6 +41,7 @@
 
 #include "ofRectangle.h"
 
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -161,6 +162,21 @@ public:
 	void setShellTexture(const ofTexture* shell) { shellTexture_ = shell; }
 	const ofTexture* shellTexture() const { return shellTexture_; }
 
+	// Playable HUD Menu v0.1 — focus presentation for existing controls.
+	// controlEnabled() reports a control region's state from the bindings the
+	// last update() ALREADY resolved, using exactly LabelWidget's rule:
+	// nullopt = hidden (unsupported), false = disabled (dimmed), true =
+	// enabled — so focus never disagrees with what is drawn.
+	std::optional<bool> controlEnabled(const std::string& regionId) const;
+	// Region to outline as focused, or nullopt for none (the default — the
+	// HUD is unchanged until something sets focus). Drawn after all widgets.
+	void setFocusedControl(const std::optional<std::string>& regionId) { focusedControl_ = regionId; }
+	const std::optional<std::string>& focusedControl() const { return focusedControl_; }
+	// One short activation flash on the focused control (accepted = accent,
+	// refused = warning), fading over kActivationFlashSeconds.
+	void triggerActivationFeedback(bool accepted) { activationStart_ = elapsedSeconds_; activationAccepted_ = accepted; }
+	static constexpr float kActivationFlashSeconds = 0.30f;
+
 	struct FrameStats {
 		int activeWidgetCount = 0;
 		int historySignalCount = 0;
@@ -180,7 +196,11 @@ public:
 	const HudVocabularyResolver& vocabulary() const { return vocabulary_; }
 	ofRectangle pixelBoundsFor(const std::string& regionId) const;
 
+	// Production (MinimalSlice-scope) membership: the original §13 slice plus
+	// the Living HUD v0.1 activations. regionInOriginalMinimalSlice() is the
+	// first part alone — tooling provenance only, never a draw-time gate.
 	static bool regionInMinimalSlice(const std::string& regionId);
+	static bool regionInOriginalMinimalSlice(const std::string& regionId);
 
 private:
 	void resolveBinding(const HudCompiledBinding& compiled, const FakeHudFrameData& frame);
@@ -218,6 +238,9 @@ private:
 	// stays at defaults for the fake/Studio path).
 	const ofTexture* currentSceneTexture_ = nullptr; // non-owning, valid only for the frame that supplied it — see SceneFrame's own lifetime rule
 	const ofTexture* shellTexture_ = nullptr; // non-owning — see setShellTexture()
+	std::optional<std::string> focusedControl_;
+	float activationStart_ = -1.0f;
+	bool activationAccepted_ = false;
 	glm::ivec2 currentSceneNativeSize_{0, 0};
 	uint64_t lastObservedFrameNumber_ = 0;
 	bool haveObservedFrameNumber_ = false;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "HudFocusNavigator.h" // HudFocusInput (device-neutral step/activate)
 #include "SceneContract.h"
 
 #include <optional>
@@ -29,4 +30,12 @@ class InputRouter {
 public:
 	std::optional<SceneCommand> translateToSceneCommand(int key) const;
 	std::optional<RuntimeCommand> translateToRuntimeCommand(int key) const;
+
+	// Playable HUD Menu v0.1: HUD focus navigation. Not a command — it only
+	// moves or activates focus; activation is then dispatched by
+	// ExperienceRuntime through the two paths above. Arrow keys = step,
+	// Enter = activate. A future rotary encoder produces the same
+	// HudFocusInput (detent = Step ±1, click = Activate) without any change
+	// to the focus or command logic.
+	std::optional<HudFocusInput> translateToFocusInput(int key) const;
 };

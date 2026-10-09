@@ -156,6 +156,8 @@ PROJECT_CFLAGS = -I../../shared/src/scene -I../../shared/src/hud-runtime \
 	-I../../shared/src/hud-compositor \
 	-I../../shared/src/hud-compositor/widgets \
 	-I../blob-region-prototype/src \
+	-I../blueprint_emergence/src \
+	-I../../shared/src/ridgeline \
 	-I../../tools/hud-skin-manifest \
 	-ffunction-sections -fdata-sections
 
@@ -194,6 +196,15 @@ PROJECT_CFLAGS = -I../../shared/src/scene -I../../shared/src/hud-runtime \
 # link doesn't silently depend on that. `uname -s` rather than PLATFORM_OS
 # because this file is included before OF's config.shared.mk defines it.
 ################################################################################
+# BLUE-001 (Blueprint Emergence production scene): the shared/src/hud/
+# widget library (BEComposition's in-artwork scanner/data-card/gauge
+# widgets) is compiled via per-file symlinks in src/, like hud-compositor
+# above. Each widget .cpp quotes its own header and "../shared/HudUtils.h"
+# relative to its real directory, which a symlinked translation unit can't
+# see — so every hud/ subdirectory is added as a plain include path
+# (header names checked: no collision with any other include directory).
+PROJECT_CFLAGS += $(addprefix -I,$(wildcard ../../shared/src/hud/*/))
+
 ifeq ($(shell uname -s),Darwin)
 	PROJECT_LDFLAGS = -Wl,-dead_strip
 else
@@ -226,3 +237,10 @@ Release Debug: sync-temporal-runtime-assets
 .PHONY: sync-temporal-runtime-assets
 sync-temporal-runtime-assets:
 	@python3 ../../scripts/sync-temporal-runtime-assets.py $(CURDIR)
+
+# BLUE-001: Blueprint Emergence's scene-local data (code fragments + font),
+# from sketches/blueprint_emergence/data/ — same deterministic model.
+Release Debug: sync-blueprint-runtime-assets
+.PHONY: sync-blueprint-runtime-assets
+sync-blueprint-runtime-assets:
+	@python3 ../../scripts/sync-blueprint-runtime-assets.py $(CURDIR)

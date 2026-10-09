@@ -8,6 +8,8 @@
 #include "SceneSwitchHarness.h"
 #include "SkinLoaderHarness.h"
 #include "HudArtReferenceExporter.h"
+#include "FocusMenuHarness.h"
+#include "BlueprintRosterHarness.h"
 #include "TemporalLifecycleHarness.h"
 #include "TwoSceneAcceptanceHarness.h"
 
@@ -49,5 +51,7 @@ private:
 	std::unique_ptr<TwoSceneAcceptanceHarness> acceptanceHarness; // RT-002
 	std::unique_ptr<SkinLoaderHarness> skinHarness; // HUD-004 first shell loader proof
 	std::unique_ptr<HudArtReferenceExporter> artExporter; // HUD Art reference PNG export (tooling)
+	std::unique_ptr<FocusMenuHarness> focusHarness; // Playable HUD Menu v0.1 demonstration
+	std::unique_ptr<BlueprintRosterHarness> blueprintHarness; // BLUE-001 roster/switch verification
 	std::unique_ptr<Rt004StallDriver> stallDriver; // RT-004 diagnostic, normal path only
 };

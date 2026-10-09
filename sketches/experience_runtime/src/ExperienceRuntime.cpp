@@ -12,7 +12,8 @@
 
 ExperienceRuntime::ExperienceRuntime()
 	: blobScene_(runtimeServices_.video())
-	, temporalScene_(runtimeServices_.video()) {
+	, temporalScene_(runtimeServices_.video())
+	, blueprintScene_(runtimeServices_.video()) {
 	// See ExperienceRuntime.h's constructor comment and blobScene_'s own
 	// declaration comment: runtimeServices_.video() is a valid, stable
 	// reference from the moment runtimeServices_ itself is constructed
@@ -21,12 +22,15 @@ ExperienceRuntime::ExperienceRuntime()
 	// happens later, in setup() below, before either scene is activated.
 }
 
-void ExperienceRuntime::installProductionScenePair(const std::string& startupSceneId) {
+void ExperienceRuntime::installProductionScenes(const std::string& startupSceneId, bool includeBlueprint) {
 	if (!productionScenesInstalled_) {
-		// Fixed registry order = NextScene ring order: Blob, then Temporal.
+		// Fixed registry order = NextScene ring order: Blob, Temporal, Blueprint.
 		sceneManager_.registerProductionScene(&blobScene_); // no canonical effect producer -> effects = nullopt
 		sceneManager_.registerProductionScene(
 			&temporalScene_, [this] { return temporalScene_.currentEffectActivitySnapshot(); });
+		if (includeBlueprint) {
+			sceneManager_.registerProductionScene(&blueprintScene_); // no canonical effect producer -> effects = nullopt
+		}
 		productionScenesInstalled_ = true;
 	}
 	sceneManager_.setStartupScene(startupSceneId);
@@ -307,7 +311,59 @@ void ExperienceRuntime::exit() {
 	runtimeServices_.shutdown();
 }
 
+void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
+	if (input.kind == HudFocusInput::Kind::Step) {
+		hudCompositorBridge_.stepFocus(input.delta);
+		const auto& f = hudCompositorBridge_.focus().focused();
+		ofLogNotice("HudFocus") << "focus -> " << (f ? *f : std::string("none (no visible controls)"));
+		return;
+	}
+
+	// Activate: only an ENABLED focused control dispatches, and only through
+	// the existing command paths — the same calls the 'n'/'p'/'['/']' keys use.
+	FocusActivationRecord rec;
+	rec.serial = lastFocusActivation_.serial + 1;
+	const auto& focused = hudCompositorBridge_.focus().focused();
+	rec.region = focused ? *focused : std::string();
+	const std::optional<std::string> target = hudCompositorBridge_.focusActivationTarget();
+	if (!target) {
+		rec.refused = focused.has_value(); // focused but disabled; no focus = nothing to do
+		if (rec.refused) hudCompositorBridge_.reportActivation(false);
+		ofLogNotice("HudFocus") << (rec.refused ? "refused: '" + rec.region + "' is not currently available"
+		                                        : std::string("activate ignored: nothing focused"));
+		lastFocusActivation_ = rec;
+		return;
+	}
+
+	// Control region -> existing command. Same meanings the HUD's availability
+	// sources use (HudRealFrameResolver control.* sources).
+	if (*target == "controls.media_previous" || *target == "controls.media_next" || *target == "controls.reseed") {
+		const SceneCommand cmd = *target == "controls.media_previous" ? SceneCommand::PreviousMedia
+			: *target == "controls.media_next" ? SceneCommand::NextMedia : SceneCommand::Regenerate;
+		rec.command = cmd == SceneCommand::PreviousMedia ? "SceneCommand::PreviousMedia"
+			: cmd == SceneCommand::NextMedia ? "SceneCommand::NextMedia" : "SceneCommand::Regenerate";
+		rec.accepted = sceneManager_.dispatchSceneCommand(cmd);
+	} else if (*target == "controls.scene_previous" || *target == "controls.scene_next") {
+		const RuntimeCommand cmd = *target == "controls.scene_previous" ? RuntimeCommand::PreviousScene : RuntimeCommand::NextScene;
+		rec.command = cmd == RuntimeCommand::PreviousScene ? "RuntimeCommand::PreviousScene" : "RuntimeCommand::NextScene";
+		handleRuntimeCommand(cmd); // existing path; it reports no accept/reject result
+		rec.accepted = true;
+	} else {
+		rec.refused = true; // unknown control: never guess a command
+	}
+	hudCompositorBridge_.reportActivation(rec.accepted && !rec.refused);
+	ofLogNotice("HudFocus") << "activate '" << rec.region << "' -> " << (rec.command.empty() ? "(none)" : rec.command)
+		<< ", accepted=" << (rec.accepted && !rec.refused);
+	lastFocusActivation_ = rec;
+}
+
 void ExperienceRuntime::keyPressed(int key) {
+	// -- Playable HUD Menu v0.1: focus navigation (arrows / Enter) -------
+	if (auto focusInput = inputRouter_.translateToFocusInput(key)) {
+		handleFocusInput(*focusInput);
+		return;
+	}
+
 	// -- Contract-shaped command routing: two separate paths -----------
 	if (auto sceneCommand = inputRouter_.translateToSceneCommand(key)) {
 		bool accepted = sceneManager_.dispatchSceneCommand(*sceneCommand);

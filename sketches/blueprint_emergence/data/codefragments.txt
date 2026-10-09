@@ -1,0 +1,57 @@
+void particleManager()
+float seed = perlinNoise(x,y)
+{ render_options: { noise: true, resolution: 48 } }
+[50000, 0-10, Y-08]
+[SPECIFS, DAM.IA.SUPERBA]
+[GENUS: RUPESTRIS]
+frame: 1024
+t=00:03:42.18
+#include <geometry.h>
+int width=1024, height=1024
+Math.pow(10, 0);
+canopy_density = 0.847
+sample_offset: 0.231
+[ZONE A, CELL 2-4]
+classify(specimen) -> pending
+hash: 9f2a1c4e
+texture_cache.flush()
+chlorophyll_index: 0.62
+delta_t = 0.0417
+[FRAME CAPTURE OK]
+luminance.mean = 118.3
+edge_detect(threshold=0.4)
+spectral_band: NIR
+{ crop: rect, w: 3, h: 2 }
+[SAMPLE 0014 / QUEUED]
+bark_texture.id = 7731
+node_count: 4096
+canopy.height_estimate(m) = 18.2
+ofPixels frameBuf;
+moisture_index: 0.71
+[LOG] seek complete, t=4.221s
+species_confidence: 0.93
+render_pass: 2 / 4
+[ARCHIVE ENTRY 00231]
+foliage_density(x,y) -> 0.55
+shadow_map.resolution = 512
+wind_offset = sin(t * 0.4)
+[QC: PASS]
+soil_ph_estimate: 6.4
+growth_ring_count ~ 41
+{ desaturate: 0.18 }
+vec3 normal = computeNormal(p)
+canopy_gap_fraction: 0.09
+[CAL FRAME 3 OF 3]
+biomass_est_kg: 212.6
+recordSample(t, frame)
+gridRef: A3-C6
+fragment.opacity = 0.6
+[NOTE] occlusion partial, ok
+photosyntheticRate ~= 0.0042
+texture_offset: (0.12, 0.88)
+specimen_class: CONIFER
+[STATUS: NOMINAL]
+elapsedFrames += 1
+canopy_temp_delta: -1.2C
+xform.scale = 1.003
+[FIELD NOTE: overcast, low wind]

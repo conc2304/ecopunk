@@ -1,0 +1,1 @@
+../../../shared/src/hud/PulseEmitterWidget/PulseEmitterWidget.cpp
