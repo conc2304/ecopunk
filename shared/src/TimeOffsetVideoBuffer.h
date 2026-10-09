@@ -103,7 +103,10 @@ class TimeOffsetVideoBuffer {
 		// exactly as they do before any media has ever loaded (see
 		// getPlayheadTexture()'s own "idx < 0" handling) — no local
 		// fallback selection of any kind is attempted here.
-		bool loadExplicit(const std::string& absolutePath);
+		// startSeconds: where to begin (the canonical service's current
+		// playhead, so a long clip's resume window applies here too); 0 or
+		// out of range = the start.
+		bool loadExplicit(const std::string& absolutePath, float startSeconds = 0.0f);
 
 		// Returns the explicitly-loaded path if loadExplicit() was ever
 		// called (even if that load failed — matches legacy
@@ -123,6 +126,11 @@ class TimeOffsetVideoBuffer {
 		bool isMediaAdvanceEligible() const;
 
 		bool hasMedia() const { return mediaLoaded; }
+		// Live (undelayed) decoder playhead in seconds, -1 if unknown.
+		float getLivePositionSeconds() const {
+			if (!mediaLoaded || player.getDuration() <= 0.0f) return -1.0f;
+			return player.getPosition() * player.getDuration();
+		}
 		int getHistoryFrameCount() const { return static_cast<int>(history.size()); }
 		int getHistoryCapacityFrames() const;
 		int getBufferWidth() const { return settings.bufferWidth; }
@@ -237,6 +245,10 @@ class TimeOffsetVideoBuffer {
 		float mediaElapsedTime = 0.0f;
 		int mediaLoopCount = 0;
 		float lastMediaPosition = 0.0f;
+		// loadExplicit()'s start offset when the decoder had no duration yet;
+		// applied once by update() as soon as one is reported.
+		float pendingStartSeconds = 0.0f;
+		void applyStartSeconds(float startSeconds);
 
 		std::deque<ofPixels> history; // front = most recent frame
 		std::vector<Playhead> playheads;

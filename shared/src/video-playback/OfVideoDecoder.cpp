@@ -31,6 +31,14 @@ float OfVideoDecoder::getDuration() const {
 	return player_.getDuration();
 }
 
+bool OfVideoDecoder::seekToSeconds(float seconds) {
+	if (!player_.isLoaded()) return false;
+	const float duration = player_.getDuration();
+	if (duration <= 0.0f || seconds < 0.0f || seconds >= duration) return false;
+	player_.setPosition(seconds / duration);
+	return true;
+}
+
 glm::ivec2 OfVideoDecoder::getSize() const {
 	if (!player_.isLoaded()) return glm::ivec2(0, 0);
 	return glm::ivec2(static_cast<int>(player_.getWidth()), static_cast<int>(player_.getHeight()));

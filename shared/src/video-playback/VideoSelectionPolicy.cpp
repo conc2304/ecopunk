@@ -54,6 +54,9 @@ void VideoSelectionPolicy::reset(std::vector<MediaMetadata> catalog, Config conf
 	activeIndex_.reset();
 	activeOrigin_ = MediaSelectionOrigin::Startup;
 	holdElapsedSeconds_ = 0.0f;
+
+	resumeSeconds_.assign(catalog_.size(), 0.0f);
+	resetVisit();
 }
 
 bool VideoSelectionPolicy::isPlayable(int catalogIndex) const {
@@ -160,6 +163,112 @@ void VideoSelectionPolicy::confirmActivationSucceeded(int catalogIndex, MediaSel
 	activeIndex_ = catalogIndex;
 	activeOrigin_ = origin;
 	holdElapsedSeconds_ = 0.0f;  // every successful activation resets the hold clock
+	resetVisit();                // classification waits for beginPlayback()
+}
+
+void VideoSelectionPolicy::resetVisit() {
+	activeClass_ = ClipClass::Unknown;
+	activeDurationSeconds_ = 0.0f;
+	windowStartSeconds_ = 0.0f;
+	lastPositionSeconds_ = -1.0f;
+	completedThisVisit_ = false;
+}
+
+float VideoSelectionPolicy::longClipThreshold() const {
+	return config_.longClipThresholdSeconds > 0.0f ? config_.longClipThresholdSeconds : 2.0f * config_.maxDwellSeconds;
+}
+
+VideoSelectionPolicy::ClipClass VideoSelectionPolicy::classify(float durationSeconds) const {
+	if (durationSeconds <= 0.0f) return ClipClass::Unknown;
+	if (durationSeconds < config_.holdDurationSeconds) return ClipClass::Short;
+	if (durationSeconds <= longClipThreshold()) return ClipClass::Medium;
+	return ClipClass::Long;
+}
+
+float VideoSelectionPolicy::beginPlayback(float durationSeconds) {
+	if (!activeIndex_.has_value() || playbackStarted()) return windowStartSeconds_;
+	const ClipClass cls = classify(durationSeconds);
+	if (cls == ClipClass::Unknown) return 0.0f; // caller retries once a duration is known
+
+	activeClass_ = cls;
+	activeDurationSeconds_ = durationSeconds;
+	windowStartSeconds_ = 0.0f;
+	if (cls == ClipClass::Long) {
+		float resume = resumeSeconds_[static_cast<size_t>(*activeIndex_)];
+		// Same wrap rule as notePlaybackExit(): never start inside the tail.
+		if (resume < 0.0f || resume >= durationSeconds || durationSeconds - resume < config_.holdDurationSeconds) {
+			resume = 0.0f;
+		}
+		windowStartSeconds_ = resume;
+	}
+	return windowStartSeconds_;
+}
+
+void VideoSelectionPolicy::notePlaybackStartFailed() {
+	windowStartSeconds_ = 0.0f;
+}
+
+void VideoSelectionPolicy::notePlaybackPosition(float positionSeconds) {
+	if (!playbackStarted() || positionSeconds < 0.0f) return;
+	// A natural end shows up as the looping decoder jumping from the last
+	// ~1.5 s of the clip back toward its start. Requiring the previous sample
+	// to be near the end keeps a resume seek (or an async seek settling) from
+	// ever reading as a completion.
+	constexpr float kEndZoneSeconds = 1.5f;
+	if (lastPositionSeconds_ >= activeDurationSeconds_ - kEndZoneSeconds && positionSeconds < lastPositionSeconds_ - 1.0f) {
+		completedThisVisit_ = true;
+	}
+	lastPositionSeconds_ = positionSeconds;
+}
+
+void VideoSelectionPolicy::notePlaybackExit(std::optional<float> positionSeconds) {
+	if (!activeIndex_.has_value()) return;
+	float& saved = resumeSeconds_[static_cast<size_t>(*activeIndex_)];
+	if (activeClass_ != ClipClass::Long) {
+		// Short/medium clips always start at 0. Unknown: never classified
+		// this visit (no duration) -> leave any earlier value untouched.
+		if (activeClass_ != ClipClass::Unknown) saved = 0.0f;
+		return;
+	}
+	if (completedThisVisit_) {
+		saved = 0.0f; // reached the end this visit: next visit wraps to the opening
+		return;
+	}
+	if (!positionSeconds.has_value() || *positionSeconds < 0.0f) return;
+	float resume = *positionSeconds;
+	if (resume >= activeDurationSeconds_ || activeDurationSeconds_ - resume < config_.holdDurationSeconds) {
+		resume = 0.0f; // too little left for a meaningful window
+	}
+	saved = resume;
+}
+
+std::optional<float> VideoSelectionPolicy::activeWindowStartSeconds() const {
+	if (!playbackStarted()) return std::nullopt;
+	return windowStartSeconds_;
+}
+
+float VideoSelectionPolicy::resumeSecondsFor(int catalogIndex) const {
+	if (catalogIndex < 0 || catalogIndex >= static_cast<int>(resumeSeconds_.size())) return 0.0f;
+	return resumeSeconds_[static_cast<size_t>(catalogIndex)];
+}
+
+float VideoSelectionPolicy::holdTargetSeconds() const {
+	const float minDwell = config_.holdDurationSeconds;
+	switch (activeClass_) {
+		case ClipClass::Unknown:
+		case ClipClass::Short:
+			return minDwell;
+		case ClipClass::Medium:
+			return std::max(minDwell, activeDurationSeconds_);
+		case ClipClass::Long:
+			return std::max(minDwell, std::min(config_.maxDwellSeconds, activeDurationSeconds_ - windowStartSeconds_));
+	}
+	return minDwell;
+}
+
+void VideoSelectionPolicy::setAutomaticAdvanceEnabled(bool enabled) {
+	if (enabled && !config_.automaticAdvanceEnabled) holdElapsedSeconds_ = 0.0f;
+	config_.automaticAdvanceEnabled = enabled;
 }
 
 void VideoSelectionPolicy::updateHold(float dt) {
@@ -171,7 +280,23 @@ void VideoSelectionPolicy::updateHold(float dt) {
 bool VideoSelectionPolicy::isHoldComplete() const {
 	if (!config_.automaticAdvanceEnabled) return false;
 	if (!activeIndex_.has_value()) return false;
-	return holdElapsedSeconds_ >= config_.holdDurationSeconds;
+	const float minDwell = config_.holdDurationSeconds;
+	switch (activeClass_) {
+		case ClipClass::Unknown:
+		case ClipClass::Short:
+			return holdElapsedSeconds_ >= minDwell;
+		case ClipClass::Medium: {
+			// One full playback, then min dwell. The small slack is a safety
+			// net in case a wrap sample is ever missed.
+			constexpr float kCompletionSlackSeconds = 2.0f;
+			if (completedThisVisit_ && holdElapsedSeconds_ >= minDwell) return true;
+			return holdElapsedSeconds_ >= std::max(minDwell, activeDurationSeconds_) + kCompletionSlackSeconds;
+		}
+		case ClipClass::Long:
+			if (completedThisVisit_ && holdElapsedSeconds_ >= minDwell) return true;
+			return holdElapsedSeconds_ >= config_.maxDwellSeconds;
+	}
+	return holdElapsedSeconds_ >= minDwell;
 }
 
 bool VideoSelectionPolicy::canSelectPrevious() const {
@@ -186,8 +311,9 @@ bool VideoSelectionPolicy::canSelectNext() const {
 
 std::optional<float> VideoSelectionPolicy::holdProgress() const {
 	if (!config_.automaticAdvanceEnabled || !activeIndex_.has_value()) return std::nullopt;
-	if (config_.holdDurationSeconds <= 0.0f) return 1.0f;
-	float raw = holdElapsedSeconds_ / config_.holdDurationSeconds;
+	const float target = holdTargetSeconds();
+	if (target <= 0.0f) return 1.0f;
+	float raw = holdElapsedSeconds_ / target;
 	return std::clamp(raw, 0.0f, 1.0f);
 }
 
@@ -198,10 +324,10 @@ std::optional<float> VideoSelectionPolicy::holdElapsedSeconds() const {
 
 std::optional<float> VideoSelectionPolicy::holdDurationSeconds() const {
 	if (!config_.automaticAdvanceEnabled || !activeIndex_.has_value()) return std::nullopt;
-	return config_.holdDurationSeconds;
+	return holdTargetSeconds();
 }
 
 std::optional<float> VideoSelectionPolicy::holdRemainingSeconds() const {
 	if (!config_.automaticAdvanceEnabled || !activeIndex_.has_value()) return std::nullopt;
-	return std::max(0.0f, config_.holdDurationSeconds - holdElapsedSeconds_);
+	return std::max(0.0f, holdTargetSeconds() - holdElapsedSeconds_);
 }

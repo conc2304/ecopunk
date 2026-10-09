@@ -1,0 +1,80 @@
+{
+  "pattern": "particlefield",
+  "particlefield": {
+    "Spawn_Rate": "0.2"
+  },
+  "transition": {
+    "Transition_Duration": "2.4",
+    "Hard_Cut_Weight": "2",
+    "Crossfade_Weight": "45",
+    "Erosion_Weight": "100",
+    "Quantize_Bands": "12",
+    "Max_History_Seconds": "18"
+  },
+  "background": {
+    "Full_Video_Weight": "60",
+    "Full_Image_Weight": "30",
+    "Split_Weight": "10",
+    "Mode_Change_Interval": "55.0",
+    "Split_Ratio": "0.5",
+    "Split_Axis_Choice": "0",
+    "Image_Cycle_Interval": "25.0",
+    "Image_Fade_Duration": "7.0",
+    "Effects": {
+      "Cycle_Interval": "20.0",
+      "Raw_Weight": "60",
+      "Desaturate": "20",
+      "Invert": "0",
+      "Recolor": "0",
+      "Threshold": "0",
+      "Dither": "0",
+      "Solarize": "0",
+      "Scanlines": "0",
+      "Channelshift": "0",
+      "Hue_Rotate": "0",
+      "Ascii_Solarpunk": "0",
+      "Bioluminescence": "0",
+      "Chromatic_Aberration": "5",
+      "Edge_Glow": "10",
+      "Ink_Outlines": "0",
+      "Pixel_Drift": "0",
+      "Pixel_Sorting": "0",
+      "Water_Refraction": "5"
+    }
+  },
+  "timeline": {
+    "Loop": "1",
+    "Start_State": "forming",
+    "States": [
+      {
+        "Name": "forming",
+        "Hold_Duration": "90",
+        "Transition_Duration": "30",
+        "Easing": "smoothstep",
+        "Overrides": {}
+      },
+      {
+        "Name": "lifting",
+        "Hold_Duration": "180",
+        "Transition_Duration": "40",
+        "Easing": "smootherstep",
+        "Overrides": {
+          "particlefield": {
+            "Drift_Speed": "0.22"
+          }
+        }
+      },
+      {
+        "Name": "dissolving",
+        "Hold_Duration": "120",
+        "Transition_Duration": "50",
+        "Easing": "smoothstep",
+        "Overrides": {
+          "particlefield": {
+            "Spawn_Rate": "0.05"
+          }
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "collection": "Air & Time v2 Cinematic",
+  "presets": [
+    {
+      "file": "quiet_canopy_timeline.json",
+      "states": [
+        "arrival",
+        "breathing",
+        "breeze",
+        "stillness"
+      ]
+    },
+    {
+      "file": "morning_fog.json",
+      "states": [
+        "forming",
+        "lifting",
+        "dissolving"
+      ]
+    },
+    {
+      "file": "moss_growth.json",
+      "states": [
+        "colonize",
+        "expand",
+        "mature",
+        "recovery"
+      ]
+    },
+    {
+      "file": "river_stones.json",
+      "states": [
+        "still_water",
+        "ripples",
+        "calm"
+      ]
+    },
+    {
+      "file": "wind_through_grass.json",
+      "states": [
+        "calm",
+        "gust",
+        "calm_return"
+      ]
+    },
+    {
+      "file": "mycelium.json",
+      "states": [
+        "searching",
+        "connecting",
+        "network",
+        "rest"
+      ]
+    },
+    {
+      "file": "ancient_tree.json",
+      "states": [
+        "dormant",
+        "growth",
+        "canopy",
+        "dormant_return"
+      ]
+    },
+    {
+      "file": "low_tide.json",
+      "states": [
+        "incoming",
+        "peak",
+        "outgoing"
+      ]
+    },
+    {
+      "file": "breathing_frames.json",
+      "states": [
+        "inhale",
+        "hold",
+        "exhale"
+      ]
+    },
+    {
+      "file": "stone_garden.json",
+      "states": [
+        "settle",
+        "recompose",
+        "silence"
+      ]
+    }
+  ]
+}

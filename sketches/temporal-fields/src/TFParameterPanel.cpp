@@ -369,7 +369,9 @@ void TFParameterPanel::setup() {
 	rootGroup.add(hudEventGroup);
 	rootGroup.add(presetGroup);
 
+#ifndef TF_PARAMETER_PANEL_HEADLESS
 	panel.setup(rootGroup);
+#endif
 
 	// Registry used by savePreset()/loadNextPreset()/pickNewWaypoint() so
 	// none of those need a hardcoded branch per pattern.
@@ -535,13 +537,17 @@ void TFParameterPanel::buildTimelineBindings() {
 
 void TFParameterPanel::registerBackgroundTextures(ofParameterGroup& textureGroup) {
 	rootGroup.add(textureGroup);
+#ifndef TF_PARAMETER_PANEL_HEADLESS
 	panel.setup(rootGroup); // rebuilds the widget tree; safe to call again with more groups already present
+#endif
 	applyDefaultGuiCollapseState(); // the rebuild above creates fresh, unminimized widgets
 }
 
 void TFParameterPanel::registerHudVisibility(ofParameterGroup& hudVisibilityGroup) {
 	rootGroup.add(hudVisibilityGroup);
+#ifndef TF_PARAMETER_PANEL_HEADLESS
 	panel.setup(rootGroup); // rebuilds the widget tree; safe to call again with more groups already present
+#endif
 	hudVisibilityGroupPtr = &hudVisibilityGroup; // kept so savePreset()/loadNextPreset() can (de)serialize it
 	applyDefaultGuiCollapseState(); // the rebuild above creates fresh, unminimized widgets
 }
@@ -555,11 +561,14 @@ void TFParameterPanel::setActivePattern(TFPatternType type) {
 }
 
 void TFParameterPanel::applyDefaultGuiCollapseState() {
+#ifndef TF_PARAMETER_PANEL_HEADLESS
 	panel.minimizeAll();
 	applyActivePatternCollapse();
+#endif
 }
 
 void TFParameterPanel::applyActivePatternCollapse() {
+#ifndef TF_PARAMETER_PANEL_HEADLESS
 	for (const auto& entry : patternGroups) {
 		ofxGuiGroup& widget = panel.getGroup(entry.second->getName());
 		if (entry.first == displayedActivePattern) {
@@ -568,6 +577,7 @@ void TFParameterPanel::applyActivePatternCollapse() {
 			widget.minimize();
 		}
 	}
+#endif
 }
 
 void TFParameterPanel::registerEvolving(ofParameter<float>& p, float lo, float hi) {
@@ -718,9 +728,11 @@ std::string TFParameterPanel::getTimelineDebugStatus() const {
 }
 
 void TFParameterPanel::draw() {
+#ifndef TF_PARAMETER_PANEL_HEADLESS
 	if (visible) {
 		panel.draw();
 	}
+#endif
 }
 
 void TFParameterPanel::onSavePressed() {

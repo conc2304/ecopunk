@@ -64,6 +64,21 @@ void ofApp::setup() {
 		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
 		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
 		&& BlueprintHudHarness::isRequested();
+	// Three-scene production-parity soak: lowest priority; default roster, startup Blob.
+	bool paritySoakRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && ParitySoakHarness::isRequested();
+	// Shared Video resume-window verification: lowest priority; default roster, startup Blob.
+	bool resumeWindowRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && !paritySoakRequested && ResumeWindowHarness::isRequested();
+	// Blueprint cycle-driven cadence verification: lowest priority; default roster, startup Blob.
+	bool cadenceRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && CadenceHarness::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
 		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
@@ -116,6 +131,12 @@ void ofApp::setup() {
 		blueprintHarness = std::make_unique<BlueprintRosterHarness>(runtime);
 	} else if (blueprintHudHarnessRequested) {
 		blueprintHudHarness = std::make_unique<BlueprintHudHarness>(runtime);
+	} else if (paritySoakRequested) {
+		paritySoakHarness = std::make_unique<ParitySoakHarness>(runtime);
+	} else if (resumeWindowRequested) {
+		resumeWindowHarness = std::make_unique<ResumeWindowHarness>(runtime);
+	} else if (cadenceRequested) {
+		cadenceHarness = std::make_unique<CadenceHarness>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
 		stallDriver = std::make_unique<Rt004StallDriver>(runtime);
 	}
@@ -158,6 +179,15 @@ void ofApp::update() {
 	if (blueprintHudHarness) {
 		blueprintHudHarness->step(ofGetLastFrameTime());
 	}
+	if (paritySoakHarness) {
+		paritySoakHarness->step(ofGetLastFrameTime());
+	}
+	if (resumeWindowHarness) {
+		resumeWindowHarness->step(ofGetLastFrameTime());
+	}
+	if (cadenceHarness) {
+		cadenceHarness->step(ofGetLastFrameTime());
+	}
 	if (blobHarness) {
 		blobHarness->step(ofGetLastFrameTime());
 	}
@@ -177,7 +207,7 @@ void ofApp::update() {
 
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness) {
 		runtime.draw();
 	}
 	// When a harness is active, it drives runtime.draw() itself (see

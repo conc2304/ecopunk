@@ -80,7 +80,10 @@ public:
 	// regardless of whether Temporal's OWN decoder could open it), it just
 	// has no usable local history/playhead output until a future call
 	// reports a different (or the same, retried) mediaId.
-	bool synchronizeSelectedMedia(const std::string& mediaId, const std::string& absolutePath);
+	// startSeconds: the canonical VideoPlaybackService playhead at sync time
+	// (VideoPlaybackStatus::positionSeconds) — Shared Video still owns where
+	// playback starts; this only follows it on (re)load.
+	bool synchronizeSelectedMedia(const std::string& mediaId, const std::string& absolutePath, float startSeconds = 0.0f);
 
 	// Forwards to the owned TimeOffsetVideoBuffer's own update — playhead
 	// stepping, quantization, decode pump, history push/trim. Unchanged
@@ -135,10 +138,12 @@ public:
 	int reloadCount() const { return reloadCount_; }
 	bool lastLoadSucceeded() const { return lastLoadSucceeded_; }
 	const std::string& loadedMediaId() const { return loadedMediaId_; }
+	float lastRequestedStartSeconds() const { return lastRequestedStartSeconds_; }
 
 private:
 	TimeOffsetVideoBuffer buffer_;
 	std::string loadedMediaId_;
 	int reloadCount_ = 0;
 	bool lastLoadSucceeded_ = false;
+	float lastRequestedStartSeconds_ = 0.0f;
 };

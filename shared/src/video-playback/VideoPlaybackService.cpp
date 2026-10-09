@@ -7,6 +7,8 @@
 #include "ofLog.h"
 
 #include <algorithm>
+#include <cstdlib>
+#include <sstream>
 
 namespace {
 constexpr const char* kLogName = "VideoPlaybackService";
@@ -68,6 +70,9 @@ bool VideoPlaybackService::setup(const Config& config) {
 	VideoSelectionPolicy::Config policyConfig;
 	policyConfig.automaticAdvanceEnabled = config.automaticAdvance;
 	policyConfig.holdDurationSeconds = config.holdDurationSeconds;
+	policyConfig.maxDwellSeconds = config.maxDwellSeconds;
+	policyConfig.longClipThresholdSeconds = config.longClipThresholdSeconds;
+	resumeTrace_ = std::getenv("EXPERIENCE_RUNTIME_VIDEO_RESUME_TRACE") != nullptr;
 	policy_.reset(catalog_, policyConfig);
 
 	setupComplete_ = true;
@@ -95,7 +100,80 @@ bool VideoPlaybackService::activateCandidate(int catalogIndex) {
 	return ok;
 }
 
+std::optional<float> VideoPlaybackService::currentPositionSeconds() const {
+	if (!decoder_->isLoaded()) return std::nullopt;
+	const float duration = decoder_->getDuration();
+	const float position = decoder_->getPosition(); // normalized [0,1], -1 if unavailable
+	if (duration <= 0.0f || position < 0.0f) return std::nullopt;
+	return position * duration;
+}
+
+void VideoPlaybackService::traceResume(const std::string& line) const {
+	if (resumeTrace_) ofLogNotice("VideoResume") << line;
+}
+
+namespace {
+const char* clipClassName(VideoSelectionPolicy::ClipClass c) {
+	switch (c) {
+		case VideoSelectionPolicy::ClipClass::Short: return "short";
+		case VideoSelectionPolicy::ClipClass::Medium: return "medium";
+		case VideoSelectionPolicy::ClipClass::Long: return "long";
+		default: return "unknown";
+	}
+}
+const char* originName(MediaSelectionOrigin o) {
+	switch (o) {
+		case MediaSelectionOrigin::Startup: return "startup";
+		case MediaSelectionOrigin::Automatic: return "automatic";
+		case MediaSelectionOrigin::ManualNext: return "manual_next";
+		case MediaSelectionOrigin::ManualPrevious: return "manual_previous";
+		case MediaSelectionOrigin::Recovery: return "recovery";
+	}
+	return "?";
+}
+} // namespace
+
+// Applies the active item's resume window exactly once per activation, as
+// soon as the decoder reports a valid duration (normally right after load;
+// otherwise retried from update() until one appears — never re-seeking).
+void VideoPlaybackService::beginPlaybackIfReady() {
+	if (!policy_.hasActiveItem() || policy_.playbackStarted()) return;
+	const float duration = decoder_->getDuration();
+	if (duration <= 0.0f) return; // unknown: ordinary playback + plain hold until known
+	const float start = policy_.beginPlayback(duration);
+	bool seekOk = true;
+	if (start > 0.0f && !decoder_->seekToSeconds(start)) {
+		policy_.notePlaybackStartFailed(); // play from 0 instead
+		seekOk = false;
+	}
+	if (resumeTrace_) {
+		const MediaMetadata& item = catalog_[static_cast<size_t>(policy_.activeCatalogIndex())];
+		std::ostringstream os;
+		os << "start media=" << item.mediaId << " duration=" << duration << "s class="
+		   << clipClassName(policy_.activeClipClass()) << " start=" << *policy_.activeWindowStartSeconds() << "s"
+		   << (seekOk ? "" : " (seek failed -> 0)") << " reason=" << originName(policy_.activeSelectionOrigin());
+		traceResume(os.str());
+	}
+}
+
 bool VideoPlaybackService::attemptSelection(const std::function<std::optional<int>()>& firstCandidateFn, MediaSelectionOrigin baseOrigin) {
+	// Save the outgoing item's resume position before anything else touches
+	// the decoder (load() below closes it) — every origin, manual included.
+	if (policy_.hasActiveItem()) {
+		const std::optional<float> exitPosition = currentPositionSeconds();
+		const std::optional<float> dwell = policy_.holdElapsedSeconds();
+		policy_.notePlaybackExit(exitPosition);
+		if (resumeTrace_) {
+			const int idx = policy_.activeCatalogIndex();
+			std::ostringstream os;
+			os << "exit media=" << catalog_[static_cast<size_t>(idx)].mediaId << " position="
+			   << (exitPosition ? std::to_string(*exitPosition) + "s" : std::string("unknown")) << " saved_resume="
+			   << policy_.resumeSecondsFor(idx) << "s dwell=" << (dwell ? std::to_string(*dwell) + "s" : std::string("-"))
+			   << " leaving_for=" << originName(baseOrigin);
+			traceResume(os.str());
+		}
+	}
+
 	std::optional<int> candidate = firstCandidateFn();
 	std::vector<int> tried;
 	bool anyFailure = false;
@@ -110,6 +188,7 @@ bool VideoPlaybackService::attemptSelection(const std::function<std::optional<in
 			health_ = VideoPlaybackHealth::Ready;
 			messageId_.reset();
 			errorCode_.reset();
+			beginPlaybackIfReady();
 			return true;
 		}
 		anyFailure = true;
@@ -129,6 +208,10 @@ void VideoPlaybackService::update(float dt) {
 	if (decoder_->isLoaded()) { RT004_SCOPE("VideoPlaybackService.decoder.update"); decoder_->update(dt); }
 
 	if (health_ == VideoPlaybackHealth::Ready) {
+		beginPlaybackIfReady(); // no-op once applied for this activation
+		if (const std::optional<float> position = currentPositionSeconds()) {
+			policy_.notePlaybackPosition(*position);
+		}
 		policy_.updateHold(dt);
 		if (policy_.isHoldComplete()) {
 			RT004_SCOPE("VideoPlaybackService.automaticAdvance");
@@ -148,6 +231,11 @@ bool VideoPlaybackService::next() {
 	if (!policy_.canSelectNext()) return false;
 	RT004_SCOPE("VideoPlaybackService.next");
 	return attemptSelection([this] { return policy_.requestManualNextCandidate(); }, MediaSelectionOrigin::ManualNext);
+}
+
+bool VideoPlaybackService::advanceAtBoundary() {
+	if (!setupComplete_ || catalog_.empty()) return false;
+	return attemptSelection([this] { return policy_.requestAutomaticAdvanceCandidate(); }, MediaSelectionOrigin::Automatic);
 }
 
 bool VideoPlaybackService::previous() {

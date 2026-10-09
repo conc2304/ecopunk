@@ -1,0 +1,80 @@
+{
+  "pattern": "columngrid",
+  "columngrid": {
+    "Column_Count": "5"
+  },
+  "transition": {
+    "Transition_Duration": "2.4",
+    "Hard_Cut_Weight": "2",
+    "Crossfade_Weight": "45",
+    "Erosion_Weight": "100",
+    "Quantize_Bands": "12",
+    "Max_History_Seconds": "18"
+  },
+  "background": {
+    "Full_Video_Weight": "65",
+    "Full_Image_Weight": "28",
+    "Split_Weight": "7",
+    "Mode_Change_Interval": "70.0",
+    "Split_Ratio": "0.5",
+    "Split_Axis_Choice": "0",
+    "Image_Cycle_Interval": "32.0",
+    "Image_Fade_Duration": "7.0",
+    "Effects": {
+      "Cycle_Interval": "25.0",
+      "Raw_Weight": "78",
+      "Desaturate": "15",
+      "Invert": "0",
+      "Recolor": "4",
+      "Threshold": "0",
+      "Dither": "0",
+      "Solarize": "0",
+      "Scanlines": "0",
+      "Channelshift": "0",
+      "Hue_Rotate": "0",
+      "Ascii_Solarpunk": "0",
+      "Bioluminescence": "0",
+      "Chromatic_Aberration": "0",
+      "Edge_Glow": "3",
+      "Ink_Outlines": "0",
+      "Pixel_Drift": "0",
+      "Pixel_Sorting": "0",
+      "Water_Refraction": "0"
+    }
+  },
+  "timeline": {
+    "Loop": "1",
+    "Start_State": "settle",
+    "States": [
+      {
+        "Name": "settle",
+        "Hold_Duration": "240",
+        "Transition_Duration": "45",
+        "Easing": "smoothstep",
+        "Overrides": {}
+      },
+      {
+        "Name": "recompose",
+        "Hold_Duration": "90",
+        "Transition_Duration": "30",
+        "Easing": "easeInOutSine",
+        "Overrides": {
+          "patternregen": {
+            "Pattern_Regen_Rate": "12"
+          }
+        }
+      },
+      {
+        "Name": "silence",
+        "Hold_Duration": "240",
+        "Transition_Duration": "45",
+        "Easing": "smoothstep",
+        "Overrides": {
+          "patternregen": {
+            "Pattern_Regen_Rate": "30"
+          }
+        }
+      }
+    ]
+  }
+}

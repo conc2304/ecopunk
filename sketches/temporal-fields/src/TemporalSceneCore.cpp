@@ -2,41 +2,14 @@
 #include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 #include "TFSettings.h"
 
-TFBackgroundLayer::Params TemporalSceneCore::defaultBackgroundParams() {
-	TFBackgroundLayer::Params p;
-	// Real, in-class struct defaults for everything except effectWeights —
-	// see class header comment.
-	p.effectWeights.cycleInterval = BACKGROUND_EFFECT_CYCLE_INTERVAL;
-	p.effectWeights.rawWeight = BACKGROUND_EFFECT_RAW_WEIGHT;
-	// Exact same 18-effect list TFParameterPanel::getBackgroundParams()
-	// seeds its own ofParameter<float>s with, at the exact same default
-	// weight — see that method's own .cpp for the source of truth this
-	// list is copied from.
-	p.effectWeights.effectWeights["desaturate"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["invert"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["recolor"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["threshold"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["dither"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["solarize"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["scanlines"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["channelshift"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["hue_rotate"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["ascii_solarpunk"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["bioluminescence"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["chromatic_aberration"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["edge_glow"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["ink_outlines"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["pixel_drift"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["pixel_sorting"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["water_refraction"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	p.effectWeights.effectWeights["heatmap_recolor"] = BACKGROUND_EFFECT_DEFAULT_WEIGHT;
-	return p;
-}
-
 void TemporalSceneCore::setup(TimeOffsetVideoBuffer* buffer, int canvasW, int canvasH) {
 	buffer_ = buffer;
 	canvasW_ = canvasW;
 	canvasH_ = canvasH;
+
+	// Same ordering as the standalone ofApp::setup(): the parameter model
+	// first, so every layer/pattern is set up from its values.
+	{ RT004_SCOPE("TemporalCore.setup.params"); params_.setup(); }
 
 	{ RT004_SCOPE("TemporalCore.setup.shaderLib");
 	shaderLib_.setup();
@@ -47,18 +20,18 @@ void TemporalSceneCore::setup(TimeOffsetVideoBuffer* buffer, int canvasW, int ca
 	}
 
 	{ RT004_SCOPE("TemporalCore.setup.backgroundLayer");
-	backgroundLayer_.setup(buffer_, &shaderLib_, "backgrounds", canvasW_, canvasH_, defaultBackgroundParams());
+	backgroundLayer_.setup(buffer_, &shaderLib_, "backgrounds", canvasW_, canvasH_, params_.getBackgroundParams());
 	}
 
-	{ RT004_SCOPE("TemporalCore.setup.bspPattern_"); bspPattern_.setup(buffer_, canvasW_, canvasH_, TFPatternBSP::Params{}); }
-	{ RT004_SCOPE("TemporalCore.setup.blobGridPattern_"); blobGridPattern_.setup(buffer_, canvasW_, canvasH_, TFPatternBlobGrid::Params{}); }
-	{ RT004_SCOPE("TemporalCore.setup.bandsPattern_"); bandsPattern_.setup(buffer_, canvasW_, canvasH_, TFPatternBands::Params{}); }
-	{ RT004_SCOPE("TemporalCore.setup.columnGridPattern_"); columnGridPattern_.setup(buffer_, canvasW_, canvasH_, TFPatternColumnGrid::Params{}); }
-	{ RT004_SCOPE("TemporalCore.setup.telescopingFramesPattern_"); telescopingFramesPattern_.setup(buffer_, canvasW_, canvasH_, TFPatternTelescopingFrames::Params{}); }
-	{ RT004_SCOPE("TemporalCore.setup.particleFieldPattern_"); particleFieldPattern_.setup(buffer_, canvasW_, canvasH_, TFPatternParticleField::Params{}); }
-	{ RT004_SCOPE("TemporalCore.setup.ecologicalSuccessionPattern_"); ecologicalSuccessionPattern_.setup(buffer_, canvasW_, canvasH_, TFPatternEcologicalSuccession::Params{}); }
-	{ RT004_SCOPE("TemporalCore.setup.networkGrowthPattern_"); networkGrowthPattern_.setup(buffer_, canvasW_, canvasH_, TFPatternNetworkGrowth::Params{}); }
-	{ RT004_SCOPE("TemporalCore.setup.temporalTidesPattern_"); temporalTidesPattern_.setup(buffer_, canvasW_, canvasH_, TFPatternTemporalTides::Params{}); }
+	{ RT004_SCOPE("TemporalCore.setup.bspPattern_"); bspPattern_.setup(buffer_, canvasW_, canvasH_, params_.getBSPParams()); }
+	{ RT004_SCOPE("TemporalCore.setup.blobGridPattern_"); blobGridPattern_.setup(buffer_, canvasW_, canvasH_, params_.getBlobGridParams()); }
+	{ RT004_SCOPE("TemporalCore.setup.bandsPattern_"); bandsPattern_.setup(buffer_, canvasW_, canvasH_, params_.getBandsParams()); }
+	{ RT004_SCOPE("TemporalCore.setup.columnGridPattern_"); columnGridPattern_.setup(buffer_, canvasW_, canvasH_, params_.getColumnGridParams()); }
+	{ RT004_SCOPE("TemporalCore.setup.telescopingFramesPattern_"); telescopingFramesPattern_.setup(buffer_, canvasW_, canvasH_, params_.getTelescopingFramesParams()); }
+	{ RT004_SCOPE("TemporalCore.setup.particleFieldPattern_"); particleFieldPattern_.setup(buffer_, canvasW_, canvasH_, params_.getParticleFieldParams()); }
+	{ RT004_SCOPE("TemporalCore.setup.ecologicalSuccessionPattern_"); ecologicalSuccessionPattern_.setup(buffer_, canvasW_, canvasH_, params_.getEcologicalSuccessionParams()); }
+	{ RT004_SCOPE("TemporalCore.setup.networkGrowthPattern_"); networkGrowthPattern_.setup(buffer_, canvasW_, canvasH_, params_.getNetworkGrowthParams()); }
+	{ RT004_SCOPE("TemporalCore.setup.temporalTidesPattern_"); temporalTidesPattern_.setup(buffer_, canvasW_, canvasH_, params_.getTemporalTidesParams()); }
 
 	TFComposition::Timing timing;
 	timing.cycleDuration = CYCLE_DURATION;
@@ -76,9 +49,7 @@ void TemporalSceneCore::setup(TimeOffsetVideoBuffer* buffer, int canvasW, int ca
 			{ TFPatternType::TEMPORAL_TIDES, &temporalTidesPattern_ },
 		},
 		canvasW_, canvasH_);
-	// Transition params (duration/hard-cut/crossfade/erosion weights) and
-	// auto-cycle-suspension are left at TFComposition's own in-class
-	// defaults — nothing here corresponds to a live GUI dial in production.
+	applyParameters(); // composition transition params + buffer settings, same as every update()
 
 	didSetup_ = true;
 }
@@ -115,8 +86,33 @@ void TemporalSceneCore::update(float dt) {
 	if (!active_) {
 		return;
 	}
+	// Same per-frame order as the standalone ofApp::update(): advance the
+	// parameter model (evolution / timeline), push its values everywhere,
+	// then background, then composition.
+	{ RT004_SCOPE("TemporalCore.params.update"); params_.update(dt); applyParameters(); }
 	{ RT004_SCOPE("TemporalCore.background.update"); backgroundLayer_.update(dt); }
+	// A running authored timeline holds one pattern for its own duration.
+	composition_.setAutoCycleSuspended(params_.isTimelineActive());
 	{ RT004_SCOPE("TemporalCore.composition.update"); composition_.update(dt); }
+}
+
+void TemporalSceneCore::applyParameters() {
+	bspPattern_.setParams(params_.getBSPParams());
+	blobGridPattern_.setParams(params_.getBlobGridParams());
+	bandsPattern_.setParams(params_.getBandsParams());
+	columnGridPattern_.setParams(params_.getColumnGridParams());
+	telescopingFramesPattern_.setParams(params_.getTelescopingFramesParams());
+	particleFieldPattern_.setParams(params_.getParticleFieldParams());
+	ecologicalSuccessionPattern_.setParams(params_.getEcologicalSuccessionParams());
+	networkGrowthPattern_.setParams(params_.getNetworkGrowthParams());
+	temporalTidesPattern_.setParams(params_.getTemporalTidesParams());
+	if (buffer_ != nullptr) {
+		buffer_->setNumQuantizeBands(params_.getQuantizeBands());
+		buffer_->setMaxHistorySeconds(params_.getMaxHistorySeconds());
+	}
+	composition_.setTransitionParams(params_.getTransitionDuration(), params_.getHardCutWeight(),
+		params_.getCrossfadeWeight(), params_.getErosionWeight());
+	backgroundLayer_.setParams(params_.getBackgroundParams());
 }
 
 void TemporalSceneCore::draw() {

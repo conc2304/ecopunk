@@ -153,7 +153,7 @@ void ofApp::syncTemporalVideoAdapter() {
 	if (!absolutePath.has_value()) {
 		return; // should be impossible whenever mediaId is set, but never assume
 	}
-	temporalVideoAdapter.synchronizeSelectedMedia(*status.mediaId, *absolutePath);
+	temporalVideoAdapter.synchronizeSelectedMedia(*status.mediaId, *absolutePath, status.positionSeconds.value_or(0.0f));
 }
 
 void ofApp::update() {

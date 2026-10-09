@@ -111,7 +111,7 @@ void TimeOffsetVideoBuffer::advanceToNextMedia() {
 	}
 }
 
-bool TimeOffsetVideoBuffer::loadExplicit(const std::string& absolutePath) {
+bool TimeOffsetVideoBuffer::loadExplicit(const std::string& absolutePath, float startSeconds) {
 	// No scan, no shuffle, no playlist mutation, no fallback selection —
 	// mediaFiles/currentFileIndex are deliberately untouched here (DEC-014).
 	RT004_SCOPE("TimeOffsetVideoBuffer.loadExplicit");
@@ -132,6 +132,11 @@ bool TimeOffsetVideoBuffer::loadExplicit(const std::string& absolutePath) {
 	if (mediaLoaded) {
 		player.setLoopState(OF_LOOP_NORMAL);
 		player.play();
+		pendingStartSeconds = 0.0f;
+		if (startSeconds > 0.0f) {
+			if (player.getDuration() > 0.0f) applyStartSeconds(startSeconds);
+			else pendingStartSeconds = startSeconds; // decoder not ready yet: update() applies it once
+		}
 		ofLogNotice("TimeOffsetVideoBuffer") << "loadExplicit: loaded " << absolutePath;
 	} else {
 		ofLogWarning("TimeOffsetVideoBuffer") << "loadExplicit: failed to load " << absolutePath;
@@ -156,12 +161,25 @@ bool TimeOffsetVideoBuffer::isMediaAdvanceEligible() const {
 	return mediaElapsedTime >= settings.minPlaytimeSeconds && mediaLoopCount >= settings.minLoopCount;
 }
 
+void TimeOffsetVideoBuffer::applyStartSeconds(float startSeconds) {
+	const float duration = player.getDuration();
+	if (duration > 0.0f && startSeconds > 0.0f && startSeconds < duration) {
+		lastMediaPosition = startSeconds / duration; // a seek is not a loop
+		player.setPosition(lastMediaPosition);
+	}
+}
+
 void TimeOffsetVideoBuffer::update(float dt) {
 	if (!mediaLoaded) {
 		return;
 	}
 
 	{ RT004_SCOPE("TimeOffsetVideoBuffer.player.update"); player.update(); }
+
+	if (pendingStartSeconds > 0.0f && player.getDuration() > 0.0f) {
+		applyStartSeconds(pendingStartSeconds);
+		pendingStartSeconds = 0.0f;
+	}
 
 	if (player.isFrameNew()) {
 		RT004_SCOPE("TimeOffsetVideoBuffer.historyPush(copy+resize)");

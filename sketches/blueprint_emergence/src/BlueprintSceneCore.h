@@ -42,10 +42,15 @@ public:
 	struct Config {
 		int canvasW = 1280;
 		int canvasH = 720;
-		// Standalone: true — one media advance per composition cycle (the
-		// sketch's pre-runtime behavior, with automaticAdvance off). Runtime:
-		// false — the runtime's canonical service hold timer is the only
-		// media cadence (a second, cycle-driven cadence would double-advance).
+		// One canonical VideoPlaybackService::advanceAtBoundary() per composition-cycle
+		// start — the sketch's original cadence. Both hosts use it; the
+		// host keeps the service's timer-driven auto-advance off while this
+		// scene is live (standalone: Config::automaticAdvance = false;
+		// ExperienceRuntime: setAutomaticAdvanceEnabled(false) on activation).
+		// The cycle that activate() starts keeps the current media (no change
+		// just because the scene became active); every later cycle start —
+		// natural cycle end or restartCycle() (RESEED / standalone 'r') —
+		// advances, exactly as the standalone startCycle() path does.
 		bool advanceMediaPerCycle = true;
 	};
 
@@ -72,6 +77,11 @@ public:
 
 	bool hasVideoFrame() const;
 
+	// Composition-cycle starts seen (BEComposition's cycle-start callback:
+	// startCycle() AND a ghost-layers mini-cycle entry from enterMode()) —
+	// the exact event that drives the per-cycle media advance.
+	int cycleStartCount() const { return cycleStartCount_; }
+
 	const BEComposition& composition() const { return composition_; }
 	const GridSystem& grid() const { return grid_; }
 
@@ -96,6 +106,8 @@ private:
 	float gridPulseBoost_ = 0.0f;
 	float motionOverlayOpacity_ = 0.0f;
 	bool hadHudWidget_ = false;
+	bool skipNextCycleMediaAdvance_ = false; // set by activate(); see Config::advanceMediaPerCycle
+	int cycleStartCount_ = 0;
 	bool bypassErosion_ = true;
 
 	bool didSetup_ = false;

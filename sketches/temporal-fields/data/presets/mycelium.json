@@ -1,0 +1,90 @@
+{
+  "pattern": "networkgrowth",
+  "networkgrowth": {
+    "Seed_Node_Count": "2",
+    "Branch_Distance": "0.84",
+    "Min_Size": "0.3",
+    "Max_Size": "0.6"
+  },
+  "transition": {
+    "Transition_Duration": "2.4",
+    "Hard_Cut_Weight": "2",
+    "Crossfade_Weight": "45",
+    "Erosion_Weight": "100",
+    "Quantize_Bands": "12",
+    "Max_History_Seconds": "18"
+  },
+  "background": {
+    "Full_Video_Weight": "55",
+    "Full_Image_Weight": "30",
+    "Split_Weight": "15",
+    "Mode_Change_Interval": "50.0",
+    "Split_Ratio": "0.5",
+    "Split_Axis_Choice": "0",
+    "Image_Cycle_Interval": "25.0",
+    "Image_Fade_Duration": "5.0",
+    "Effects": {
+      "Cycle_Interval": "18.0",
+      "Raw_Weight": "50",
+      "Desaturate": "0",
+      "Invert": "0",
+      "Recolor": "0",
+      "Threshold": "0",
+      "Dither": "0",
+      "Solarize": "0",
+      "Scanlines": "0",
+      "Channelshift": "0",
+      "Hue_Rotate": "0",
+      "Ascii_Solarpunk": "0",
+      "Bioluminescence": "25",
+      "Chromatic_Aberration": "5",
+      "Edge_Glow": "5",
+      "Ink_Outlines": "10",
+      "Pixel_Drift": "5",
+      "Pixel_Sorting": "0",
+      "Water_Refraction": "0"
+    }
+  },
+  "timeline": {
+    "Loop": "1",
+    "Start_State": "searching",
+    "States": [
+      {
+        "Name": "searching",
+        "Hold_Duration": "120",
+        "Transition_Duration": "30",
+        "Easing": "smoothstep",
+        "Overrides": {}
+      },
+      {
+        "Name": "connecting",
+        "Hold_Duration": "180",
+        "Transition_Duration": "45",
+        "Easing": "smootherstep",
+        "Overrides": {
+          "networkgrowth": {
+            "Growth_Interval": "1.2"
+          }
+        }
+      },
+      {
+        "Name": "network",
+        "Hold_Duration": "240",
+        "Transition_Duration": "50",
+        "Easing": "smootherstep",
+        "Overrides": {
+          "networkgrowth": {
+            "Max_Node_Count": "140"
+          }
+        }
+      },
+      {
+        "Name": "rest",
+        "Hold_Duration": "120",
+        "Transition_Duration": "45",
+        "Easing": "smoothstep",
+        "Overrides": {}
+      }
+    ]
+  }
+}

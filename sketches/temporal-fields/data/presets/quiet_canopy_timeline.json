@@ -1,0 +1,97 @@
+{
+  "pattern": "blobgrid",
+  "blobgrid": {
+    "Grid_Resolution": "12",
+    "Blob_Centers": "2",
+    "Drift_Speed": "0.08"
+  },
+  "transition": {
+    "Transition_Duration": "2.4",
+    "Hard_Cut_Weight": "2",
+    "Crossfade_Weight": "45",
+    "Erosion_Weight": "100",
+    "Quantize_Bands": "12",
+    "Max_History_Seconds": "18"
+  },
+  "background": {
+    "Full_Video_Weight": "68",
+    "Full_Image_Weight": "24",
+    "Split_Weight": "8",
+    "Mode_Change_Interval": "55.0",
+    "Split_Ratio": "0.5",
+    "Split_Axis_Choice": "0",
+    "Image_Cycle_Interval": "26.0",
+    "Image_Fade_Duration": "6.0",
+    "Effects": {
+      "Cycle_Interval": "20.0",
+      "Raw_Weight": "68",
+      "Desaturate": "18",
+      "Invert": "0",
+      "Recolor": "8",
+      "Threshold": "0",
+      "Dither": "0",
+      "Solarize": "0",
+      "Scanlines": "0",
+      "Channelshift": "0",
+      "Hue_Rotate": "4",
+      "Ascii_Solarpunk": "3",
+      "Bioluminescence": "16",
+      "Chromatic_Aberration": "0",
+      "Edge_Glow": "6",
+      "Ink_Outlines": "0",
+      "Pixel_Drift": "2",
+      "Pixel_Sorting": "0",
+      "Water_Refraction": "12"
+    }
+  },
+  "timeline": {
+    "Loop": "1",
+    "Start_State": "arrival",
+    "States": [
+      {
+        "Name": "arrival",
+        "Hold_Duration": "20",
+        "Transition_Duration": "30",
+        "Easing": "smoothstep",
+        "Overrides": {
+          "blobgrid": {
+            "Drift_Speed": "0.02"
+          }
+        }
+      },
+      {
+        "Name": "breathing",
+        "Hold_Duration": "180",
+        "Transition_Duration": "45",
+        "Easing": "smootherstep",
+        "Overrides": {
+          "blobgrid": {
+            "Drift_Speed": "0.10"
+          }
+        }
+      },
+      {
+        "Name": "breeze",
+        "Hold_Duration": "120",
+        "Transition_Duration": "35",
+        "Easing": "easeInOutSine",
+        "Overrides": {
+          "blobgrid": {
+            "Drift_Speed": "0.22"
+          }
+        }
+      },
+      {
+        "Name": "stillness",
+        "Hold_Duration": "120",
+        "Transition_Duration": "50",
+        "Easing": "smoothstep",
+        "Overrides": {
+          "blobgrid": {
+            "Drift_Speed": "0.05"
+          }
+        }
+      }
+    ]
+  }
+}

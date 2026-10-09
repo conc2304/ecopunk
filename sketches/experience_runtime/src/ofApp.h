@@ -11,6 +11,9 @@
 #include "FocusMenuHarness.h"
 #include "BlueprintRosterHarness.h"
 #include "BlueprintHudHarness.h"
+#include "ParitySoakHarness.h"
+#include "ResumeWindowHarness.h"
+#include "CadenceHarness.h"
 #include "TemporalLifecycleHarness.h"
 #include "TwoSceneAcceptanceHarness.h"
 
@@ -55,5 +58,8 @@ private:
 	std::unique_ptr<FocusMenuHarness> focusHarness; // Playable HUD Menu v0.1 demonstration
 	std::unique_ptr<BlueprintRosterHarness> blueprintHarness; // BLUE-001 roster/switch verification
 	std::unique_ptr<BlueprintHudHarness> blueprintHudHarness; // HUD check with Blueprint as third scene
+	std::unique_ptr<ParitySoakHarness> paritySoakHarness; // three-scene production-parity soak
+	std::unique_ptr<ResumeWindowHarness> resumeWindowHarness; // Shared Video long-clip resume windows
+	std::unique_ptr<CadenceHarness> cadenceHarness; // Blueprint cycle-driven media cadence
 	std::unique_ptr<Rt004StallDriver> stallDriver; // RT-004 diagnostic, normal path only
 };

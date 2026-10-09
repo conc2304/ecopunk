@@ -37,11 +37,21 @@ CATALOG_BIN = media_catalog_tests
 POLICY_SRC = video_selection_policy_tests.cpp ../VideoSelectionPolicy.cpp
 POLICY_BIN = video_selection_policy_tests
 
+# Dwell / long-clip resume-window policy (same pure VideoSelectionPolicy).
+RESUME_SRC = video_resume_window_tests.cpp ../VideoSelectionPolicy.cpp
+RESUME_BIN = video_resume_window_tests
+
+# Runtime cadence switch (automatic vs boundary-driven next()).
+ADVANCE_SRC = video_advance_mode_tests.cpp ../VideoSelectionPolicy.cpp
+ADVANCE_BIN = video_advance_mode_tests
+
 .PHONY: test clean
 
-test: $(CATALOG_BIN) $(POLICY_BIN)
+test: $(CATALOG_BIN) $(POLICY_BIN) $(RESUME_BIN) $(ADVANCE_BIN)
 	./$(CATALOG_BIN)
 	./$(POLICY_BIN)
+	./$(RESUME_BIN)
+	./$(ADVANCE_BIN)
 
 $(CATALOG_BIN): $(CATALOG_SRC) ../MediaCatalog.h ../MediaMetadata.h
 	$(CXX) $(CXXFLAGS) $(CATALOG_SRC) -o $(CATALOG_BIN)
@@ -49,5 +59,11 @@ $(CATALOG_BIN): $(CATALOG_SRC) ../MediaCatalog.h ../MediaMetadata.h
 $(POLICY_BIN): $(POLICY_SRC) ../VideoSelectionPolicy.h ../MediaMetadata.h ../VideoPlaybackStatus.h
 	$(CXX) $(CXXFLAGS) $(POLICY_SRC) -o $(POLICY_BIN)
 
+$(RESUME_BIN): $(RESUME_SRC) ../VideoSelectionPolicy.h ../MediaMetadata.h ../VideoPlaybackStatus.h
+	$(CXX) $(CXXFLAGS) $(RESUME_SRC) -o $(RESUME_BIN)
+
+$(ADVANCE_BIN): $(ADVANCE_SRC) ../VideoSelectionPolicy.h ../MediaMetadata.h ../VideoPlaybackStatus.h
+	$(CXX) $(CXXFLAGS) $(ADVANCE_SRC) -o $(ADVANCE_BIN)
+
 clean:
-	rm -f $(CATALOG_BIN) $(POLICY_BIN)
+	rm -f $(CATALOG_BIN) $(POLICY_BIN) $(RESUME_BIN) $(ADVANCE_BIN)

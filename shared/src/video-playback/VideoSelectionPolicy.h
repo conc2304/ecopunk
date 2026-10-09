@@ -65,14 +65,47 @@
 // navigation semantics" and Implement-Shared-Video-Playback-System-Agent-
 // Prompt.md §4.2/§9 — both describe this behavior narratively; this class
 // implements it exactly.
+//
+// -- Dwell / resume-window policy (per media item) ---------------------------
+//
+// The hold timer is duration-aware once the caller reports the active item's
+// duration (beginPlayback()). holdDurationSeconds is the MINIMUM dwell;
+// maxDwellSeconds bounds long clips:
+//
+//   unknown duration          -> plain hold: advance at holdDurationSeconds
+//   short   (d < min dwell)   -> start at 0, loop; advance at min dwell
+//   medium  (d <= threshold)  -> start at 0; advance after one full playback
+//                                (completion) once min dwell is met
+//   long    (d >  threshold)  -> start at the item's saved resume position;
+//                                advance at max dwell (or, if the end is
+//                                reached first, once min dwell is met)
+//
+//   threshold = longClipThresholdSeconds, or 2 x maxDwellSeconds when <= 0.
+//
+// Resume positions live HERE, one per catalog item, beside the selection
+// history — the only media history in the service. They are written only
+// by notePlaybackExit() (the caller reports the outgoing playhead before
+// every selection) and read only by beginPlayback(). Selection eligibility
+// (shuffle/no-repeat/history) is unaffected: history decides WHICH item and
+// WHEN; resume state decides WHERE playback starts. Scene switches never
+// reach this class, so they cannot reset it. Lifetime = the service's.
+//
+// Wrap rule: a long clip's saved resume becomes 0 when the end was reached
+// during the visit, when the saved position is at/after the end, or when
+// fewer than min-dwell seconds would remain after it (too short to form a
+// meaningful window).
 // ============================================================================
 
 class VideoSelectionPolicy {
 public:
 	struct Config {
 		bool automaticAdvanceEnabled = true;
-		float holdDurationSeconds = 30.0f;
+		float holdDurationSeconds = 30.0f; // minimum dwell (and the plain hold for unknown durations)
+		float maxDwellSeconds = 120.0f;    // long-clip viewing window
+		float longClipThresholdSeconds = 0.0f; // <= 0: derived as 2 * maxDwellSeconds
 	};
+
+	enum class ClipClass { Unknown, Short, Medium, Long };
 
 	// Injectable so tests can force a specific shuffle order — "use an
 	// injectable deterministic random seed or selection strategy for
@@ -102,7 +135,34 @@ public:
 	// ---- The only mutating call ----
 	void confirmActivationSucceeded(int catalogIndex, MediaSelectionOrigin origin);
 
+	// ---- Dwell / resume window (see header comment) ----
+	// Call once per activation, the first time a valid duration is known.
+	// Returns the playhead (seconds) to seek to; 0 means play from the start.
+	float beginPlayback(float durationSeconds);
+	bool playbackStarted() const { return activeClass_ != ClipClass::Unknown; }
+	// The start seek failed: the window actually starts at 0.
+	void notePlaybackStartFailed();
+	// Every frame while active: detects a natural end (wrap) of the clip.
+	void notePlaybackPosition(float positionSeconds);
+	// Before leaving the active item (any selection origin): saves its resume
+	// position. nullopt = playhead unknown (the saved value is left as is).
+	void notePlaybackExit(std::optional<float> positionSeconds);
+
+	ClipClass activeClipClass() const { return activeClass_; }
+	ClipClass classify(float durationSeconds) const;
+	std::optional<float> activeWindowStartSeconds() const;
+	bool activeCompletedThisVisit() const { return completedThisVisit_; }
+	float resumeSecondsFor(int catalogIndex) const;
+
 	// ---- Hold timer ----
+	// Runtime cadence switch (Config::automaticAdvanceEnabled after setup).
+	// Disabled: the hold clock stops and accrues nothing, so it can never
+	// complete; manual next/previous and resume windows are unaffected.
+	// Re-enabled from disabled: a fresh dwell window starts (elapsed = 0), so
+	// time spent disabled never turns into an overdue immediate advance.
+	void setAutomaticAdvanceEnabled(bool enabled);
+	bool automaticAdvanceEnabled() const { return config_.automaticAdvanceEnabled; }
+
 	// No-op if automatic advance is disabled or nothing is active yet.
 	void updateHold(float dt);
 	bool isHoldComplete() const;
@@ -142,4 +202,15 @@ private:
 	MediaSelectionOrigin activeOrigin_ = MediaSelectionOrigin::Startup;
 
 	float holdElapsedSeconds_ = 0.0f;
+
+	float longClipThreshold() const;
+	float holdTargetSeconds() const;
+	void resetVisit();
+
+	std::vector<float> resumeSeconds_; // per catalog index; 0 = start of clip
+	ClipClass activeClass_ = ClipClass::Unknown;
+	float activeDurationSeconds_ = 0.0f;
+	float windowStartSeconds_ = 0.0f;
+	float lastPositionSeconds_ = -1.0f;
+	bool completedThisVisit_ = false;
 };

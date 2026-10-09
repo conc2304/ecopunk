@@ -1,0 +1,53 @@
+{
+  "pattern": "blobgrid",
+  "blobgrid": {
+    "Grid_Resolution": "12",
+    "Blob_Centers": "2",
+    "Drift_Speed": "0.18",
+    "Blob_Radius": "0.42",
+    "Edge_Softness": "0.68",
+    "Size_Variation": "0.78",
+    "Fragment_Refresh_Rate": "9.0",
+    "Mask_To_Blob": "1",
+    "Transparent_Background": "1"
+  },
+  "transition": {
+    "Transition_Duration": "2.4",
+    "Hard_Cut_Weight": "2",
+    "Crossfade_Weight": "42",
+    "Erosion_Weight": "100",
+    "Quantize_Bands": "12",
+    "Max_History_Seconds": "18.0"
+  },
+  "background": {
+    "Full_Video_Weight": "72",
+    "Full_Image_Weight": "23",
+    "Split_Weight": "5",
+    "Mode_Change_Interval": "60.0",
+    "Split_Ratio": "0.5",
+    "Split_Axis_Choice": "0",
+    "Image_Cycle_Interval": "28.0",
+    "Image_Fade_Duration": "6.0",
+    "Effects": {
+      "Cycle_Interval": "20.0",
+      "Raw_Weight": "100",
+      "Desaturate": "24",
+      "Invert": "0",
+      "Recolor": "8",
+      "Threshold": "0",
+      "Dither": "0",
+      "Solarize": "0",
+      "Scanlines": "0",
+      "Channelshift": "0",
+      "Hue_Rotate": "5",
+      "Ascii_Solarpunk": "4",
+      "Bioluminescence": "22",
+      "Chromatic_Aberration": "0",
+      "Edge_Glow": "8",
+      "Ink_Outlines": "0",
+      "Pixel_Drift": "3",
+      "Pixel_Sorting": "0",
+      "Water_Refraction": "18"
+    }
+  }
+}

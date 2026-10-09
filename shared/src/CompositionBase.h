@@ -3,6 +3,7 @@
 #include <vector>
 #include <memory>
 #include <functional>
+#include <optional>
 #include "Fragment.h"
 #include "GridSystem.h"
 
@@ -42,6 +43,12 @@ class CompositionBase {
 		CyclePhase getPhase() const { return phase; }
 		float getPhaseElapsed() const { return phaseElapsed; }
 		float getCycleElapsedSeconds() const { return cycleElapsedTotal; }
+		// Progress (0..1) through the current phase, only when that phase's
+		// end is purely timer-driven: BLANK and RESET_HOLD always; PLACEMENT
+		// and DENSITY only while the subclass uses the automatic phase timer.
+		// nullopt for DISSOLVE (ends on fragment/grid completion) and for any
+		// phase with no timer bound — never an estimate.
+		std::optional<float> getPhaseProgress() const;
 		int getCycleSeed() const { return cycleSeed; }
 		const std::vector<std::unique_ptr<Fragment>>& getFragments() const { return fragments; }
 

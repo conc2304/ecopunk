@@ -21,6 +21,7 @@ public:
 
 	float getPosition() const override;
 	float getDuration() const override;
+	bool seekToSeconds(float seconds) override;
 
 	glm::ivec2 getSize() const override;
 	const ofTexture* getTexture() const override;

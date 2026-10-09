@@ -205,6 +205,11 @@ PROJECT_CFLAGS = -I../../shared/src/scene -I../../shared/src/hud-runtime \
 # (header names checked: no collision with any other include directory).
 PROJECT_CFLAGS += $(addprefix -I,$(wildcard ../../shared/src/hud/*/))
 
+# Production-parity closure: Temporal's TFParameterPanel (tuned defaults,
+# evolution/waypoint drift, preset timeline) is compiled in with its ofxPanel
+# widget tree compiled out — see TFParameterPanel.h. No ofxGui in this build.
+PROJECT_CFLAGS += -DTF_PARAMETER_PANEL_HEADLESS
+
 ifeq ($(shell uname -s),Darwin)
 	PROJECT_LDFLAGS = -Wl,-dead_strip
 else

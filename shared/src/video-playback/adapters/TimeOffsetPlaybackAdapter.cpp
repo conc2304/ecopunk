@@ -4,7 +4,7 @@ void TimeOffsetPlaybackAdapter::setup(const TimeOffsetVideoBuffer::Settings& set
 	buffer_.configure(settings);
 }
 
-bool TimeOffsetPlaybackAdapter::synchronizeSelectedMedia(const std::string& mediaId, const std::string& absolutePath) {
+bool TimeOffsetPlaybackAdapter::synchronizeSelectedMedia(const std::string& mediaId, const std::string& absolutePath, float startSeconds) {
 	if (!loadedMediaId_.empty() && mediaId == loadedMediaId_) {
 		// Same media already loaded (or already the last-attempted one) —
 		// no-op, per this class's own "unchanged mediaId does not reload"
@@ -12,7 +12,8 @@ bool TimeOffsetPlaybackAdapter::synchronizeSelectedMedia(const std::string& medi
 		return lastLoadSucceeded_;
 	}
 
-	bool ok = buffer_.loadExplicit(absolutePath);
+	bool ok = buffer_.loadExplicit(absolutePath, startSeconds);
+	lastRequestedStartSeconds_ = startSeconds;
 	loadedMediaId_ = mediaId;
 	lastLoadSucceeded_ = ok;
 	reloadCount_++;

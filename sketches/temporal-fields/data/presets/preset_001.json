@@ -1,0 +1,59 @@
+{
+    "background": {
+        "Effects": {
+            "Ascii_Solarpunk": "7.81101",
+            "Bioluminescence": "3.6728",
+            "Channelshift": "1.10023",
+            "Chromatic_Aberration": "2.8829",
+            "Cycle_Interval": "9.4166",
+            "Desaturate": "7.60032",
+            "Dither": "1.14356",
+            "Edge_Glow": "1.44323",
+            "Heatmap_Recolor": "9.0",
+            "Ink_Outlines": "8.14665",
+            "Invert": "1.25384",
+            "Pixel_Drift": "0.00175524",
+            "Pixel_Sorting": "0.116187",
+            "Raw_Weight": "24.2988",
+            "Recolor": "9.90891",
+            "Scanlines": "4.3831",
+            "Solarize": "10",
+            "Threshold": "5.97025",
+            "Water_Refraction": "6.91576"
+        },
+        "Full_Image_Weight": "25.8685",
+        "Full_Video_Weight": "35.1588",
+        "Image_Cycle_Interval": "7.09139",
+        "Image_Fade_Duration": "1.8632",
+        "Mode_Change_Interval": "25.2216",
+        "Split_Axis_Choice": "0",
+        "Split_Ratio": "0.523274",
+        "Split_Weight": "32.8744"
+    },
+    "blobgrid": {
+        "Blob_Centers": "3",
+        "Blob_Radius": "0.299796",
+        "Drift_Speed": "0.983654",
+        "Edge_Softness": "0.278545",
+        "Fragment_Refresh_Rate": "3.47093",
+        "Grid_Resolution": "18",
+        "Mask_To_Blob": "1",
+        "Size_Variation": "0.458627",
+        "Transparent_Background": "0"
+    },
+    "bsp": {
+        "Cell_Density": "0.0714402",
+        "Geometry_Reshuffle_Rate": "2.5651",
+        "Irregularity": "0.523511",
+        "Regions_Touched_Per_Tick": "1",
+        "Transparency_Amount": "0.113968"
+    },
+    "pattern": "bsp",
+    "transition": {
+        "Crossfade_Weight": "35.1361",
+        "Erosion_Weight": "37.8856",
+        "Hard_Cut_Weight": "33.6497",
+        "Quantize_Bands": "12",
+        "Transition_Duration": "0.789505"
+    }
+}

@@ -1,0 +1,87 @@
+{
+  "pattern": "ecologicalsuccession",
+  "ecologicalsuccession": {
+    "Grid_Resolution": "10"
+  },
+  "transition": {
+    "Transition_Duration": "2.4",
+    "Hard_Cut_Weight": "2",
+    "Crossfade_Weight": "45",
+    "Erosion_Weight": "100",
+    "Quantize_Bands": "12",
+    "Max_History_Seconds": "18"
+  },
+  "background": {
+    "Full_Video_Weight": "62",
+    "Full_Image_Weight": "28",
+    "Split_Weight": "10",
+    "Mode_Change_Interval": "60.0",
+    "Split_Ratio": "0.5",
+    "Split_Axis_Choice": "0",
+    "Image_Cycle_Interval": "30.0",
+    "Image_Fade_Duration": "6.0",
+    "Effects": {
+      "Cycle_Interval": "22.0",
+      "Raw_Weight": "60",
+      "Desaturate": "8",
+      "Invert": "0",
+      "Recolor": "10",
+      "Threshold": "0",
+      "Dither": "0",
+      "Solarize": "0",
+      "Scanlines": "0",
+      "Channelshift": "0",
+      "Hue_Rotate": "0",
+      "Ascii_Solarpunk": "0",
+      "Bioluminescence": "15",
+      "Chromatic_Aberration": "0",
+      "Edge_Glow": "7",
+      "Ink_Outlines": "0",
+      "Pixel_Drift": "0",
+      "Pixel_Sorting": "0",
+      "Water_Refraction": "0"
+    }
+  },
+  "timeline": {
+    "Loop": "1",
+    "Start_State": "colonize",
+    "States": [
+      {
+        "Name": "colonize",
+        "Hold_Duration": "120",
+        "Transition_Duration": "40",
+        "Easing": "smoothstep",
+        "Overrides": {}
+      },
+      {
+        "Name": "expand",
+        "Hold_Duration": "180",
+        "Transition_Duration": "45",
+        "Easing": "smootherstep",
+        "Overrides": {
+          "ecologicalsuccession": {
+            "Min_Render_Scale": "0.6"
+          }
+        }
+      },
+      {
+        "Name": "mature",
+        "Hold_Duration": "240",
+        "Transition_Duration": "60",
+        "Easing": "smootherstep",
+        "Overrides": {
+          "ecologicalsuccession": {
+            "Climax_Turnover": "50"
+          }
+        }
+      },
+      {
+        "Name": "recovery",
+        "Hold_Duration": "120",
+        "Transition_Duration": "45",
+        "Easing": "smoothstep",
+        "Overrides": {}
+      }
+    ]
+  }
+}

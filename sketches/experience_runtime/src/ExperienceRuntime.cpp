@@ -8,6 +8,8 @@
 #include "ofGraphics.h"
 #include "ofLog.h"
 
+#include <algorithm>
+#include <cstdio>
 #include <cstdlib> // std::getenv (EXPERIENCE_RUNTIME_HUD_SKIN)
 
 ExperienceRuntime::ExperienceRuntime()
@@ -30,10 +32,25 @@ void ExperienceRuntime::installProductionScenes(const std::string& startupSceneI
 			&temporalScene_, [this] { return temporalScene_.currentEffectActivitySnapshot(); });
 		if (includeBlueprint) {
 			sceneManager_.registerProductionScene(&blueprintScene_); // no canonical effect producer -> effects = nullopt
+			if (BlueprintProductionScene::kMediaAdvancesAtCycleBoundary) {
+				boundaryDrivenMediaScenes_.push_back(BlueprintProductionScene::kSceneId);
+			}
 		}
 		productionScenesInstalled_ = true;
 	}
 	sceneManager_.setStartupScene(startupSceneId);
+}
+
+void ExperienceRuntime::applyMediaCadence(bool liveThisFrame) {
+	const std::string& owner = sceneManager_.status().activeSceneId;
+	const bool boundaryDriven = liveThisFrame
+		&& std::find(boundaryDrivenMediaScenes_.begin(), boundaryDrivenMediaScenes_.end(), owner) != boundaryDrivenMediaScenes_.end();
+	VideoPlaybackService& video = runtimeServices_.video();
+	if (video.automaticAdvanceEnabled() == boundaryDriven) {
+		video.setAutomaticAdvanceEnabled(!boundaryDriven);
+		ofLogNotice("ExperienceRuntime") << "media cadence -> "
+			<< (boundaryDriven ? "scene-boundary-driven (" + owner + ")" : std::string("automatic"));
+	}
 }
 
 void ExperienceRuntime::establishGlobalRenderingBaseline() {
@@ -66,8 +83,23 @@ void ExperienceRuntime::setup() {
 	// activated below.
 	VideoPlaybackService::Config videoConfig;
 	videoConfig.mediaRoot = ofToDataPath("../../../../assets/shared/media", true);
+	// Dwell policy (VideoSelectionPolicy.h): 30 s minimum dwell; long clips
+	// (> 2 x 120 s) play 120 s resume windows that advance across visits.
 	videoConfig.holdDurationSeconds = 30.0f;
+	videoConfig.maxDwellSeconds = 120.0f;
 	videoConfig.automaticAdvance = true;
+	// Verification only: EXPERIENCE_RUNTIME_VIDEO_DWELL="<min>,<max>" scales
+	// the policy down so the real catalog (longest clip ~100 s) contains
+	// "long" clips. Never set in a normal run.
+	if (const char* dwell = std::getenv("EXPERIENCE_RUNTIME_VIDEO_DWELL")) {
+		float minDwell = 0.0f;
+		float maxDwell = 0.0f;
+		if (std::sscanf(dwell, "%f,%f", &minDwell, &maxDwell) == 2 && minDwell > 0.0f && maxDwell >= minDwell) {
+			videoConfig.holdDurationSeconds = minDwell;
+			videoConfig.maxDwellSeconds = maxDwell;
+			ofLogWarning("ExperienceRuntime") << "verification dwell override: min " << minDwell << " s, max " << maxDwell << " s";
+		}
+	}
 	runtimeServices_.setup(videoConfig);
 
 	// Whether the production scene pair (vs. the tooling-only FakeScene) is
@@ -166,6 +198,7 @@ void ExperienceRuntime::update(float dt) {
 	// caching) and reports whether the active scene runs live this frame.
 	bool live;
 	{ RT004_SCOPE("SceneManager.beginFrame"); live = sceneManager_.beginFrame(); }
+	applyMediaCadence(live); // before the scene/video updates below read or advance media
 
 	if (live) {
 		{ RT004_SCOPE("SceneManager.updateActiveScene"); sceneManager_.updateActiveScene(dt); } // step 3

@@ -58,7 +58,8 @@ int main() {
 		SEM_CHECK(compute(in).activity.overall.value() == 0.0f);
 	}
 
-	// Undefined activity channels and §18.6 data gaps stay absent.
+	// Undefined activity channels, zone densities, and progress for a phase
+	// that is not timer-bounded stay absent.
 	{
 		Inputs in;
 		in.fragmentCount = 3;
@@ -87,6 +88,16 @@ int main() {
 			&& mode->valueId.value() == "scene.blueprint.metric.cycle_mode.ghost_layers");
 		const SceneMetric* balance = findMetric(d, "scene.blueprint.metric.zone_balance");
 		SEM_CHECK(balance && balance->valueType == HudMetricValueType::Ratio && balance->value.value() == 0.25f);
+	}
+
+	// Phase progress: published (stateProgress + metric) only when bounded.
+	{
+		Inputs in;
+		in.phaseProgress = 0.25f;
+		SceneSemanticData d = compute(in);
+		SEM_CHECK(d.timing.stateProgress.value() == 0.25f);
+		const SceneMetric* progress = findMetric(d, "scene.blueprint.metric.phase_progress");
+		SEM_CHECK(progress && progress->valueType == HudMetricValueType::Ratio && progress->value.value() == 0.25f);
 	}
 
 	// Zone balance absent with no zoned fragments; cycle mode absent when unknown.

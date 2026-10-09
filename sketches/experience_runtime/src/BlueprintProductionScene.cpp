@@ -28,7 +28,7 @@ void BlueprintProductionScene::setup(const SceneServices& services) {
 	BlueprintSceneCore::Config config;
 	config.canvasW = kNativeWidth;
 	config.canvasH = kNativeHeight;
-	config.advanceMediaPerCycle = false; // runtime hold timer is the only media cadence
+	config.advanceMediaPerCycle = kMediaAdvancesAtCycleBoundary; // runtime suspends auto-advance while live
 	{ RT004_SCOPE("Blueprint.setup.core"); core_.setup(&video_, config); }
 	didSetup_ = true;
 }
@@ -112,6 +112,7 @@ SceneSemanticData BlueprintProductionScene::buildSemanticData() const {
 	blueprintsemantics::Inputs in;
 	in.phase = state.currentPhase;
 	in.phaseElapsedSeconds = composition.getPhaseElapsed();
+	in.phaseProgress = composition.getPhaseProgress();
 	in.cycleModeId = cycleModeSemanticId(composition.getCurrentMode());
 	in.fragmentCount = state.fragmentCount;
 	in.zoneACount = state.zoneACount;

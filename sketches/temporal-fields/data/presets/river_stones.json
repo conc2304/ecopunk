@@ -1,0 +1,80 @@
+{
+  "pattern": "bsp",
+  "bsp": {
+    "Irregularity": "0.78"
+  },
+  "transition": {
+    "Transition_Duration": "2.4",
+    "Hard_Cut_Weight": "2",
+    "Crossfade_Weight": "45",
+    "Erosion_Weight": "100",
+    "Quantize_Bands": "12",
+    "Max_History_Seconds": "18"
+  },
+  "background": {
+    "Full_Video_Weight": "58",
+    "Full_Image_Weight": "32",
+    "Split_Weight": "10",
+    "Mode_Change_Interval": "55.0",
+    "Split_Ratio": "0.5",
+    "Split_Axis_Choice": "0",
+    "Image_Cycle_Interval": "28.0",
+    "Image_Fade_Duration": "6.0",
+    "Effects": {
+      "Cycle_Interval": "20.0",
+      "Raw_Weight": "62",
+      "Desaturate": "10",
+      "Invert": "0",
+      "Recolor": "0",
+      "Threshold": "0",
+      "Dither": "0",
+      "Solarize": "0",
+      "Scanlines": "0",
+      "Channelshift": "0",
+      "Hue_Rotate": "0",
+      "Ascii_Solarpunk": "0",
+      "Bioluminescence": "5",
+      "Chromatic_Aberration": "0",
+      "Edge_Glow": "5",
+      "Ink_Outlines": "0",
+      "Pixel_Drift": "0",
+      "Pixel_Sorting": "0",
+      "Water_Refraction": "18"
+    }
+  },
+  "timeline": {
+    "Loop": "1",
+    "Start_State": "still_water",
+    "States": [
+      {
+        "Name": "still_water",
+        "Hold_Duration": "180",
+        "Transition_Duration": "30",
+        "Easing": "smoothstep",
+        "Overrides": {}
+      },
+      {
+        "Name": "ripples",
+        "Hold_Duration": "90",
+        "Transition_Duration": "25",
+        "Easing": "easeInOutSine",
+        "Overrides": {
+          "bsp": {
+            "Geometry_Reshuffle_Rate": "4"
+          }
+        }
+      },
+      {
+        "Name": "calm",
+        "Hold_Duration": "180",
+        "Transition_Duration": "40",
+        "Easing": "smoothstep",
+        "Overrides": {
+          "bsp": {
+            "Geometry_Reshuffle_Rate": "9"
+          }
+        }
+      }
+    ]
+  }
+}

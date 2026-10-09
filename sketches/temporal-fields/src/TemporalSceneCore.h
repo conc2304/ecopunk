@@ -15,6 +15,7 @@
 #include "TFPatternNetworkGrowth.h"
 #include "TFPatternTemporalTides.h"
 #include "TFPatternType.h"
+#include "TFParameterPanel.h"
 #include "TimeOffsetVideoBuffer.h"
 
 #include "ofRectangle.h"
@@ -37,8 +38,17 @@
 // loads media itself, matching every existing TFPattern*/TFBackgroundLayer
 // call site's existing contract), window/global state (frame rate,
 // fullscreen, vsync, ofExit, cursor, ofDisableArbTex — none of that is
-// touched here), ofxGui/ofParameter state, TFParameterPanel, TFHudLayer, the
-// HUD glitch overlay, MotionExtraction, or any debug/overlay drawing.
+// touched here), ofxGui, TFHudLayer, the HUD glitch overlay,
+// MotionExtraction, or any debug/overlay drawing.
+//
+// Parameter model (production-parity closure): owns a TFParameterPanel — in
+// ExperienceRuntime built with TF_PARAMETER_PANEL_HEADLESS, so no ofxPanel
+// exists — and drives it exactly as the standalone ofApp::update() does: the
+// tuned TFSettings.h defaults, the always-on evolution (per-dial LFO wobble +
+// drift toward randomly picked authored presets every 30-60 s), and the
+// preset timeline's auto-cycle suspension. Before this, production ran the
+// patterns on their in-class Params{} prototype defaults, which TFSettings.h
+// documents as superseded (e.g. BSP reshuffle 3 s -> 75 s).
 //
 // Scope decision (documented, not silent — see this session's completion
 // report "Deviations from prompt"): the standalone temporal-fields ofApp is
@@ -142,14 +152,16 @@ public:
 	TFComposition& composition() { return composition_; }
 	TFBackgroundLayer& backgroundLayer() { return backgroundLayer_; }
 	TFAmbientTextureLayer& ambientTextures() { return ambientTextures_; }
+	const TFParameterPanel& parameters() const { return params_; }
 
 private:
 	// See class header comment on why this seeds the real named-effect
 	// list + TFSettings.h constants rather than leaving effectWeights at
 	// its empty in-class default (which would silently disable the 16
 	// shader effects' entire weighted-cycling behavior in production).
-	static TFBackgroundLayer::Params defaultBackgroundParams();
+	void applyParameters();
 
+	TFParameterPanel params_; // headless in ExperienceRuntime — see class header comment
 	TimeOffsetVideoBuffer* buffer_ = nullptr; // not owned, see setup()
 
 	ShaderLibrary shaderLib_;

@@ -54,6 +54,11 @@ public:
 	virtual float getPosition() const = 0;
 	virtual float getDuration() const = 0;
 
+	// Seeks the loaded media to `seconds`. Returns false (no seek) when
+	// nothing is loaded or the duration is unknown — the caller then simply
+	// plays from where the decoder already is (the start).
+	virtual bool seekToSeconds(float seconds) = 0;
+
 	virtual glm::ivec2 getSize() const = 0;
 	virtual const ofTexture* getTexture() const = 0;  // nullptr if unavailable
 	virtual const ofPixels* getPixels() const = 0;    // nullptr if unavailable

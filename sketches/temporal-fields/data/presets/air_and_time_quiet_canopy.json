@@ -1,0 +1,104 @@
+{
+    "pattern": "blobgrid",
+
+    "blobgrid": {
+        "Grid_Resolution": "14",
+        "Blob_Centers": "2",
+        "Drift_Speed": "0.15",
+        "Blob_Radius": "0.42",
+        "Edge_Softness": "0.4",
+        "Size_Variation": "0.5",
+        "Fragment_Refresh_Rate": "6.0",
+        "Mask_To_Blob": "1",
+        "Transparent_Background": "1"
+    },
+
+    "transition": {
+        "Transition_Duration": "1.8",
+        "Hard_Cut_Weight": "10",
+        "Crossfade_Weight": "30",
+        "Erosion_Weight": "60",
+        "Quantize_Bands": "12",
+        "Max_History_Seconds": "18"
+    },
+
+    "background": {
+        "Full_Video_Weight": "60",
+        "Full_Image_Weight": "25",
+        "Split_Weight": "15",
+        "Mode_Change_Interval": "45",
+        "Split_Ratio": "0.5",
+        "Split_Axis_Choice": "0",
+        "Image_Cycle_Interval": "20",
+        "Image_Fade_Duration": "3.0",
+        "Effects": {
+            "Raw_Weight": "70",
+            "Desaturate": "10",
+            "Bioluminescence": "8",
+            "Water_Refraction": "6",
+            "Edge_Glow": "6"
+        }
+    },
+
+    "timeline": {
+        "Loop": "1",
+        "Start_State": "arrival",
+
+        "States": [
+            {
+                "Name": "arrival",
+                "Hold_Duration": "20.0",
+                "Transition_Duration": "30.0",
+                "Easing": "smoothstep",
+                "Overrides": {
+                    "blobgrid": {
+                        "Drift_Speed": "0.03",
+                        "Edge_Softness": "0.85"
+                    },
+                    "background": {
+                        "Image_Fade_Duration": "8.0"
+                    }
+                }
+            },
+            {
+                "Name": "breathing",
+                "Hold_Duration": "180.0",
+                "Transition_Duration": "45.0",
+                "Easing": "smootherstep",
+                "Overrides": {
+                    "blobgrid": {
+                        "Drift_Speed": "0.18",
+                        "Blob_Radius": "0.46"
+                    }
+                }
+            },
+            {
+                "Name": "activity",
+                "Hold_Duration": "120.0",
+                "Transition_Duration": "35.0",
+                "Easing": "easeInOutSine",
+                "Overrides": {
+                    "blobgrid": {
+                        "Drift_Speed": "0.42",
+                        "Fragment_Refresh_Rate": "2.5"
+                    },
+                    "transition": {
+                        "Transition_Duration": "1.2"
+                    }
+                }
+            },
+            {
+                "Name": "rest",
+                "Hold_Duration": "90.0",
+                "Transition_Duration": "50.0",
+                "Easing": "smootherstep",
+                "Overrides": {
+                    "blobgrid": {
+                        "Drift_Speed": "0.06",
+                        "Fragment_Refresh_Rate": "10.0"
+                    }
+                }
+            }
+        ]
+    }
+}

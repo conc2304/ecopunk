@@ -52,7 +52,9 @@ public:
 	struct Config {
 		std::string mediaRoot;   // scanned for playable files (.mp4 today)
 		std::string catalogPath; // optional; empty = auto-synthesized catalog only
-		float holdDurationSeconds = 30.0f;
+		float holdDurationSeconds = 30.0f;  // minimum dwell per selection
+		float maxDwellSeconds = 120.0f;     // long-clip viewing window (see VideoSelectionPolicy.h)
+		float longClipThresholdSeconds = 0.0f; // <= 0: 2 x maxDwellSeconds
 		bool automaticAdvance = true;
 	};
 
@@ -76,6 +78,19 @@ public:
 	// canSelectNext, which reflect exactly the conditions checked here.
 	bool next();
 	bool previous();
+
+	// Cadence: true (the default, from Config::automaticAdvance) = timer-
+	// driven automatic advance; false = the caller drives media changes with
+	// next() at its own boundaries. Selection, history, resume windows and
+	// manual navigation are identical in both. Re-enabling starts a fresh
+	// dwell window — see VideoSelectionPolicy::setAutomaticAdvanceEnabled().
+	void setAutomaticAdvanceEnabled(bool enabled) { policy_.setAutomaticAdvanceEnabled(enabled); }
+	// The boundary-driven counterpart of the hold timer: the exact same
+	// automatic-advance selection (and MediaSelectionOrigin::Automatic, not a
+	// user's ManualNext), triggered at the caller's own boundary — e.g.
+	// Blueprint's composition-cycle start. Works whether or not the timer is on.
+	bool advanceAtBoundary();
+	bool automaticAdvanceEnabled() const { return policy_.automaticAdvanceEnabled(); }
 
 	const ofTexture* currentTexture() const;
 	const ofPixels* currentPixels() const;
@@ -106,7 +121,16 @@ public:
 
 	VideoPlaybackStatus status() const;
 
+	// Diagnostics/tests only — not part of VideoPlaybackStatus.
+	const VideoSelectionPolicy& selectionPolicyForTesting() const { return policy_; }
+
 private:
+	// Long-clip resume windows (VideoSelectionPolicy owns the state; this
+	// class only feeds it the decoder's playhead and applies the seek).
+	std::optional<float> currentPositionSeconds() const;
+	void beginPlaybackIfReady();
+	void traceResume(const std::string& line) const;
+
 	bool activateCandidate(int catalogIndex);
 	// Shared retry-on-failure loop for startup/next/previous/automatic
 	// advance. firstCandidateFn supplies the first index to try;
@@ -127,4 +151,5 @@ private:
 	std::optional<std::string> errorCode_;
 
 	bool setupComplete_ = false;
+	bool resumeTrace_ = false; // EXPERIENCE_RUNTIME_VIDEO_RESUME_TRACE — verification only
 };

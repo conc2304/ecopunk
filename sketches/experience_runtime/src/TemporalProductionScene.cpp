@@ -53,7 +53,7 @@ void TemporalProductionScene::syncVideoAdapter() {
 		return; // should be impossible whenever mediaId is set, but never assume
 	}
 	RT004_SCOPE("Temporal.synchronizeSelectedMedia");
-	temporalVideoAdapter_.synchronizeSelectedMedia(*status.mediaId, *absolutePath);
+	temporalVideoAdapter_.synchronizeSelectedMedia(*status.mediaId, *absolutePath, status.positionSeconds.value_or(0.0f));
 }
 
 void TemporalProductionScene::setup(const SceneServices& services) {

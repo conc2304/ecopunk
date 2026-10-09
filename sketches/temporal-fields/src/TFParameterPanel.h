@@ -4,7 +4,14 @@
 #include <map>
 #include <string>
 #include <vector>
+// TF_PARAMETER_PANEL_HEADLESS (defined only by ExperienceRuntime's build):
+// compiles every ofParameter, the evolution/waypoint drift, preset loading
+// and the preset timeline exactly as the standalone runs them, but with the
+// ofxPanel widget tree compiled out — the production scene drives the same
+// parameter behavior with no ofxGui anywhere in its path.
+#ifndef TF_PARAMETER_PANEL_HEADLESS
 #include "ofxGui.h"
+#endif
 #include "ofJson.h"
 #include "LFOBank.h"
 #include "TFPresetTimeline.h"
@@ -312,7 +319,9 @@ class TFParameterPanel {
 		ofParameter<void> saveButton;
 
 		ofParameterGroup rootGroup;
+#ifndef TF_PARAMETER_PANEL_HEADLESS
 		ofxPanel panel;
+#endif
 
 		// Set by registerHudVisibility(); null until ofApp calls it in
 		// setup(). Only savePreset()/loadNextPreset() read this — everything

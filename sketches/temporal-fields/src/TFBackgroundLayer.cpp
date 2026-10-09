@@ -42,9 +42,16 @@ void TFBackgroundLayer::update(float dt) {
 }
 
 void TFBackgroundLayer::pickNextMode() {
+	// FULL_IMAGE and SPLIT both draw TFImageCycler stills. With no still
+	// images in the folder (the cycler excludes the ambient _tint/_mask
+	// pairs), those modes would render an empty background — so they are
+	// only eligible while the cycler actually has content; they come back
+	// automatically once curated stills are added.
+	const bool imagesAvailable = imageCycler.hasImages();
 	std::vector<std::pair<Mode, float>> options = { { Mode::FULL_VIDEO, params.fullVideoWeight },
-		{ Mode::FULL_IMAGE, params.fullImageWeight }, { Mode::SPLIT, params.splitWeight } };
-	currentMode = tfWeightedPick(options);
+		{ Mode::FULL_IMAGE, imagesAvailable ? params.fullImageWeight : 0.0f },
+		{ Mode::SPLIT, imagesAvailable ? params.splitWeight : 0.0f } };
+	currentMode = imagesAvailable ? tfWeightedPick(options) : Mode::FULL_VIDEO;
 
 	if (currentMode == Mode::SPLIT) {
 		currentSplitIsVertical = (params.splitAxisChoice == 1) ? true

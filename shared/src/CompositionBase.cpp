@@ -1,4 +1,6 @@
 #include "CompositionBase.h"
+
+#include <algorithm>
 #include "ofLog.h"
 #include <cstdlib>
 #include <random>
@@ -100,6 +102,25 @@ void CompositionBase::beginDissolve() {
 				false });
 		}
 	}
+}
+
+std::optional<float> CompositionBase::getPhaseProgress() const {
+	float duration = 0.0f;
+	switch (phase) {
+	case CyclePhase::BLANK: duration = timing.blankDuration; break;
+	case CyclePhase::PLACEMENT:
+		if (!usesAutomaticPhaseTimer()) return std::nullopt;
+		duration = placementDuration;
+		break;
+	case CyclePhase::DENSITY:
+		if (!usesAutomaticPhaseTimer()) return std::nullopt;
+		duration = timing.densityDuration;
+		break;
+	case CyclePhase::DISSOLVE: return std::nullopt;
+	case CyclePhase::RESET_HOLD: duration = timing.resetHoldDuration; break;
+	}
+	if (duration <= 0.0f) return std::nullopt;
+	return std::min(1.0f, std::max(0.0f, phaseElapsed / duration));
 }
 
 void CompositionBase::update(float dt) {

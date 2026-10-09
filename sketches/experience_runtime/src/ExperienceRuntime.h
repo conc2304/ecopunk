@@ -99,6 +99,8 @@ public:
 	void installBlueprintProductionScene() { installProductionScenes(BlueprintProductionScene::kSceneId, true); }
 
 	BlueprintProductionScene& blueprintSceneForTesting() { return blueprintScene_; }
+	// Read-only: the one canonical VideoPlaybackService (resume-window verification).
+	const VideoPlaybackService& videoServiceForTesting() const { return runtimeServices_.video(); }
 
 	// Temporal Production Scene #2 Migration: development/test-only access
 	// to the real TemporalProductionScene instance — same rationale as
@@ -239,6 +241,15 @@ public:
 private:
 	FocusActivationRecord lastFocusActivation_;
 	void installProductionScenes(const std::string& startupSceneId, bool includeBlueprint);
+
+	// Per-scene Shared Video cadence, applied every frame from SceneManager's
+	// live owner: a scene listed here drives media changes itself with
+	// next() at its own boundaries, so timer-driven auto-advance is off while
+	// it is live; every other state (other scenes, transitions, a failed
+	// activation, shutdown) gets normal automatic advance back — with a fresh
+	// dwell window (VideoPlaybackService::setAutomaticAdvanceEnabled()).
+	void applyMediaCadence(bool liveThisFrame);
+	std::vector<std::string> boundaryDrivenMediaScenes_;
 
 	// RT-003: on the frame an incoming scene's activation succeeds, reallocate
 	// the runtime-owned scene FBO iff its native size differs. Clears the

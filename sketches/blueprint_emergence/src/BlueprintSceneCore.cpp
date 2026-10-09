@@ -70,10 +70,13 @@ void BlueprintSceneCore::setup(VideoPlaybackService* video, const Config& config
 		annotations_.onFragmentRemoved(frag);
 	});
 	composition_.setOnCycleStart([this]() {
-		// One media advance per composition cycle — standalone only (see
-		// Config::advanceMediaPerCycle).
-		if (config_.advanceMediaPerCycle && video_ != nullptr && !video_->next()) {
-			ofLogWarning("BlueprintSceneCore") << "onCycleStart: VideoPlaybackService::next() failed (media unavailable?)";
+		// One canonical media advance per composition cycle (see
+		// Config::advanceMediaPerCycle) — Shared Video still picks WHAT plays.
+		cycleStartCount_++;
+		const bool skipAdvance = skipNextCycleMediaAdvance_;
+		skipNextCycleMediaAdvance_ = false;
+		if (config_.advanceMediaPerCycle && !skipAdvance && video_ != nullptr && !video_->advanceAtBoundary()) {
+			ofLogWarning("BlueprintSceneCore") << "onCycleStart: VideoPlaybackService::advanceAtBoundary() failed (media unavailable?)";
 		}
 		annotations_.reset();
 		erosionFBO_.clear();
@@ -98,6 +101,7 @@ void BlueprintSceneCore::activate() {
 	if (!didSetup_) return;
 	motionOverlayOpacity_ = 0.0f;
 	hadHudWidget_ = false;
+	skipNextCycleMediaAdvance_ = true; // the activation cycle keeps the current media
 	restartCycle();
 	active_ = true;
 }

@@ -11,12 +11,15 @@
 //   activity.motion/density/variation/transition | absent (no derivation defined yet)
 //   timing.activeSeconds     | production scene's own timer — always present
 //   timing.stateElapsedSeconds | CompositionBase::getPhaseElapsed() — always present
-//   timing.stateProgress     | absent (no exact per-phase duration; §18.6 data gap)
+//   timing.stateProgress     | CompositionBase::getPhaseProgress() — only while the phase is
+//                            |   timer-bounded (BLANK/RESET_HOLD; PLACEMENT/DENSITY in ghost-layers
+//                            |   mode); absent during DISSOLVE and perpetual-mode placement
 //   timing.generation        | production scene's own activation counter
 //   scene.blueprint.metric.fragment_count | Count, Literal
 //   scene.blueprint.metric.cycle_mode     | Identifier, scene.blueprint.metric.cycle_mode.<mode>
 //   scene.blueprint.metric.zone_balance   | Ratio = zoneA / (zoneA + zoneB); absent with no fragments
-//   scene.blueprint.metric.phase_progress, zone_a_density, zone_b_density | absent (§18.6 data gaps)
+//   scene.blueprint.metric.phase_progress | Ratio, same value as timing.stateProgress, same absence rule
+//   scene.blueprint.metric.zone_a_density, zone_b_density | absent (§18.6 data gap: no normalization)
 namespace blueprintsemantics {
 
 namespace {
@@ -54,6 +57,7 @@ SceneSemanticData compute(const Inputs& in) {
 
 	data.timing.activeSeconds = in.activeSeconds;
 	data.timing.stateElapsedSeconds = in.phaseElapsedSeconds;
+	data.timing.stateProgress = in.phaseProgress;
 	data.timing.generation = in.generation;
 
 	data.metrics.push_back(numberMetric("scene.blueprint.metric.fragment_count", HudMetricValueType::Count,
@@ -72,6 +76,11 @@ SceneSemanticData compute(const Inputs& in) {
 	if (zoned > 0) {
 		data.metrics.push_back(numberMetric("scene.blueprint.metric.zone_balance", HudMetricValueType::Ratio,
 			static_cast<float>(in.zoneACount) / static_cast<float>(zoned)));
+	}
+
+	if (in.phaseProgress) {
+		data.metrics.push_back(numberMetric("scene.blueprint.metric.phase_progress", HudMetricValueType::Ratio,
+			*in.phaseProgress));
 	}
 
 	return data;

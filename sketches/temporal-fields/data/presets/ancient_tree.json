@@ -1,0 +1,92 @@
+{
+  "pattern": "networkgrowth",
+  "networkgrowth": {
+    "Seed_Node_Count": "1",
+    "Branch_Distance": "1.0",
+    "Min_Size": "1.10",
+    "Max_Size": "2.20",
+    "Edge_Thickness": "2.5"
+  },
+  "transition": {
+    "Transition_Duration": "2.4",
+    "Hard_Cut_Weight": "2",
+    "Crossfade_Weight": "45",
+    "Erosion_Weight": "100",
+    "Quantize_Bands": "12",
+    "Max_History_Seconds": "18"
+  },
+  "background": {
+    "Full_Video_Weight": "65",
+    "Full_Image_Weight": "25",
+    "Split_Weight": "10",
+    "Mode_Change_Interval": "60.0",
+    "Split_Ratio": "0.5",
+    "Split_Axis_Choice": "0",
+    "Image_Cycle_Interval": "30.0",
+    "Image_Fade_Duration": "6.0",
+    "Effects": {
+      "Cycle_Interval": "22.0",
+      "Raw_Weight": "65",
+      "Desaturate": "6",
+      "Invert": "0",
+      "Recolor": "6",
+      "Threshold": "0",
+      "Dither": "0",
+      "Solarize": "0",
+      "Scanlines": "0",
+      "Channelshift": "0",
+      "Hue_Rotate": "0",
+      "Ascii_Solarpunk": "0",
+      "Bioluminescence": "14",
+      "Chromatic_Aberration": "0",
+      "Edge_Glow": "6",
+      "Ink_Outlines": "9",
+      "Pixel_Drift": "0",
+      "Pixel_Sorting": "0",
+      "Water_Refraction": "0"
+    }
+  },
+  "timeline": {
+    "Loop": "1",
+    "Start_State": "dormant",
+    "States": [
+      {
+        "Name": "dormant",
+        "Hold_Duration": "180",
+        "Transition_Duration": "40",
+        "Easing": "smoothstep",
+        "Overrides": {}
+      },
+      {
+        "Name": "growth",
+        "Hold_Duration": "180",
+        "Transition_Duration": "45",
+        "Easing": "smootherstep",
+        "Overrides": {
+          "networkgrowth": {
+            "Growth_Interval": "2"
+          }
+        }
+      },
+      {
+        "Name": "canopy",
+        "Hold_Duration": "240",
+        "Transition_Duration": "60",
+        "Easing": "smootherstep",
+        "Overrides": {
+          "networkgrowth": {
+            "Min_Size": "4.16",
+            "Max_Size": "8.28"
+          }
+        }
+      },
+      {
+        "Name": "dormant_return",
+        "Hold_Duration": "180",
+        "Transition_Duration": "50",
+        "Easing": "smoothstep",
+        "Overrides": {}
+      }
+    ]
+  }
+}

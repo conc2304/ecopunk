@@ -2,7 +2,7 @@
 """Sync Temporal's own (non-shared) runtime data assets into every sketch
 that needs them, from one canonical tracked source.
 
-Scope — this script owns exactly two asset groups, both authored/owned by
+Scope — this script owns exactly three asset groups, all authored/owned by
 the temporal-fields sketch and consumed at runtime via a plain relative
 ofShader::load()/ofDirectory::listDir() path (resolved against whichever
 binary's own bin/data/ is running, per-sketch, not shared at runtime):
@@ -56,6 +56,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 CANON_ROOT = REPO_ROOT / "sketches" / "temporal-fields" / "data"
 CANON_SHADERS = CANON_ROOT / "shaders"
 CANON_BACKGROUNDS = CANON_ROOT / "backgrounds"
+# 3. The authored parameter presets TFParameterPanel's evolution system drifts
+#    toward (rescanPresets(): every *.json under bin/data/presets/) — driven in
+#    production too, via TemporalSceneCore's headless TFParameterPanel.
+CANON_PRESETS = CANON_ROOT / "presets"
 
 # The three Temporal-only shader pairs this script owns. Deliberately a
 # fixed filename list, not "every file in CANON_SHADERS" — bin/data/shaders/
@@ -152,10 +156,35 @@ def sync_backgrounds(sketch_dir: Path, check: bool, report: list) -> bool:
     return ok
 
 
+def sync_presets(sketch_dir: Path, check: bool, report: list) -> bool:
+    import shutil
+    ok = True
+    dst_dir = sketch_dir / "bin" / "data" / "presets"
+    canon_files = sorted(p.name for p in CANON_PRESETS.glob("*.json"))
+    if not canon_files:
+        report.append(f"[{sketch_dir.name}] ERROR: canonical presets source is empty: {CANON_PRESETS}")
+        return False
+    for name in canon_files:
+        src = CANON_PRESETS / name
+        dst = dst_dir / name
+        if not dst.exists() or not filecmp.cmp(src, dst, shallow=False):
+            report.append(f"[{sketch_dir.name}] {'update' if dst.exists() else 'add'}: bin/data/presets/{name}")
+            if check:
+                ok = False
+            else:
+                dst_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(src, dst)
+    # Never deletes: bin/data/presets/ is also where the standalone's 'S' key
+    # saves new presets during authoring; promote one by copying it into the
+    # canonical source.
+    return ok
+
+
 def sync_sketch(sketch_dir: Path, check: bool, report: list) -> bool:
     before = len(report)
     ok = sync_shaders(sketch_dir, check, report)
     ok = sync_backgrounds(sketch_dir, check, report) and ok
+    ok = sync_presets(sketch_dir, check, report) and ok
     if len(report) == before:
         report.append(f"[{sketch_dir.name}] up to date (Temporal runtime assets)")
     return ok

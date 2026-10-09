@@ -13,9 +13,12 @@
 // ExperienceRuntime/SceneManager into the runtime-owned scene FBO.
 //
 // Media: reads the runtime's single canonical VideoPlaybackService (injected,
-// not owned). The standalone sketch's one-advance-per-composition-cycle hook
-// is disabled here — the runtime service's own hold timer is the only media
-// cadence (DEC-013/014: one selection authority, no competing cadence).
+// not owned) and, like the standalone sketch, requests one canonical advance
+// (VideoPlaybackService::advanceAtBoundary())
+// per composition-cycle start (none for the cycle activation starts). The
+// runtime suspends the service's timer-driven auto-advance while this scene
+// is live, so the cycle is the only cadence; Shared Video still decides which
+// media comes next (history, shuffle, resume windows).
 //
 // Effects: per-fragment ShaderLibrary effects are artwork-internal; there is
 // no canonical EffectActivityStatus producer for this scene, so it registers
@@ -28,6 +31,10 @@ public:
 	static constexpr const char* kSceneId = "blueprint_emergence"; // matches HudPresentationProfile's flexible profile
 	static constexpr int kNativeWidth = 1280;
 	static constexpr int kNativeHeight = 720;
+	// Media cadence: one canonical advance per composition cycle; the runtime
+	// keeps Shared Video's timer-driven auto-advance off while this scene is
+	// the live owner (ExperienceRuntime::applyMediaCadence()).
+	static constexpr bool kMediaAdvancesAtCycleBoundary = true;
 
 	explicit BlueprintProductionScene(VideoPlaybackService& video);
 

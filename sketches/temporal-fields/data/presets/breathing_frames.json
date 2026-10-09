@@ -1,0 +1,76 @@
+{
+  "pattern": "telescopingframes",
+  "telescopingframes": {
+    "Ring_Count": "5"
+  },
+  "transition": {
+    "Transition_Duration": "2.4",
+    "Hard_Cut_Weight": "2",
+    "Crossfade_Weight": "45",
+    "Erosion_Weight": "100",
+    "Quantize_Bands": "12",
+    "Max_History_Seconds": "18"
+  },
+  "background": {
+    "Full_Video_Weight": "70",
+    "Full_Image_Weight": "22",
+    "Split_Weight": "8",
+    "Mode_Change_Interval": "75.0",
+    "Split_Ratio": "0.5",
+    "Split_Axis_Choice": "0",
+    "Image_Cycle_Interval": "35.0",
+    "Image_Fade_Duration": "8.0",
+    "Effects": {
+      "Cycle_Interval": "25.0",
+      "Raw_Weight": "75",
+      "Desaturate": "12",
+      "Invert": "0",
+      "Recolor": "0",
+      "Threshold": "0",
+      "Dither": "0",
+      "Solarize": "0",
+      "Scanlines": "0",
+      "Channelshift": "0",
+      "Hue_Rotate": "0",
+      "Ascii_Solarpunk": "0",
+      "Bioluminescence": "0",
+      "Chromatic_Aberration": "0",
+      "Edge_Glow": "8",
+      "Ink_Outlines": "0",
+      "Pixel_Drift": "0",
+      "Pixel_Sorting": "0",
+      "Water_Refraction": "5"
+    }
+  },
+  "timeline": {
+    "Loop": "1",
+    "Start_State": "inhale",
+    "States": [
+      {
+        "Name": "inhale",
+        "Hold_Duration": "120",
+        "Transition_Duration": "35",
+        "Easing": "smoothstep",
+        "Overrides": {}
+      },
+      {
+        "Name": "hold",
+        "Hold_Duration": "60",
+        "Transition_Duration": "20",
+        "Easing": "linear",
+        "Overrides": {}
+      },
+      {
+        "Name": "exhale",
+        "Hold_Duration": "120",
+        "Transition_Duration": "40",
+        "Easing": "smoothstep",
+        "Overrides": {
+          "telescopingframes": {
+            "Thickness_Variation": "0.3"
+          }
+        }
+      }
+    ]
+  }
+}
