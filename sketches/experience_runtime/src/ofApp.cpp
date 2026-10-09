@@ -79,6 +79,12 @@ void ofApp::setup() {
 		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
 		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
 		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && CadenceHarness::isRequested();
+	// Temporal first-activation stall verification: lowest priority; default roster, startup Blob.
+	bool temporalWarmRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
+		&& TemporalWarmHarness::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
 		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
@@ -137,6 +143,8 @@ void ofApp::setup() {
 		resumeWindowHarness = std::make_unique<ResumeWindowHarness>(runtime);
 	} else if (cadenceRequested) {
 		cadenceHarness = std::make_unique<CadenceHarness>(runtime);
+	} else if (temporalWarmRequested) {
+		temporalWarmHarness = std::make_unique<TemporalWarmHarness>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
 		stallDriver = std::make_unique<Rt004StallDriver>(runtime);
 	}
@@ -188,6 +196,9 @@ void ofApp::update() {
 	if (cadenceHarness) {
 		cadenceHarness->step(ofGetLastFrameTime());
 	}
+	if (temporalWarmHarness) {
+		temporalWarmHarness->step(ofGetLastFrameTime());
+	}
 	if (blobHarness) {
 		blobHarness->step(ofGetLastFrameTime());
 	}
@@ -207,7 +218,7 @@ void ofApp::update() {
 
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness) {
 		runtime.draw();
 	}
 	// When a harness is active, it drives runtime.draw() itself (see

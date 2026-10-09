@@ -94,6 +94,11 @@ public:
 	// participates here.
 	std::optional<videoeffects::EffectActivityStatus> currentEffectActivitySnapshot() const;
 
+	// Host preparation, outside the IEcopunkScene lifecycle: loads Temporal's
+	// immutable ambient textures once (the ~1.6 s that used to freeze the
+	// first switch into Temporal). Does not set up or activate the scene.
+	void prepareImmutableAssets() { core_.prepareImmutableAssets(kNativeWidth, kNativeHeight); }
+
 	// Development/test-only access to the real TemporalSceneCore/
 	// TimeOffsetPlaybackAdapter instances — same rationale as
 	// BlobProductionScene's own testing-only accessors: SceneManager's

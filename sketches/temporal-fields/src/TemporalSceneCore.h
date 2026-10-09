@@ -87,6 +87,12 @@ public:
 	// Never constructed here (see class comment).
 	void setup(TimeOffsetVideoBuffer* buffer, int canvasW, int canvasH);
 
+	// Loads the immutable ambient ground textures (the dominant setup cost —
+	// ~19 tint/mask PNG pairs) ahead of setup(), e.g. during the host's own
+	// startup while another scene is active. Idempotent; setup() calls it
+	// itself if nobody did. Needs a GL context; touches no scene state.
+	void prepareImmutableAssets(int canvasW, int canvasH);
+
 	// Resumes active behavior. Restarts the composition cycle from its
 	// first registered pattern with a fresh seed (TFComposition::
 	// startCycle()) — a reactivated Temporal scene must never carry over

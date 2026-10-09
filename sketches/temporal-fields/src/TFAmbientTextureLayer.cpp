@@ -1,4 +1,5 @@
 #include "TFAmbientTextureLayer.h"
+#include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 #include <set>
 #include "ofFileUtils.h"
 #include "ofGraphics.h"
@@ -34,6 +35,15 @@ void TFAmbientTextureLayer::setup(int canvasW_, int canvasH_, const std::string&
 
 	std::set<std::string> handledMasks;
 
+	// Each pair is loaded in place inside `textures` (reserved up front) — a
+	// local TFBackgroundTexture pushed by value made ofImage's copy
+	// constructor duplicate every decoded image AND re-upload its GL texture,
+	// once per push plus again for every earlier entry on each vector
+	// reallocation. That copy churn, not the PNG decode itself, was most of
+	// Temporal's ~2.2 s first-activation stall.
+	textures.clear();
+	textures.reserve(dir.size() / 2 + 1);
+
 	for (std::size_t i = 0; i < dir.size(); i++) {
 		std::string name = dir.getName(i);
 		if (name.size() <= kTintSuffix.size()
@@ -49,18 +59,25 @@ void TFAmbientTextureLayer::setup(int canvasW_, int canvasH_, const std::string&
 		}
 		handledMasks.insert(maskName);
 
-		TFBackgroundTexture tex;
+		textures.emplace_back();
+		TFBackgroundTexture& tex = textures.back();
 		tex.baseName = baseName;
 
 		std::string tintPath = ofFilePath::join(folderPath, name);
 		std::string maskPath = ofFilePath::join(folderPath, maskName);
 
-		if (!tex.tint.load(tintPath)) {
+		bool tintOk;
+		{ RT004_SCOPE("TFAmbient.load.tint"); tintOk = tex.tint.load(tintPath); }
+		if (!tintOk) {
 			ofLogWarning("TFAmbientTextureLayer") << "failed to load tint image, skipping: " << tintPath;
+			textures.pop_back();
 			continue;
 		}
-		if (!tex.mask.load(maskPath)) {
+		bool maskOk;
+		{ RT004_SCOPE("TFAmbient.load.mask"); maskOk = tex.mask.load(maskPath); }
+		if (!maskOk) {
 			ofLogWarning("TFAmbientTextureLayer") << "failed to load mask image, skipping: " << maskPath;
+			textures.pop_back();
 			continue;
 		}
 
@@ -105,7 +122,6 @@ void TFAmbientTextureLayer::setup(int canvasW_, int canvasH_, const std::string&
 		tex.opacity.set(paramName, opacityDefault, 0.0f, kMaxOpacity);
 
 		group.add(tex.opacity);
-		textures.push_back(tex);
 	}
 
 	for (std::size_t i = 0; i < dir.size(); i++) {
@@ -119,6 +135,7 @@ void TFAmbientTextureLayer::setup(int canvasW_, int canvasH_, const std::string&
 		}
 	}
 
+	loaded = true;
 	ofLogNotice("TFAmbientTextureLayer") << "loaded " << textures.size() << " background texture(s) from " << folderPath;
 }
 

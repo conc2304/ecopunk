@@ -147,6 +147,15 @@ void ExperienceRuntime::setup() {
 	sceneManager_.setup(services);        // sets up the startup scene only
 	sceneManager_.activateScene();        // caches SceneCapabilities exactly once here
 
+	// Temporal's immutable ambient textures are prepared here, once, before
+	// the first frame — not on the first switch into Temporal, where loading
+	// them froze the runtime for ~1.6 s. Scene setup/activation stay lazy and
+	// unchanged (SceneManager still sets Temporal up on first use).
+	if (productionScenesInstalled_) {
+		RT004_SCOPE("Temporal.prepareImmutableAssets");
+		temporalScene_.prepareImmutableAssets();
+	}
+
 	glm::ivec2 nativeSize = sceneManager_.activeSceneNativeRenderSize();
 	sceneFbo_.allocate(nativeSize.x, nativeSize.y, GL_RGBA);
 	presentationCounters_.sceneFboAllocations++;

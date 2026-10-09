@@ -14,6 +14,7 @@
 #include "ParitySoakHarness.h"
 #include "ResumeWindowHarness.h"
 #include "CadenceHarness.h"
+#include "TemporalWarmHarness.h"
 #include "TemporalLifecycleHarness.h"
 #include "TwoSceneAcceptanceHarness.h"
 
@@ -61,5 +62,6 @@ private:
 	std::unique_ptr<ParitySoakHarness> paritySoakHarness; // three-scene production-parity soak
 	std::unique_ptr<ResumeWindowHarness> resumeWindowHarness; // Shared Video long-clip resume windows
 	std::unique_ptr<CadenceHarness> cadenceHarness; // Blueprint cycle-driven media cadence
+	std::unique_ptr<TemporalWarmHarness> temporalWarmHarness; // Temporal first-activation stall
 	std::unique_ptr<Rt004StallDriver> stallDriver; // RT-004 diagnostic, normal path only
 };

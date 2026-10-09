@@ -15,9 +15,7 @@ void TemporalSceneCore::setup(TimeOffsetVideoBuffer* buffer, int canvasW, int ca
 	shaderLib_.setup();
 	}
 
-	{ RT004_SCOPE("TemporalCore.setup.ambientTextures");
-	ambientTextures_.setup(canvasW_, canvasH_, "backgrounds");
-	}
+	prepareImmutableAssets(canvasW_, canvasH_); // no-op if the host preloaded them
 
 	{ RT004_SCOPE("TemporalCore.setup.backgroundLayer");
 	backgroundLayer_.setup(buffer_, &shaderLib_, "backgrounds", canvasW_, canvasH_, params_.getBackgroundParams());
@@ -52,6 +50,12 @@ void TemporalSceneCore::setup(TimeOffsetVideoBuffer* buffer, int canvasW, int ca
 	applyParameters(); // composition transition params + buffer settings, same as every update()
 
 	didSetup_ = true;
+}
+
+void TemporalSceneCore::prepareImmutableAssets(int canvasW, int canvasH) {
+	if (ambientTextures_.isLoaded()) return;
+	RT004_SCOPE("TemporalCore.setup.ambientTextures");
+	ambientTextures_.setup(canvasW, canvasH, "backgrounds");
 }
 
 void TemporalSceneCore::activate() {

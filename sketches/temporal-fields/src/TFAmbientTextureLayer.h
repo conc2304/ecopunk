@@ -58,6 +58,16 @@ class TFAmbientTextureLayer {
 		// Missing/unreadable/unmatched files are logged and skipped, never
 		// fatal.
 		void setup(int canvasW, int canvasH, const std::string& folderPath);
+		bool isLoaded() const { return loaded; }
+
+		// Resource reporting: decoded CPU pixel bytes held by tint + mask
+		// images (the GL textures hold roughly the same again).
+		size_t textureCount() const { return textures.size(); }
+		size_t pixelBytes() const {
+			size_t total = 0;
+			for (const auto& t : textures) total += t.tint.getPixels().getTotalBytes() + t.mask.getPixels().getTotalBytes();
+			return total;
+		}
 
 		// drawLayer() derives every draw rect from canvasW/canvasH fresh
 		// each call, so this is the only state a resize needs to update.
@@ -77,6 +87,7 @@ class TFAmbientTextureLayer {
 		void drawLayer(TFBackgroundTexture::Layer layer) const;
 
 		std::vector<TFBackgroundTexture> textures;
+		bool loaded = false;
 		ofParameterGroup group;
 		int canvasW = 0;
 		int canvasH = 0;
