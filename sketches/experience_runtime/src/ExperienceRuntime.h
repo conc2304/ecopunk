@@ -121,6 +121,7 @@ public:
 	// instead of the harness hardcoding a rectangle that only matched
 	// HudCompositorStub's old, unrelated placement logic.
 	const HudCompositorBridge& hudCompositorBridgeForTesting() const { return hudCompositorBridge_; }
+	HudCompositorBridge& hudCompositorBridgeMutableForTesting() { return hudCompositorBridge_; } // SkinLoaderHarness
 
 	// Architecture-Closure Session: HUD-ONLY allocation delta, isolated
 	// from the whole-process AllocationCounter measurement

@@ -149,6 +149,18 @@ public:
 
 	const MediaViewportMesh& mediaViewportMesh() const { return mediaViewportMesh_; }
 
+	// HUD-004 first shell-only loader seam. A non-owning pointer to the
+	// active skin's full-canvas shell texture (1280x720, straight-alpha
+	// RGBA8), or nullptr for the functional wireframe (the default, and the
+	// only state the Validation Studio path ever uses). draw() composites it
+	// directly after MediaViewportMesh and before every widget/overlay
+	// binding — spec §4 order: mesh-clipped scene, shell, runtime widgets,
+	// runtime overlays — using source-over for straight alpha. The owner
+	// (HudCompositorBridge's skin loader) must clear or replace this pointer
+	// before releasing the texture. No skin-ID logic lives here.
+	void setShellTexture(const ofTexture* shell) { shellTexture_ = shell; }
+	const ofTexture* shellTexture() const { return shellTexture_; }
+
 	struct FrameStats {
 		int activeWidgetCount = 0;
 		int historySignalCount = 0;
@@ -205,6 +217,7 @@ private:
 	// Production-path-only state (populated by update(HudFrameData) —
 	// stays at defaults for the fake/Studio path).
 	const ofTexture* currentSceneTexture_ = nullptr; // non-owning, valid only for the frame that supplied it — see SceneFrame's own lifetime rule
+	const ofTexture* shellTexture_ = nullptr; // non-owning — see setShellTexture()
 	glm::ivec2 currentSceneNativeSize_{0, 0};
 	uint64_t lastObservedFrameNumber_ = 0;
 	bool haveObservedFrameNumber_ = false;

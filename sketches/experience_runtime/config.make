@@ -156,6 +156,7 @@ PROJECT_CFLAGS = -I../../shared/src/scene -I../../shared/src/hud-runtime \
 	-I../../shared/src/hud-compositor \
 	-I../../shared/src/hud-compositor/widgets \
 	-I../blob-region-prototype/src \
+	-I../../tools/hud-skin-manifest \
 	-ffunction-sections -fdata-sections
 
 ################################################################################

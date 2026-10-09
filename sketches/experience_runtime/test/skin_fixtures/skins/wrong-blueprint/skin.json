@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "skinId": "wrong-blueprint",
+  "displayName": "x",
+  "skinVersion": "0.0.1",
+  "blueprintId": "hud-blueprint-v1",
+  "blueprintVersion": 1,
+  "assets": {
+    "shell": {
+      "path": "shell.png",
+      "required": true,
+      "coordinateSpace": "canvas",
+      "expectedWidth": 1280,
+      "expectedHeight": 720
+    }
+  }
+}

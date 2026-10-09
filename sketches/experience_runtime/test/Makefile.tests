@@ -80,14 +80,33 @@ TEMPORAL_SEMANTIC_BIN = temporal_semantic_mapping_tests
 SCENE_SWITCH_SRC = scene_switch_controller_tests.cpp
 SCENE_SWITCH_BIN = scene_switch_controller_tests
 
-.PHONY: test session2 clean
+# HUD-004 first shell-only loader: HudSkinPng + HudSkinLoader (OF-free) linked
+# against the ACCEPTED validator in tools/hud-skin-manifest/ (the same .cpp the
+# app build reaches through its src/ symlink) and nlohmann/json.hpp, which
+# openFrameworks ships header-only in libs/json/include — no OF/GL linkage.
+SKIN_LOADER_CXXFLAGS = $(CXXFLAGS) \
+	-I../../../tools/hud-skin-manifest \
+	-I../../../../../../libs/json/include \
+	-DHUD_SKIN_TEST_FIXTURE_DIR='"$(abspath skin_fixtures)"'
+SKIN_LOADER_SRC = hud_skin_loader_tests.cpp ../src/HudSkinLoader.cpp ../src/HudSkinPng.cpp \
+	../../../tools/hud-skin-manifest/HudSkinManifest.cpp
+SKIN_LOADER_BIN = hud_skin_loader_tests
 
-test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(SCENE_SWITCH_BIN)
+.PHONY: test session2 skin clean
+
+test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN)
 	./$(LIFECYCLE_BIN)
 	./$(SESSION2_BIN)
 	./$(BLOB_SEMANTIC_BIN)
 	./$(TEMPORAL_SEMANTIC_BIN)
 	./$(SCENE_SWITCH_BIN)
+	./$(SKIN_LOADER_BIN)
+
+skin: $(SKIN_LOADER_BIN)
+	./$(SKIN_LOADER_BIN)
+
+$(SKIN_LOADER_BIN): $(SKIN_LOADER_SRC) ../src/HudSkinLoader.h ../src/HudSkinPng.h ../../../tools/hud-skin-manifest/HudSkinManifest.h
+	$(CXX) $(SKIN_LOADER_CXXFLAGS) $(SKIN_LOADER_SRC) -o $(SKIN_LOADER_BIN)
 
 session2: $(SESSION2_BIN)
 	./$(SESSION2_BIN)
@@ -108,4 +127,4 @@ $(SCENE_SWITCH_BIN): $(SCENE_SWITCH_SRC) ../src/SceneSwitchController.h
 	$(CXX) $(CXXFLAGS) $(SCENE_SWITCH_SRC) -o $(SCENE_SWITCH_BIN)
 
 clean:
-	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(SCENE_SWITCH_BIN)
+	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN)

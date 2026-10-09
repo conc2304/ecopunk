@@ -1,5 +1,7 @@
 #include "HudCompositorBridge.h"
 
+#include "ofLog.h"
+
 void HudCompositorBridge::setup() {
 	// The one and only canonical canvas size — see this class's header
 	// comment for why no destRect/scale step is needed downstream.
@@ -26,4 +28,51 @@ void HudCompositorBridge::draw() const {
 	drawCallCount_++;
 	if (!visible_) return;
 	renderer_.draw();
+}
+
+void HudCompositorBridge::configureSkins(const HudAssetPaths& paths,
+	const hudskin::SkinManifestValidationPolicy& expectedBlueprint) {
+	hudskin::SkinLoaderConfig config;
+	config.skinsRoot = paths.skinsRoot;
+	config.expectedBlueprint = expectedBlueprint;
+	skinLoader_.configure(std::move(config));
+}
+
+void HudCompositorBridge::setSkinsRootForTesting(const std::string& root) {
+	hudskin::SkinLoaderConfig config = skinLoader_.config();
+	config.skinsRoot = root;
+	skinLoader_.configure(std::move(config));
+}
+
+hudskin::SkinLoadOutcome HudCompositorBridge::requestSkin(const std::string& selection) {
+	// The renderer keeps drawing the currently active shell (or wireframe)
+	// throughout: the request is synchronous and nothing is drawn mid-call,
+	// and the loader only releases the previous texture AFTER the candidate
+	// is fully staged — syncShellTexture() then repoints the renderer before
+	// the next draw.
+	hudskin::SkinLoadOutcome outcome = skinLoader_.requestSkin(selection);
+	syncShellTexture();
+
+	const std::string active = outcome.activeSkinIdAfter ? *outcome.activeSkinIdAfter : std::string("none (wireframe)");
+	if (outcome.activated) {
+		ofLogNotice("HudSkin") << "activated '" << selection << "'"
+			<< (outcome.releasedPrevious ? " (previous skin released)" : "")
+			<< "; peak GPU " << outcome.peakGpuBytesDuringRequest << " B, steady " << skinLoader_.steadyGpuBytes() << " B";
+	} else {
+		ofLogWarning("HudSkin") << "rejected '" << selection << "' at stage " << hudskin::stageName(outcome.stage)
+			<< " [" << outcome.code << "]" << (outcome.asset.empty() ? "" : " asset=" + outcome.asset)
+			<< ": " << outcome.detail << "; active: " << active
+			<< (outcome.retainedPreviousActive ? " (retained)" : "");
+	}
+	return outcome;
+}
+
+void HudCompositorBridge::shutdownSkins() {
+	renderer_.setShellTexture(nullptr); // stop referencing before release
+	skinLoader_.shutdown();
+}
+
+void HudCompositorBridge::syncShellTexture() {
+	const auto& active = skinLoader_.active();
+	renderer_.setShellTexture(active ? skinBackend_.texture(active->handle) : nullptr);
 }

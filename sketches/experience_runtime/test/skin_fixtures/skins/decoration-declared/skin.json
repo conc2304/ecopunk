@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "skinId": "decoration-declared",
+  "displayName": "x",
+  "skinVersion": "0.0.1",
+  "blueprintId": "ecopunk-hud-blueprint",
+  "blueprintVersion": 1,
+  "assets": {
+    "shell": {
+      "path": "shell.png",
+      "required": true,
+      "coordinateSpace": "canvas",
+      "expectedWidth": 1280,
+      "expectedHeight": 720
+    },
+    "decoration": {
+      "path": "decoration.png",
+      "required": false,
+      "coordinateSpace": "canvas",
+      "expectedWidth": 1280,
+      "expectedHeight": 720
+    }
+  }
+}

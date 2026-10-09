@@ -2,6 +2,7 @@
 
 #include "HudFormattingService.h"
 
+#include "ofGraphics.h"
 #include "ofUtils.h"
 
 #include <algorithm>
@@ -367,6 +368,20 @@ void HudWireframeRenderer::draw() const {
 		params.bounds = pixelBoundsFor("media_viewport");
 		mediaViewportMesh_.updateGeometry(params, currentSceneNativeSize_);
 		mediaViewportMesh_.draw(currentSceneTexture_, ofColor(20, 26, 24, 255));
+	}
+
+	// HUD-004 shell layer — after the mesh-clipped scene, before every
+	// widget/overlay binding below (see setShellTexture()). Straight-alpha
+	// source-over: OF_BLENDMODE_ALPHA = GL_FUNC_ADD with GL_SRC_ALPHA /
+	// GL_ONE_MINUS_SRC_ALPHA in both OF renderers. Untinted (white) so the
+	// sampled texel colour and alpha pass through unchanged. Full canvas,
+	// canonical 1280x720 coordinates — the same space every region uses.
+	if (shellTexture_ != nullptr && shellTexture_->isAllocated()) {
+		ofPushStyle();
+		ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+		ofSetColor(255, 255, 255, 255);
+		shellTexture_->draw(0.0f, 0.0f, canvasWidth_, canvasHeight_);
+		ofPopStyle();
 	}
 
 	stats_ = FrameStats{};

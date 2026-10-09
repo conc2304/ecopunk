@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "skinId": "fixture-shell-proof",
+  "displayName": "Shell Loader Proof Fixture (TEST ONLY - not production art)",
+  "skinVersion": "0.0.1",
+  "blueprintId": "ecopunk-hud-blueprint",
+  "blueprintVersion": 1,
+  "assets": {
+    "shell": {
+      "path": "shell.png",
+      "required": true,
+      "coordinateSpace": "canvas",
+      "expectedWidth": 1280,
+      "expectedHeight": 720
+    }
+  }
+}

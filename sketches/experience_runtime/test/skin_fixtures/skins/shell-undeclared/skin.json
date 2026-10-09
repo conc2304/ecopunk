@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "skinId": "shell-undeclared",
+  "displayName": "x",
+  "skinVersion": "0.0.1",
+  "blueprintId": "ecopunk-hud-blueprint",
+  "blueprintVersion": 1,
+  "assets": {}
+}

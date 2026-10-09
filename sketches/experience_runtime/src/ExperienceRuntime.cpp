@@ -8,6 +8,8 @@
 #include "ofGraphics.h"
 #include "ofLog.h"
 
+#include <cstdlib> // std::getenv (EXPERIENCE_RUNTIME_HUD_SKIN)
+
 ExperienceRuntime::ExperienceRuntime()
 	: blobScene_(runtimeServices_.video())
 	, temporalScene_(runtimeServices_.video()) {
@@ -117,6 +119,30 @@ void ExperienceRuntime::setup() {
 	// the canonical 1280x720 canvas (see HudCompositorBridge's own header
 	// comment for why the window is already sized to match this exactly).
 	hudCompositorBridge_.setup();
+
+	// HUD-004 first shell-only skin loader. HUD asset paths reach the
+	// compositor through HudAssetPaths, never SceneServices (Scene/HUD
+	// Contract v1 §12), resolved the same host-relative way as
+	// sharedMediaRoot above. The expected Blueprint pair is supplied
+	// explicitly by this caller — the frozen HUD-006 identity (DEC-019) —
+	// because the validator deliberately has no default.
+	{
+		HudAssetPaths hudPaths;
+		hudPaths.skinsRoot = ofToDataPath("../../../../assets/hud/skins", true);
+		hudskin::SkinManifestValidationPolicy expected;
+		expected.expectedBlueprintId = "ecopunk-hud-blueprint";
+		expected.expectedBlueprintVersion = 1u;
+		hudCompositorBridge_.configureSkins(hudPaths, expected);
+
+		// Setup-time selection only (spec §5: no live skin-switching UI).
+		// Unset → functional wireframe, exactly as before this increment.
+		const char* skin = std::getenv("EXPERIENCE_RUNTIME_HUD_SKIN");
+		if (skin != nullptr && skin[0] != '\0') {
+			hudCompositorBridge_.requestSkin(skin);
+		} else {
+			ofLogNotice("HudSkin") << "no HUD skin selected (EXPERIENCE_RUNTIME_HUD_SKIN unset): functional wireframe";
+		}
+	}
 
 	didSetup_ = true;
 }
@@ -275,6 +301,7 @@ void ExperienceRuntime::draw() {
 }
 
 void ExperienceRuntime::exit() {
+	hudCompositorBridge_.shutdownSkins(); // release skin textures while the GL context is alive
 	sceneManager_.deactivateScene();
 	sceneManager_.shutdown(); // every registered scene that was ever set up
 	runtimeServices_.shutdown();

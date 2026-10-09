@@ -40,6 +40,12 @@ void ofApp::setup() {
 	// RT-002: lowest priority; always starts in Blob (deterministic startup).
 	bool acceptanceRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
 		&& !temporalLifecycleRequested && !switchHarnessRequested && TwoSceneAcceptanceHarness::isRequested();
+	// HUD-004 first shell loader proof: lowest priority; runs with the normal
+	// installed production scene (Blob by default) so the live scene is
+	// visible through the shell — see SkinLoaderHarness.h.
+	bool skinHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& SkinLoaderHarness::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
 		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
@@ -72,6 +78,8 @@ void ofApp::setup() {
 		switchHarness = std::make_unique<SceneSwitchHarness>(runtime);
 	} else if (acceptanceRequested) {
 		acceptanceHarness = std::make_unique<TwoSceneAcceptanceHarness>(runtime);
+	} else if (skinHarnessRequested) {
+		skinHarness = std::make_unique<SkinLoaderHarness>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
 		stallDriver = std::make_unique<Rt004StallDriver>(runtime);
 	}
@@ -99,6 +107,9 @@ void ofApp::update() {
 	if (harness) {
 		harness->step(ofGetLastFrameTime());
 	}
+	if (skinHarness) {
+		skinHarness->step(ofGetLastFrameTime());
+	}
 	if (blobHarness) {
 		blobHarness->step(ofGetLastFrameTime());
 	}
@@ -118,7 +129,7 @@ void ofApp::update() {
 
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness) {
 		runtime.draw();
 	}
 	// When a harness is active, it drives runtime.draw() itself (see

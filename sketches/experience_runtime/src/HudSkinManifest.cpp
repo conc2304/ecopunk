@@ -1,0 +1,1 @@
+../../../tools/hud-skin-manifest/HudSkinManifest.cpp

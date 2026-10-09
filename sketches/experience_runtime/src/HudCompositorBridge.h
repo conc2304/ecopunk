@@ -1,7 +1,18 @@
 #pragma once
 
 #include "HudFrameData.h"
+#include "HudSkinLoader.h"
+#include "HudSkinOfImageBackend.h"
 #include "HudWireframeRenderer.h"
+
+#include <string>
+
+// Scene/HUD Contract v1 §12: HUD asset paths reach the HudCompositor from
+// ExperienceRuntime through their own object, never through SceneServices.
+// HUD-004 first loader needs exactly one path; nothing else is added here.
+struct HudAssetPaths {
+	std::string skinsRoot; // canonical: <repo>/assets/hud/skins
+};
 
 // HudCompositorBridge — Engineering Session 2's replacement for
 // HudCompositorStub (see that class's own header comment, now marked
@@ -69,8 +80,33 @@ public:
 	// single-call-site code inspection alone.
 	uint64_t drawCallCount() const { return drawCallCount_; }
 
+	// -- HUD-004 skin packages (first shell-only loader) -----------------------
+	// Configure once at setup: where packages live and the CALLER-supplied
+	// expected Blueprint pair (the validator has no default).
+	void configureSkins(const HudAssetPaths& paths, const hudskin::SkinManifestValidationPolicy& expectedBlueprint);
+
+	// Validate → decode → stage → atomically activate one package. On any
+	// failure the current presentation (active skin, or wireframe) is kept
+	// and the candidate is released. Logs a one-line diagnostic.
+	hudskin::SkinLoadOutcome requestSkin(const std::string& selection);
+
+	// Releases all skin GPU resources; the HUD returns to wireframe. Call
+	// while the GL context is still alive (ExperienceRuntime::exit()).
+	void shutdownSkins();
+
+	// Inspection / harness surface.
+	const hudskin::HudSkinLoader& skinLoader() const { return skinLoader_; }
+	const HudSkinOfImageBackend& skinBackend() const { return skinBackend_; }
+	HudSkinOfImageBackend& skinBackendForTesting() { return skinBackend_; }
+	void setSkinsRootForTesting(const std::string& root);
+
 private:
+	void syncShellTexture();
+
 	hudpresent::HudWireframeRenderer renderer_;
 	bool visible_ = true;
 	mutable uint64_t drawCallCount_ = 0;
+
+	HudSkinOfImageBackend skinBackend_;
+	hudskin::HudSkinLoader skinLoader_{skinBackend_};
 };
