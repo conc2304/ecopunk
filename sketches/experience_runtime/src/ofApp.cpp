@@ -46,6 +46,10 @@ void ofApp::setup() {
 	bool skinHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
 		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
 		&& SkinLoaderHarness::isRequested();
+	// HUD Art reference export (tooling): lowest priority, normal production scene.
+	bool artExportRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && HudArtReferenceExporter::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
 		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
@@ -80,6 +84,8 @@ void ofApp::setup() {
 		acceptanceHarness = std::make_unique<TwoSceneAcceptanceHarness>(runtime);
 	} else if (skinHarnessRequested) {
 		skinHarness = std::make_unique<SkinLoaderHarness>(runtime);
+	} else if (artExportRequested) {
+		artExporter = std::make_unique<HudArtReferenceExporter>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
 		stallDriver = std::make_unique<Rt004StallDriver>(runtime);
 	}
@@ -110,6 +116,9 @@ void ofApp::update() {
 	if (skinHarness) {
 		skinHarness->step(ofGetLastFrameTime());
 	}
+	if (artExporter) {
+		artExporter->step(ofGetLastFrameTime());
+	}
 	if (blobHarness) {
 		blobHarness->step(ofGetLastFrameTime());
 	}
@@ -129,7 +138,7 @@ void ofApp::update() {
 
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter) {
 		runtime.draw();
 	}
 	// When a harness is active, it drives runtime.draw() itself (see
