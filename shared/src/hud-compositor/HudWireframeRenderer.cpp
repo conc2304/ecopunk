@@ -71,7 +71,9 @@ const std::unordered_set<std::string>& livingHudRegions() {
 
 } // namespace
 
-HudWireframeRenderer::HudWireframeRenderer() : compiler_(regions_, vocabulary_) {}
+HudWireframeRenderer::HudWireframeRenderer() : compiler_(regions_, vocabulary_) {
+	realResolver_.setVocabulary(&vocabulary_);
+}
 
 void HudWireframeRenderer::setup(float canvasWidth, float canvasHeight) {
 	canvasWidth_ = canvasWidth;

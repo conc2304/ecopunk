@@ -59,6 +59,11 @@ void ofApp::setup() {
 		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
 		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested
 		&& BlueprintRosterHarness::isRequested();
+	// Blueprint HUD integration check: lowest priority; default roster, startup Blob.
+	bool blueprintHudHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& BlueprintHudHarness::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
 		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
@@ -109,6 +114,8 @@ void ofApp::setup() {
 		focusHarness = std::make_unique<FocusMenuHarness>(runtime);
 	} else if (blueprintHarnessRequested) {
 		blueprintHarness = std::make_unique<BlueprintRosterHarness>(runtime);
+	} else if (blueprintHudHarnessRequested) {
+		blueprintHudHarness = std::make_unique<BlueprintHudHarness>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
 		stallDriver = std::make_unique<Rt004StallDriver>(runtime);
 	}
@@ -148,6 +155,9 @@ void ofApp::update() {
 	if (blueprintHarness) {
 		blueprintHarness->step(ofGetLastFrameTime());
 	}
+	if (blueprintHudHarness) {
+		blueprintHudHarness->step(ofGetLastFrameTime());
+	}
 	if (blobHarness) {
 		blobHarness->step(ofGetLastFrameTime());
 	}
@@ -167,7 +177,7 @@ void ofApp::update() {
 
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness) {
 		runtime.draw();
 	}
 	// When a harness is active, it drives runtime.draw() itself (see

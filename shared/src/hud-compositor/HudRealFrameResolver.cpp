@@ -91,8 +91,15 @@ HudIdentifierList allActiveEffectIds(const videoeffects::EffectActivityStatus& s
 // now, live at different access paths (frame.media vs frame.media->...)
 // and sharing a template/overload here would cost more clarity than the
 // ~8 lines it would save.
-HudResolvedValue resolveMediaTitle(const VideoPlaybackStatus& media) {
-	if (media.titleId && !media.titleId->empty()) {
+HudResolvedValue resolveMediaTitle(const VideoPlaybackStatus& media, const HudVocabularyResolver* vocabulary,
+	const std::string& sceneId) {
+	// A synthesized titleId ("media.title.media.auto.<hash>") never has a
+	// vocabulary entry until a curator authors one; with a vocabulary
+	// attached, skip it in that case rather than letting the formatter's
+	// stable-ID tier print the raw key.
+	const bool titleResolves = media.titleId && !media.titleId->empty()
+		&& (vocabulary == nullptr || vocabulary->resolvedThroughVocabulary(sceneId, *media.titleId));
+	if (titleResolves) {
 		return HudResolvedValue::identifier(*media.titleId);
 	}
 	if (media.fallbackDisplayTitle && !media.fallbackDisplayTitle->empty()) {
@@ -202,7 +209,7 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 	}
 	if (sourceId == "media.title") {
 		if (!frame.video) return HudResolvedValue::missing(HudSourceValueType::Identifier, HudDataClass::Literal);
-		return resolveMediaTitle(*frame.video);
+		return resolveMediaTitle(*frame.video, vocabulary_, frame.sceneManager.activeSceneId);
 	}
 	if (sourceId == "media.playback.progress") {
 		if (!frame.video || !frame.video->playbackProgress) return HudResolvedValue::missing(HudSourceValueType::Ratio, HudDataClass::Normalized);

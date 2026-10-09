@@ -32,7 +32,8 @@
 // ============================================================================
 
 #include "HudDataTypes.h"
-#include "HudSourceResolver.h" // for the shared static canonical-ID table
+#include "HudSourceResolver.h"
+#include "HudVocabularyResolver.h" // for the shared static canonical-ID table
 
 #include "HudFrameData.h" // real, shared/src/hud-runtime/ — OF-dependent transitively (SceneContract.h -> ofTexture.h)
 
@@ -59,12 +60,21 @@ public:
 	void setActiveEffectsCompatibilityFallbackEnabled(bool enabled) { compatibilityFallbackEnabled_ = enabled; }
 	bool activeEffectsCompatibilityFallbackEnabled() const { return compatibilityFallbackEnabled_; }
 
+	// Non-owning. When set, media.title only reports VideoPlaybackStatus::
+	// titleId if that ID actually resolves through this vocabulary;
+	// otherwise it falls through to fallbackDisplayTitle, then mediaId —
+	// the documented order (MediaCatalog.cpp synthesizeTitleId(): "titleId
+	// vocabulary -> catalog fallback -> stable media ID"). Unset keeps the
+	// vocabulary-blind behavior (titleId always wins).
+	void setVocabulary(const HudVocabularyResolver* vocabulary) { vocabulary_ = vocabulary; }
+
 private:
 	std::optional<HudResolvedValue> resolveCanonical(const std::string& sourceId, const HudFrameData& frame) const;
 	std::optional<HudResolvedValue> resolveSceneMetric(const std::string& sourceId, const HudFrameData& frame) const;
 	std::optional<HudResolvedValue> resolveEffects(const std::string& sourceId, const HudFrameData& frame) const;
 
 	bool compatibilityFallbackEnabled_ = false;
+	const HudVocabularyResolver* vocabulary_ = nullptr;
 };
 
 } // namespace hudpresent

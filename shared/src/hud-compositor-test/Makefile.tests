@@ -112,7 +112,10 @@ REAL_SRC = \
 	hud_real_frame_tests.cpp \
 	$(HUD_SRC_DIR)/HudRealFrameResolver.cpp \
 	$(HUD_SRC_DIR)/HudSourceResolver.cpp \
+	$(HUD_SRC_DIR)/HudVocabularyResolver.cpp \
 	../video-effects/knowledge/EffectActivityStatus.cpp
+# ^ HudVocabularyResolver.cpp: media.title consults an attached vocabulary
+# (HudRealFrameResolver::setVocabulary()) to skip an unresolvable titleId.
 # ^ EffectActivityStatus.cpp added alongside the REAL_CXXFLAGS include-path
 # change above (same Architecture-Closure reason): HudRealFrameResolver.cpp
 # now CALLS videoeffects::resolveDominantEffectIds() (DEC-015's canonical

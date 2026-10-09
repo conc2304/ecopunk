@@ -10,6 +10,7 @@
 #include "HudArtReferenceExporter.h"
 #include "FocusMenuHarness.h"
 #include "BlueprintRosterHarness.h"
+#include "BlueprintHudHarness.h"
 #include "TemporalLifecycleHarness.h"
 #include "TwoSceneAcceptanceHarness.h"
 
@@ -53,5 +54,6 @@ private:
 	std::unique_ptr<HudArtReferenceExporter> artExporter; // HUD Art reference PNG export (tooling)
 	std::unique_ptr<FocusMenuHarness> focusHarness; // Playable HUD Menu v0.1 demonstration
 	std::unique_ptr<BlueprintRosterHarness> blueprintHarness; // BLUE-001 roster/switch verification
+	std::unique_ptr<BlueprintHudHarness> blueprintHudHarness; // HUD check with Blueprint as third scene
 	std::unique_ptr<Rt004StallDriver> stallDriver; // RT-004 diagnostic, normal path only
 };

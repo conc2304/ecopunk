@@ -200,6 +200,49 @@ void test_real_media_title_fallback_chain() {
 	}
 }
 
+// With a vocabulary attached (the production renderer's wiring), an
+// unresolvable titleId — e.g. MediaCatalog's synthesized
+// "media.title.media.auto.<hash>" — falls through to fallbackDisplayTitle
+// instead of surfacing the raw key; a resolvable one still wins.
+void test_real_media_title_skips_unresolvable_title_id() {
+	HudVocabularyResolver vocabulary;
+	HudRealFrameResolver resolver;
+	resolver.setVocabulary(&vocabulary);
+	{
+		HudFrameData frame = makeMinimalRealFrame();
+		VideoPlaybackStatus video;
+		video.titleId = "media.title.media.auto.1f0329b7";
+		video.fallbackDisplayTitle = "ElectricLightning Storm";
+		video.mediaId = "media.auto.1f0329b7";
+		frame.video = video;
+		auto title = resolver.resolve("media.title", frame);
+		HUD_CHECK(title && title->present);
+		HUD_CHECK(title->valueType == HudSourceValueType::Text);
+		HUD_CHECK_EQ_STR(title->textValue, "ElectricLightning Storm");
+	}
+	{
+		HudFrameData frame = makeMinimalRealFrame();
+		VideoPlaybackStatus video;
+		video.titleId = "media.sample_01"; // registered canonical vocabulary key
+		video.fallbackDisplayTitle = "Some Fallback";
+		frame.video = video;
+		auto title = resolver.resolve("media.title", frame);
+		HUD_CHECK(title && title->present);
+		HUD_CHECK(title->valueType == HudSourceValueType::Identifier);
+		HUD_CHECK_EQ_STR(title->textValue, "media.sample_01");
+	}
+	{
+		HudFrameData frame = makeMinimalRealFrame();
+		VideoPlaybackStatus video;
+		video.titleId = "media.title.media.auto.deadbeef";
+		video.mediaId = "media.auto.deadbeef"; // no fallback title -> stable media ID
+		frame.video = video;
+		auto title = resolver.resolve("media.title", frame);
+		HUD_CHECK(title && title->present);
+		HUD_CHECK_EQ_STR(title->textValue, "media.auto.deadbeef");
+	}
+}
+
 void test_real_media_selection_manual_derivation() {
 	HudRealFrameResolver resolver;
 	HudFrameData frame = makeMinimalRealFrame();
@@ -579,6 +622,7 @@ int main() {
 	test_real_semantic_present_vs_absent();
 	test_real_metric_lookup();
 	test_real_media_title_fallback_chain();
+	test_real_media_title_skips_unresolvable_title_id();
 	test_real_media_selection_manual_derivation();
 	test_real_control_availability_derivation();
 	test_real_effects_absent_snapshot();
