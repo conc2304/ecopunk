@@ -1,6 +1,9 @@
 #include "TemporalWarmHarness.h"
 
 #include "ofAppRunner.h"
+#include "ofFbo.h"
+#include "ofGLUtils.h"
+#include "ofGraphics.h"
 #include "ofLog.h"
 #include "ofUtils.h"
 
@@ -55,6 +58,45 @@ TemporalWarmHarness::TemporalWarmHarness(ExperienceRuntime& runtime) : runtime_(
 		", count=" + ofToString(ambient.textureCount()) + ", decoded pixel bytes=" +
 		ofToString(ambient.pixelBytes() / (1024.0 * 1024.0), 1) + " MB, Temporal scene set up yet=" +
 		(temporal.coreForTesting().didSetup() ? "yes" : "no") + ", resident " + ofToString(residentMegabytes(), 0) + " MB");
+	ambientHashAtStartup_ = ambientRenderCheck("startup");
+}
+
+std::string TemporalWarmHarness::ambientRenderCheck(const std::string& when) {
+	TemporalProductionScene& temporal = runtime_.temporalSceneForTesting();
+	TFAmbientTextureLayer& ambient = temporal.coreForTesting().ambientTextures();
+	const glm::ivec2 size = temporal.nativeRenderSize();
+	ofFbo fbo;
+	fbo.allocate(size.x, size.y, GL_RGBA);
+	const bool fboOk = fbo.checkStatus();
+	fbo.begin();
+	ofClear(128, 128, 128, 255);
+	ambient.drawUnderlay();
+	ambient.drawOverlay();
+	fbo.end();
+	ofPixels px;
+	fbo.readToPixels(px);
+	uint64_t hash = 1469598103934665603ULL;
+	size_t changed = 0;
+	const unsigned char* d = px.getData();
+	const size_t channels = px.getNumChannels();
+	for (size_t i = 0; i < px.size(); i++) {
+		hash = (hash ^ d[i]) * 1099511628211ULL;
+		if (channels >= 3 && i % channels == 0 && (d[i] != 128 || d[i + 1] != 128 || d[i + 2] != 128)) changed++;
+	}
+	const size_t pixels = px.getWidth() * px.getHeight();
+	const std::string hex = ofToHex(hash);
+	note("[ambient " + when + "] residency=" + (ambient.residency() == TFAmbientTextureLayer::Residency::Bounded ? "bounded" : "legacy") +
+		" hash=" + hex + " changedPixels=" + ofToString(changed) + "/" + ofToString(pixels) +
+		" tintTextures=" + ofToString(ambient.residentTintTextures()) + " maskTextures=" + ofToString(ambient.residentMaskTextures()) +
+		" cpuMiB=" + ofToString(ambient.pixelBytes() / (1024.0 * 1024.0), 1) +
+		" gpuEstMiB=" + ofToString(ambient.gpuBytesEstimate() / (1024.0 * 1024.0), 1));
+	check("[ambient " + when + "] FBO complete", fboOk);
+	check("[ambient " + when + "] every ambient pair has a resident tint texture",
+		ambient.textureCount() > 0 && ambient.residentTintTextures() == ambient.textureCount(),
+		ofToString(ambient.residentTintTextures()) + "/" + ofToString(ambient.textureCount()));
+	check("[ambient " + when + "] ambient layers visibly drawn (not black/missing)", changed > pixels / 2,
+		ofToString(changed) + "/" + ofToString(pixels) + " pixels changed");
+	return hex;
 }
 
 void TemporalWarmHarness::check(const std::string& name, bool passed, const std::string& detail) {
@@ -149,6 +191,20 @@ void TemporalWarmHarness::finish() {
 		const double growth = residentMb_[5] - residentMb_[3];
 		check("no resident-memory growth across repeated Temporal activations (leg 4 -> leg 6 < 64 MB)", growth < 64.0,
 			ofToString(growth, 1) + " MB");
+	}
+	{
+		// Same ambient output after repeated Blob/Temporal/Blueprint switching
+		// (no stale/evicted/use-after-free texture), then prove a mask that
+		// is not eagerly resident can still be loaded on request.
+		const std::string endHash = ambientRenderCheck("after switching");
+		check("ambient output unchanged across the run", endHash == ambientHashAtStartup_, ambientHashAtStartup_ + " vs " + endHash);
+		TFAmbientTextureLayer& ambient = runtime_.temporalSceneForTesting().coreForTesting().ambientTextures();
+		const size_t masksBefore = ambient.residentMaskTextures();
+		const bool maskOk = ambient.ensureMaskLoaded(0);
+		check("mask reachable on demand (ensureMaskLoaded)", maskOk && ambient.residentMaskTextures() >= std::max<size_t>(masksBefore, 1),
+			"resident masks " + ofToString(masksBefore) + " -> " + ofToString(ambient.residentMaskTextures()));
+		const GLenum err = glGetError();
+		check("no GL error at end of run", err == GL_NO_ERROR, "0x" + ofToHex(static_cast<int>(err)));
 	}
 	note("RESULT: " + ofToString(passes_) + " passed, " + ofToString(failures_) + " failed");
 	std::ofstream out(ofToDataPath(std::string(kOutDir) + "/results.txt", true));

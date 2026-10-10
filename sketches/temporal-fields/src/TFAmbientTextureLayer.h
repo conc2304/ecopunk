@@ -33,7 +33,12 @@ struct TFBackgroundTexture {
 	ofBlendMode blendMode = OF_BLENDMODE_ALPHA;
 
 	ofImage tint;
-	ofImage mask; // loaded per spec; not yet composited -- reserved for a future per-pixel alpha-mask draw pass
+	// Not yet composited -- reserved for a future per-pixel alpha-mask draw
+	// pass. Under Residency::Bounded it is not decoded at setup (nothing
+	// samples it); TFAmbientTextureLayer::ensureMaskLoaded() loads it from
+	// maskPath on first request. The file always stays in the asset package.
+	ofImage mask;
+	std::string maskPath;
 
 	// 0..kMaxOpacity. Opacity lives here, at runtime, never baked into the
 	// PNG pixels -- prep_textures.sh intentionally leaves the source at
@@ -60,14 +65,33 @@ class TFAmbientTextureLayer {
 		void setup(int canvasW, int canvasH, const std::string& folderPath);
 		bool isLoaded() const { return loaded; }
 
-		// Resource reporting: decoded CPU pixel bytes held by tint + mask
-		// images (the GL textures hold roughly the same again).
+		// RT-004 Priority C. Legacy: every tint AND mask decoded and kept as
+		// CPU pixels + GL texture for the process lifetime. Bounded (default):
+		// the same 19 tint textures stay GPU-resident (every one is drawn
+		// every frame), but their CPU pixels are released once the texture is
+		// confirmed allocated (drawing only binds the texture), and masks --
+		// never sampled by any draw path -- are not decoded until
+		// ensureMaskLoaded() asks for one. Chosen once at setup by
+		// EXPERIENCE_RUNTIME_TEMPORAL_AMBIENT_RESIDENCY=legacy|bounded
+		// (verification/attribution toggle, not a user setting).
+		enum class Residency { Legacy, Bounded };
+		Residency residency() const { return residencyMode; }
+
+		// Lazily decodes + uploads texture `index`'s mask (main/GL thread
+		// only, like every other ambient GL call). Returns false if the
+		// index is out of range or the file cannot be loaded.
+		bool ensureMaskLoaded(size_t index);
+
+		// Resource reporting. CPU = decoded pixel bytes still held; GPU =
+		// estimate from texture dimensions x channels (a driver may pad RGB
+		// to 4 bytes/pixel -- see gpuBytesEstimate(true)).
 		size_t textureCount() const { return textures.size(); }
-		size_t pixelBytes() const {
-			size_t total = 0;
-			for (const auto& t : textures) total += t.tint.getPixels().getTotalBytes() + t.mask.getPixels().getTotalBytes();
-			return total;
-		}
+		size_t pixelBytes() const { return tintPixelBytes() + maskPixelBytes(); }
+		size_t tintPixelBytes() const;
+		size_t maskPixelBytes() const;
+		size_t residentTintTextures() const;
+		size_t residentMaskTextures() const;
+		size_t gpuBytesEstimate(bool padRgbToRgba = false) const;
 
 		// drawLayer() derives every draw rect from canvasW/canvasH fresh
 		// each call, so this is the only state a resize needs to update.
@@ -86,8 +110,12 @@ class TFAmbientTextureLayer {
 	private:
 		void drawLayer(TFBackgroundTexture::Layer layer) const;
 
+		// Never copied or reallocated after setup() (reserved up front): an
+		// ofImage copy re-creates its texture from its CPU pixels, which
+		// Residency::Bounded has released.
 		std::vector<TFBackgroundTexture> textures;
 		bool loaded = false;
+		Residency residencyMode = Residency::Bounded;
 		ofParameterGroup group;
 		int canvasW = 0;
 		int canvasH = 0;

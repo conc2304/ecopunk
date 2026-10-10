@@ -6,11 +6,100 @@
 #include "ofJson.h"
 #include "ofLog.h"
 #include "ofMath.h"
+#include "ofGLUtils.h"
+#include <cstdlib>
+#include <fstream>
+#if defined(__APPLE__)
+#include <mach/mach.h>
+#endif
+#if defined(__linux__)
+#include <unistd.h>
+#endif
+
+namespace {
+// Process resident set size in MiB, or -1 if unavailable. Diagnostic only:
+// RSS is not a GPU-memory measure (drivers may or may not mirror texture
+// storage into the process).
+double residentMiB() {
+#if defined(__APPLE__)
+	mach_task_basic_info_data_t info;
+	mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
+	if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>(&info), &count) == KERN_SUCCESS) {
+		return static_cast<double>(info.resident_size) / (1024.0 * 1024.0);
+	}
+#elif defined(__linux__)
+	std::ifstream statm("/proc/self/statm");
+	long pages = 0, residentPages = 0;
+	if (statm >> pages >> residentPages) {
+		return static_cast<double>(residentPages) * static_cast<double>(sysconf(_SC_PAGESIZE)) / (1024.0 * 1024.0);
+	}
+#endif
+	return -1.0;
+}
+
+size_t textureBytes(const ofImage& img, bool padRgbToRgba) {
+	const ofTexture& t = img.getTexture();
+	if (!t.isAllocated()) return 0;
+	const ofTextureData& d = t.getTextureData();
+	size_t channels = static_cast<size_t>(ofGetNumChannelsFromGLFormat(ofGetGLFormatFromInternal(d.glInternalFormat)));
+	if (padRgbToRgba && channels == 3) channels = 4;
+	return static_cast<size_t>(d.width) * static_cast<size_t>(d.height) * channels;
+}
+} // namespace
+
+size_t TFAmbientTextureLayer::tintPixelBytes() const {
+	size_t total = 0;
+	for (const auto& t : textures) total += t.tint.getPixels().getTotalBytes();
+	return total;
+}
+
+size_t TFAmbientTextureLayer::maskPixelBytes() const {
+	size_t total = 0;
+	for (const auto& t : textures) total += t.mask.getPixels().getTotalBytes();
+	return total;
+}
+
+size_t TFAmbientTextureLayer::residentTintTextures() const {
+	size_t n = 0;
+	for (const auto& t : textures) n += t.tint.getTexture().isAllocated() ? 1 : 0;
+	return n;
+}
+
+size_t TFAmbientTextureLayer::residentMaskTextures() const {
+	size_t n = 0;
+	for (const auto& t : textures) n += t.mask.getTexture().isAllocated() ? 1 : 0;
+	return n;
+}
+
+size_t TFAmbientTextureLayer::gpuBytesEstimate(bool padRgbToRgba) const {
+	size_t total = 0;
+	for (const auto& t : textures) total += textureBytes(t.tint, padRgbToRgba) + textureBytes(t.mask, padRgbToRgba);
+	return total;
+}
+
+bool TFAmbientTextureLayer::ensureMaskLoaded(size_t index) {
+	if (index >= textures.size()) return false;
+	TFBackgroundTexture& tex = textures[index];
+	if (tex.mask.getTexture().isAllocated()) return true;
+	RT004_SCOPE("TFAmbient.lazyLoad.mask");
+	if (!tex.mask.load(tex.maskPath)) {
+		ofLogWarning("TFAmbientTextureLayer") << "lazy mask load failed: " << tex.maskPath;
+		return false;
+	}
+	if (residencyMode == Residency::Bounded && tex.mask.getTexture().isAllocated()) tex.mask.getPixels().clear();
+	return true;
+}
 
 void TFAmbientTextureLayer::setup(int canvasW_, int canvasH_, const std::string& folderPath) {
 	canvasW = canvasW_;
 	canvasH = canvasH_;
 	group.setName("Background textures");
+
+	const char* residencyEnv = std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_AMBIENT_RESIDENCY");
+	residencyMode = (residencyEnv != nullptr && std::string(residencyEnv) == "legacy") ? Residency::Legacy : Residency::Bounded;
+	const bool bounded = residencyMode == Residency::Bounded;
+	const double rssBefore = residentMiB();
+	size_t tintPixelsKept = 0; // bounded: tints whose texture did not allocate keep their pixels
 
 	ofDirectory dir;
 	dir.allowExt("png");
@@ -73,12 +162,27 @@ void TFAmbientTextureLayer::setup(int canvasW_, int canvasH_, const std::string&
 			textures.pop_back();
 			continue;
 		}
-		bool maskOk;
-		{ RT004_SCOPE("TFAmbient.load.mask"); maskOk = tex.mask.load(maskPath); }
-		if (!maskOk) {
-			ofLogWarning("TFAmbientTextureLayer") << "failed to load mask image, skipping: " << maskPath;
-			textures.pop_back();
-			continue;
+		tex.maskPath = maskPath;
+		if (!bounded) {
+			bool maskOk;
+			{ RT004_SCOPE("TFAmbient.load.mask"); maskOk = tex.mask.load(maskPath); }
+			if (!maskOk) {
+				ofLogWarning("TFAmbientTextureLayer") << "failed to load mask image, skipping: " << maskPath;
+				textures.pop_back();
+				continue;
+			}
+		}
+		// Bounded: the pair still requires its mask file on disk (checked
+		// above), but nothing samples the mask, so it is not decoded here.
+		if (bounded) {
+			// Drawing only binds tint.getTexture() (ofImage::draw -> renderer
+			// -> texture); width/height are ofImage members, not read from the
+			// pixels. Release the CPU copy only once the texture exists.
+			if (tex.tint.getTexture().isAllocated()) {
+				tex.tint.getPixels().clear();
+			} else {
+				tintPixelsKept++;
+			}
 		}
 
 		std::string displayName = "unknown";
@@ -137,6 +241,21 @@ void TFAmbientTextureLayer::setup(int canvasW_, int canvasH_, const std::string&
 
 	loaded = true;
 	ofLogNotice("TFAmbientTextureLayer") << "loaded " << textures.size() << " background texture(s) from " << folderPath;
+
+	const GLenum glErr = glGetError(); // one check after the whole load, not per-frame polling
+	const double rssAfter = residentMiB();
+	auto mib = [](size_t b) { return ofToString(b / (1024.0 * 1024.0), 1); };
+	const std::string report = std::string("residency=") + (bounded ? "bounded" : "legacy")
+		+ " pairs=" + ofToString(textures.size())
+		+ " tintTextures=" + ofToString(residentTintTextures()) + " maskTextures=" + ofToString(residentMaskTextures())
+		+ " cpuTintMiB=" + mib(tintPixelBytes()) + " cpuMaskMiB=" + mib(maskPixelBytes())
+		+ " gpuEstMiB=" + mib(gpuBytesEstimate()) + " (rgb-padded " + mib(gpuBytesEstimate(true)) + ")"
+		+ " tintPixelsKept=" + ofToString(tintPixelsKept)
+		+ " rssBeforeMiB=" + ofToString(rssBefore, 0) + " rssAfterMiB=" + ofToString(rssAfter, 0)
+		+ " glError=0x" + ofToHex(static_cast<int>(glErr));
+	ofLogNotice("TFAmbientTextureLayer") << report;
+	rt004::Probe::get().note("temporal.ambientResidency", report);
+	if (glErr != GL_NO_ERROR) ofLogError("TFAmbientTextureLayer") << "GL error after ambient load: 0x" << ofToHex(static_cast<int>(glErr));
 }
 
 void TFAmbientTextureLayer::drawLayer(TFBackgroundTexture::Layer layer) const {

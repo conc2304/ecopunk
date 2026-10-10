@@ -36,6 +36,12 @@ private:
 	void onLegLive();
 	void onLegSettled();
 	void finish();
+	// RT-004 Priority C: draws ONLY the ambient underlay + overlay into an
+	// offscreen FBO over a mid-grey ground and returns an FNV-1a hash of the
+	// readback (identical across residency modes and across the run if the
+	// ambient artwork is unchanged); notes coverage/FBO status/resident counts.
+	std::string ambientRenderCheck(const std::string& when);
+	std::string ambientHashAtStartup_;
 
 	ExperienceRuntime& runtime_;
 	std::vector<Leg> legs_;
