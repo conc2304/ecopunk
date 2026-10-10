@@ -206,9 +206,29 @@ class TimeOffsetVideoBuffer {
 			PlayheadMotion motion = PlayheadMotion::HOLD;
 			ofTexture texture;
 			bool uploadedThisFrame = false;
+			uint64_t diagLastUploadGeneration = 0; // RT-004 Priority B diagnostic only
 		};
 
 		int offsetToHistoryIndex(float quantizedOffset) const;
+
+		// Priority B: bit-identical replacement for "copy decoder pixels,
+		// then ofPixels::resize() (nearest neighbour)" when building a
+		// history frame. ofPixels::resizeTo() recomputes the same source
+		// index (float accumulate + convert + per-byte channel lookup) for
+		// every byte of every frame although source/destination dimensions
+		// never change; this caches that mapping per dimension set and reads
+		// straight from the decoder's pixels. Returns false (caller uses the
+		// original path) for unsupported formats, an unallocated source, a
+		// mapping that cannot be proven identical, or when
+		// EXPERIENCE_RUNTIME_TEMPORAL_LEGACY_DOWNSCALE is set.
+		bool downscaleIntoHistoryFrame(const ofPixels& src, ofPixels& dst);
+		struct DownscaleMap {
+			size_t srcWidth = 0, srcHeight = 0, dstWidth = 0, dstHeight = 0, channels = 0;
+			std::vector<size_t> rowByteOffset; // per destination row
+			std::vector<size_t> colByteOffset; // per destination column
+			bool exact = false;                // integer mapping == OF's float mapping for every pixel
+		};
+		DownscaleMap downscaleMap;
 
 		// The only way history is ever reset. Clears the CPU history AND
 		// releases every playhead's GPU texture, so a frame uploaded before
@@ -252,4 +272,12 @@ class TimeOffsetVideoBuffer {
 
 		std::deque<ofPixels> history; // front = most recent frame
 		std::vector<Playhead> playheads;
+
+		// RT-004 Priority B diagnostic only (counters, no behavior): a
+		// monotonically increasing id per pushed history frame, so uploads
+		// can be classified as repeat/duplicate frames; and the source
+		// format last seen, so a dimension/format change is logged once.
+		uint64_t diagPushGeneration = 0;
+		std::vector<uint64_t> diagUploadedGenerationsThisFrame;
+		std::string diagLastSourceFormat;
 };

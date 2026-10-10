@@ -113,6 +113,12 @@ public:
 		writeRaw(os.str());
 	}
 
+	// Event counter (allocations, uploads, ...) reported in the summary.
+	void count(const char * label, uint64_t n = 1) {
+		if (!enabled_) return;
+		counters_[label] += n;
+	}
+
 	uint64_t frameIndex() const { return frameIndex_; }
 
 	~Probe() {
@@ -140,6 +146,7 @@ public:
 			os << r.first << "," << s.count << "," << s.totalNs / 1e6 << "," << (s.count ? s.totalNs / 1e6 / s.count : 0.0)
 			   << "," << pct(0.95) << "," << pct(0.99) << "," << s.maxNs / 1e6 << "\n";
 		}
+		for (auto & kv : counters_) os << "counter," << kv.first << "," << kv.second << "\n";
 		for (auto & kv : intervalsByOwner_) {
 			std::vector<float> v(kv.second.begin(), kv.second.end());
 			std::sort(v.begin(), v.end());
@@ -239,6 +246,11 @@ private:
 				std::lock_guard<std::mutex> lock(contextMutex_);
 				auto it = context_.find("owner");
 				owner = it == context_.end() ? "?" : it->second;
+				// Optional measurement window set by a driver script
+				// (e.g. warmup/steady/media-change), so steady-state frame
+				// intervals are reported apart from transition frames.
+				auto w = context_.find("window");
+				if (w != context_.end()) owner += "/" + w->second;
 			}
 			auto & dq = intervalsByOwner_[owner];
 			if (dq.size() >= kMaxSamplesPerLabel) dq.pop_front();
@@ -323,6 +335,7 @@ private:
 	double maxIntervalMs_ = 0.0;
 	std::vector<Event> events_;
 	std::unordered_map<const char *, Stat> stats_;
+	std::unordered_map<const char *, uint64_t> counters_;
 	std::deque<float> intervals_;
 	std::unordered_map<std::string, std::deque<float>> intervalsByOwner_;
 	std::deque<FrameSummary> recent_;

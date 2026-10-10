@@ -3,8 +3,11 @@
 #include "ofFileUtils.h"
 #include "ofLog.h"
 #include "ofMath.h"
+#include "ofUtils.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include <cstring>
 
 namespace {
 // RT-004: pause before close — see OfVideoDecoder.cpp's pauseThenClose()
@@ -190,15 +193,56 @@ void TimeOffsetVideoBuffer::update(float dt) {
 		pendingStartSeconds = 0.0f;
 	}
 
+	rt004::Probe& probe = rt004::Probe::get();
+	probe.count("TOVB.update.calls");
 	if (player.isFrameNew()) {
 		RT004_SCOPE("TimeOffsetVideoBuffer.historyPush(copy+resize)");
-		ofPixels frame = player.getPixels();
-		frame.resize(settings.bufferWidth, settings.bufferHeight);
+		probe.count("TOVB.update.newSourceFrame");
+		if (probe.enabled()) {
+			const ofPixels& src = player.getPixels();
+			std::string fmt = std::to_string(src.getWidth()) + "x" + std::to_string(src.getHeight()) + " ch="
+				+ std::to_string(src.getNumChannels()) + " fmt=" + std::to_string(static_cast<int>(src.getPixelFormat()))
+				+ " -> " + std::to_string(settings.bufferWidth) + "x" + std::to_string(settings.bufferHeight);
+			if (fmt != diagLastSourceFormat) {
+				probe.note("temporal.historySourceFormat", fmt);
+				probe.count("TOVB.history.sourceFormatChanged");
+				diagLastSourceFormat = fmt;
+			}
+		}
+		// Nested inside historyPush: these scopes are its parts, not extra cost.
+		ofPixels frame;
+		const bool fast = downscaleIntoHistoryFrame(player.getPixels(), frame); // scoped inside as TOVB.history.fastDownscale
+		if (fast) {
+			probe.count("TOVB.history.fastPath");
+			probe.count("TOVB.history.heapAlloc", 1); // destination only
+		} else {
+			RT004_SCOPE("TOVB.history.legacyDownscale"); // copySource + resize below
+			{ RT004_SCOPE("TOVB.history.copySource"); frame = player.getPixels(); }
+			{ RT004_SCOPE("TOVB.history.resize"); frame.resize(settings.bufferWidth, settings.bufferHeight); }
+			probe.count("TOVB.history.legacyPath");
+			probe.count("TOVB.history.heapAlloc", 2); // full-size copy + resized destination
+			probe.count("TOVB.history.heapFree", 1);  // full-size copy released by resize()
+		}
+		static const bool verifyDownscale = std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_DOWNSCALE_VERIFY") != nullptr;
+		if (fast && verifyDownscale) {
+			// Verification only: rebuild the frame the original way and compare bytes.
+			ofPixels reference = player.getPixels();
+			reference.resize(settings.bufferWidth, settings.bufferHeight);
+			const bool same = reference.getWidth() == frame.getWidth() && reference.getHeight() == frame.getHeight()
+				&& reference.getPixelFormat() == frame.getPixelFormat() && reference.size() == frame.size()
+				&& std::equal(reference.begin(), reference.end(), frame.begin());
+			if (!same) ofLogError("TimeOffsetVideoBuffer") << "downscale verify: fast path differs from ofPixels::resize";
+			probe.count(same ? "TOVB.history.verifyMatch" : "TOVB.history.verifyMismatch");
+		}
+
+		RT004_SCOPE("TOVB.history.pushPop");
 		history.push_front(std::move(frame));
+		diagPushGeneration++;
 
 		size_t maxFrames = static_cast<size_t>(settings.maxHistorySeconds * settings.assumedSourceFps);
 		while (history.size() > maxFrames) {
 			history.pop_back();
+			probe.count("TOVB.history.heapFree");
 		}
 
 		mediaElapsedTime += dt;
@@ -228,6 +272,7 @@ void TimeOffsetVideoBuffer::update(float dt) {
 		ph.currentOffset = quantize(ph.currentOffset);
 		ph.uploadedThisFrame = false;
 	}
+	diagUploadedGenerationsThisFrame.clear();
 }
 
 void TimeOffsetVideoBuffer::jumpPlayhead(int playheadIndex, float normalizedOffset) {
@@ -255,6 +300,8 @@ float TimeOffsetVideoBuffer::getPlayheadOffset(int playheadIndex) const {
 const ofTexture& TimeOffsetVideoBuffer::getPlayheadTexture(int playheadIndex) {
 	Playhead& ph = playheads[playheadIndex];
 
+	rt004::Probe& probe = rt004::Probe::get();
+	probe.count("TOVB.playhead.getCalls");
 	if (!ph.uploadedThisFrame) {
 		RT004_SCOPE("TimeOffsetVideoBuffer.playheadUpload");
 		int idx = offsetToHistoryIndex(ph.currentOffset);
@@ -263,14 +310,115 @@ const ofTexture& TimeOffsetVideoBuffer::getPlayheadTexture(int playheadIndex) {
 			if (!ph.texture.isAllocated()
 				|| ph.texture.getWidth() != px.getWidth()
 				|| ph.texture.getHeight() != px.getHeight()) {
+				RT004_SCOPE("TOVB.playhead.texAllocate");
 				ph.texture.allocate(px);
+				probe.count("TOVB.playhead.texAllocate");
+				if (probe.enabled()) {
+					probe.note("temporal.playheadTexFormat", std::to_string(px.getWidth()) + "x" + std::to_string(px.getHeight())
+						+ " ch=" + std::to_string(px.getNumChannels()) + " glInternalFormat=0x"
+						+ ofToHex(ph.texture.getTextureData().glInternalFormat));
+				}
 			}
-			ph.texture.loadData(px);
+			{ RT004_SCOPE("TOVB.playhead.loadData"); ph.texture.loadData(px); }
+			probe.count("TOVB.playhead.upload");
+			if (probe.enabled()) {
+				const uint64_t gen = diagPushGeneration - static_cast<uint64_t>(idx);
+				if (gen == ph.diagLastUploadGeneration) probe.count("TOVB.playhead.uploadSameFrameAsLast");
+				if (std::find(diagUploadedGenerationsThisFrame.begin(), diagUploadedGenerationsThisFrame.end(), gen)
+					!= diagUploadedGenerationsThisFrame.end()) {
+					probe.count("TOVB.playhead.uploadDuplicateInFrame");
+				} else {
+					diagUploadedGenerationsThisFrame.push_back(gen);
+				}
+				ph.diagLastUploadGeneration = gen;
+			}
+		} else {
+			probe.count("TOVB.playhead.emptyHistory");
 		}
 		ph.uploadedThisFrame = true;
 	}
 
 	return ph.texture;
+}
+
+bool TimeOffsetVideoBuffer::downscaleIntoHistoryFrame(const ofPixels& src, ofPixels& dst) {
+	// Read per call (not cached) so the RT-004 driver's temporal-ab script
+	// can alternate legacy/fast windows inside one process.
+	const bool forceLegacy = std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_LEGACY_DOWNSCALE") != nullptr;
+	if (forceLegacy || !src.isAllocated() || settings.bufferWidth <= 0 || settings.bufferHeight <= 0) return false;
+	switch (src.getPixelFormat()) {
+		case OF_PIXELS_GRAY: case OF_PIXELS_RGB: case OF_PIXELS_BGR: case OF_PIXELS_RGBA: case OF_PIXELS_BGRA: break;
+		default: return false; // planar/YUV and other formats stay on ofPixels::resize()
+	}
+	const size_t srcW = src.getWidth();
+	const size_t srcH = src.getHeight();
+	const size_t dstW = static_cast<size_t>(settings.bufferWidth);
+	const size_t dstH = static_cast<size_t>(settings.bufferHeight);
+	const size_t channels = src.getNumChannels();
+
+	DownscaleMap& m = downscaleMap;
+	if (m.srcWidth != srcW || m.srcHeight != srcH || m.dstWidth != dstW || m.dstHeight != dstH || m.channels != channels) {
+		// Same arithmetic, in the same types and order, as
+		// ofPixels_::resizeTo()'s OF_INTERPOLATE_NEAREST_NEIGHBOR branch.
+		const float srcxFactor = (float)srcW / dstW;
+		const float srcyFactor = (float)srcH / dstH;
+		std::vector<size_t> srcIndexPerRow(dstH);
+		std::vector<float> srcxPerCol(dstW);
+		float srcy = 0.5;
+		for (size_t y = 0; y < dstH; y++) {
+			srcIndexPerRow[y] = static_cast<size_t>(srcy) * srcW;
+			srcy += srcyFactor;
+		}
+		float srcx = 0.5;
+		for (size_t x = 0; x < dstW; x++) {
+			srcxPerCol[x] = srcx;
+			srcx += srcxFactor;
+		}
+		// The reference indexes with static_cast<size_t>(srcIndex + srcx),
+		// a float sum; the cached form splits it into row + column integer
+		// parts. Use the cache only if the two agree for every pixel.
+		bool exact = true;
+		const size_t srcPixels = srcW * srcH;
+		for (size_t y = 0; y < dstH && exact; y++) {
+			const size_t srcIndex = srcIndexPerRow[y];
+			for (size_t x = 0; x < dstW; x++) {
+				const size_t reference = static_cast<size_t>(srcIndex + srcxPerCol[x]);
+				const size_t split = srcIndex + static_cast<size_t>(srcxPerCol[x]);
+				if (reference != split || split >= srcPixels) { exact = false; break; }
+			}
+		}
+		m.srcWidth = srcW; m.srcHeight = srcH; m.dstWidth = dstW; m.dstHeight = dstH; m.channels = channels;
+		m.rowByteOffset.resize(dstH);
+		m.colByteOffset.resize(dstW);
+		for (size_t y = 0; y < dstH; y++) m.rowByteOffset[y] = srcIndexPerRow[y] * channels;
+		for (size_t x = 0; x < dstW; x++) m.colByteOffset[x] = static_cast<size_t>(srcxPerCol[x]) * channels;
+		m.exact = exact;
+		rt004::Probe::get().note("temporal.downscaleMap", std::to_string(srcW) + "x" + std::to_string(srcH) + " -> "
+			+ std::to_string(dstW) + "x" + std::to_string(dstH) + " ch=" + std::to_string(channels) + (exact ? " exact" : " NOT exact (legacy path)"));
+		if (!exact) ofLogWarning("TimeOffsetVideoBuffer") << "cached downscale not provably identical for " << srcW << "x" << srcH << "; using ofPixels::resize()";
+	}
+	if (!m.exact) return false;
+
+	RT004_SCOPE("TOVB.history.fastDownscale"); // allocate + copy; excludes the one-time map build above
+	dst.allocate(dstW, dstH, src.getPixelFormat());
+	const unsigned char* srcData = src.getData();
+	unsigned char* out = dst.getData();
+	for (size_t y = 0; y < dstH; y++) {
+		const unsigned char* row = srcData + m.rowByteOffset[y];
+		if (channels == 3) {
+			for (size_t x = 0; x < dstW; x++) {
+				const unsigned char* p = row + m.colByteOffset[x];
+				out[0] = p[0]; out[1] = p[1]; out[2] = p[2];
+				out += 3;
+			}
+		} else {
+			for (size_t x = 0; x < dstW; x++) {
+				std::memcpy(out, row + m.colByteOffset[x], channels);
+				out += channels;
+			}
+		}
+	}
+	return true;
 }
 
 float TimeOffsetVideoBuffer::quantize(float normalizedOffset) const {

@@ -71,6 +71,52 @@ Rt004StallDriver::Rt004StallDriver(ExperienceRuntime & runtime)
 		log("=== RT-004 stall driver: script first-activation ===");
 		return;
 	}
+	if (scriptName != nullptr && std::string(scriptName) == "temporal-steady") {
+		// Priority B: sustained Temporal frame time, kept apart from the
+		// first-activation and media-change frames by the probe's "window"
+		// context (frame intervals are reported per owner/window). Run with
+		// EXPERIENCE_RUNTIME_VIDEO_DWELL set above the run length so the
+		// canonical automatic advance cannot land inside the steady window.
+		float steadySeconds = 120.0f;
+		if (const char * s = std::getenv("EXPERIENCE_RUNTIME_STALL_DRIVER_STEADY_SECONDS")) steadySeconds = std::max(10.0f, static_cast<float>(std::atof(s)));
+		script_.push_back({ 5.0f, ']', "Blob->Temporal (first activation)" });
+		script_.push_back({ 5.0f, kMarkWindow, "warmup" });
+		script_.push_back({ 20.0f, kMarkWindow, "steady" });
+		script_.push_back({ 20.0f + steadySeconds, kMarkWindow, "media-change" });
+		script_.push_back({ 20.0f + steadySeconds, 'n', "next media while Temporal active" });
+		script_.push_back({ 35.0f + steadySeconds, 0, "exit" });
+		log("=== RT-004 stall driver: script temporal-steady, steady window " + std::to_string(steadySeconds) + " s ===");
+		return;
+	}
+	if (scriptName != nullptr && std::string(scriptName) == "temporal-ab") {
+		// Priority B A/B in ONE process (same media, decoder state, thermal
+		// conditions): alternates the legacy history downscale and the
+		// cached one in equal windows, interleaved so drift cancels. Frame
+		// intervals are reported per window (steady-legacy / steady-fast).
+		float windowSeconds = 30.0f;
+		if (const char * s = std::getenv("EXPERIENCE_RUNTIME_STALL_DRIVER_STEADY_SECONDS")) windowSeconds = std::max(10.0f, static_cast<float>(std::atof(s)));
+		int pairs = 4;
+		if (const char * s = std::getenv("EXPERIENCE_RUNTIME_STALL_DRIVER_AB_PAIRS")) pairs = std::max(1, std::atoi(s));
+		script_.push_back({ 5.0f, ']', "Blob->Temporal (first activation)" });
+		script_.push_back({ 5.0f, kMarkWindow, "warmup" });
+		float t = 20.0f;
+		for (int i = 0; i < pairs; i++) {
+			// Each mode gets a 2 s settle sub-window after the switch.
+			script_.push_back({ t, kSetLegacyDownscale, "1" });
+			script_.push_back({ t, kMarkWindow, "settle" });
+			script_.push_back({ t + 2.0f, kMarkWindow, "steady-legacy" });
+			t += 2.0f + windowSeconds;
+			script_.push_back({ t, kSetLegacyDownscale, "0" });
+			script_.push_back({ t, kMarkWindow, "settle" });
+			script_.push_back({ t + 2.0f, kMarkWindow, "steady-fast" });
+			t += 2.0f + windowSeconds;
+		}
+		script_.push_back({ t, kMarkWindow, "media-change" });
+		script_.push_back({ t, 'n', "next media while Temporal active" });
+		script_.push_back({ t + 15.0f, 0, "exit" });
+		log("=== RT-004 stall driver: script temporal-ab, " + std::to_string(pairs) + " pairs x " + std::to_string(windowSeconds) + " s ===");
+		return;
+	}
 	float t = 15.0f;
 	for (int cycle = 0; cycle < 3; cycle++) {
 		std::string c = "cycle" + std::to_string(cycle + 1) + ":";
@@ -132,6 +178,15 @@ void Rt004StallDriver::step(float dt) {
 		if (a.key == 0) {
 			ofExit();
 			return;
+		}
+		if (a.key == kMarkWindow) {
+			rt004::Probe::get().setContext("window", a.label);
+			continue;
+		}
+		if (a.key == kSetLegacyDownscale) {
+			if (a.label == "1") setenv("EXPERIENCE_RUNTIME_TEMPORAL_LEGACY_DOWNSCALE", "1", 1);
+			else unsetenv("EXPERIENCE_RUNTIME_TEMPORAL_LEGACY_DOWNSCALE");
+			continue;
 		}
 		runtime_.keyPressed(a.key);
 	}

@@ -25,9 +25,12 @@ public:
 private:
 	struct Action {
 		float atSeconds;
-		int key; // 0 = exit
+		int key; // 0 = exit; kMarkWindow = set the probe's "window" context to label
 		std::string label;
 	};
+	static constexpr int kMarkWindow = -1;
+	static constexpr int kSetLegacyDownscale = -2; // label "1" = legacy history downscale, "0" = cached
+
 	void log(const std::string & line);
 
 	ExperienceRuntime & runtime_;
