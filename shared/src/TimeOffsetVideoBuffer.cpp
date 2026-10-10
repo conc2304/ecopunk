@@ -6,6 +6,15 @@
 #include <algorithm>
 #include <cmath>
 
+namespace {
+// RT-004: pause before close — see OfVideoDecoder.cpp's pauseThenClose()
+// for why (ofGstUtils::close()'s up-to-5 s EOS wait on a playing pipeline).
+void pauseThenClose(ofVideoPlayer& player) {
+	if (player.isLoaded()) player.setPaused(true);
+	player.close();
+}
+} // namespace
+
 void TimeOffsetVideoBuffer::configure(const Settings& settings_) {
 	settings = settings_;
 	playheads.assign(std::max(1, settings.numPlayheads), Playhead{});
@@ -97,7 +106,7 @@ void TimeOffsetVideoBuffer::advanceToNextMedia() {
 	}
 	resetHistoryAndPlayheadTextures(); // buffered frames are from the previous source — stale, discard
 
-	player.close();
+	pauseThenClose(player);
 	mediaLoaded = player.load(mediaFiles[currentFileIndex]);
 	mediaElapsedTime = 0.0f;
 	mediaLoopCount = 0;
@@ -118,7 +127,7 @@ bool TimeOffsetVideoBuffer::loadExplicit(const std::string& absolutePath, float 
 	rt004::Probe::get().note("temporal.loadExplicit", ofFilePath::getFileName(absolutePath));
 	{ RT004_SCOPE("TimeOffsetVideoBuffer.resetHistory"); resetHistoryAndPlayheadTextures(); }
 
-	{ RT004_SCOPE("TimeOffsetVideoBuffer.player.close"); player.close(); }
+	{ RT004_SCOPE("TimeOffsetVideoBuffer.player.close"); pauseThenClose(player); }
 	{ RT004_SCOPE("TimeOffsetVideoBuffer.player.load"); mediaLoaded = player.load(absolutePath); }
 	mediaElapsedTime = 0.0f;
 	mediaLoopCount = 0;

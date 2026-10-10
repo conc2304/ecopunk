@@ -1,8 +1,21 @@
 #include "OfVideoDecoder.h"
 #include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 
+namespace {
+// RT-004: pause before close. On the GStreamer backend (Pi),
+// ofGstUtils::close() sends EOS to a playing, unpaused pipeline and blocks
+// up to 5 s waiting for it ("didn't received EOS in 5s"); a paused pipeline
+// skips that wait and goes straight to READY/NULL teardown. Draining to EOS
+// serves no purpose for a decode-only pipeline. Same thread, same player,
+// no GL work; harmless on AVFoundation.
+void pauseThenClose(ofVideoPlayer& player) {
+	if (player.isLoaded()) player.setPaused(true);
+	player.close();
+}
+} // namespace
+
 bool OfVideoDecoder::load(const std::string& absolutePath) {
-	{ RT004_SCOPE("OfVideoDecoder.close"); player_.close(); }
+	{ RT004_SCOPE("OfVideoDecoder.close"); pauseThenClose(player_); }
 	bool ok;
 	{ RT004_SCOPE("OfVideoDecoder.ofVideoPlayer.load"); ok = player_.load(absolutePath); }
 	if (!ok) return false;
@@ -18,7 +31,7 @@ void OfVideoDecoder::update(float dt) {
 }
 
 void OfVideoDecoder::close() {
-	player_.close();
+	pauseThenClose(player_);
 }
 
 float OfVideoDecoder::getPosition() const {
