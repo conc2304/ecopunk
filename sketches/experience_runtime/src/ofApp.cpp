@@ -5,6 +5,15 @@
 #include <cstdlib>
 
 void ofApp::setup() {
+	// RT-004 GL error attribution (diagnostic; no-op unless the probe and
+	// EXPERIENCE_RUNTIME_GL_ERROR_TRACE are both set). The context exists here.
+	rt004::Probe::get().setGlErrorHook([]() -> unsigned { return static_cast<unsigned>(glGetError()); });
+	rt004::Probe::get().glCheckpoint("(before ofApp::setup: window/context creation)");
+	if (rt004::Probe::get().glTraceActive()) {
+		// Proves the tracer works: must appear once as glError,...,0x500.
+		RT004_SCOPE("rt004.glTraceSelfTest(expect 0x500)");
+		glEnable(0xFFFF);
+	}
 	// Blob First Complete Production Migration: the GL harness's existing
 	// proofs (GlRestorationHarness) directly manipulate
 	// runtime.sceneManagerForTesting().devScene() (FakeScene) and assume
@@ -85,6 +94,12 @@ void ofApp::setup() {
 		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
 		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
 		&& TemporalWarmHarness::isRequested();
+	// RT-005 three-scene circuit proof: lowest priority; default roster, startup Blob.
+	bool threeSceneRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
+		&& !temporalWarmRequested && ThreeSceneCircuitHarness::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
 		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
@@ -105,7 +120,9 @@ void ofApp::setup() {
 			runtime.installBlobProductionScene(!(switchHarnessRequested || acceptanceRequested));
 		}
 	}
+	if (Rt004FramePhaseProbe::isRequested()) framePhaseProbe = std::make_unique<Rt004FramePhaseProbe>(runtime);
 	runtime.setup();
+	if (framePhaseProbe) framePhaseProbe->afterRuntimeSetup(); // limiter/vsync controls apply after the runtime's own baseline
 
 	// Blob render-path A/B pixel check: self-contained, runs once here
 	// (needs only a live GL context) and exits — see BlobRenderPathAbHarness.h.
@@ -145,6 +162,8 @@ void ofApp::setup() {
 		cadenceHarness = std::make_unique<CadenceHarness>(runtime);
 	} else if (temporalWarmRequested) {
 		temporalWarmHarness = std::make_unique<TemporalWarmHarness>(runtime);
+	} else if (threeSceneRequested) {
+		threeSceneHarness = std::make_unique<ThreeSceneCircuitHarness>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
 		stallDriver = std::make_unique<Rt004StallDriver>(runtime);
 	}
@@ -156,6 +175,7 @@ void ofApp::setup() {
 void ofApp::update() {
 	rt004::Probe::get().beginFrame();
 	RT004_SCOPE("ofApp.update");
+	if (Rt004FramePhaseProbe::presentOnlyControl()) return; // diagnostic control: no runtime/harness work, clear + swap only
 	if (!blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness) {
 		// Normal path and GL-harness path both want runtime.update()
 		// called exactly once per real tick, unconditionally, here — see
@@ -199,6 +219,9 @@ void ofApp::update() {
 	if (temporalWarmHarness) {
 		temporalWarmHarness->step(ofGetLastFrameTime());
 	}
+	if (threeSceneHarness) {
+		threeSceneHarness->step(ofGetLastFrameTime());
+	}
 	if (blobHarness) {
 		blobHarness->step(ofGetLastFrameTime());
 	}
@@ -218,7 +241,8 @@ void ofApp::update() {
 
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness) {
+	if (Rt004FramePhaseProbe::presentOnlyControl()) { ofClear(0, 0, 0, 255); return; }
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness) {
 		runtime.draw();
 	}
 	// When a harness is active, it drives runtime.draw() itself (see

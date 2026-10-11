@@ -88,6 +88,67 @@ Rt004StallDriver::Rt004StallDriver(ExperienceRuntime & runtime)
 		log("=== RT-004 stall driver: script temporal-steady, steady window " + std::to_string(steadySeconds) + " s ===");
 		return;
 	}
+	if (scriptName != nullptr && std::string(scriptName) == "upload-split") {
+		// Measurement only (no production code): cost of one playhead-sized
+		// 640x360 upload as RGB (what Temporal uses, GL_RGB8) vs RGBA, to tell
+		// whether the driver pays for an RGB->RGBA conversion. glFinish()
+		// charges the GPU/driver work to each upload.
+		const int w = 640, h = 360, iterations = 300;
+		for (int channels : { 3, 4 }) {
+			ofPixels px;
+			px.allocate(w, h, channels == 3 ? OF_PIXELS_RGB : OF_PIXELS_RGBA);
+			for (size_t i = 0; i < px.size(); i++) px[i] = static_cast<unsigned char>((i * 2654435761u) >> 24);
+			ofTexture tex;
+			tex.allocate(px);
+			glFinish();
+			std::vector<double> ms;
+			for (int i = 0; i < iterations; i++) {
+				px[i % px.size()] ^= 0xFF; // different data each time
+				int64_t t0 = rt004::nowNs();
+				tex.loadData(px);
+				glFinish();
+				ms.push_back((rt004::nowNs() - t0) / 1e6);
+			}
+			std::sort(ms.begin(), ms.end());
+			double sum = 0.0;
+			for (double v : ms) sum += v;
+			std::ostringstream os;
+			os << "UPLOAD-SPLIT " << w << "x" << h << (channels == 3 ? " RGB" : " RGBA") << " internalFormat=0x" << std::hex
+			   << tex.getTextureData().glInternalFormat << std::dec << " bytes=" << px.size() << " n=" << iterations
+			   << " meanMs=" << sum / iterations << " p50Ms=" << ms[iterations / 2] << " p95Ms=" << ms[iterations * 95 / 100]
+			   << " p99Ms=" << ms[iterations * 99 / 100] << " glError=0x" << std::hex << glGetError();
+			log(os.str());
+		}
+		script_.push_back({ 1.0f, 0, "exit" });
+		return;
+	}
+	if (scriptName != nullptr && std::string(scriptName) == "playhead-ab") {
+		// Playhead upload A/B in ONE process (same media, B fast downscale and
+		// C bounded residency held at their defaults): alternates legacy
+		// (always upload) and skip-redundant windows, interleaved.
+		float windowSeconds = 30.0f;
+		if (const char * s = std::getenv("EXPERIENCE_RUNTIME_STALL_DRIVER_STEADY_SECONDS")) windowSeconds = std::max(10.0f, static_cast<float>(std::atof(s)));
+		int pairs = 4;
+		if (const char * s = std::getenv("EXPERIENCE_RUNTIME_STALL_DRIVER_AB_PAIRS")) pairs = std::max(1, std::atoi(s));
+		script_.push_back({ 5.0f, ']', "Blob->Temporal (first activation)" });
+		script_.push_back({ 5.0f, kMarkWindow, "warmup" });
+		float t = 20.0f;
+		for (int i = 0; i < pairs; i++) {
+			script_.push_back({ t, kSetEnv, "EXPERIENCE_RUNTIME_TEMPORAL_PLAYHEAD_UPLOAD=legacy" });
+			script_.push_back({ t, kMarkWindow, "settle" });
+			script_.push_back({ t + 2.0f, kMarkWindow, "steady-upload-legacy" });
+			t += 2.0f + windowSeconds;
+			script_.push_back({ t, kSetEnv, "EXPERIENCE_RUNTIME_TEMPORAL_PLAYHEAD_UPLOAD=" });
+			script_.push_back({ t, kMarkWindow, "settle" });
+			script_.push_back({ t + 2.0f, kMarkWindow, "steady-upload-skip" });
+			t += 2.0f + windowSeconds;
+		}
+		script_.push_back({ t, kMarkWindow, "media-change" });
+		script_.push_back({ t, 'n', "next media while Temporal active" });
+		script_.push_back({ t + 15.0f, 0, "exit" });
+		log("=== RT-004 stall driver: script playhead-ab, " + std::to_string(pairs) + " pairs x " + std::to_string(windowSeconds) + " s ===");
+		return;
+	}
 	if (scriptName != nullptr && std::string(scriptName) == "temporal-ab") {
 		// Priority B A/B in ONE process (same media, decoder state, thermal
 		// conditions): alternates the legacy history downscale and the
@@ -181,6 +242,15 @@ void Rt004StallDriver::step(float dt) {
 		}
 		if (a.key == kMarkWindow) {
 			rt004::Probe::get().setContext("window", a.label);
+			continue;
+		}
+		if (a.key == kSetEnv) {
+			// label "NAME=VALUE" sets, "NAME=" unsets
+			const size_t eq = a.label.find('=');
+			const std::string name = a.label.substr(0, eq);
+			const std::string value = eq == std::string::npos ? "" : a.label.substr(eq + 1);
+			if (value.empty()) unsetenv(name.c_str());
+			else setenv(name.c_str(), value.c_str(), 1);
 			continue;
 		}
 		if (a.key == kSetLegacyDownscale) {

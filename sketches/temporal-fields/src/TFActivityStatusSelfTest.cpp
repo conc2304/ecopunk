@@ -1,4 +1,5 @@
 #include "TFActivityStatusSelfTest.h"
+#include "TFBackgroundLayer.h"
 #include "TFEffectPicker.h"
 #include "DefaultVideoEffectCatalog.h"
 #include "VideoEffectRegistry.h"
@@ -155,6 +156,50 @@ namespace videoeffects {
 			// tested here because there is no honest way to reach it, and
 			// fabricating one would violate the "no false telemetry"
 			// principle this whole increment is built around.
+		}
+
+		// --- Case 4: first pick through the REAL TFBackgroundLayer::setup() -
+		// The production entry point (TemporalSceneCore and the standalone
+		// ofApp both reach the picker only through it). setup() makes the
+		// picker's one setup-time pick, so the configured weights must
+		// already be installed by then: with Raw weighted 0 and a single
+		// configured effect, that very first selection can only be the
+		// configured effect. Before the initialization-order fix this
+		// picked against the default (Raw-only) weights and landed on Raw.
+		{
+			const std::string knownGoodId = "desaturate";
+			TFBackgroundLayer::Params p;
+			p.effectWeights.rawWeight = 0.0f;
+			p.effectWeights.effectWeights = { { knownGoodId, 1000.0f } };
+			p.effectWeights.cycleInterval = 999999.0f;
+
+			TFBackgroundLayer layer;
+			layer.setup(nullptr, &sharedShaderLib, "backgrounds", 64, 36, p);
+
+			check(layer.getCurrentEffectName() == knownGoodId,
+				"background-layer first pick: setup-time selection used the configured weights (got '"
+					+ layer.getCurrentEffectName() + "')");
+			auto status = layer.effectActivityStatus();
+			check(status.health == EffectHealth::Ready && status.slots.size() == 1
+					&& status.slots.front().effectId == knownGoodId && !status.slots.front().displayName.empty(),
+				"background-layer first pick: first activityStatus() is present-active with the canonical id and displayName");
+		}
+
+		// --- Case 5: no selectable effect through TFBackgroundLayer -------
+		// Zero-weight effects plus a Raw weight leave nothing to pick: the
+		// first snapshot must stay present-empty/Ready, never a fabricated slot.
+		{
+			TFBackgroundLayer::Params p;
+			p.effectWeights.rawWeight = 1000.0f;
+			p.effectWeights.effectWeights = { { "desaturate", 0.0f } };
+			p.effectWeights.cycleInterval = 999999.0f;
+
+			TFBackgroundLayer layer;
+			layer.setup(nullptr, &sharedShaderLib, "backgrounds", 64, 36, p);
+
+			auto status = layer.effectActivityStatus();
+			check(layer.getCurrentEffectName().empty() && status.health == EffectHealth::Ready && status.slots.empty(),
+				"background-layer no-eligible case: first activityStatus() is present-empty with health Ready");
 		}
 
 		bool allPassed = (g_failures == 0);

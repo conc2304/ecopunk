@@ -8,6 +8,7 @@
 #include "ofUtils.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -32,8 +33,33 @@ double residentMegabytes() {
 	if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, reinterpret_cast<task_info_t>(&info), &count) == KERN_SUCCESS) {
 		return static_cast<double>(info.resident_size) / (1024.0 * 1024.0);
 	}
+#elif defined(__linux__)
+	std::ifstream status("/proc/self/status");
+	std::string key;
+	while (status >> key) {
+		if (key == "VmRSS:") { double kb = 0; status >> kb; return kb / 1024.0; }
+		status.ignore(4096, '\n');
+	}
 #endif
 	return -1.0;
+}
+
+// Linux (Pi) only: contiguous-memory-allocator headroom the VC4 driver
+// allocates GPU buffers from. -1 where unavailable.
+double cmaFreeMegabytes() {
+#if defined(__linux__)
+	std::ifstream meminfo("/proc/meminfo");
+	std::string key;
+	while (meminfo >> key) {
+		if (key == "CmaFree:") { double kb = 0; meminfo >> kb; return kb / 1024.0; }
+		meminfo.ignore(4096, '\n');
+	}
+#endif
+	return -1.0;
+}
+
+double msSince(std::chrono::steady_clock::time_point t0) {
+	return std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
 }
 
 } // namespace
@@ -51,6 +77,8 @@ TemporalWarmHarness::TemporalWarmHarness(ExperienceRuntime& runtime) : runtime_(
 		{kTemporalId, "4_temporal_second", ']'},
 		{kBlueprintId, "5_blueprint", ']'},
 		{kTemporalId, "6_temporal_third", '['},
+		{kBlobId, "7_blob", '['},
+		{kTemporalId, "8_temporal_fourth", ']'},
 	};
 	TemporalProductionScene& temporal = runtime_.temporalSceneForTesting();
 	const auto& ambient = temporal.coreForTesting().ambientTextures();
@@ -142,7 +170,12 @@ void TemporalWarmHarness::onLegSettled() {
 	const Leg& leg = legs_[leg_];
 	const double mb = residentMegabytes();
 	residentMb_.push_back(mb);
-	note("[" + leg.label + "] settled: resident " + ofToString(mb, 0) + " MB");
+	TemporalProductionScene& temporal = runtime_.temporalSceneForTesting();
+	const TFAmbientTextureLayer& ambient = temporal.coreForTesting().ambientTextures();
+	note("[" + leg.label + "] settled: resident " + ofToString(mb, 0) + " MB, CmaFree " + ofToString(cmaFreeMegabytes(), 0) +
+		" MB, tintTextures=" + ofToString(ambient.residentTintTextures()) + " maskTextures=" + ofToString(ambient.residentMaskTextures()) +
+		" playheadTextures=" + ofToString(temporal.videoAdapterForTesting().buffer().getAllocatedPlayheadTextureCount()) +
+		"/" + ofToString(temporal.videoAdapterForTesting().buffer().getNumPlayheads()));
 	if (leg.sceneId == kTemporalId) {
 		const HudFrameData& f = runtime_.currentHudFrameData();
 		check("[" + leg.label + "] activation-relative time (fresh)",
@@ -199,12 +232,75 @@ void TemporalWarmHarness::finish() {
 		const std::string endHash = ambientRenderCheck("after switching");
 		check("ambient output unchanged across the run", endHash == ambientHashAtStartup_, ambientHashAtStartup_ + " vs " + endHash);
 		TFAmbientTextureLayer& ambient = runtime_.temporalSceneForTesting().coreForTesting().ambientTextures();
-		const size_t masksBefore = ambient.residentMaskTextures();
-		const bool maskOk = ambient.ensureMaskLoaded(0);
-		check("mask reachable on demand (ensureMaskLoaded)", maskOk && ambient.residentMaskTextures() >= std::max<size_t>(masksBefore, 1),
-			"resident masks " + ofToString(masksBefore) + " -> " + ofToString(ambient.residentMaskTextures()));
+		// On-demand mask residency, 3 x (load -> use -> release) on the same
+		// mask. glFinish() is test-only, so latencies include the GPU work.
+		// Errors queued before this block belong to earlier code: drained and
+		// reported separately rather than charged to the mask path.
+		GLenum stale = glGetError();
+		note("[mask cycles] GL error flag on entry (from earlier code): 0x" + ofToHex(static_cast<int>(stale)));
+		while (stale != GL_NO_ERROR) stale = glGetError();
+		const bool bounded = ambient.residency() == TFAmbientTextureLayer::Residency::Bounded;
+		const size_t baseMasks = ambient.residentMaskTextures();
+		for (int cycle = 1; cycle <= 3; cycle++) {
+			const std::string c = "[mask cycle " + ofToString(cycle) + "] ";
+			const double rssBefore = residentMegabytes();
+			const size_t before = ambient.residentMaskTextures();
+			auto t0 = std::chrono::steady_clock::now();
+			const bool loaded = ambient.ensureMaskLoaded(0);
+			glFinish();
+			const double loadMs = msSince(t0);
+			const double rssLoaded = residentMegabytes();
+			const GLenum errLoad = glGetError();
+			const ofTexture& mask = ambient.textureAt(0).mask.getTexture();
+			const bool texAfterLoad = mask.isAllocated();
+			const std::string dims = ofToString(ambient.textureAt(0).mask.getWidth()) + "x" + ofToString(ambient.textureAt(0).mask.getHeight());
+			const size_t loadedCount = ambient.residentMaskTextures();
+			// Usable: draw the mask into a small FBO and read it back.
+			ofFbo probeFbo;
+			probeFbo.allocate(64, 64, GL_RGBA);
+			probeFbo.begin();
+			ofClear(0, 0, 0, 255);
+			ofSetColor(255);
+			if (mask.isAllocated()) mask.draw(0, 0, 64, 64);
+			probeFbo.end();
+			ofPixels px;
+			probeFbo.readToPixels(px);
+			size_t lit = 0;
+			for (size_t i = 0; i + 2 < px.size(); i += px.getNumChannels()) lit += (px[i] | px[i + 1] | px[i + 2]) ? 1 : 0;
+			const GLenum errUse = glGetError();
+			t0 = std::chrono::steady_clock::now();
+			const bool released = ambient.releaseMask(0);
+			glFinish();
+			const double releaseMs = msSince(t0);
+			const double rssReleased = residentMegabytes();
+			const GLenum errRelease = glGetError();
+			const size_t after = ambient.residentMaskTextures();
+			note(c + "masks " + ofToString(before) + " -> " + ofToString(loadedCount) + " -> " + ofToString(after) +
+				", load(decode+upload+finish) " + ofToString(loadMs, 2) + " ms, release " + ofToString(releaseMs, 3) + " ms, tex " + dims +
+				", drawn lit pixels " + ofToString(lit) + "/4096, RSS " + ofToString(rssBefore, 1) + " -> " + ofToString(rssLoaded, 1) + " -> " +
+				ofToString(rssReleased, 1) + " MB, CmaFree " + ofToString(cmaFreeMegabytes(), 0) + " MB");
+			check(c + "mask loads on demand", loaded && texAfterLoad && loadedCount == (bounded ? 1 : baseMasks),
+				ofToString(loadedCount) + " resident after load");
+			check(c + "loaded mask is drawable (non-black readback)", lit > 0, ofToString(lit) + "/4096");
+			check(c + "release returns resident masks to baseline", released && after == (bounded ? 0 : baseMasks - 1),
+				ofToString(after) + " resident");
+			check(c + "no GL error in load/use/release", errLoad == GL_NO_ERROR && errUse == GL_NO_ERROR && errRelease == GL_NO_ERROR,
+				"load 0x" + ofToHex(static_cast<int>(errLoad)) + " use 0x" + ofToHex(static_cast<int>(errUse)) + " release 0x" + ofToHex(static_cast<int>(errRelease)));
+			if (!bounded) ambient.ensureMaskLoaded(0); // legacy keeps every mask resident: restore it
+		}
 		const GLenum err = glGetError();
 		check("no GL error at end of run", err == GL_NO_ERROR, "0x" + ofToHex(static_cast<int>(err)));
+	}
+	if (residentMb_.size() >= 8) {
+		// Temporal legs 2/4/6/8: classify the settled-RSS trend.
+		const double t2 = residentMb_[1], t4 = residentMb_[3], t6 = residentMb_[5], t8 = residentMb_[7];
+		const bool monotonic = t4 > t2 + 1.0 && t6 > t4 + 1.0 && t8 > t6 + 1.0;
+		const double spread = std::max({t4, t6, t8}) - std::min({t4, t6, t8});
+		note("memory trend over Temporal legs 2/4/6/8: " + ofToString(t2, 0) + " / " + ofToString(t4, 0) + " / " + ofToString(t6, 0) + " / " +
+			ofToString(t8, 0) + " MB -> " + (monotonic ? "GROWS MONOTONICALLY" : (spread < 16.0 ? "stable" : "oscillates")) +
+			" (legs 4-8 spread " + ofToString(spread, 1) + " MB)");
+		check("no resident-memory growth across repeated Temporal activations (leg 4 -> leg 8 < 64 MB)", t8 - t4 < 64.0,
+			ofToString(t8 - t4, 1) + " MB");
 	}
 	note("RESULT: " + ofToString(passes_) + " passed, " + ofToString(failures_) + " failed");
 	std::ofstream out(ofToDataPath(std::string(kOutDir) + "/results.txt", true));

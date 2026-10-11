@@ -31,6 +31,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <deque>
+#include <map>
 #include <mutex>
 #include <sstream>
 #include <string>
@@ -62,6 +63,7 @@ public:
 	// Called at the very top of ofApp::update(). Closes the previous frame.
 	void beginFrame() {
 		if (!enabled_) return;
+		glCheckpoint("(between frames: draw tail, swap, events)");
 		int64_t now = nowNs();
 		if (frameStartNs_ != 0) {
 			closeFrame(now);
@@ -86,15 +88,14 @@ public:
 		if (events_.size() < kMaxEventsPerFrame) {
 			events_.push_back({ label, startNs, dur, d });
 		}
-		Stat & s = stats_[label];
-		s.count++;
-		s.totalNs += dur;
-		s.maxNs = std::max(s.maxNs, dur);
-		if (s.samples.size() < kMaxSamplesPerLabel) {
-			s.samples.push_back(dur);
-		} else {
-			s.samples[s.count % kMaxSamplesPerLabel] = dur;
-		}
+		addSample(stats_[label], dur);
+		// Per-window copies for Temporal scopes only (A/B attribution).
+		if (!window_.empty() && isWindowedLabel(label)) addSample(windowStats_[std::string(label) + "@" + window_], dur);
+	}
+
+	static bool isWindowedLabel(const char * label) {
+		const std::string l(label);
+		return l.rfind("TOVB.", 0) == 0 || l.rfind("TimeOffsetVideoBuffer.", 0) == 0 || l.rfind("Temporal.", 0) == 0;
 	}
 
 	// Free-form correlation context (scene, phase, epoch, mediaId, origin).
@@ -102,6 +103,7 @@ public:
 		if (!enabled_) return;
 		std::lock_guard<std::mutex> lock(contextMutex_);
 		context_[key] = value;
+		if (std::string(key) == "window") window_ = value; // main thread only, like pop()
 	}
 
 	// Instant event recorded into the current frame (e.g. "media change").
@@ -113,10 +115,44 @@ public:
 		writeRaw(os.str());
 	}
 
+	// GL error attribution (EXPERIENCE_RUNTIME_GL_ERROR_TRACE=1, probe on).
+	// The header stays GL-free: the app installs a glGetError() wrapper
+	// once a context exists. Every scope then drains the GL error flags on
+	// entry (charged to the enclosing scope's own unscoped code) and on exit
+	// (charged to that scope, whose nested scopes already took theirs), so
+	// each error lands on the innermost instrumented code that raised it.
+	// Diagnostic only — glGetError per scope edge.
+	using GlErrorFn = unsigned (*)();
+	void setGlErrorHook(GlErrorFn fn) { glErrorFn_ = (enabled_ && glTrace_) ? fn : nullptr; }
+	bool glTraceActive() const { return glErrorFn_ != nullptr; }
+	void glCheckpoint(const char * attributeTo) {
+		if (glErrorFn_ == nullptr) return;
+		for (int guard = 0; guard < 8; guard++) { // GL may queue several flags
+			const unsigned err = glErrorFn_();
+			if (err == 0) return;
+			std::ostringstream key;
+			key << attributeTo << ",0x" << std::hex << err;
+			uint64_t & n = glErrors_[key.str()];
+			if (n++ == 0) {
+				std::ostringstream os;
+				os << "  GLERROR first frame=" << frameIndex_ << " t=" << msSinceStart(nowNs()) << "ms in " << attributeTo
+				   << " code=0x" << std::hex << err << "\n";
+				writeRaw(os.str());
+			}
+		}
+	}
+	const char * openScopeLabel() const {
+		int d = depth_.load(std::memory_order_relaxed);
+		if (d <= 0) return "(outside scopes)";
+		const char * l = openStack_[std::min(d, kMaxDepth) - 1].load(std::memory_order_relaxed);
+		return l ? l : "?";
+	}
+
 	// Event counter (allocations, uploads, ...) reported in the summary.
 	void count(const char * label, uint64_t n = 1) {
 		if (!enabled_) return;
 		counters_[label] += n;
+		if (!window_.empty()) windowCounters_[std::string(label) + "@" + window_] += n;
 	}
 
 	uint64_t frameIndex() const { return frameIndex_; }
@@ -147,6 +183,16 @@ public:
 			   << "," << pct(0.95) << "," << pct(0.99) << "," << s.maxNs / 1e6 << "\n";
 		}
 		for (auto & kv : counters_) os << "counter," << kv.first << "," << kv.second << "\n";
+		for (auto & kv : windowStats_) {
+			std::vector<int64_t> v = kv.second.samples;
+			std::sort(v.begin(), v.end());
+			auto pct = [&](double p) { return v.empty() ? 0.0 : v[std::min(v.size() - 1, static_cast<size_t>(p * v.size()))] / 1e6; };
+			const Stat & st = kv.second;
+			os << "window," << kv.first << "," << st.count << "," << st.totalNs / 1e6 << "," << (st.count ? st.totalNs / 1e6 / st.count : 0.0)
+			   << "," << pct(0.95) << "," << pct(0.99) << "," << st.maxNs / 1e6 << "\n";
+		}
+		for (auto & kv : windowCounters_) os << "windowCounter," << kv.first << "," << kv.second << "\n";
+		for (auto & kv : glErrors_) os << "glError," << kv.first << "," << kv.second << "\n";
 		for (auto & kv : intervalsByOwner_) {
 			std::vector<float> v(kv.second.begin(), kv.second.end());
 			std::sort(v.begin(), v.end());
@@ -187,6 +233,16 @@ private:
 		int64_t maxNs = 0;
 		std::vector<int64_t> samples;
 	};
+	static void addSample(Stat & s, int64_t dur) {
+		s.count++;
+		s.totalNs += dur;
+		s.maxNs = std::max(s.maxNs, dur);
+		if (s.samples.size() < kMaxSamplesPerLabel) {
+			s.samples.push_back(dur);
+		} else {
+			s.samples[s.count % kMaxSamplesPerLabel] = dur;
+		}
+	}
 	struct FrameSummary {
 		uint64_t index;
 		double intervalMs;
@@ -206,6 +262,7 @@ private:
 		const char * path = std::getenv("EXPERIENCE_RUNTIME_STALL_PROBE_LOG");
 		logPath_ = path ? path : "rt004-stall-probe.log";
 		sampleStacks_ = std::getenv("EXPERIENCE_RUNTIME_STALL_PROBE_SAMPLE") != nullptr;
+		glTrace_ = std::getenv("EXPERIENCE_RUNTIME_GL_ERROR_TRACE") != nullptr;
 		processStartNs_ = nowNs();
 		std::ostringstream os;
 		os << "=== RT-004 stall probe enabled: thresholdMs=" << thresholdMs_ << " sampleStacks=" << sampleStacks_ << " ===\n";
@@ -336,6 +393,12 @@ private:
 	std::vector<Event> events_;
 	std::unordered_map<const char *, Stat> stats_;
 	std::unordered_map<const char *, uint64_t> counters_;
+	std::string window_;
+	std::map<std::string, Stat> windowStats_;
+	std::map<std::string, uint64_t> windowCounters_;
+	bool glTrace_ = false;
+	GlErrorFn glErrorFn_ = nullptr;
+	std::map<std::string, uint64_t> glErrors_;
 	std::deque<float> intervals_;
 	std::unordered_map<std::string, std::deque<float>> intervalsByOwner_;
 	std::deque<FrameSummary> recent_;
@@ -358,12 +421,17 @@ public:
 	explicit Scope(const char * label) {
 		if (!Probe::get().enabled()) return;
 		label_ = label;
-		Probe::get().push(label);
+		Probe & p = Probe::get();
+		if (p.glTraceActive()) p.glCheckpoint(p.openScopeLabel());
+		p.push(label);
 		start_ = nowNs();
 	}
 	~Scope() {
 		if (label_ == nullptr) return;
-		Probe::get().pop(label_, start_, nowNs());
+		const int64_t end = nowNs();
+		Probe & p = Probe::get();
+		if (p.glTraceActive()) p.glCheckpoint(label_);
+		p.pop(label_, start_, end);
 	}
 	Scope(const Scope &) = delete;
 	Scope & operator=(const Scope &) = delete;

@@ -1,0 +1,24 @@
+=== RT-004 stall probe enabled: thresholdMs=250 sampleStacks=0 ===
+--- LONG FRAME #1 frame=249 start=7606.02ms interval=1061.54ms covered=1060.94ms uncovered=0.594513ms
+      ThreeSceneHarness.readOutgoingFrame @1060.31 dur=0.406779
+      ThreeSceneHarness.switchKey @1060.72 dur=0.233261
+        SceneManager.deactivateEntry @1060.72 dur=0.206
+--- LONG FRAME #2 frame=255 start=8768.21ms interval=337.957ms covered=337.474ms uncovered=0.482986ms
+--- LONG FRAME #3 frame=769 start=24939.2ms interval=533.046ms covered=532.6ms uncovered=0.445589ms
+      ThreeSceneHarness.readOutgoingFrame @531.556 dur=0.422405
+      ThreeSceneHarness.switchKey @531.98 dur=0.629562
+        SceneManager.deactivateEntry @531.982 dur=0.595178
+--- LONG FRAME #4 frame=788 start=25801.5ms interval=392.73ms covered=392.091ms uncovered=0.638496ms
+--- LONG FRAME #5 frame=898 start=29239.2ms interval=1273.95ms covered=1273.47ms uncovered=0.481959ms
+      ThreeSceneHarness.readOutgoingFrame @1272.93 dur=0.404264
+      ThreeSceneHarness.switchKey @1273.33 dur=0.149367
+        SceneManager.deactivateEntry @1273.34 dur=0.131296
+--- LONG FRAME #6 frame=904 start=30631.8ms interval=479.259ms covered=478.806ms uncovered=0.453428ms
+--- LONG FRAME #7 frame=1073 start=35091.8ms interval=697.268ms covered=696.74ms uncovered=0.528134ms
+--- LONG FRAME #8 frame=3997 start=132538ms interval=499.06ms covered=498.511ms uncovered=0.549666ms
+      ThreeSceneHarness.readOutgoingFrame @496.601 dur=1.68262
+      ThreeSceneHarness.switchKey @498.285 dur=0.226419
+        SceneManager.deactivateEntry @498.288 dur=0.202838
+=== RT-004 SUMMARY frames=4114 longFrames=8 thresholdMs=250 ===
+ThreeSceneHarness.readOutgoingFrame,30,173.299,5.77663,13.9382,14.2609,14.2609
+ThreeSceneHarness.switchKey,30,8.67459,0.289153,0.629562,1.08243,1.08243

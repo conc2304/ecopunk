@@ -137,6 +137,12 @@ class TimeOffsetVideoBuffer {
 		int getBufferHeight() const { return settings.bufferHeight; }
 
 		int getNumPlayheads() const { return static_cast<int>(playheads.size()); }
+		// Observability only (harnesses): playhead textures currently holding GL storage.
+		int getAllocatedPlayheadTextureCount() const {
+			int n = 0;
+			for (const auto& ph : playheads) n += ph.texture.isAllocated() ? 1 : 0;
+			return n;
+		}
 
 		// normalizedOffset: 0 = live/most-recent frame (white), 1 = as far
 		// back as maxHistorySeconds allows (black) — matches the brief's
@@ -206,7 +212,7 @@ class TimeOffsetVideoBuffer {
 			PlayheadMotion motion = PlayheadMotion::HOLD;
 			ofTexture texture;
 			bool uploadedThisFrame = false;
-			uint64_t diagLastUploadGeneration = 0; // RT-004 Priority B diagnostic only
+			uint64_t uploadedGeneration = 0; // history generation this texture holds; 0 = none
 		};
 
 		int offsetToHistoryIndex(float quantizedOffset) const;
@@ -273,11 +279,16 @@ class TimeOffsetVideoBuffer {
 		std::deque<ofPixels> history; // front = most recent frame
 		std::vector<Playhead> playheads;
 
-		// RT-004 Priority B diagnostic only (counters, no behavior): a
-		// monotonically increasing id per pushed history frame, so uploads
-		// can be classified as repeat/duplicate frames; and the source
-		// format last seen, so a dimension/format change is logged once.
-		uint64_t diagPushGeneration = 0;
+		// Monotonically increasing id per pushed history frame (never reset,
+		// so ids stay unique across media changes/reactivations). The frame
+		// at history[i] has generation historyGeneration - i. Lets
+		// getPlayheadTexture() recognise a playhead texture that already
+		// holds the selected frame.
+		uint64_t historyGeneration = 0;
+		// RT-004 diagnostics only (counters, no behavior): whether update()
+		// pushed a frame this tick, per-frame upload generations, and the
+		// source format last seen (logged once per change).
+		bool diagPushedThisFrame = false;
 		std::vector<uint64_t> diagUploadedGenerationsThisFrame;
 		std::string diagLastSourceFormat;
 };

@@ -77,4 +77,10 @@ private:
 	// and (b) history genuinely recovers after reactivation (CycleFrames).
 	int historyCountAtDeactivate_ = 0;
 	int historyCountBeforeCycleFrames_ = 0;
+
+	// Canonical effect-snapshot evidence (HudFrameData.effects): the first
+	// frame it is valid, and the setup-time selection reactivation must keep.
+	int framesRun_ = 0;
+	bool loggedFirstEffects_ = false;
+	std::string firstEffectIds_;
 };

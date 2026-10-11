@@ -11,8 +11,10 @@ void TFBackgroundLayer::setup(TimeOffsetVideoBuffer* videoBuffer_, ShaderLibrary
 	canvasH = canvasH_;
 	params = params_;
 
-	effectPicker.setup(shaderLib);
+	// Weights before setup(): setup() makes the picker's first pick, which
+	// must use the configured weights, not the struct defaults (Raw only).
 	effectPicker.setWeights(params.effectWeights);
+	effectPicker.setup(shaderLib);
 
 	imageCycler.setup(imagesFolder);
 	imageCycler.setParams(params.imageParams);

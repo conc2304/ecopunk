@@ -81,6 +81,10 @@ class TFAmbientTextureLayer {
 		// only, like every other ambient GL call). Returns false if the
 		// index is out of range or the file cannot be loaded.
 		bool ensureMaskLoaded(size_t index);
+		// Releases texture `index`'s mask (CPU pixels + GL texture); the next
+		// ensureMaskLoaded(index) reloads it from disk. Main/GL thread only.
+		bool releaseMask(size_t index);
+		const TFBackgroundTexture& textureAt(size_t index) const { return textures[index]; }
 
 		// Resource reporting. CPU = decoded pixel bytes still held; GPU =
 		// estimate from texture dimensions x channels (a driver may pad RGB

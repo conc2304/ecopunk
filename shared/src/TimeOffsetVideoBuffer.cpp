@@ -36,6 +36,7 @@ void TimeOffsetVideoBuffer::resetHistoryAndPlayheadTextures() {
 			ph.texture.clear();
 		}
 		ph.uploadedThisFrame = false;
+		ph.uploadedGeneration = 0;
 	}
 }
 
@@ -186,6 +187,7 @@ void TimeOffsetVideoBuffer::update(float dt) {
 		return;
 	}
 
+	diagPushedThisFrame = false;
 	{ RT004_SCOPE("TimeOffsetVideoBuffer.player.update"); player.update(); }
 
 	if (pendingStartSeconds > 0.0f && player.getDuration() > 0.0f) {
@@ -237,7 +239,8 @@ void TimeOffsetVideoBuffer::update(float dt) {
 
 		RT004_SCOPE("TOVB.history.pushPop");
 		history.push_front(std::move(frame));
-		diagPushGeneration++;
+		historyGeneration++;
+		diagPushedThisFrame = true;
 
 		size_t maxFrames = static_cast<size_t>(settings.maxHistorySeconds * settings.assumedSourceFps);
 		while (history.size() > maxFrames) {
@@ -304,14 +307,19 @@ const ofTexture& TimeOffsetVideoBuffer::getPlayheadTexture(int playheadIndex) {
 	probe.count("TOVB.playhead.getCalls");
 	if (!ph.uploadedThisFrame) {
 		RT004_SCOPE("TimeOffsetVideoBuffer.playheadUpload");
-		int idx = offsetToHistoryIndex(ph.currentOffset);
+		int idx;
+		{ RT004_SCOPE("TOVB.playhead.select"); idx = offsetToHistoryIndex(ph.currentOffset); } // offset -> history index
 		if (idx >= 0) {
 			const ofPixels& px = history[idx];
+			// History frames are never modified after push, so a generation
+			// identifies a frame's exact pixels for as long as it exists.
+			const uint64_t gen = historyGeneration - static_cast<uint64_t>(idx);
 			if (!ph.texture.isAllocated()
 				|| ph.texture.getWidth() != px.getWidth()
 				|| ph.texture.getHeight() != px.getHeight()) {
 				RT004_SCOPE("TOVB.playhead.texAllocate");
 				ph.texture.allocate(px);
+				ph.uploadedGeneration = 0; // fresh storage: never treat as holding a frame
 				probe.count("TOVB.playhead.texAllocate");
 				if (probe.enabled()) {
 					probe.note("temporal.playheadTexFormat", std::to_string(px.getWidth()) + "x" + std::to_string(px.getHeight())
@@ -319,18 +327,44 @@ const ofTexture& TimeOffsetVideoBuffer::getPlayheadTexture(int playheadIndex) {
 						+ ofToHex(ph.texture.getTextureData().glInternalFormat));
 				}
 			}
-			{ RT004_SCOPE("TOVB.playhead.loadData"); ph.texture.loadData(px); }
-			probe.count("TOVB.playhead.upload");
-			if (probe.enabled()) {
-				const uint64_t gen = diagPushGeneration - static_cast<uint64_t>(idx);
-				if (gen == ph.diagLastUploadGeneration) probe.count("TOVB.playhead.uploadSameFrameAsLast");
-				if (std::find(diagUploadedGenerationsThisFrame.begin(), diagUploadedGenerationsThisFrame.end(), gen)
-					!= diagUploadedGenerationsThisFrame.end()) {
-					probe.count("TOVB.playhead.uploadDuplicateInFrame");
-				} else {
-					diagUploadedGenerationsThisFrame.push_back(gen);
+			// RT-004 playhead upload: skip only a provably redundant upload —
+			// this playhead's texture already holds exactly this history
+			// frame. EXPERIENCE_RUNTIME_TEMPORAL_PLAYHEAD_UPLOAD=legacy always
+			// uploads (read per call so a driver script can A/B in-process).
+			const char* uploadMode = std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_PLAYHEAD_UPLOAD");
+			const bool legacyUpload = uploadMode != nullptr && std::string(uploadMode) == "legacy";
+			const bool redundant = gen == ph.uploadedGeneration;
+			if (probe.enabled() && redundant) {
+				// Why the same frame came round again (diagnostic).
+				probe.count(diagPushedThisFrame ? "TOVB.playhead.sameFrame.newSourceThisFrame" : "TOVB.playhead.sameFrame.noNewSourceThisFrame");
+				probe.count(history.size() >= static_cast<size_t>(getHistoryCapacityFrames()) ? "TOVB.playhead.sameFrame.historyFull" : "TOVB.playhead.sameFrame.historyFilling");
+			}
+			if (redundant && !legacyUpload) {
+				probe.count("TOVB.playhead.uploadSkippedRedundant");
+				static const bool verifySkip = std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_PLAYHEAD_UPLOAD_VERIFY") != nullptr;
+				if (verifySkip) {
+					// Verification only (desktop GL): the texture must already
+					// hold exactly the pixels the skipped upload would have sent.
+					ofPixels held;
+					ph.texture.readToPixels(held);
+					const bool same = held.size() == px.size() && std::equal(px.begin(), px.end(), held.begin());
+					if (!same) ofLogError("TimeOffsetVideoBuffer") << "playhead skip verify: texture differs from selected history frame";
+					probe.count(same ? "TOVB.playhead.skipVerifyMatch" : "TOVB.playhead.skipVerifyMismatch");
 				}
-				ph.diagLastUploadGeneration = gen;
+			} else {
+				{ RT004_SCOPE("TOVB.playhead.loadData"); ph.texture.loadData(px); }
+				ph.uploadedGeneration = gen;
+				probe.count("TOVB.playhead.upload");
+				probe.count("TOVB.playhead.uploadBytes", px.size());
+				if (redundant) probe.count("TOVB.playhead.uploadSameFrameAsLast");
+				if (probe.enabled()) {
+					if (std::find(diagUploadedGenerationsThisFrame.begin(), diagUploadedGenerationsThisFrame.end(), gen)
+						!= diagUploadedGenerationsThisFrame.end()) {
+						probe.count("TOVB.playhead.uploadDuplicateInFrame");
+					} else {
+						diagUploadedGenerationsThisFrame.push_back(gen);
+					}
+				}
 			}
 		} else {
 			probe.count("TOVB.playhead.emptyHistory");

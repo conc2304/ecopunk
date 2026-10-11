@@ -5,6 +5,7 @@
 #include "ExperienceRuntime.h"
 #include "GlRestorationHarness.h"
 #include "Rt004StallDriver.h"
+#include "Rt004FramePhaseProbe.h"
 #include "SceneSwitchHarness.h"
 #include "SkinLoaderHarness.h"
 #include "HudArtReferenceExporter.h"
@@ -15,6 +16,7 @@
 #include "ResumeWindowHarness.h"
 #include "CadenceHarness.h"
 #include "TemporalWarmHarness.h"
+#include "ThreeSceneCircuitHarness.h"
 #include "TemporalLifecycleHarness.h"
 #include "TwoSceneAcceptanceHarness.h"
 
@@ -63,5 +65,7 @@ private:
 	std::unique_ptr<ResumeWindowHarness> resumeWindowHarness; // Shared Video long-clip resume windows
 	std::unique_ptr<CadenceHarness> cadenceHarness; // Blueprint cycle-driven media cadence
 	std::unique_ptr<TemporalWarmHarness> temporalWarmHarness; // Temporal first-activation stall
+	std::unique_ptr<ThreeSceneCircuitHarness> threeSceneHarness; // RT-005 three-scene circuits
 	std::unique_ptr<Rt004StallDriver> stallDriver; // RT-004 diagnostic, normal path only
+	std::unique_ptr<Rt004FramePhaseProbe> framePhaseProbe; // RT-004 frame-phase diagnostic (EXPERIENCE_RUNTIME_FRAME_PHASE_PROBE)
 };

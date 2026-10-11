@@ -82,12 +82,30 @@ bool TFAmbientTextureLayer::ensureMaskLoaded(size_t index) {
 	TFBackgroundTexture& tex = textures[index];
 	if (tex.mask.getTexture().isAllocated()) return true;
 	RT004_SCOPE("TFAmbient.lazyLoad.mask");
-	if (!tex.mask.load(tex.maskPath)) {
+	// Same result as ofImage::load() (decode into the image's pixels, then
+	// update() uploads), split so decode and upload are timed separately.
+	ofPixels px;
+	bool ok;
+	{ RT004_SCOPE("TFAmbient.lazyLoad.mask.decode"); ok = ofLoadImage(px, tex.maskPath); }
+	if (!ok) {
 		ofLogWarning("TFAmbientTextureLayer") << "lazy mask load failed: " << tex.maskPath;
 		return false;
 	}
+	{
+		RT004_SCOPE("TFAmbient.lazyLoad.mask.upload");
+		tex.mask.getPixels() = std::move(px);
+		tex.mask.update();
+	}
 	if (residencyMode == Residency::Bounded && tex.mask.getTexture().isAllocated()) tex.mask.getPixels().clear();
-	return true;
+	return tex.mask.getTexture().isAllocated();
+}
+
+bool TFAmbientTextureLayer::releaseMask(size_t index) {
+	if (index >= textures.size()) return false;
+	TFBackgroundTexture& tex = textures[index];
+	RT004_SCOPE("TFAmbient.releaseMask");
+	tex.mask.clear(); // CPU pixels + GL texture; maskPath and the file on disk are kept
+	return !tex.mask.getTexture().isAllocated();
 }
 
 void TFAmbientTextureLayer::setup(int canvasW_, int canvasH_, const std::string& folderPath) {

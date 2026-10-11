@@ -7,6 +7,36 @@
 #include "ofLog.h"
 #include "ofUtils.h"
 
+namespace {
+
+// One-line rendering of HudFrameData.effects for the log — absent,
+// present-empty, or each slot's canonical id / displayName / phase /
+// prominence, exactly as the HUD receives them.
+std::string describeEffects(const HudFrameData& frame) {
+	if (!frame.effects) return "absent";
+	const auto& fx = *frame.effects;
+	std::string health = fx.health == videoeffects::EffectHealth::Ready ? "Ready"
+		: fx.health == videoeffects::EffectHealth::Degraded ? "Degraded" : "Failed";
+	if (fx.slots.empty()) return "present-empty (health=" + health + ")";
+	std::string out = "present-active (health=" + health + ")";
+	for (const auto& s : fx.slots) {
+		out += " [effectId=" + s.effectId + " displayName=\"" + s.displayName + "\" phase="
+			+ (s.phase == videoeffects::EvolutionPhase::Holding ? "Holding" : "Transitioning")
+			+ " prominence=" + ofToString(s.prominence, 2) + "]";
+	}
+	return out;
+}
+
+std::string activeEffectIds(const HudFrameData& frame) {
+	std::string ids;
+	if (frame.effects) {
+		for (const auto& s : frame.effects->slots) ids += (ids.empty() ? "" : ",") + s.effectId;
+	}
+	return ids; // "" = absent or present-empty
+}
+
+} // namespace
+
 bool TemporalLifecycleHarness::isRequested() {
 	return std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_LIFECYCLE_HARNESS") != nullptr;
 }
@@ -36,6 +66,13 @@ void TemporalLifecycleHarness::runOneFrame(float dt) {
 	logResult("frameNumber() strictly increasing", runtime_.frameNumber() > lastFrameNumber_,
 		"was " + ofToString(lastFrameNumber_) + ", now " + ofToString(runtime_.frameNumber()));
 	lastFrameNumber_ = runtime_.frameNumber();
+
+	framesRun_++;
+	if (!loggedFirstEffects_ && frame.effects) {
+		loggedFirstEffects_ = true;
+		ofLogNotice("TemporalLifecycleHarness") << "first effect snapshot at harness frame " << framesRun_
+			<< " (runtime frameNumber " << runtime_.frameNumber() << "): " << describeEffects(frame);
+	}
 }
 
 void TemporalLifecycleHarness::captureScreenshot(const std::string& label) {
@@ -69,7 +106,8 @@ void TemporalLifecycleHarness::step(float dt) {
 
 				bool effectsPresentAfterWarmup = runtime_.currentHudFrameData().effects.has_value();
 				logResult("HudFrameData.effects present after first completed Temporal frame (DEC-015 forwarding path)",
-					effectsPresentAfterWarmup, "");
+					effectsPresentAfterWarmup, describeEffects(runtime_.currentHudFrameData()));
+				firstEffectIds_ = activeEffectIds(runtime_.currentHudFrameData());
 
 				captureScreenshot("00_warmup");
 				historyCountAtDeactivate_ = temporal.coreForTesting().historyFrameCount();
@@ -135,7 +173,17 @@ void TemporalLifecycleHarness::step(float dt) {
 				bool effectsCoherent = runtime_.currentHudFrameData().effects.has_value();
 				logResult("Canonical effect snapshot remains coherent after reactivation (cycle "
 						+ ofToString(cycleIndex_) + ")",
-					effectsCoherent, "");
+					effectsCoherent, describeEffects(runtime_.currentHudFrameData()));
+
+				// The whole harness runs far inside one TFEffectPicker cycle
+				// interval and activate()/deactivate() never pick, so the
+				// selection made at setup must survive reactivation unchanged
+				// — neither re-picked nor reset to a stale/empty state.
+				const std::string idsNow = activeEffectIds(runtime_.currentHudFrameData());
+				logResult("Reactivation keeps the setup-time effect selection (no re-pick, no stale reset; cycle "
+						+ ofToString(cycleIndex_) + ")",
+					idsNow == firstEffectIds_,
+					"first=[" + firstEffectIds_ + "] now=[" + idsNow + "]");
 
 				captureScreenshot("cycle" + ofToString(cycleIndex_) + "_end");
 				sceneManager.deactivateScene();
