@@ -6,6 +6,7 @@
 #include "ofVideoPlayer.h"
 #include "ofPixels.h"
 #include "ofTexture.h"
+#include "ofGLUtils.h"
 
 // Plays a single video continuously (forward, looping) and keeps a rolling
 // history of downscaled frames in CPU memory, so multiple "playheads" can
@@ -126,6 +127,17 @@ class TimeOffsetVideoBuffer {
 		bool isMediaAdvanceEligible() const;
 
 		bool hasMedia() const { return mediaLoaded; }
+
+		// RT-004 inactive-resource release (called by TimeOffsetPlaybackAdapter
+		// when the owning scene is deactivated): clears the CPU history and the
+		// playhead textures (same reset as every reload) and closes the
+		// dedicated decoder with the pause-then-close sequence (measured ~98 ms
+		// on the Pi, S1 frame 427 -- not the ~5 s EOS wait, which only applies
+		// to closing an unpaused, playing pipeline). Nothing reads this buffer
+		// while its scene is inactive; the next loadExplicit() reloads from
+		// scratch. Main/GL thread only. Safe to call repeatedly or before
+		// shutdown (close on an unloaded player is a no-op).
+		void releaseForInactive();
 		// Live (undelayed) decoder playhead in seconds, -1 if unknown.
 		float getLivePositionSeconds() const {
 			if (!mediaLoaded || player.getDuration() <= 0.0f) return -1.0f;
@@ -137,6 +149,28 @@ class TimeOffsetVideoBuffer {
 		int getBufferHeight() const { return settings.bufferHeight; }
 
 		int getNumPlayheads() const { return static_cast<int>(playheads.size()); }
+		// Observability only (RT-004 memory attribution): live decoded pixel
+		// bytes held by the CPU history right now (sum of ofPixels::size();
+		// excludes allocator/page overhead).
+		size_t getHistoryPixelBytes() const {
+			size_t total = 0;
+			for (const auto& px : history) total += px.size();
+			return total;
+		}
+		// Estimate only: width x height x channels of each allocated playhead
+		// texture, from its GL internal format. A driver may store RGB as 4
+		// bytes/pixel (padRgbToRgba) and adds its own overhead either way.
+		size_t getPlayheadTextureBytesEstimate(bool padRgbToRgba) const {
+			size_t total = 0;
+			for (const auto& ph : playheads) {
+				if (!ph.texture.isAllocated()) continue;
+				const ofTextureData& d = ph.texture.getTextureData();
+				size_t channels = static_cast<size_t>(ofGetNumChannelsFromGLFormat(ofGetGLFormatFromInternal(d.glInternalFormat)));
+				if (padRgbToRgba && channels == 3) channels = 4;
+				total += static_cast<size_t>(d.width) * static_cast<size_t>(d.height) * channels;
+			}
+			return total;
+		}
 		// Observability only (harnesses): playhead textures currently holding GL storage.
 		int getAllocatedPlayheadTextureCount() const {
 			int n = 0;

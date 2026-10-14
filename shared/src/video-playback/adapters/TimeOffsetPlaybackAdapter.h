@@ -115,6 +115,17 @@ public:
 	// resets this adapter's own local "have I already loaded this" memory.
 	void invalidateForReactivation() { loadedMediaId_.clear(); }
 
+	// RT-004: release the dedicated decoder, history and playhead textures
+	// while the owning scene is inactive (see TimeOffsetVideoBuffer::
+	// releaseForInactive()). Also forgets loadedMediaId_, so the next
+	// synchronizeSelectedMedia() reloads -- exactly what reactivation already
+	// forces via invalidateForReactivation(). Does not touch
+	// VideoPlaybackService or the canonical selection (DEC-013/DEC-014).
+	void releaseForDeactivation() {
+		buffer_.releaseForInactive();
+		loadedMediaId_.clear();
+	}
+
 	// Direct access to the owned buffer for every existing playhead/
 	// history/raw-texture accessor (getPlayheadTexture, getPlayheadOffset,
 	// getHistoryFrameCount, getRawVideoTexture, ...) — deliberately NOT

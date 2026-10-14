@@ -249,3 +249,21 @@ Release Debug: sync-blueprint-runtime-assets
 .PHONY: sync-blueprint-runtime-assets
 sync-blueprint-runtime-assets:
 	@python3 ../../scripts/sync-blueprint-runtime-assets.py $(CURDIR)
+
+# Shared shaders loaded by legacy bin/data paths (ShaderLibrary's
+# shaders/effects/ + of_nature_shader_pack_glsl/, MotionExtraction,
+# fragmentEffects, erosion), from shared/assets/video-effects/ and
+# shared/src/shaders/ — same deterministic model. Previously hand-copied, so
+# absent on a fresh tree (Rock Pi).
+Release Debug: sync-shared-shader-runtime-assets
+.PHONY: sync-shared-shader-runtime-assets
+sync-shared-shader-runtime-assets:
+	@python3 ../../scripts/sync-shared-shader-runtime-assets.py $(CURDIR)
+
+# Shared Effect Knowledge pack (TFEffectPicker imports
+# shared-video-effects/knowledge/effect-knowledge-pack.json). This sketch has
+# no effect-manifest.json, so the existing sync only writes the pack.
+Release Debug: sync-video-effect-assets
+.PHONY: sync-video-effect-assets
+sync-video-effect-assets:
+	@python3 ../../scripts/sync-video-effect-assets.py $(CURDIR)

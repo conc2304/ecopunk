@@ -58,7 +58,10 @@ namespace {
 			std::string path = prefix + "." + p.getEscapedName();
 			TFTimelineBinding binding;
 
-			if (p.isOfType<float>()) {
+			// type() compares typeid(*this), same as 0.12.1's isOfType<T>(),
+			// which oF 0.12.0 lacks.
+			const std::string type = p.type();
+			if (type == typeid(ofParameter<float>).name()) {
 				ofParameter<float>& fp = p.cast<float>();
 				binding.kind = TFTimelineBinding::Kind::Float;
 				binding.get = [&fp]() { return static_cast<double>(fp.get()); };
@@ -66,7 +69,7 @@ namespace {
 				binding.hasRange = true;
 				binding.minValue = fp.getMin();
 				binding.maxValue = fp.getMax();
-			} else if (p.isOfType<int>()) {
+			} else if (type == typeid(ofParameter<int>).name()) {
 				ofParameter<int>& ip = p.cast<int>();
 				binding.kind = TIMELINE_ENUM_LIKE_PATHS.count(path) ? TFTimelineBinding::Kind::EnumInt : TFTimelineBinding::Kind::Int;
 				binding.get = [&ip]() { return static_cast<double>(ip.get()); };
@@ -74,7 +77,7 @@ namespace {
 				binding.hasRange = true;
 				binding.minValue = ip.getMin();
 				binding.maxValue = ip.getMax();
-			} else if (p.isOfType<bool>()) {
+			} else if (type == typeid(ofParameter<bool>).name()) {
 				ofParameter<bool>& bp = p.cast<bool>();
 				binding.kind = TFTimelineBinding::Kind::Bool;
 				binding.get = [&bp]() { return bp.get() ? 1.0 : 0.0; };

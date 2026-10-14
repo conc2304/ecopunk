@@ -31,6 +31,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <deque>
+#include <iomanip>
 #include <map>
 #include <mutex>
 #include <sstream>
@@ -110,7 +111,11 @@ public:
 	void note(const char * label, const std::string & detail) {
 		if (!enabled_) return;
 		std::ostringstream os;
-		os << "  NOTE frame=" << frameIndex_ << " t=" << msSinceStart(nowNs()) << "ms " << label << ": " << detail << "\n";
+		const int64_t n = nowNs();
+		// mono= is steady_clock seconds (CLOCK_MONOTONIC on Linux), the time
+		// basis shared with external samplers.
+		os << "  NOTE frame=" << frameIndex_ << " mono=" << std::fixed << std::setprecision(3) << n / 1e9 << std::defaultfloat
+		   << " t=" << msSinceStart(n) << "ms " << label << ": " << detail << "\n";
 		pendingNotes_ += os.str();
 		writeRaw(os.str());
 	}
@@ -316,7 +321,8 @@ private:
 		if (intervalMs >= thresholdMs_) {
 			longFrames_++;
 			std::ostringstream os;
-			os << "\n--- LONG FRAME #" << longFrames_ << " frame=" << frameIndex_ << " start=" << msSinceStart(frameStartNs_)
+			os << "\n--- LONG FRAME #" << longFrames_ << " frame=" << frameIndex_ << " mono=" << std::fixed << std::setprecision(3)
+			   << frameStartNs_ / 1e9 << std::defaultfloat << " start=" << msSinceStart(frameStartNs_)
 			   << "ms interval=" << intervalMs << "ms covered=" << coveredMs << "ms uncovered=" << (intervalMs - coveredMs)
 			   << "ms\n  context: " << ctx << "\n  previous frames:\n";
 			for (const FrameSummary & f : recent_) {

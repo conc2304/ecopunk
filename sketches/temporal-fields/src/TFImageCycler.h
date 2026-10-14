@@ -1,9 +1,10 @@
 #pragma once
 
+#include "ofImage.h"
+#include "ofPixels.h"
+#include "ofRectangle.h"
 #include <string>
 #include <vector>
-#include "ofImage.h"
-#include "ofRectangle.h"
 
 // Crossfades between static images from a folder on its own timer. Lazily
 // keeps only current+next ofImage resident — never the whole folder —
@@ -13,27 +14,27 @@
 // ofImage/ofLoadImage hits in shared/src or any sketch); this mirrors
 // TFParameterPanel::rescanPresets()'s ofDirectory scan idiom instead.
 class TFImageCycler {
-	public:
-		struct Params {
-			float cycleInterval = 10.0f; // total time each image is "current", including its fade-out
-			float fadeDuration = 2.0f; // crossfade window at the end of each interval
-		};
+public:
+	struct Params {
+		float cycleInterval = 10.0f; // total time each image is "current", including its fade-out
+		float fadeDuration = 2.0f; // crossfade window at the end of each interval
+	};
 
-		void setup(const std::string& folderPath);
-		void setParams(const Params& p) { params = p; }
-		void update(float dt);
-		bool hasImages() const { return !imagePaths.empty(); }
+	void setup(const std::string & folderPath);
+	void setParams(const Params & p) { params = p; }
+	void update(float dt);
+	bool hasImages() const { return !imagePaths.empty(); }
 
-		void draw(const ofRectangle& destRect, float alpha = 1.0f);
+	void draw(const ofRectangle & destRect, float alpha = 1.0f);
 
-	private:
-		void advance();
+private:
+	void advance();
 
-		std::vector<std::string> imagePaths;
-		Params params;
-		int currentIndex = -1;
-		int nextIndex = -1;
-		ofImage currentImg;
-		ofImage nextImg;
-		float holdTimer = 0.0f;
+	std::vector<std::string> imagePaths;
+	Params params;
+	int currentIndex = -1;
+	int nextIndex = -1;
+	ofImage currentImg;
+	ofImage nextImg;
+	float holdTimer = 0.0f;
 };

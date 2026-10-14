@@ -1,0 +1,116 @@
+# run_id=S1-20261012T023401Z-4ac6 source_revision=44044c13e371f246ca8a7fe662919d0dc06addca+dirty build_id=62322abd378027dd stop=cma_free<=40MiB_floor (33.6) launch_mono_s=89214.374
+rel_s	mono_s	source	scene	event	cma_free_mib	mem_available_mib	rss_mib	rss_anon_mib	v3d_kb	v3d_bos	purgeable_userspace_cache_kb	binner_kb	shader_kb	dumb_kb	dmabuf_objects	dmabuf_bytes	history_pix_mib	playhead_tex	detail
+-3.010	89211.364	collector	-	prelaunch	231.9	803.9					0		0	3664	0	0			
+-3.010	89211.364	watchdog	-	supervisor_start															run_dir=/home/conc/rt004fp/campaign-20261012T023119Z-747b/S1/S1-20261012T023401Z-4ac6
+-2.008	89212.366	collector	-	prelaunch	231.9	803.9					0		0	3664	0	0			
+-1.005	89213.369	collector	-	prelaunch	231.9	803.9					0		0	3664	0	0			
+-0.000	89214.374	watchdog	-	preflight_reading															"{""cma_free_mib"": 231.88671875, ""mem_available_mib"": 803.91796875, ""rss_mib"": null}"
+0.038	89214.412	watchdog	-	launch															pid=11931 pgid=11931 starttime=8921437 launch_mono=89214.374 cmd=/home/conc/openFrameworks/of_v0.12.1_linuxarmv6l_release/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/experience_runtime
+0.040	89214.414	collector	-	running	231.9	804.0	0.9	0.1			0		0	3664	0	0			
+1.040	89215.414	collector	-	running	231.9	802.4	27.2	3.2			0		0	3664	0	0			
+2.040	89216.414	collector	-	running	231.9	796.0	40.3	10.5			0		0	3664	0	0			
+3.040	89217.414	collector	-	running	231.9	791.3	53.8	11.4			0		0	3664	0	0			
+4.040	89218.414	collector	-	running	231.9	791.4	65.7	11.8			0		0	3664	0	0			
+4.578	89218.952	stall-note	-	canonical.load															media.auto.e50e19fd
+5.040	89219.414	collector	-	running	210.6	747.1	82.4	17.2	7792	3	0	16384	0	3664	1	3686400			
+5.542	89219.916	stall-note	blob-region-prototype (setup)	scene.setup															blob-region-prototype
+6.040	89220.414	collector	blob-region-prototype (setup)	running	198.7	723.2	102.6	31.8	11872	5	2040	16384	0	3664	23	26230784			
+6.236	89220.610	stall-note	blob-region-prototype	scene.activate															blob-region-prototype
+7.040	89221.414	collector	blob-region-prototype	running	186.4	710.8	108.8	37.4	24772	10	8400	16384	0	3664	23	26230784			
+8.040	89222.414	collector	blob-region-prototype	running	164.0	685.3	108.7	37.4	47308	13	12504	16384	0	3664	23	26230784			
+9.040	89223.414	collector	blob-region-prototype	running	152.3	674.4	108.7	37.4	59596	15	12504	16384	0	3664	23	26230784			
+10.040	89224.414	collector	blob-region-prototype	running	141.0	672.8	108.7	37.4	65524	16	6144	16384	0	3664	23	26230784			
+11.041	89225.415	collector	blob-region-prototype	running	131.7	659.7	108.6	37.4	84388	19	12504	16384	0	3664	23	26230784			
+12.041	89226.415	collector	blob-region-prototype	running	115.5	641.6	114.5	43.5	102820	22	12504	16384	0	3664	23	26230784			
+13.040	89227.414	collector	blob-region-prototype	running	104.4	614.2	108.5	37.5	115108	24	12504	16384	0	3664	23	26230784			
+14.040	89228.414	collector	blob-region-prototype	running	93.8	602.9	108.4	37.5	121036	25	6144	16384	0	3664	23	26230784			
+14.734	89229.108	stall-note	blob-region-prototype	temporal.ambientResidency															residency=bounded pairs=19 tintTextures=19 maskTextures=0 cpuTintMiB=0.0 cpuMaskMiB=0.0 gpuEstMiB=85.5 (rgb-padded 114.0) tintPixelsKept=0 rssBeforeMiB=104 rssA
+14.742	89229.117	frame-phase	blob-region-prototype	CONFIG:															"CONFIG t=0 mono=89229.116554 of=0.12.1 glRenderer=""VC4 V3D 2.1"" glVersion=""2.1 Mesa 24.2.8-1~bpo12+rpt5"" targetFps=30.000000 limiter=on vsync=on glFinish=off control=none slowMs=200.000000 windowMs=10"
+14.850	89229.224	frame-phase	blob-region-prototype	EVENT:effects													0.00	0/0	EVENT mono=89229.224 t=10286.60ms frame=0 kind=effects none
+14.850	89229.224	frame-phase	blob-region-prototype	SLOW:															SLOW frame=0 mono=89229.224 t=10286.60ms total=423.09ms largest=preDraw owner=blob-region-prototype phase=0 media=media.auto.e50e19fd
+14.850	89229.224	stall-note	blob-region-prototype	probe.scopeOverheadNs															531.324015
+14.851	89229.225	stall-long	blob-region-prototype	long-frame															frame=1 interval=423ms
+14.868	89229.242	stall-note	blob-region-prototype	driver.action															blob-baseline
+14.921	89229.295	watchdog	blob-region-prototype	cma_baseline_marker															driver logged blob-baseline
+15.040	89229.414	collector	blob-region-prototype	running	74.1	581.2	104.7	33.6	142724	30	8184	16384	0	3664	23	26230784			
+15.273	89229.647	frame-phase	blob-region-prototype	EVENT:scene-owner													0.00	0/0	EVENT mono=89229.647 t=10709.68ms frame=1 kind=scene-owner from=- to=blob-region-prototype
+15.273	89229.647	frame-phase	blob-region-prototype	EVENT:canonical-media													0.00	0/0	EVENT mono=89229.647 t=10709.68ms frame=1 kind=canonical-media from=- to=media.auto.e50e19fd
+16.040	89230.414	collector	blob-region-prototype	running	72.7	603.7	106.8	34.3	147228	36	11864	16384	52	3664	24	27254784			
+17.040	89231.414	collector	blob-region-prototype	running	71.7	594.6	106.8	34.3	148252	37	12888	16384	52	3664	24	27254784			
+17.956	89232.330	watchdog	blob-region-prototype	cma_baseline															71.7 MiB (median of 12 readings; decline limit 48 MiB -> stop at 23.7, floor 40)
+18.040	89232.414	collector	blob-region-prototype	running	71.7	594.6	106.8	34.3	138428	35	3064	16384	52	3664	24	27254784			
+18.218	89232.592	stall-note	blob-region-prototype	driver.action															temporal-1
+18.218	89232.592	stall-note	blob-region-prototype	driver.action															Blob->Temporal (first activation)
+18.218	89232.592	stall-note	transition	scene.deactivate															blob-region-prototype
+18.422	89232.796	frame-phase	transition	SLOW:															SLOW frame=183 mono=89232.796 t=13857.97ms total=1027.13ms largest=update owner=- phase=2 media=media.auto.e50e19fd
+18.422	89232.796	stall-note	temporal-fields (setup)	scene.setup															temporal-fields
+18.422	89232.796	stall-long	temporal-fields (setup)	long-frame															frame=184 interval=1.03e+03ms
+18.423	89232.797	stall-note	temporal-fields (setup)	temporal.loadExplicit															vecteezy_close-up-of-a-snail-on-a-green-grass_12322900.mp4
+19.040	89233.414	collector	temporal-fields (setup)	running	65.5	554.0	116.0	43.4	140468	36	3064	16384	52	3664	46	49799168			
+19.449	89233.823	frame-phase	temporal-fields (setup)	EVENT:scene-owner													0.00	0/6	EVENT mono=89233.823 t=14885.10ms frame=184 kind=scene-owner from=blob-region-prototype to=-
+19.450	89233.824	stall-note	temporal-fields	scene.activate															temporal-fields
+19.484	89233.858	stall-note	temporal-fields	temporal.historySourceFormat															960x540 ch=3 fmt=2 -> 640x360
+19.487	89233.861	stall-note	temporal-fields	temporal.downscaleMap															960x540 -> 640x360 ch=3 exact
+19.556	89233.930	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+19.575	89233.949	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+19.593	89233.967	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+19.609	89233.983	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+19.626	89234.000	frame-phase	temporal-fields	EVENT:scene-owner													0.66	4/6	EVENT mono=89234.000 t=15062.71ms frame=185 kind=scene-owner from=- to=temporal-fields
+19.626	89234.000	frame-phase	temporal-fields	EVENT:effects													0.66	4/6	EVENT mono=89234.000 t=15062.71ms frame=185 kind=effects health=0 slots=1 [temporal_fields.background:recolor|Recolor]
+20.040	89234.414	collector	temporal-fields	running	58.0	566.0	121.0	48.1	158228	46	5944	16384	80	3664	46	49799168			
+20.645	89235.019	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+21.040	89235.414	collector	temporal-fields	running	56.1	566.8	126.3	53.4	160148	48	6904	16384	80	3664	46	49799168			
+22.040	89236.414	collector	temporal-fields	running	55.9	561.4	131.7	58.8	160316	50	6904	16384	92	3664	46	49799168			
+22.316	89236.690	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+22.813	89237.187	stall-note	temporal-fields	driver.action															blob-2
+22.813	89237.187	stall-note	temporal-fields	driver.action															Temporal->Blob
+22.813	89237.187	stall-note	transition	scene.deactivate															temporal-fields
+23.046	89237.420	collector	transition	running	54.5	557.6	135.7	62.8	161212	51	6840	16384	92	3664	46	49799168			
+23.123	89237.497	frame-phase	transition	EVENT:scene-owner													15.82	6/6	EVENT mono=89237.497 t=18559.71ms frame=232 kind=scene-owner from=temporal-fields to=-
+23.123	89237.497	frame-phase	transition	EVENT:effects													15.82	6/6	EVENT mono=89237.497 t=18559.71ms frame=232 kind=effects none
+23.124	89237.498	stall-note	blob-region-prototype	scene.activate															blob-region-prototype
+23.143	89237.517	frame-phase	blob-region-prototype	EVENT:scene-owner													15.82	6/6	EVENT mono=89237.517 t=18578.99ms frame=233 kind=scene-owner from=- to=blob-region-prototype
+24.040	89238.414	collector	blob-region-prototype	running	54.5	555.7	135.7	62.8	162236	52	7864	16384	92	3664	46	49799168			
+25.040	89239.414	collector	blob-region-prototype	running	54.5	555.7	135.7	62.8	162236	52	7864	16384	92	3664	46	49799168			
+26.040	89240.414	collector	blob-region-prototype	running	54.5	556.7	136.1	63.2	157436	47	3064	16384	92	3664	46	49799168			
+26.202	89240.576	stall-note	blob-region-prototype	driver.action															temporal-2
+26.203	89240.577	stall-note	blob-region-prototype	driver.action															Blob->Temporal (second activation)
+26.203	89240.577	stall-note	transition	scene.deactivate															blob-region-prototype
+26.417	89240.791	frame-phase	transition	EVENT:scene-owner													15.82	6/6	EVENT mono=89240.791 t=21853.59ms frame=426 kind=scene-owner from=blob-region-prototype to=-
+26.417	89240.791	frame-phase	transition	SLOW:															SLOW frame=426 mono=89240.791 t=21853.59ms total=660.45ms largest=update owner=temporal-fields phase=3 media=media.auto.e50e19fd
+26.418	89240.792	stall-note	temporal-fields	scene.activate															temporal-fields
+26.418	89240.792	stall-long	temporal-fields	long-frame															frame=427 interval=661ms
+26.419	89240.793	stall-note	temporal-fields	temporal.loadExplicit															vecteezy_close-up-of-a-snail-on-a-green-grass_12322900.mp4
+26.988	89241.362	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+27.000	89241.374	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+27.012	89241.386	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+27.024	89241.398	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+27.037	89241.411	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+27.040	89241.414	collector	temporal-fields	running	50.8	570.8	120.5	47.7	165756	50	4192	16384	92	3664	46	49799168			
+27.063	89241.437	stall-note	temporal-fields	temporal.playheadTexFormat															640x360 ch=3 glInternalFormat=0x00008051
+27.078	89241.452	frame-phase	temporal-fields	EVENT:scene-owner													0.66	6/6	EVENT mono=89241.452 t=22514.04ms frame=427 kind=scene-owner from=- to=temporal-fields
+27.078	89241.452	frame-phase	temporal-fields	EVENT:history-reset													0.66	6/6	EVENT mono=89241.452 t=22514.04ms frame=427 kind=history-reset from=24 to=1
+27.078	89241.452	frame-phase	temporal-fields	EVENT:effects													0.66	6/6	EVENT mono=89241.452 t=22514.04ms frame=427 kind=effects health=0 slots=1 [temporal_fields.background:recolor|Recolor]
+28.041	89242.415	collector	temporal-fields	running	50.9	549.2	127.3	54.5	165756	50	4192	16384	92	3664	46	49799168			
+29.045	89243.419	collector	temporal-fields	running	50.9	556.7	132.6	59.8	164732	49	3168	16384	92	3664	46	49799168			
+30.040	89244.414	collector	temporal-fields	running	49.6	549.4	138.0	65.1	167504	51	3000	16384	92	3664	46	49799168			
+30.393	89244.767	stall-note	temporal-fields	driver.action															blueprint
+30.393	89244.767	stall-note	temporal-fields	driver.action															Temporal->Blueprint
+30.393	89244.767	stall-note	transition	scene.deactivate															temporal-fields
+30.632	89245.006	stall-note	blueprint_emergence (setup)	scene.setup															blueprint_emergence
+31.040	89245.414	collector	blueprint_emergence (setup)	running	48.5	540.3	143.7	69.5	168656	53	6904	16384	92	3664	46	49799168			
+31.417	89245.791	watchdog	blueprint_emergence (setup)	stop															cma_free<=40MiB_floor (33.6)
+31.419	89245.793	watchdog	blueprint_emergence (setup)	stop_last_reading															"{""cma_free_mib"": 33.4765625, ""mem_available_mib"": 518.77734375, ""rss_mib"": 146.89453125}"
+31.419	89245.793	watchdog	blueprint_emergence (setup)	stop_last_sample															"{""status_vmrss_kb"": ""147116"", ""status_rssanon_kb"": ""71184"", ""status_rssfile_kb"": ""75916"", ""status_rssshmem_kb"": ""16"", ""meminfo_memavailable_kb"": ""553260"", ""meminfo_swapfree_kb"": ""481172"", ""meminfo_cmatotal_kb"": ""262144"", ""meminfo_cmafree_kb"": ""49700""}"
+31.420	89245.794	watchdog	terminating	signal															SIGTERM -> pgid 11931
+32.042	89246.416	collector	terminating	running	5.4	508.1	124.5	50.4	188028	121	171872	16384	64	3664	24	27254784			
+33.040	89247.414	collector	terminating	running	5.3	502.2	124.6	50.4	188028	121	171872	16384	64	3664	24	27254784			
+34.040	89248.414	collector	terminating	running	5.3	505.5	124.6	50.4	188028	121	171872	16384	64	3664	24	27254784			
+35.040	89249.414	collector	terminating	running	5.3	508.0	124.6	50.4	188028	121	171872	16384	64	3664	24	27254784			
+36.040	89250.414	collector	terminating	running	5.3	512.7	124.6	50.4	188028	121	171872	16384	64	3664	24	27254784			
+36.435	89250.809	watchdog	terminating	signal															SIGKILL -> pgid 11931 (TERM grace 5s expired)
+36.467	89250.841	watchdog	terminating	app_exit															returncode=-9
+37.040	89251.414	collector	terminating	postexit	21.8	586.6					0		0	3664	0	0			
+38.040	89252.414	collector	terminating	postexit	221.5	789.7					0		0	3664	0	0			
+39.040	89253.414	collector	terminating	postexit	221.5	789.7					0		0	3664	0	0			
+39.470	89253.844	watchdog	terminating	supervisor_end															cma_free<=40MiB_floor (33.6)

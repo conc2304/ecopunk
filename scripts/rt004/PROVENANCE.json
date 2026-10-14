@@ -1,0 +1,20 @@
+{
+  "created_utc": "2026-10-12T02:02:16Z",
+  "diff_sha256": "1fa02620db71693d82da469747af7d4f18a3d44f076be3fd1b32b01f13b95837",
+  "dirty": true,
+  "git_head": "44044c13e371f246ca8a7fe662919d0dc06addca",
+  "host": "MacBookPro",
+  "status_porcelain": [
+    " M shared/src/Rt004StallProbe.h",
+    " M shared/src/TimeOffsetVideoBuffer.h",
+    " M sketches/experience_runtime/src/Rt004FramePhaseProbe.cpp",
+    " M sketches/experience_runtime/src/Rt004FramePhaseProbe.h",
+    " M sketches/experience_runtime/src/Rt004StallDriver.cpp",
+    " M sketches/experience_runtime/src/Rt004StallDriver.h",
+    "?? docs/reviews/blue-002-blueprint-dark-moss-visual-review-report.md",
+    "?? docs/reviews/blue002-captures/",
+    "?? docs/reviews/logs/blue002-gl-trace-and-long-frames-2026-10-11.log",
+    "?? docs/reviews/logs/blue002-normal-session-run-2026-10-11.log",
+    "?? scripts/rt004/"
+  ]
+}

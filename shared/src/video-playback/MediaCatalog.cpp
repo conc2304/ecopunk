@@ -1,9 +1,12 @@
 #include "MediaCatalog.h"
 
 #include <algorithm>
+#include <cctype>
+#include <cstdint>
 #include <fstream>
 #include <unordered_map>
 #include <unordered_set>
+#include <vector>
 
 namespace {
 
@@ -56,24 +59,43 @@ std::string MediaCatalog::synthesizeTitleId(const std::string& mediaId) {
 }
 
 std::string MediaCatalog::synthesizeFallbackDisplayTitle(const std::string& relativePath) {
-	std::string name = stripExtension(relativePath);
-	for (char& c : name) {
-		if (c == '_' || c == '-') c = ' ';
+	// Turns snake_case, kebab-case and camelCase stems into Title Case
+	// words: "this_is_aTitleThat_We-can-change" -> "This Is A Title That We
+	// Can Change". Only each word's first letter is uppercased, so acronyms
+	// survive ("HUDTitle" -> "HUD Title").
+	const std::string name = stripExtension(relativePath);
+	auto isUpper = [](char c) { return std::isupper(static_cast<unsigned char>(c)) != 0; };
+	auto isLower = [](char c) { return std::islower(static_cast<unsigned char>(c)) != 0; };
+
+	std::vector<std::string> words;
+	std::string word;
+	for (size_t i = 0; i < name.size(); i++) {
+		char c = name[i];
+		if (c == '_' || c == '-' || c == ' ') {
+			if (!word.empty()) words.push_back(word);
+			word.clear();
+			continue;
+		}
+		// camelCase boundary ("aTitle"), or the end of an acronym run
+		// ("HUDTitle" splits before the 'T').
+		bool boundary = !word.empty() && isUpper(c) &&
+			(isLower(word.back()) ||
+			 (isUpper(word.back()) && i + 1 < name.size() && isLower(name[i + 1])));
+		if (boundary) {
+			words.push_back(word);
+			word.clear();
+		}
+		word.push_back(c);
 	}
-	// Collapse runs of spaces produced by adjacent separators (e.g.
-	// "foo--bar" or "foo_-bar") without pulling in a regex dependency.
-	std::string collapsed;
-	collapsed.reserve(name.size());
-	bool lastWasSpace = false;
-	for (char c : name) {
-		bool isSpace = (c == ' ');
-		if (isSpace && lastWasSpace) continue;
-		collapsed.push_back(c);
-		lastWasSpace = isSpace;
+	if (!word.empty()) words.push_back(word);
+
+	std::string title;
+	for (std::string& w : words) {
+		w[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(w[0])));
+		if (!title.empty()) title.push_back(' ');
+		title += w;
 	}
-	while (!collapsed.empty() && collapsed.front() == ' ') collapsed.erase(collapsed.begin());
-	while (!collapsed.empty() && collapsed.back() == ' ') collapsed.pop_back();
-	return collapsed.empty() ? relativePath : collapsed;
+	return title.empty() ? relativePath : title;
 }
 
 MediaCatalogBuildResult MediaCatalog::build(

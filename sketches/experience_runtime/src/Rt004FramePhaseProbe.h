@@ -47,6 +47,14 @@ class ExperienceRuntime;
 // (segment p50/p95/max, CPU share, RSS/MemAvailable/CmaFree/SwapFree).
 // Nothing is registered when disabled.
 //
+// RT-004 memory attribution additions: each WINDOW also carries Temporal
+// residency (historyFrames/capacity and live history pixel bytes = measured;
+// playhead texture bytes = estimate from dimensions x format, plus an
+// RGB-padded-to-RGBA figure) and RssAnon/RssFile/RssShmem; EVENT lines are
+// written only on transitions (scene owner, canonical media, history reset,
+// history full). EXPERIENCE_RUNTIME_FRAME_PHASE_WINDOW_MS sets the summary
+// period (default 10000, min 250).
+//
 // Diagnostic controls (only with the probe enabled; never in a normal run):
 //   EXPERIENCE_RUNTIME_FRAME_LIMITER=off   ofSetFrameRate(0) after runtime setup
 //   EXPERIENCE_RUNTIME_VSYNC=off           ofSetVerticalSync(false) after runtime setup
@@ -89,11 +97,17 @@ private:
 	void closeFrame(const Stamp& nextU0);
 	void writeWindowSummary(double atMs);
 	void writeLine(const std::string& line);
+	std::string temporalResidency() const;
+	void checkTransitions(const Stamp& at);
 	std::string frameContext() const;
 
 	ExperienceRuntime& runtime_;
 	std::string logPath_;
 	double slowMs_ = 200.0;
+	double windowMs_ = 10000.0; // EXPERIENCE_RUNTIME_FRAME_PHASE_WINDOW_MS (min 250)
+	std::string lastOwner_, lastMedia_;
+	int lastHistory_ = 0;
+	size_t lastEffectsHash_ = 0; // 0 = nothing seen yet (first snapshot always logged)
 	bool glFinish_ = false;
 	int64_t startNs_ = 0;
 

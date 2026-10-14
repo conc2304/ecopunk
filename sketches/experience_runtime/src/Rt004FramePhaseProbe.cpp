@@ -2,6 +2,7 @@
 
 #include "ExperienceRuntime.h"
 #include "Rt004StallProbe.h"
+#include "TemporalProductionScene.h"
 #include "ofAppRunner.h"
 #include "ofGLUtils.h"
 #include "ofGraphics.h"
@@ -12,6 +13,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
+#include <functional>
 #include <iomanip>
 #include <sstream>
 #include <vector>
@@ -70,6 +72,7 @@ Rt004FramePhaseProbe::Rt004FramePhaseProbe(ExperienceRuntime& runtime) : runtime
 	logPath_ = path ? path : "rt004-frame-phase.log";
 	if (const char* ms = std::getenv("EXPERIENCE_RUNTIME_FRAME_PHASE_MS")) slowMs_ = std::max(1.0, std::atof(ms));
 	glFinish_ = std::getenv("EXPERIENCE_RUNTIME_FRAME_PHASE_GLFINISH") != nullptr;
+	if (const char* w = std::getenv("EXPERIENCE_RUNTIME_FRAME_PHASE_WINDOW_MS")) windowMs_ = std::max(250.0, std::atof(w));
 	startNs_ = steadyNs();
 	ofAddListener(ofEvents().update, this, &Rt004FramePhaseProbe::onUpdateBefore, OF_EVENT_ORDER_BEFORE_APP);
 	ofAddListener(ofEvents().update, this, &Rt004FramePhaseProbe::onUpdateAfter, OF_EVENT_ORDER_AFTER_APP);
@@ -98,7 +101,7 @@ void Rt004FramePhaseProbe::afterRuntimeSetup() {
 	   << (renderer ? reinterpret_cast<const char*>(renderer) : "?") << "\" glVersion=\"" << (version ? reinterpret_cast<const char*>(version) : "?")
 	   << "\" targetFps=" << ofGetTargetFrameRate() << " limiter=" << (limiterOff ? "off" : "on") << " vsync=" << (vsyncOff ? "off" : "on")
 	   << " glFinish=" << (glFinish_ ? "on" : "off") << " control=" << (control ? control : "none") << " slowMs=" << slowMs_
-	   << " stallProbe=" << (rt004::Probe::get().enabled() ? "on" : "off") << " glTrace=" << (rt004::Probe::get().glTraceActive() ? "on" : "off")
+	   << " windowMs=" << windowMs_ << " stallProbe=" << (rt004::Probe::get().enabled() ? "on" : "off") << " glTrace=" << (rt004::Probe::get().glTraceActive() ? "on" : "off")
 	   << " window=" << ofGetWidth() << "x" << ofGetHeight();
 	writeLine(os.str());
 	writeLine("SEGMENTS update=U1-U0 preDraw=D0-U1(window-update tail+startRender clear+setupScreen+limiter) draw=D1-D0 "
@@ -131,6 +134,7 @@ void Rt004FramePhaseProbe::onUpdateBefore(ofEventArgs&) {
 	// finishRender, loop event, pollEvents (only with the GL trace on).
 	rt004::Probe::get().glCheckpoint("(postDraw: swapBuffers, finishRender, loopEvent, pollEvents)");
 	if (haveFrame_) closeFrame(s);
+	checkTransitions(s);
 	u0_ = s;
 	haveFrame_ = true;
 	haveU1_ = haveD0_ = haveD1_ = false;
@@ -192,7 +196,7 @@ void Rt004FramePhaseProbe::closeFrame(const Stamp& nextU0) {
 			writeLine(os.str());
 		}
 	}
-	if (atMs - windowStartMs_ >= 10000.0) writeWindowSummary(atMs);
+	if (atMs - windowStartMs_ >= windowMs_) writeWindowSummary(atMs);
 	frame_++;
 }
 
@@ -213,12 +217,78 @@ void Rt004FramePhaseProbe::writeWindowSummary(double atMs) {
 		os << " | " << kSegName[i] << " p50=" << pct(v, 0.50) << " p95=" << pct(v, 0.95) << " max=" << pct(v, 1.0)
 		   << " share=" << (totalSum > 0 ? 100.0 * sum / totalSum : 0.0) << "% cpu/wall=" << (sum > 0 ? 100.0 * windowCpuMs_[i] / sum : 0.0) << "%";
 	}
-	os << " | rssMiB=" << procMiB("/proc/self/status", "VmRSS:") << " memAvailMiB=" << procMiB("/proc/meminfo", "MemAvailable:")
+	os << " | " << temporalResidency();
+	os << " | rssMiB=" << procMiB("/proc/self/status", "VmRSS:") << " rssAnonMiB=" << procMiB("/proc/self/status", "RssAnon:")
+	   << " rssFileMiB=" << procMiB("/proc/self/status", "RssFile:") << " rssShmemMiB=" << procMiB("/proc/self/status", "RssShmem:")
+	   << " memAvailMiB=" << procMiB("/proc/meminfo", "MemAvailable:")
 	   << " cmaFreeMiB=" << procMiB("/proc/meminfo", "CmaFree:") << " swapFreeMiB=" << procMiB("/proc/meminfo", "SwapFree:");
 	writeLine(os.str());
 	for (int i = 0; i < SegCount; i++) { windowWall_[i].clear(); windowCpuMs_[i] = 0.0; }
 	windowTotal_.clear();
 	windowSlow_ = 0;
+}
+
+std::string Rt004FramePhaseProbe::temporalResidency() const {
+	// Measured: history frame count / capacity and live history pixel bytes.
+	// Estimated: playhead texture bytes from allocated dimensions x format.
+	const TimeOffsetVideoBuffer& b = runtime_.temporalSceneForTesting().videoAdapterForTesting().buffer();
+	std::ostringstream os;
+	os.setf(std::ios::fixed);
+	os.precision(2);
+	os << "historyFrames=" << b.getHistoryFrameCount() << "/" << b.getHistoryCapacityFrames()
+	   << " historyPixMiB=" << b.getHistoryPixelBytes() / (1024.0 * 1024.0)
+	   << " playheadTex=" << b.getAllocatedPlayheadTextureCount() << "/" << b.getNumPlayheads()
+	   << " playheadEstMiB=" << b.getPlayheadTextureBytesEstimate(false) / (1024.0 * 1024.0)
+	   << " playheadEstRgbaMiB=" << b.getPlayheadTextureBytesEstimate(true) / (1024.0 * 1024.0);
+	return os.str();
+}
+
+void Rt004FramePhaseProbe::checkTransitions(const Stamp& at) {
+	// Transition-only EVENT lines (no per-frame I/O): scene owner, canonical
+	// media, Temporal history reset (count drops) and history full.
+	const HudFrameData& f = runtime_.currentHudFrameData();
+	const std::string& owner = f.sceneManager.activeSceneId;
+	const std::string media = (f.video && f.video->mediaId) ? *f.video->mediaId : std::string();
+	const int history = runtime_.temporalSceneForTesting().videoAdapterForTesting().buffer().getHistoryFrameCount();
+	const int capacity = runtime_.temporalSceneForTesting().videoAdapterForTesting().buffer().getHistoryCapacityFrames();
+	std::ostringstream os;
+	os.setf(std::ios::fixed);
+	const double mono = at.wallNs / 1e9;
+	const double t = (at.wallNs - startNs_) / 1e6;
+	auto event = [&](const std::string& kind, const std::string& detail) {
+		os.str("");
+		os << "EVENT mono=" << std::setprecision(3) << mono << " t=" << std::setprecision(2) << t << "ms frame=" << frame_
+		   << " kind=" << kind << " " << detail << " | " << temporalResidency();
+		writeLine(os.str());
+	};
+	if (owner != lastOwner_) { event("scene-owner", "from=" + (lastOwner_.empty() ? std::string("-") : lastOwner_) + " to=" + (owner.empty() ? std::string("-") : owner)); lastOwner_ = owner; }
+	if (media != lastMedia_) { event("canonical-media", "from=" + (lastMedia_.empty() ? std::string("-") : lastMedia_) + " to=" + (media.empty() ? std::string("-") : media)); lastMedia_ = media; }
+	if (history < lastHistory_) event("history-reset", "from=" + std::to_string(lastHistory_) + " to=" + std::to_string(history));
+	if (history >= capacity && lastHistory_ < capacity && capacity > 0) event("history-full", "frames=" + std::to_string(history));
+	lastHistory_ = history;
+
+	// Effect snapshot changes (first snapshot included). Hash without
+	// allocating; build the text only when it changes. "none" = no
+	// HudFrameData.effects; "slots=0" = Raw / no active effect.
+	size_t h = 0x9e3779b9u;
+	if (f.effects) {
+		h ^= std::hash<int>()(static_cast<int>(f.effects->health)) + 0x9e3779b9u + (h << 6) + (h >> 2);
+		for (const auto& slot : f.effects->slots) {
+			h ^= std::hash<std::string>()(slot.slotId) + 0x9e3779b9u + (h << 6) + (h >> 2);
+			h ^= std::hash<std::string>()(slot.effectId) + 0x9e3779b9u + (h << 6) + (h >> 2);
+		}
+	} else {
+		h = 1;
+	}
+	if (h != lastEffectsHash_) {
+		lastEffectsHash_ = h;
+		std::string detail = "none";
+		if (f.effects) {
+			detail = "health=" + std::to_string(static_cast<int>(f.effects->health)) + " slots=" + std::to_string(f.effects->slots.size());
+			for (const auto& slot : f.effects->slots) detail += " [" + slot.slotId + ":" + slot.effectId + "|" + slot.displayName + "]";
+		}
+		event("effects", detail);
+	}
 }
 
 void Rt004FramePhaseProbe::writeLine(const std::string& line) {

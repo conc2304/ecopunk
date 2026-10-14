@@ -1,0 +1,6 @@
+=== RT-004 stall probe enabled: thresholdMs=500 sampleStacks=0 ===
+  NOTE frame=0 t=1343.02ms temporal.ambientResidency: residency=bounded pairs=19 tintTextures=19 maskTextures=0 cpuTintMiB=0.0 cpuMaskMiB=0.0 gpuEstMiB=85.5 (rgb-padded 114.0) tintPixelsKept=0 rssBeforeMiB=48 rssAfterMiB=176 glError=0x00000000
+--- LONG FRAME #1 frame=5081 start=168804ms interval=562.693ms covered=4.65856ms uncovered=558.034ms
+--- LONG FRAME #2 frame=5888 start=195702ms interval=572.011ms covered=4.25393ms uncovered=567.757ms
+=== RT-004 SUMMARY frames=7783 longFrames=2 thresholdMs=500 ===
+glError,rt004.glTraceSelfTest(expect 0x500),0x500,1

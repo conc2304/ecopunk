@@ -124,6 +124,31 @@ void TimeOffsetVideoBuffer::advanceToNextMedia() {
 	}
 }
 
+void TimeOffsetVideoBuffer::releaseForInactive() {
+	RT004_SCOPE("TimeOffsetVideoBuffer.releaseForInactive");
+	rt004::Probe& probe = rt004::Probe::get();
+	const size_t historyBytes = getHistoryPixelBytes();
+	const int historyFrames = getHistoryFrameCount();
+	const int playheadTextures = getAllocatedPlayheadTextureCount();
+	const size_t playheadBytes = getPlayheadTextureBytesEstimate(true);
+	const bool decoderWasLoaded = player.isLoaded();
+	const int64_t t0 = rt004::nowNs();
+	{ RT004_SCOPE("TimeOffsetVideoBuffer.releaseForInactive.resetHistory"); resetHistoryAndPlayheadTextures(); }
+	const int64_t t1 = rt004::nowNs();
+	{ RT004_SCOPE("TimeOffsetVideoBuffer.releaseForInactive.decoderClose"); pauseThenClose(player); }
+	const int64_t t2 = rt004::nowNs();
+	mediaLoaded = false;
+	pendingStartSeconds = 0.0f;
+	if (probe.enabled()) {
+		probe.note("temporal.releaseForInactive",
+			"historyFrames=" + std::to_string(historyFrames) + " historyPixMiB=" + ofToString(historyBytes / (1024.0 * 1024.0), 2)
+			+ " playheadTex=" + std::to_string(playheadTextures) + " playheadEstRgbaMiB=" + ofToString(playheadBytes / (1024.0 * 1024.0), 2)
+			+ " decoderWasLoaded=" + std::to_string(decoderWasLoaded) + " resetMs=" + ofToString((t1 - t0) / 1e6, 2)
+			+ " decoderCloseMs=" + ofToString((t2 - t1) / 1e6, 2) + " | after: historyFrames=" + std::to_string(getHistoryFrameCount())
+			+ " playheadTex=" + std::to_string(getAllocatedPlayheadTextureCount()) + " decoderLoaded=" + std::to_string(player.isLoaded()));
+	}
+}
+
 bool TimeOffsetVideoBuffer::loadExplicit(const std::string& absolutePath, float startSeconds) {
 	// No scan, no shuffle, no playlist mutation, no fallback selection —
 	// mediaFiles/currentFileIndex are deliberately untouched here (DEC-014).

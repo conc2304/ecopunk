@@ -2,6 +2,8 @@
 #include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 #include "TemporalSemanticMapping.h"
 #include "TFSettings.h"
+#include <cstdlib>
+#include <string>
 
 namespace {
 	// Lowers TFPatternType to the identifier this migration's semantic
@@ -112,6 +114,20 @@ void TemporalProductionScene::activate() {
 
 void TemporalProductionScene::deactivate() {
 	core_.deactivate();
+	// RT-004 inactive-resource release: nothing updates or draws this scene
+	// after deactivation (SceneManager skips non-live frames; the fade uses
+	// the frozen scene FBO), and activate() already forces a full reload +
+	// history reset (TEMP-004), so holding the dedicated decoder (~21.5 MiB
+	// of v4l2 dma-buf CMA on the Pi), CPU history and playhead textures
+	// while inactive buys nothing. The close is pause-then-close (~98 ms on
+	// the Pi), moved here from the reactivation reload.
+	// EXPERIENCE_RUNTIME_TEMPORAL_INACTIVE_RELEASE=retain keeps the previous
+	// behavior (verification/rollback toggle).
+	const char* mode = std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_INACTIVE_RELEASE");
+	if (mode == nullptr || std::string(mode) != "retain") {
+		RT004_SCOPE("Temporal.deactivate.releaseInactive");
+		temporalVideoAdapter_.releaseForDeactivation();
+	}
 	// No explicit decoder pause call needed — TemporalSceneCore::update()
 	// (and therefore this scene's own update() below) simply stops being
 	// called on the real per-frame path while inactive (SceneManager only

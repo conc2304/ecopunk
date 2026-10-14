@@ -314,7 +314,8 @@ void TFAmbientTextureLayer::drawLayer(TFBackgroundTexture::Layer layer) const {
 			blendFadeShader.begin();
 			blendFadeShader.setUniformTexture("tex", tex.tint.getTexture(), 0);
 			blendFadeShader.setUniform1f("opacity", alpha);
-			blendFadeShader.setUniform3f("identityColor", identity);
+			// Component form: oF 0.12.0 has no setUniform3f(ofFloatColor).
+			blendFadeShader.setUniform3f("identityColor", identity.r, identity.g, identity.b);
 			tex.tint.draw(0, 0, canvasW, canvasH);
 			blendFadeShader.end();
 		} else {

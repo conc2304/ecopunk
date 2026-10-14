@@ -3,6 +3,9 @@
 #include <string>
 #include <vector>
 #include "ofImage.h"
+// oF 0.12.0's ofImage.h only forward-declares ofPixels_; ofImage members
+// here need the complete type (0.12.1 includes it from ofImage.h).
+#include "ofPixels.h"
 #include "ofParameter.h"
 #include "ofShader.h"
 

@@ -52,7 +52,7 @@ static void test_single_file_no_overrides_synthesizes_entry() {
 	MC_CHECK(m.relativePath == "clip_one.mp4");
 	MC_CHECK(!m.mediaId.empty());
 	MC_CHECK(!m.titleId.empty());
-	MC_CHECK(m.fallbackDisplayTitle == "clip one");  // underscores -> spaces, extension stripped
+	MC_CHECK(m.fallbackDisplayTitle == "Clip One");  // underscores -> spaces, Title Case, extension stripped
 	MC_CHECK(m.enabled);
 	MC_CHECK(m.piSafe);
 }
@@ -163,8 +163,16 @@ static void test_missing_catalog_file_is_not_an_error_for_build() {
 }
 
 static void test_fallback_display_title_collapses_separators() {
-	MC_CHECK(MediaCatalog::synthesizeFallbackDisplayTitle("a-weird--name__here.mp4") == "a weird name here");
-	MC_CHECK(MediaCatalog::synthesizeFallbackDisplayTitle("nested/dir/clip.mp4") == "clip");
+	MC_CHECK(MediaCatalog::synthesizeFallbackDisplayTitle("a-weird--name__here.mp4") == "A Weird Name Here");
+	MC_CHECK(MediaCatalog::synthesizeFallbackDisplayTitle("nested/dir/clip.mp4") == "Clip");
+}
+
+static void test_fallback_display_title_splits_camel_case() {
+	MC_CHECK(MediaCatalog::synthesizeFallbackDisplayTitle("this_is_aTitleThat_We-can-change.mp4")
+		== "This Is A Title That We Can Change");
+	MC_CHECK(MediaCatalog::synthesizeFallbackDisplayTitle("Bamboo_Grove.mp4") == "Bamboo Grove");
+	MC_CHECK(MediaCatalog::synthesizeFallbackDisplayTitle("HUDTitleCard.mov") == "HUD Title Card");
+	MC_CHECK(MediaCatalog::synthesizeFallbackDisplayTitle(" padded  name .mp4") == "Padded Name");
 }
 
 int main() {
@@ -179,6 +187,7 @@ int main() {
 	test_override_referencing_undiscovered_file_reported();
 	test_missing_catalog_file_is_not_an_error_for_build();
 	test_fallback_display_title_collapses_separators();
+	test_fallback_display_title_splits_camel_case();
 
 	std::cout << (g_total - g_failures) << "/" << g_total << " checks passed\n";
 	return g_failures == 0 ? 0 : 1;

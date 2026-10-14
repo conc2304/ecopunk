@@ -31,6 +31,8 @@ private:
 	static constexpr int kMarkWindow = -1;
 	static constexpr int kSetLegacyDownscale = -2; // label "1" = legacy history downscale, "0" = cached
 	static constexpr int kSetEnv = -3;             // label "NAME=VALUE" sets, "NAME=" unsets
+	static constexpr int kMaskCycles = -4;         // label = cycle count (blob-short)
+	void runMaskCycles(int cycles);
 
 	void log(const std::string & line);
 

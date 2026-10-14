@@ -1,48 +1,51 @@
 #include "GridSystem.h"
-#include "ofMath.h"
-#include "ofMathConstants.h"
-#include "ofRandomDistributions.h"
-#include "ofUtils.h"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
 
+#include "ofMath.h"
+#include "ofMathConstants.h"
+#include "ofRandomEngine.h"
+#include "ofRandomDistributions.h"
+#include "ofUtils.h"
+
 namespace {
-	constexpr float PHI = 1.61803398875f;
+constexpr float PHI = 1.61803398875f;
 
-	constexpr float VLINE_JITTER_FACTOR = 0.04f; // fraction of canvas_width
-	constexpr float LINE_MIN_SEPARATION = 20.0f; // px
-	constexpr float CANVAS_EDGE_MARGIN = 80.0f; // px
+constexpr float VLINE_JITTER_FACTOR = 0.04f; // fraction of canvas_width
+constexpr float LINE_MIN_SEPARATION = 20.0f; // px
+constexpr float CANVAS_EDGE_MARGIN = 80.0f; // px
 
-	constexpr float INHERITANCE_WEIGHT = 0.72f;
-	constexpr float FRESH_WEIGHT = 0.28f;
+constexpr float INHERITANCE_WEIGHT = 0.72f;
+constexpr float FRESH_WEIGHT = 0.28f;
 
-	constexpr float VLINE_DRIFT_AMPLITUDE = 8.0f; // px
-	constexpr float HLINE_DRIFT_AMPLITUDE = 5.0f; // px
-	constexpr float DRIFT_SPEED = 0.04f; // radians/second
+constexpr float VLINE_DRIFT_AMPLITUDE = 8.0f; // px
+constexpr float HLINE_DRIFT_AMPLITUDE = 5.0f; // px
+constexpr float DRIFT_SPEED = 0.04f; // radians/second
 
-	constexpr float FRAGMENT_LINE_MIN_DIST = 20.0f; // px
-	constexpr float EXTENT_TRUNCATE_PROB = 0.40f; // each, left vs right
-	constexpr float EXTENT_TRUNCATE_MAX = 0.60f;
+constexpr float FRAGMENT_LINE_MIN_DIST = 20.0f; // px
+constexpr float EXTENT_TRUNCATE_PROB = 0.40f; // each, left vs right
+constexpr float EXTENT_TRUNCATE_MAX = 0.60f;
 
-	constexpr float OPACITY_STRUCTURAL_MIN = 0.25f;
-	constexpr float OPACITY_STRUCTURAL_MAX = 0.35f;
-	constexpr float OPACITY_FRAGMENT_MIN = 0.15f;
-	constexpr float OPACITY_FRAGMENT_MAX = 0.22f;
-	constexpr float OPACITY_SUBDIVISION_MIN = 0.18f;
-	constexpr float OPACITY_SUBDIVISION_MAX = 0.28f;
+constexpr float OPACITY_STRUCTURAL_MIN = 0.25f;
+constexpr float OPACITY_STRUCTURAL_MAX = 0.35f;
+constexpr float OPACITY_FRAGMENT_MIN = 0.15f;
+constexpr float OPACITY_FRAGMENT_MAX = 0.22f;
+constexpr float OPACITY_SUBDIVISION_MIN = 0.18f;
+constexpr float OPACITY_SUBDIVISION_MAX = 0.28f;
 
-	constexpr float SUBDIVISION_ZONE_THRESH = 0.38f; // fraction of canvas_width
-	constexpr float SUBDIVISION_PROB = 0.25f;
-	constexpr int SUBDIVISION_MAX_PER_CYCLE = 2;
-	constexpr float SUBDIVISION_GROW_SPEED = 600.0f; // px/second
+constexpr float SUBDIVISION_ZONE_THRESH = 0.38f; // fraction of canvas_width
+constexpr float SUBDIVISION_PROB = 0.25f;
+constexpr int SUBDIVISION_MAX_PER_CYCLE = 2;
+constexpr float SUBDIVISION_GROW_SPEED = 600.0f; // px/second
 
-	constexpr float FRAGMENT_LINE_FADE_DELAY_MIN = 0.2f;
-	constexpr float FRAGMENT_LINE_FADE_DELAY_MAX = 0.4f;
-	constexpr float FRAGMENT_LINE_FADE_DUR_MIN = 0.8f;
-	constexpr float FRAGMENT_LINE_FADE_DUR_MAX = 1.2f;
-	constexpr float STRUCTURAL_DISSOLVE_DUR = 2.0f;
-	constexpr float DIVIDER_DISSOLVE_DUR = 1.5f;
+constexpr float FRAGMENT_LINE_FADE_DELAY_MIN = 0.2f;
+constexpr float FRAGMENT_LINE_FADE_DELAY_MAX = 0.4f;
+constexpr float FRAGMENT_LINE_FADE_DUR_MIN = 0.8f;
+constexpr float FRAGMENT_LINE_FADE_DUR_MAX = 1.2f;
+constexpr float STRUCTURAL_DISSOLVE_DUR = 2.0f;
+constexpr float DIVIDER_DISSOLVE_DUR = 1.5f;
 }
 
 void GridSystem::setup(int canvasW_, int canvasH_, float dividerX_) {
