@@ -1,6 +1,9 @@
 #include "HudManager.h"
 #include <algorithm>
 #include <cmath>
+#include "QCCanvas.h"
+
+namespace quadrantcrosshair {
 
 // ── Theme helper ──────────────────────────────────────────────────────────────
 
@@ -19,7 +22,7 @@ hud::HudTheme HudManager::themedAt(float alpha) const {
 }
 
 ofVec2f HudManager::panelBasePos(int q) const {
-    float W = ofGetWidth(), H = ofGetHeight();
+    float W = canvasWidth(), H = canvasHeight();
     switch (q) {
         case 0: return {        30.f,         30.f };
         case 1: return { W - 230.f,            30.f };
@@ -69,6 +72,14 @@ void HudManager::popNextToSlot(int slotIdx) {
     int idx = deck.back();
     deck.pop_back();
     startSlot(slots[slotIdx], idx);
+}
+
+void HudManager::showElementForTesting(int elemIdx) {
+    HudSlot& slot = slots[0];
+    startSlot(slot, elemIdx);
+    slot.alpha      = 1.f;
+    slot.drawnAlpha = 1.f;
+    slot.state      = HudSlot::State::ACTIVE;
 }
 
 void HudManager::updateSlot(int slotIdx, float dt) {
@@ -150,7 +161,7 @@ void HudManager::setup(TriggerBus& tb, CrosshairSystem& ch, LFOBank& lfoRef,
     baseTheme.frame.showTicks   = true;
     baseTheme.additive          = true;
 
-    float W = ofGetWidth(), H = ofGetHeight();
+    float W = canvasWidth(), H = canvasHeight();
 
     // Pool 0 — Contours
     hud::ContourOptions cOpts;
@@ -306,7 +317,7 @@ void HudManager::onVideoFileChanged(const std::string& basename) {
     // actually is right now, not canvas center.
     glitch.trigger();
     CrosshairState cs = crosshairSys->getState();
-    float W = ofGetWidth(), H = ofGetHeight();
+    float W = canvasWidth(), H = canvasHeight();
     hexGrid.pulseAt(ofClamp(cs.cx / W, 0.f, 1.f), ofClamp(cs.cy / H, 0.f, 1.f));
 
     log.pushLine("> loaded " + basename + " [" + currentCopy_.categoryName + "]");
@@ -319,7 +330,7 @@ void HudManager::updateScannerBounds(const CrosshairState& cs) {
     float r = 90.f + lfoVal * 12.f;
     scanner.setBounds(cs.cx - r, cs.cy - r, r * 2.f, r * 2.f);
 
-    float W = ofGetWidth(), H = ofGetHeight();
+    float W = canvasWidth(), H = canvasHeight();
 
     // Gauges: centered top, recalculated every frame so resize stays correct
     motionGauge.setBounds(W * 0.5f - 135.f, 10.f, 110.f, 110.f);
@@ -426,12 +437,14 @@ void HudManager::draw(float expansionFade) {
     scanner.setTheme(themedAt(0.45f * expansionFade)); scanner.draw();
     if (showBioGauge)   { motionGauge.setTheme(themedAt(0.55f * expansionFade)); motionGauge.draw(); }
     if (showDwellGauge) { dwellGauge.setTheme(themedAt(0.55f * expansionFade));  dwellGauge.draw();  }
-    for (int q = 0; q < 4; q++) {
-        quadCards[q].setTheme(themedAt(0.55f * expansionFade));
-        quadCards[q].draw();
+    if (showInformationLayer) {
+        for (int q = 0; q < 4; q++) {
+            quadCards[q].setTheme(themedAt(0.55f * expansionFade));
+            quadCards[q].draw();
+        }
+        mediaStatus.setTheme(themedAt(0.55f * expansionFade)); mediaStatus.draw();
+        log.setTheme(themedAt(0.55f * expansionFade));         log.draw();
     }
-    mediaStatus.setTheme(themedAt(0.55f * expansionFade)); mediaStatus.draw();
-    log.setTheme(themedAt(0.55f * expansionFade));         log.draw();
     glitch.setTheme(themedAt(1.f * expansionFade));        glitch.draw();
 
     // Rotating slots — drawnAlpha scaled by expansionFade
@@ -453,14 +466,14 @@ void HudManager::draw(float expansionFade) {
             labels.push_back({ elemNames[slot.elemIdx], slot.drawnAlpha * expansionFade });
     }
 
-    if (!labels.empty()) {
+    if (showInformationLayer && !labels.empty()) {
         const float gap = 32.f;
         float totalW = 0.f;
         for (auto& l : labels) totalW += l.name.size() * charW;
         if (labels.size() > 1) totalW += gap;
 
-        float x = ofGetWidth() * 0.5f - totalW * 0.5f;
-        float y = ofGetHeight() - 18.f;
+        float x = canvasWidth() * 0.5f - totalW * 0.5f;
+        float y = canvasHeight() - 18.f;
 
         for (auto& l : labels) {
             ofColor c = themedAt(l.alpha * 0.65f).colors.muted;
@@ -470,3 +483,5 @@ void HudManager::draw(float expansionFade) {
         }
     }
 }
+
+} // namespace quadrantcrosshair

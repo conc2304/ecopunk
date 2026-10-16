@@ -1,10 +1,12 @@
 #pragma once
 
 #include "ofMain.h"
-#include "TimeOffsetVideoBuffer.h"
+#include "FTVideoTypes.h"
 #include "FTImageCycler.h"
 #include "HudElements.h"
 #include <string>
+
+namespace fragmenttrail {
 
 // Full-canvas backdrop drawn beneath the fragment pool, so the travelling
 // fragments read as bright peepholes over a coherent field instead of flat
@@ -19,7 +21,8 @@
 // fixed ambient HUD widget drawn full-canvas at low opacity.
 class FTBackgroundLayer {
 	public:
-		void setup(TimeOffsetVideoBuffer* videoBuffer, const std::string& imagesFolder, int canvasW, int canvasH);
+		void setup(TimeOffsetVideoBuffer* videoBuffer, const std::string& imagesFolder, int canvasW, int canvasH,
+			const std::string& vertShaderPath = "shaders/vert.glsl", const std::string& bgShaderPath = "shaders/bg_dim.glsl");
 		// draw() derives every rect from canvasW/canvasH fresh each call, so
 		// this is the only state a resize needs to update.
 		void resizeCanvas(int canvasW_, int canvasH_);
@@ -54,3 +57,5 @@ class FTBackgroundLayer {
 		float sectionTimer = 0.0f;
 		float sectionInterval = 18.0f;
 };
+
+} // namespace fragmenttrail

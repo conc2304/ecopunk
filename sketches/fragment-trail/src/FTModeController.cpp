@@ -1,5 +1,7 @@
 #include "FTModeController.h"
 
+namespace fragmenttrail {
+
 namespace {
 // Only effects with a jitterable per-fragment param beyond plain `alpha`
 // are useful candidates for Mode C — see brief Section 4's own examples
@@ -62,3 +64,5 @@ void FTModeController::onTriggerEvent(const TriggerEvent& e) {
 		switchTo(FTContentMode::TIME_SLICE);
 	}
 }
+
+} // namespace fragmenttrail

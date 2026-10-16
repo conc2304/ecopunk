@@ -60,9 +60,9 @@ public:
 	// 3-stage paths (see render()). CPU wall time around GL submission,
 	// not GPU time: driver stalls land in whichever stage triggers them.
 	struct StageTimings {
-		int directDraws = 0; // shader straight into the bound target
-		int legacyDraws = 0; // shader -> scratchResultFbo -> composite
-		double sourceMs = 0.0; // crop into scratchSourceFbo (every draw)
+		int directDraws = 0; // shader (or unshaded crop) straight into the bound target
+		int legacyDraws = 0; // shader -> scratchResultFbo -> composite (or unshaded scratch copy -> composite)
+		double sourceMs = 0.0; // crop into scratchSourceFbo (every draw except unshaded direct)
 		double shaderDirectMs = 0.0;
 		double shaderResultMs = 0.0;
 		double compositeMs = 0.0;

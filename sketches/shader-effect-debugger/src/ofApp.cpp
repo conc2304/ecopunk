@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "../../../shared/src/video-playback/SharedMediaRoot.h"
 #include "EffectKnowledgePack.h"
 #include "EffectPresetId.h"
 #include "KnowledgePackSelfTest.h"
@@ -40,7 +41,7 @@ void ofApp::setup() {
 	if (!videoFiles.empty()) {
 		loadVideo(0);
 	} else {
-		ofLogWarning("ofApp") << "no media found in bin/data/media/ — drop .mp4 clips there to preview effects against real footage";
+		ofLogWarning("ofApp") << "no media found in assets/shared/media/ — drop .mp4 clips there to preview effects against real footage";
 	}
 
 	gui.setup("Shader Effect Debugger");
@@ -74,7 +75,7 @@ void ofApp::setup() {
 
 void ofApp::scanMediaFiles() {
 	videoFiles.clear();
-	ofDirectory dir(ofToDataPath("media", true));
+	ofDirectory dir(ecopunk::sharedMediaRoot());
 	if (!dir.exists()) return;
 	dir.allowExt("mp4");
 	dir.allowExt("mov");

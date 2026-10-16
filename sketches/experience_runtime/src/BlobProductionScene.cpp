@@ -21,7 +21,23 @@ void BlobProductionScene::setup(const SceneServices & services) {
 	// only this class's public surface").
 	(void)services;
 	core_.setup(video_);
+	core_.regionParams().effectName = effectPolicy_.currentTreatment().regionEffectName();
 	didSetup_ = true;
+
+	// Blob production visual model: desaturated full-frame world, tracked
+	// regions reveal original color or a curated treatment (see
+	// BlobEffectPolicy.h). Background mode 2 runs the full frame through
+	// BlobSceneCore's existing background effect renderer — same cover-fit
+	// crop as mode 1, so geometry is unchanged.
+	BlobSceneCore::BackgroundConfig & background = core_.backgroundConfig();
+	background.mode = 2;
+	background.effectName = blobeffects::backgroundEffectId();
+	background.effectAmount = 1.0f;
+	if (std::getenv("EXPERIENCE_RUNTIME_BLOB_BACKGROUND_NORMAL") != nullptr) {
+		// Profiling A/B only: the previous unshaded background.
+		background.mode = 1;
+		ofLogNotice("BlobRenderProfile") << "EXPERIENCE_RUNTIME_BLOB_BACKGROUND_NORMAL set: background drawn unshaded (pre-desaturated-world model)";
+	}
 
 	renderProfileEnabled_ = std::getenv("EXPERIENCE_RUNTIME_BLOB_RENDER_PROFILE") != nullptr;
 	if (std::getenv("EXPERIENCE_RUNTIME_BLOB_RENDER_LEGACY") != nullptr) {
@@ -45,6 +61,16 @@ void BlobProductionScene::update(float dt) {
 		return;
 	}
 	activeSeconds_ += dt;
+
+	// Curated fragment effect, one per canonical media item (see
+	// BlobEffectPolicy.h). Only new fragments pick up a changed effect —
+	// VideoRegionController captures effectName at fragment creation — so
+	// fragments already on screen keep theirs until they dissolve.
+	if (effectPolicy_.observeMedia(video_.status().mediaId)) {
+		core_.regionParams().effectName = effectPolicy_.currentTreatment().regionEffectName();
+		ofLogNotice("BlobProductionScene") << "fragment treatment -> " << effectPolicy_.currentTreatment().id();
+	}
+
 	ofRectangle destRect(0, 0, static_cast<float>(kNativeWidth), static_cast<float>(kNativeHeight));
 	RT004_SCOPE("Blob.core.update");
 	lastUpdateTimings_ = core_.update(dt, destRect);
@@ -64,6 +90,7 @@ void BlobProductionScene::drawToCurrentTarget() {
 		return;
 	}
 	core_.regionController().renderer().resetStageTimings();
+	core_.backgroundEffectRenderer().resetStageTimings();
 	uint64_t t0 = ofGetElapsedTimeMicros();
 	core_.draw(destRect);
 	recordRenderProfileFrame(static_cast<float>(ofGetElapsedTimeMicros() - t0) / 1000.0f);
@@ -87,6 +114,8 @@ void BlobProductionScene::recordRenderProfileFrame(float drawMs) {
 		w.trackerMs += lastUpdateTimings_.trackerMs;
 		w.regionUpdateMs += lastUpdateTimings_.regionUpdateMs;
 		w.drawMs += drawMs;
+		const VideoRegionEffectRenderer::StageTimings & bg = core_.backgroundEffectRenderer().getStageTimings();
+		w.backgroundMs += bg.sourceMs + bg.shaderDirectMs + bg.shaderResultMs + bg.compositeMs;
 		w.fragments += core_.activeFragmentCount();
 		w.stages.directDraws += frameStages.directDraws;
 		w.stages.legacyDraws += frameStages.legacyDraws;
@@ -113,7 +142,10 @@ void BlobProductionScene::recordRenderProfileFrame(float drawMs) {
 		<< " detectorMs=" << perFrame(w.detectorMs)
 		<< " trackerMs=" << perFrame(w.trackerMs)
 		<< " regionUpdateMs=" << perFrame(w.regionUpdateMs)
+		<< " treatment=" << effectPolicy_.currentTreatment().id()
+		<< " background=" << (core_.backgroundConfig().mode == 2 ? core_.backgroundConfig().effectName : std::string("normal"))
 		<< " sceneDrawMs=" << perFrame(w.drawMs)
+		<< " backgroundMs=" << perFrame(w.backgroundMs)
 		<< " fragments=" << perFrame(w.fragments)
 		<< " directDraws=" << st.directDraws
 		<< " legacyDraws=" << st.legacyDraws
@@ -178,7 +210,8 @@ SceneHudStatus BlobProductionScene::hudStatus() const {
 	// class header comment), so this mirrors the two real, currently-
 	// selected effect names rather than being left to imply "no effects
 	// running" when effects genuinely are.
-	if (core_.regionParams().fragmentsEnabled) {
+	// An Original treatment runs no effect, so it adds no region entry.
+	if (core_.regionParams().fragmentsEnabled && !core_.regionParams().effectName.empty()) {
 		status.activeEffects.push_back("region: " + core_.regionParams().effectName);
 	}
 	if (core_.backgroundConfig().mode == 2) {

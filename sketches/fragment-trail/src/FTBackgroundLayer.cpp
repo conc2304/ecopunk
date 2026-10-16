@@ -1,7 +1,10 @@
 #include "FTBackgroundLayer.h"
 #include "FTTextureCropFill.h"
 
-void FTBackgroundLayer::setup(TimeOffsetVideoBuffer* videoBuffer_, const std::string& imagesFolder, int canvasW_, int canvasH_) {
+namespace fragmenttrail {
+
+void FTBackgroundLayer::setup(TimeOffsetVideoBuffer* videoBuffer_, const std::string& imagesFolder, int canvasW_, int canvasH_,
+	const std::string& vertShaderPath, const std::string& bgShaderPath) {
 	videoBuffer = videoBuffer_;
 	canvasW = canvasW_;
 	canvasH = canvasH_;
@@ -32,7 +35,7 @@ void FTBackgroundLayer::setup(TimeOffsetVideoBuffer* videoBuffer_, const std::st
 	hexOpts.activation = 0.10f; // sparse — stays an ambient texture, not a focal element
 	hexGrid.setOptions(hexOpts);
 
-	bgShader.load("shaders/vert.glsl", "shaders/bg_dim.glsl");
+	bgShader.load(vertShaderPath, bgShaderPath);
 
 	pickNextAltSection();
 }
@@ -120,3 +123,5 @@ void FTBackgroundLayer::draw() {
 
 	ofDisableAlphaBlending();
 }
+
+} // namespace fragmenttrail

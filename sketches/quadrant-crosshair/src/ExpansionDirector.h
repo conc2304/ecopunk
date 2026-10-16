@@ -1,6 +1,8 @@
 #pragma once
 #include "ofMain.h"
 
+namespace quadrantcrosshair {
+
 enum class ExpansionState {
     IDLE,
     TRAVEL_OUT,
@@ -62,3 +64,5 @@ private:
     int       randomQuadrant();
     float     easeInOut(float t);
 };
+
+} // namespace quadrantcrosshair

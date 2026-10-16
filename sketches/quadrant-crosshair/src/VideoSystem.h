@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+namespace quadrantcrosshair {
+
 class VideoSystem {
 public:
 	void setup(const std::string & mediaPath);
@@ -48,3 +50,5 @@ private:
 	void buildPlaylist();
 	void pickTargetLoops();
 };
+
+} // namespace quadrantcrosshair

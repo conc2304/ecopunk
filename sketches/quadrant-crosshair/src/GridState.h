@@ -2,6 +2,8 @@
 #include "ofMain.h"
 #include <array>
 
+namespace quadrantcrosshair {
+
 class GridState {
 public:
     static constexpr int COLS = 24;
@@ -18,3 +20,5 @@ private:
     std::array<float, COLS * ROWS> grid;
     ofTexture gridTex;
 };
+
+} // namespace quadrantcrosshair

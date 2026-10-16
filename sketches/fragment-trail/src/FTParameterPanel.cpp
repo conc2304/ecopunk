@@ -1,5 +1,7 @@
 #include "FTParameterPanel.h"
 
+namespace fragmenttrail {
+
 void FTParameterPanel::setup() {
 	spawnGroup.setName("Spawn");
 	spawnGroup.add(spawnMinDistance.set("Min Distance (px)", 70.f, 10.f, 300.f));
@@ -41,9 +43,15 @@ void FTParameterPanel::setup() {
 	rootGroup.add(responseGroup);
 	rootGroup.add(crosshairGroup);
 
+#if !defined(FT_PRODUCTION_RUNTIME)
 	panel.setup(rootGroup);
+#endif
 }
 
 void FTParameterPanel::draw() {
+#if !defined(FT_PRODUCTION_RUNTIME)
 	if (visible) panel.draw();
+#endif
 }
+
+} // namespace fragmenttrail

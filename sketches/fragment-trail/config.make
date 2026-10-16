@@ -55,7 +55,18 @@ PROJECT_EXTERNAL_SOURCE_PATHS = ../../shared/src
 # collision this file already documents. FT was deliberately deferred from
 # adopting the shared video-effect service (see that doc's Phase 8), so
 # exclude the whole subtree rather than leave it half-compiled.
-PROJECT_EXCLUSIONS = ../../shared/src ../../shared/src/video-effects%
+#
+# The ExperienceRuntime subsystems added to shared/src after this sketch's
+# last build (hud-compositor, its -test directory with standalone *_tests.cpp
+# main()s, hud-runtime, scene, video-playback) are excluded the same way:
+# none of them is used here, and the recursive sweep otherwise compiles
+# hud-compositor-test's test translation units (no include path for their
+# video-effects dependencies) and fails the build. The `%` suffix covers
+# each one's nested subdirectories; hud-compositor% also matches
+# hud-compositor-test. hud/, hud_overlay/ and ridgeline/ stay included.
+PROJECT_EXCLUSIONS = ../../shared/src ../../shared/src/video-effects% \
+	../../shared/src/hud-compositor% ../../shared/src/hud-runtime% \
+	../../shared/src/scene% ../../shared/src/video-playback%
 
 # osx template
 # export MAC_OS_MIN_VERSION = 10.15

@@ -1,0 +1,121 @@
+PASS full roster [Blob, Temporal, Blueprint, Quadrant] — blob-region-prototype,temporal-fields,blueprint_emergence,quadrant-crosshair
+startup in Blob; RSS 206.0 MiB
+PASS [c1F.1 blob->temporal] landed: one activation/capability query, owned state, fresh frame — diff 31.7, max frame 119.9 ms
+PASS Temporal renders a live (non-black) scene frame — scene mean 131.3
+capture: bin/data/captures/quadrant-four-scene/s_temporal_window.png
+capture: bin/data/captures/quadrant-four-scene/s_temporal_scene.png
+PASS [c1F.2 temporal->blueprint] landed: one activation/capability query, owned state, fresh frame — diff 95.0, max frame 90.1 ms
+PASS [c1F.2 temporal->blueprint] RESEED starts a new Blueprint cycle
+PASS Blueprint renders placed fragments through the production scene FBO — 2 fragments, scene mean 111.5
+capture: bin/data/captures/quadrant-four-scene/s_blueprint_window.png
+capture: bin/data/captures/quadrant-four-scene/s_blueprint_scene.png
+capture: bin/data/captures/quadrant-four-scene/t_c1_blueprint_to_quadrant_fadeout_mid.png
+capture: bin/data/captures/quadrant-four-scene/t_c1_blueprint_to_quadrant_fadein_mid.png
+PASS [c1F.3 blueprint->quadrant] landed: one activation/capability query, owned state, fresh frame — diff 95.0, max frame 85.6 ms
+PASS Quadrant renders through the production scene FBO and publishes four channel states — scene mean 148.3, 4 channel states
+capture: bin/data/captures/quadrant-four-scene/s_quadrant_window.png
+capture: bin/data/captures/quadrant-four-scene/s_quadrant_scene.png
+PASS Quadrant expansion reaches HOLD and publishes expanding + expansion_progress — scene.quadrant.state.expanding
+capture: bin/data/captures/quadrant-four-scene/s_quadrant_expanded_window.png
+capture: bin/data/captures/quadrant-four-scene/s_quadrant_expanded_scene.png
+capture: bin/data/captures/quadrant-four-scene/t_c1_quadrant_to_blob_fadeout_mid.png
+capture: bin/data/captures/quadrant-four-scene/t_c1_quadrant_to_blob_fadein_mid.png
+PASS [c1F.4 quadrant->blob] landed: one activation/capability query, owned state, fresh frame — diff 44.8, max frame 34.2 ms
+Blob scene mean 152.2 (content-dependent)
+capture: bin/data/captures/quadrant-four-scene/s_blob_window.png
+capture: bin/data/captures/quadrant-four-scene/s_blob_scene.png
+circuit 1 (forward) complete: RSS 304.6 MiB, scene FBO allocations 1, scene FBO texture 24
+capture: bin/data/captures/quadrant-four-scene/t_c2_blob_to_quadrant_fadeout_mid.png
+capture: bin/data/captures/quadrant-four-scene/t_c2_blob_to_quadrant_fadein_mid.png
+PASS [c2B.1 blob->quadrant] landed: one activation/capability query, owned state, fresh frame — diff 51.2, max frame 150.2 ms
+PASS [c2B.1 blob->quadrant] NextMedia changed canonical media; scene follows — media.auto.4a618eef -> media.auto.40fd74a2, scene mean 148.5
+capture: bin/data/captures/quadrant-four-scene/t_c2_quadrant_to_blueprint_fadeout_mid.png
+capture: bin/data/captures/quadrant-four-scene/t_c2_quadrant_to_blueprint_fadein_mid.png
+PASS [c2B.2 quadrant->blueprint] landed: one activation/capability query, owned state, fresh frame — diff 126.1, max frame 33.3 ms
+PASS [c2B.2 quadrant->blueprint] NextMedia changed canonical media; scene follows — media.auto.40fd74a2 -> media.auto.61933905, scene mean 20.9
+PASS [c2B.3 blueprint->temporal] landed: one activation/capability query, owned state, fresh frame — diff 47.0, max frame 33.3 ms
+PASS [c2B.3 blueprint->temporal] NextMedia changed canonical media; scene follows — media.auto.61933905 -> media.auto.715cfe74, scene mean 51.9
+PASS [c2B.4 temporal->blob] landed: one activation/capability query, owned state, fresh frame — diff 34.1, max frame 33.3 ms
+PASS [c2B.4 temporal->blob] NextMedia changed canonical media; scene follows — media.auto.715cfe74 -> media.auto.0c211943, scene mean 167.5
+circuit 2 (backward) complete: RSS 286.4 MiB, scene FBO allocations 1, scene FBO texture 24
+PASS [c3F.1 blob->temporal] landed: one activation/capability query, owned state, fresh frame — diff 32.2, max frame 33.3 ms
+PASS [c3F.2 temporal->blueprint] landed: one activation/capability query, owned state, fresh frame — diff 77.3, max frame 33.4 ms
+PASS [c3F.3 blueprint->quadrant] landed: one activation/capability query, owned state, fresh frame — diff 107.4, max frame 33.4 ms
+PASS [c3F.4 quadrant->blob] landed: one activation/capability query, owned state, fresh frame — diff 60.7, max frame 33.3 ms
+circuit 3 (forward) complete: RSS 288.1 MiB, scene FBO allocations 1, scene FBO texture 24
+PASS [c4B.1 blob->quadrant] landed: one activation/capability query, owned state, fresh frame — diff 53.4, max frame 33.4 ms
+PASS [c4B.1 blob->quadrant] NextMedia changed canonical media; scene follows — media.auto.0c211943 -> media.auto.47d1cd1b, scene mean 136.8
+PASS [c4B.2 quadrant->blueprint] landed: one activation/capability query, owned state, fresh frame — diff 115.3, max frame 98.2 ms
+PASS [c4B.2 quadrant->blueprint] RESEED starts a new Blueprint cycle
+PASS [c4B.2 quadrant->blueprint] NextMedia changed canonical media; scene follows — media.auto.47d1cd1b -> media.auto.e50e19fd, scene mean 22.4
+PASS [c4B.3 blueprint->temporal] landed: one activation/capability query, owned state, fresh frame — diff 91.4, max frame 33.3 ms
+PASS [c4B.3 blueprint->temporal] NextMedia changed canonical media; scene follows — media.auto.e50e19fd -> media.auto.7fb8cbf1, scene mean 113.9
+PASS [c4B.4 temporal->blob] landed: one activation/capability query, owned state, fresh frame — diff 41.6, max frame 33.4 ms
+PASS [c4B.4 temporal->blob] NextMedia changed canonical media; scene follows — media.auto.7fb8cbf1 -> media.auto.e281a2b4, scene mean 126.7
+circuit 4 (backward) complete: RSS 285.8 MiB, scene FBO allocations 1, scene FBO texture 24
+PASS [c5F.1 blob->temporal] landed: one activation/capability query, owned state, fresh frame — diff 35.4, max frame 33.3 ms
+PASS [c5F.2 temporal->blueprint] landed: one activation/capability query, owned state, fresh frame — diff 118.7, max frame 53.5 ms
+PASS [c5F.3 blueprint->quadrant] landed: one activation/capability query, owned state, fresh frame — diff 72.1, max frame 33.4 ms
+PASS [c5F.4 quadrant->blob] landed: one activation/capability query, owned state, fresh frame — diff 48.4, max frame 33.4 ms
+circuit 5 (forward) complete: RSS 290.7 MiB, scene FBO allocations 1, scene FBO texture 24
+PASS [c6B.1 blob->quadrant] landed: one activation/capability query, owned state, fresh frame — diff 44.8, max frame 33.4 ms
+PASS [c6B.1 blob->quadrant] NextMedia changed canonical media; scene follows — media.auto.e281a2b4 -> media.auto.96a08d04, scene mean 101.5
+PASS [c6B.2 quadrant->blueprint] landed: one activation/capability query, owned state, fresh frame — diff 107.8, max frame 33.4 ms
+PASS [c6B.2 quadrant->blueprint] NextMedia changed canonical media; scene follows — media.auto.96a08d04 -> media.auto.cba6721d, scene mean 20.9
+PASS [c6B.3 blueprint->temporal] landed: one activation/capability query, owned state, fresh frame — diff 55.5, max frame 33.3 ms
+PASS [c6B.3 blueprint->temporal] NextMedia changed canonical media; scene follows — media.auto.cba6721d -> media.auto.1f0329b7, scene mean 85.3
+PASS [c6B.4 temporal->blob] landed: one activation/capability query, owned state, fresh frame — diff 31.7, max frame 33.4 ms
+PASS [c6B.4 temporal->blob] NextMedia changed canonical media; scene follows — media.auto.1f0329b7 -> media.auto.479b063e, scene mean 54.8
+circuit 6 (backward) complete: RSS 274.9 MiB, scene FBO allocations 1, scene FBO texture 24
+PASS [c7F.1 blob->temporal] landed: one activation/capability query, owned state, fresh frame — diff 39.0, max frame 33.3 ms
+PASS [c7F.2 temporal->blueprint] landed: one activation/capability query, owned state, fresh frame — diff 69.1, max frame 33.4 ms
+PASS [c7F.2 temporal->blueprint] RESEED starts a new Blueprint cycle
+PASS [c7F.3 blueprint->quadrant] landed: one activation/capability query, owned state, fresh frame — diff 75.0, max frame 33.3 ms
+PASS [c7F.4 quadrant->blob] landed: one activation/capability query, owned state, fresh frame — diff 44.0, max frame 33.4 ms
+circuit 7 (forward) complete: RSS 288.7 MiB, scene FBO allocations 1, scene FBO texture 24
+PASS [c8B.1 blob->quadrant] landed: one activation/capability query, owned state, fresh frame — diff 42.8, max frame 33.9 ms
+PASS [c8B.1 blob->quadrant] NextMedia changed canonical media; scene follows — media.auto.9fc43161 -> media.auto.dfe053fb, scene mean 49.5
+PASS [c8B.2 quadrant->blueprint] landed: one activation/capability query, owned state, fresh frame — diff 38.1, max frame 115.6 ms
+PASS [c8B.2 quadrant->blueprint] NextMedia changed canonical media; scene follows — media.auto.dfe053fb -> media.auto.080b175e, scene mean 21.9
+PASS [c8B.3 blueprint->temporal] landed: one activation/capability query, owned state, fresh frame — diff 35.3, max frame 36.9 ms
+PASS [c8B.3 blueprint->temporal] NextMedia changed canonical media; scene follows — media.auto.080b175e -> media.auto.e8a7768a, scene mean 98.5
+PASS [c8B.4 temporal->blob] landed: one activation/capability query, owned state, fresh frame — diff 19.4, max frame 33.3 ms
+PASS [c8B.4 temporal->blob] NextMedia changed canonical media; scene follows — media.auto.e8a7768a -> media.auto.1a8db9c7, scene mean 67.4
+circuit 8 (backward) complete: RSS 157.8 MiB, scene FBO allocations 1, scene FBO texture 24
+PASS [c9F.1 blob->temporal] landed: one activation/capability query, owned state, fresh frame — diff 35.0, max frame 37.3 ms
+PASS [c9F.2 temporal->blueprint] landed: one activation/capability query, owned state, fresh frame — diff 87.3, max frame 33.3 ms
+PASS [c9F.3 blueprint->quadrant] landed: one activation/capability query, owned state, fresh frame — diff 65.7, max frame 33.3 ms
+PASS [c9F.4 quadrant->blob] landed: one activation/capability query, owned state, fresh frame — diff 37.7, max frame 33.3 ms
+circuit 9 (forward) complete: RSS 158.0 MiB, scene FBO allocations 1, scene FBO texture 24
+PASS [c10B.1 blob->quadrant] landed: one activation/capability query, owned state, fresh frame — diff 37.9, max frame 33.3 ms
+PASS [c10B.1 blob->quadrant] NextMedia changed canonical media; scene follows — media.auto.1a8db9c7 -> media.auto.65b7fdf1, scene mean 87.5
+capture: bin/data/captures/quadrant-four-scene/s_final_c10_quadrant_window.png
+PASS [c10B.2 quadrant->blueprint] landed: one activation/capability query, owned state, fresh frame — diff 67.8, max frame 33.3 ms
+PASS [c10B.2 quadrant->blueprint] RESEED starts a new Blueprint cycle
+PASS [c10B.2 quadrant->blueprint] NextMedia changed canonical media; scene follows — media.auto.65b7fdf1 -> media.auto.014b1a8c, scene mean 24.2
+capture: bin/data/captures/quadrant-four-scene/s_final_c10_blueprint_window.png
+PASS [c10B.3 blueprint->temporal] landed: one activation/capability query, owned state, fresh frame — diff 52.8, max frame 33.4 ms
+PASS [c10B.3 blueprint->temporal] NextMedia changed canonical media; scene follows — media.auto.014b1a8c -> media.auto.c9ac3db4, scene mean 151.8
+capture: bin/data/captures/quadrant-four-scene/s_final_c10_temporal_window.png
+PASS [c10B.4 temporal->blob] landed: one activation/capability query, owned state, fresh frame — diff 9.0, max frame 33.3 ms
+PASS [c10B.4 temporal->blob] NextMedia changed canonical media; scene follows — media.auto.c9ac3db4 -> media.auto.9a8649a1, scene mean 150.9
+capture: bin/data/captures/quadrant-four-scene/s_final_c10_blob_window.png
+circuit 10 (backward) complete: RSS 160.2 MiB, scene FBO allocations 1, scene FBO texture 24
+PASS all 40 switches (10 circuits, both directions) completed — 40 done
+PASS run returns to Blob after the final circuit — blob-region-prototype
+PASS blob lifecycle: one setup, activations == visits, capabilities once per activation, one status pull + draw per live update — setup 1, activations 11/11, deactivations 10, caps 11, updates 1203, status 1203, draws 1203
+PASS temporal lifecycle: one setup, activations == visits, capabilities once per activation, one status pull + draw per live update — setup 1, activations 10/10, deactivations 10, caps 10, updates 1040, status 1040, draws 1040
+PASS blueprint lifecycle: one setup, activations == visits, capabilities once per activation, one status pull + draw per live update — setup 1, activations 10/10, deactivations 10, caps 10, updates 1491, status 1491, draws 1491
+PASS quadrant lifecycle: one setup, activations == visits, capabilities once per activation, one status pull + draw per live update — setup 1, activations 10/10, deactivations 10, caps 10, updates 1486, status 1486, draws 1486
+PASS no inactive scene updates (scene updates == live scene frames) — 5220 updates, 5220 live frames
+PASS Quadrant always observes the canonical media selection — 1366 Quadrant Idle frames checked
+PASS Quadrant expansion exercised
+PASS one HudFrameData assembly per presented frame — 5740 assemblies, 5740 HUD draws, 5220 live / 520 static scene frames
+PASS no stale status/effects/capabilities/semantics on any frame — 4740 Idle frames, 0 violations
+PASS every mid-transition switch request / scene command rejected — 80 switch, 40 scene-command rejections
+canonical media changes observed: 20; Blueprint reseeds: 4
+PASS no GL errors at any landing or at end of run — 0
+PASS RSS bounded across circuits (end of c2 -> end of run within 32 MiB) — c2 286.4 -> last 160.2 MiB (peak 290.7); series: 304.6 286.4 288.1 285.8 290.7 274.9 288.7 157.8 158.0 160.2 
+PASS runtime-owned scene FBO not reallocated per circuit — 1 allocations, texture 24
+max frame ms per switch (request -> landing; 16 post-capture frames excluded): 119 90 85 34 150 33 33 33 33 33 33 33 33 98 33 33 33 53 33 33 33 33 33 33 33 33 33 33 33 115 36 33 37 33 33 33 33 33 33 33 
+RESULT: 84 passed, 0 failed

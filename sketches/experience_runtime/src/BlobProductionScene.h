@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BlobEffectPolicy.h"
 #include "BlobSceneCore.h"
 #include "SceneContract.h"
 #include "VideoPlaybackService.h"
@@ -21,8 +22,9 @@
 // Deliberately does NOT:
 //   - own a VideoPlaybackService instance — see video_'s own comment.
 //   - author a canonical videoeffects::EffectActivityStatus — no real
-//     effect-execution owner object currently exists for Blob (two bare
-//     GUI-selected effect names, not an owned activity-tracking object);
+//     effect-execution owner object currently exists for Blob (a curated
+//     fragment treatment chosen per media item by BlobEffectPolicy, plus
+//     the fixed desaturated background — not an owned activity-tracking object);
 //     see the migration report's "Effects" section. HudFrameData.effects
 //     stays std::nullopt for this scene until that ownership gap is
 //     closed by an Architecture-reviewed decision.
@@ -85,10 +87,9 @@ public:
 	// The SEPARATE VideoRegionEffectRenderer instance BlobSceneCore uses
 	// for the full-frame background effect pass (backgroundMode==2) — see
 	// BlobSceneCore.h's own comment on why this is a second scratch-FBO
-	// pair, not shared with the fragment path above. Stays 0x0 whenever
-	// backgroundMode != 2 (the production default is 1/"normal" — see
-	// BlobSceneCore::BackgroundConfig), which is itself real, honest
-	// information, not a bug.
+	// pair, not shared with the fragment path above. Production uses mode 2
+	// (desaturated world, see setup()), so this grows to the full native
+	// size; it stays 0x0 only under EXPERIENCE_RUNTIME_BLOB_BACKGROUND_NORMAL.
 	int backgroundScratchFboWidthForTesting() { return core_.backgroundEffectRenderer().getScratchWidth(); }
 	int backgroundScratchFboHeightForTesting() { return core_.backgroundEffectRenderer().getScratchHeight(); }
 
@@ -100,12 +101,25 @@ public:
 	int configuredMaxBlobsForTesting() const { return core_.detectionConfig().maxBlobs; }
 	int configuredMaxActiveFragmentsForTesting() const { return core_.regionParams().maxActiveFragments; }
 
+	// The region effect name new fragments are currently assigned (empty
+	// for the Original treatment), the selected treatment's id, and how
+	// many times the media-change policy has changed it.
+	const std::string & fragmentEffectForTesting() const { return core_.regionParams().effectName; }
+	std::string fragmentTreatmentIdForTesting() const { return effectPolicy_.currentTreatment().id(); }
+	const BlobSceneCore::BackgroundConfig & backgroundConfigForTesting() const { return core_.backgroundConfig(); }
+	int fragmentEffectChangeCountForTesting() const { return effectPolicy_.selectionChangeCount(); }
+
 private:
 	SceneSemanticData buildSemanticData() const;
 	void recordRenderProfileFrame(float drawMs);
 
 	VideoPlaybackService & video_; // not owned, see constructor comment
 	BlobSceneCore core_;
+
+	// Curated fragment-effect selection (BlobEffectPolicy.h). Deliberately
+	// survives activate()/reset(): the selection follows media identity,
+	// so returning to Blob on the same media keeps the same effect.
+	blobeffects::MediaEffectPolicy effectPolicy_;
 
 	// Opt-in Pi profiling of the fragment renderer
 	// (EXPERIENCE_RUNTIME_BLOB_RENDER_PROFILE): accumulates a window of
@@ -120,6 +134,7 @@ private:
 		double trackerMs = 0.0;
 		double regionUpdateMs = 0.0;
 		double drawMs = 0.0;
+		double backgroundMs = 0.0; // background effect renderer stages (0 when background is unshaded)
 		double fragments = 0.0;
 		VideoRegionEffectRenderer::StageTimings stages;
 		int stalls = 0;

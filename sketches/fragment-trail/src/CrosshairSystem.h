@@ -3,6 +3,8 @@
 #include "ofMain.h"
 #include <array>
 
+namespace fragmenttrail {
+
 struct CrosshairPreset {
 	float freqA, freqB;
 	float ampA, ampB;
@@ -107,3 +109,5 @@ private:
 	void addArmQuad(ofMesh & mesh, glm::vec2 a, glm::vec2 b,
 		float T, ofColor ca, ofColor cb);
 };
+
+} // namespace fragmenttrail

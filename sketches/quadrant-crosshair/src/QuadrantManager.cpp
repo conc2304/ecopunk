@@ -1,14 +1,28 @@
 #include "QuadrantManager.h"
 #include <set>
+#include "QCCanvas.h"
+
+namespace quadrantcrosshair {
 
 void QuadrantManager::setup(ShaderLibrary* lib) {
-    float W = ofGetWidth(), H = ofGetHeight();
+    float W = canvasWidth(), H = canvasHeight();
     float hw = W * 0.5f, hh = H * 0.5f;
 
     quads[0].setup(0, ofRectangle(0,  0,  hw, hh), lib);
     quads[1].setup(1, ofRectangle(hw, 0,  hw, hh), lib);
     quads[2].setup(2, ofRectangle(0,  hh, hw, hh), lib);
     quads[3].setup(3, ofRectangle(hw, hh, hw, hh), lib);
+
+    resetComposition();
+}
+
+void QuadrantManager::resetComposition() {
+    for (auto& q : quads) q.resetState();
+    pending.clear();
+    velHighActive    = false;
+    contracting      = false;
+    contractionT     = 0.f;
+    expandedQuadrant = -1;
 
     quads[0].setScaleConfig(0.80f, 1.00f,   0.f);
     quads[1].setScaleConfig(1.20f, 1.60f,  50.f);
@@ -23,6 +37,7 @@ void QuadrantManager::setup(ShaderLibrary* lib) {
     // Pre-shuffle an independent deck for each quadrant
     float staggerBase[4] = { 0.f, 12.f, 24.f, 36.f };
     for (int i = 0; i < 4; i++) {
+        cycleStates[i] = CycleState{}; // clears saved/interrupted shader + resume state too
         cycleStates[i].deck = shaderPool;
         for (int j = (int)cycleStates[i].deck.size() - 1; j > 0; j--)
             std::swap(cycleStates[i].deck[j], cycleStates[i].deck[(int)ofRandom(j + 1)]);
@@ -149,7 +164,7 @@ void QuadrantManager::kickRandomShader(int quadId) {
 void QuadrantManager::update(float dt, const CrosshairState& state,
                               const LFOBank& lfo, ofTexture& gridTex,
                               ofTexture& motionTex, ofTexture& motionDelayedTex) {
-    float W  = ofGetWidth(),  H  = ofGetHeight();
+    float W  = canvasWidth(),  H  = canvasHeight();
     float cx = state.cx,      cy = state.cy;
 
     quads[0].region = ofRectangle(0,  0,  cx,     cy    );
@@ -265,13 +280,13 @@ void QuadrantManager::beginContraction(int quadrantID) {
     expandedQuadrant = quadrantID;
 }
 
-void QuadrantManager::draw(ofTexture& videoTex, glm::vec2 videoSize) {
+void QuadrantManager::draw(const ofTexture& videoTex, glm::vec2 videoSize) {
     for (auto& q : quads) {
         if (contracting && q.id == expandedQuadrant) {
             // Fullscreen version fades out (no scissor — full canvas draw)
             ofEnableAlphaBlending();
             ofSetColor(255, 255, 255, (int)(contractionT * 255));
-            videoTex.draw(0, 0, ofGetWidth(), ofGetHeight());
+            videoTex.draw(0, 0, canvasWidth(), canvasHeight());
             ofDisableAlphaBlending();
             // Quarter-size version grows in underneath (scissored to crosshair region)
             q.draw(videoTex, videoSize);
@@ -443,3 +458,5 @@ QuadrantManager::QuadrantTelemetry QuadrantManager::getTelemetry(int q) const {
     t.dwellProgress = quads[q].primaryDwellProgress();
     return t;
 }
+
+} // namespace quadrantcrosshair

@@ -1,0 +1,9 @@
+[BLUEPRINT_HARNESS] [notice ] BlueprintRosterHarness: FAIL [2_blob] no multi-second stall (max frame < 1000 ms)
+[BLUEPRINT_HARNESS] [notice ] BlueprintRosterHarness: FAIL [3_temporal] no multi-second stall (max frame < 1000 ms)
+[BLUEPRINT_HARNESS] [notice ] BlueprintRosterHarness: RESULT: 16 passed, 2 failed
+[BLUEPRINT_HUD_HARNESS] [notice ] BlueprintHudHarness: RESULT: 26 passed, 0 failed
+[PARITY_HARNESS] [notice ] ParitySoakHarness: RESULT: 37 passed, 0 failed
+[SWITCH_HARNESS] [notice ] SceneSwitchHarness: RESULT: PASS
+[TWO_SCENE_ACCEPTANCE] [notice ] TwoSceneAcceptance: RESULT: PASS
+[BLOB_LIFECYCLE_HARNESS] [notice ] BlobLifecycleHarness: RESULT: 895/895 checks passed
+[TEMPORAL_LIFECYCLE_HARNESS] [notice ] TemporalLifecycleHarness: RESULT: PASS

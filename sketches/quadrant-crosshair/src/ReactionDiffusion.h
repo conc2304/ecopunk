@@ -1,6 +1,8 @@
 #pragma once
 #include "ofMain.h"
 
+namespace quadrantcrosshair {
+
 class ReactionDiffusion {
 public:
     static constexpr int RD_W = 160;
@@ -20,3 +22,5 @@ private:
     void buildQuad();
     void seedInitialState();
 };
+
+} // namespace quadrantcrosshair

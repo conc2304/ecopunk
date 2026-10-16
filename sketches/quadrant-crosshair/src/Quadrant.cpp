@@ -3,6 +3,9 @@
 #include "VideoEffectRegistry.h"
 #include "VideoEffectTypes.h"
 #include <algorithm>
+#include "QCCanvas.h"
+
+namespace quadrantcrosshair {
 
 namespace {
 	float sampleAverageBrightness(const ofPixels& px) {
@@ -40,8 +43,8 @@ void Quadrant::setup(int id_, ofRectangle region_, ShaderLibrary* lib_) {
     lastCy    = region.y + region.height * 0.5f;
 
     ofFbo::Settings s;
-    s.width          = (int)ofGetWidth();
-    s.height         = (int)ofGetHeight();
+    s.width          = (int)canvasWidth();
+    s.height         = (int)canvasHeight();
     s.internalformat = GL_RGBA;
     s.useDepth       = false;
     fbo_read.allocate(s);
@@ -127,8 +130,8 @@ void Quadrant::update(float dt, float cx, float cy) {
         0, 1, scaleMin, scaleMax
     );
 
-    float wScale = ofGetWidth()  / 1280.f;
-    float hScale = ofGetHeight() / 720.f;
+    float wScale = canvasWidth()  / 1280.f;
+    float hScale = canvasHeight() / 720.f;
     morphOffX = ofMap(ofNoise(t * 0.018f + id * 9.1f),         0, 1, -25.f * wScale,  25.f * wScale);
     morphOffY = ofMap(ofNoise(t * 0.018f + id * 9.1f + 77.f),  0, 1, -25.f * hScale,  25.f * hScale);
     morphW    = ofMap(ofNoise(t * 0.012f + id * 6.3f + 155.f), 0, 1, -50.f * wScale,  50.f * wScale);
@@ -145,7 +148,7 @@ void Quadrant::update(float dt, float cx, float cy) {
         for (const auto& slot : slots)
             if (!slot.isIdle() && slot.name == "ridgeline") { active = true; break; }
         if (active) {
-            int W = (int)ofGetWidth(), H = (int)ofGetHeight();
+            int W = (int)canvasWidth(), H = (int)canvasHeight();
             if (W != ridgelineW || H != ridgelineH) {
                 ridgelineRenderer.setup(W, H);
                 ridgelineW = W;
@@ -156,7 +159,29 @@ void Quadrant::update(float dt, float cx, float cy) {
     }
 }
 
-void Quadrant::draw(ofTexture& videoTex, glm::vec2 videoSize) {
+void Quadrant::accumulateErosion(const ofTexture& videoTex) {
+    // Off-screen erosion accumulation pass. Runs during update, never inside
+    // another bound FBO: ofFbo::end() resets the renderer's render surface to
+    // the window, so nesting this pass inside ExperienceRuntime's scene FBO
+    // flipped every later orientation-dependent draw that frame (the HUD
+    // layer's bitmap-string labels rendered upside down).
+    if (!erosionReady || !shaderLib->has("erosion")) return;
+    fbo_write.begin();
+    ofShader& er = shaderLib->get("erosion");
+    er.begin();
+    er.setUniformTexture("accumulated", fbo_read.getTexture(), 0);
+    er.setUniformTexture("videoFrame",  videoTex,              1);
+    er.setUniform1f("decayRate",  decayRate);
+    er.setUniform1f("videoAlpha", videoAlpha);
+    // Draw via accumulated texture so vert.glsl receives correct texcoords
+    ofSetColor(255);
+    fbo_read.getTexture().draw(0, 0, fbo_write.getWidth(), fbo_write.getHeight());
+    er.end();
+    fbo_write.end();
+    std::swap(fbo_read, fbo_write);
+}
+
+void Quadrant::draw(const ofTexture& videoTex, glm::vec2 videoSize) {
     // Guard: zero-width/height scissor rects cause GL errors on VideoCore IV
     if (region.width < 2.f || region.height < 2.f) return;
 
@@ -165,30 +190,23 @@ void Quadrant::draw(ofTexture& videoTex, glm::vec2 videoSize) {
     float rw = std::max(region.width  + morphW, 1.f);
     float rh = std::max(region.height + morphH, 1.f);
 
-    // ── Erosion accumulation pass (off-screen) ────────────────────────────
-    if (erosionReady && shaderLib->has("erosion")) {
-        fbo_write.begin();
-        ofShader& er = shaderLib->get("erosion");
-        er.begin();
-        er.setUniformTexture("accumulated", fbo_read.getTexture(), 0);
-        er.setUniformTexture("videoFrame",  videoTex,              1);
-        er.setUniform1f("decayRate",  decayRate);
-        er.setUniform1f("videoAlpha", videoAlpha);
-        // Draw via accumulated texture so vert.glsl receives correct texcoords
-        ofSetColor(255);
-        fbo_read.getTexture().draw(0, 0, fbo_write.getWidth(), fbo_write.getHeight());
-        er.end();
-        fbo_write.end();
-        std::swap(fbo_read, fbo_write);
-    }
+    // (Erosion accumulation runs in accumulateErosion(), before any draw.)
 
     // ── Draw to screen (scissor-clipped) ─────────────────────────────────
     // Use exact region bounds (not morphed) so scissor edges stay flush with crosshair lines.
     // Morph offsets still animate the draw position inside the clipped area.
+    // glScissor takes framebuffer rows. The window framebuffer's rows run
+    // bottom-up relative to the canvas, so the rect is flipped there. An
+    // ofFbo bound with its default matrix flip (ExperienceRuntime's scene
+    // FBO) stores canvas row y at FBO row y — flipping there clips each
+    // quadrant to its vertically mirrored region.
+    GLint boundFramebuffer = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &boundFramebuffer);
+    const float scissorY = boundFramebuffer != 0 ? region.y : canvasHeight() - region.y - region.height;
     glEnable(GL_SCISSOR_TEST);
     glScissor(
         (GLint)region.x,
-        (GLint)(ofGetHeight() - region.y - region.height),
+        (GLint)scissorY,
         (GLint)region.width,
         (GLint)region.height
     );
@@ -221,7 +239,9 @@ void Quadrant::draw(ofTexture& videoTex, glm::vec2 videoSize) {
             // CPU-side renderer: draws full canvas (0,0→W,H), clipped by the
             // active GL scissor to this quadrant's region.
             if (ridgelineW > 0 && ridgelineH > 0) {
-                ofTexture* overlayTex = ridgelineRenderer.getParams().overlayMode ? &videoTex : nullptr;
+                // RidgelineRenderer::draw() (shared) takes a non-const pointer but
+                // only binds/draws the texture.
+                ofTexture* overlayTex = ridgelineRenderer.getParams().overlayMode ? const_cast<ofTexture*>(&videoTex) : nullptr;
                 ridgelineRenderer.draw(overlayTex, slot.drawnAlpha);
             }
         } else {
@@ -276,7 +296,7 @@ void Quadrant::clearShaders(float fadeSecs) {
     }
 }
 
-void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
+void Quadrant::drawWithEffect(const ofTexture& tex, glm::vec2 videoSize,
                                const std::string& effect, float alpha,
                                float cx, float cy,
                                float ditherArc, float ditherPx,
@@ -288,11 +308,11 @@ void Quadrant::drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
         sh.begin();
         sh.setUniformTexture("tex",  tex, 0);  // legacy shaders
         sh.setUniformTexture("tex0", tex, 0);  // nature pack shaders
-        sh.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
+        sh.setUniform2f("resolution", canvasWidth(), canvasHeight());
         if (effect == "dither") {
             // arc and px are frozen per-slot at push time; only opacity follows the lifecycle.
             // ditherPx is stored in reference pixels (1280px width); scale to actual screen pixels.
-            float wScale = ofGetWidth() / 1280.f;
+            float wScale = canvasWidth() / 1280.f;
             sh.setUniform1f("alpha",         ditherArc);
             sh.setUniform1f("opacity",       alpha);
             sh.setUniform1f("maxPixelation", ditherPx * wScale);
@@ -443,6 +463,11 @@ void Quadrant::drawDebugHUD(const std::string& phaseStr) const {
     );
 }
 
+void Quadrant::resetState() {
+    for (auto& slot : slots) slot.clear();
+    resetErosion();
+}
+
 void Quadrant::resetErosion() {
     fbo_read.begin();  ofClear(0, 0, 0, 255); fbo_read.end();
     fbo_write.begin(); ofClear(0, 0, 0, 255); fbo_write.end();
@@ -505,3 +530,5 @@ void Quadrant::initRidgelineParams(const ofPixels* px) {
     ridgelineW = 0;
     ridgelineH = 0;
 }
+
+} // namespace quadrantcrosshair

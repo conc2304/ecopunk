@@ -1,10 +1,11 @@
 #pragma once
 
 #include "ofMain.h"
-#include "TimeOffsetVideoBuffer.h"
-#include "ShaderLibrary.h"
+#include "FTVideoTypes.h"
 #include "HudElements.h"
 #include <string>
+
+namespace fragmenttrail {
 
 // Section 4 of the brief.
 enum class FTContentMode {
@@ -81,3 +82,5 @@ private:
 
 	void drawContent(const ofTexture& tex, const ofRectangle& destRect, ShaderLibrary& shaderLib);
 };
+
+} // namespace fragmenttrail

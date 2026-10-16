@@ -1,5 +1,8 @@
 #include "FTFragment.h"
 #include <algorithm>
+#include "FTCanvas.h"
+
+namespace fragmenttrail {
 
 void FTFragment::spawn(const FTFragmentSpawnParams& p, float sustainSeconds, float decaySeconds, const hud::HudTheme& theme) {
 	params = p;
@@ -38,8 +41,8 @@ void FTFragment::drawContent(const ofTexture& tex, const ofRectangle& destRect, 
 	// this project (verified: full-screen and quadrant-crosshair's own
 	// full-texture .draw() calls both render correctly; drawSubsection
 	// produced a flat, undetailed fill instead of the video content).
-	float canvasW = ofGetWidth();
-	float canvasH = ofGetHeight();
+	float canvasW = canvasWidth();
+	float canvasH = canvasHeight();
 
 	// Zoom > 1 draws the video far larger than the canvas so only a small,
 	// magnified region lands inside this fragment's scissor window — the
@@ -52,8 +55,16 @@ void FTFragment::drawContent(const ofTexture& tex, const ofRectangle& destRect, 
 	float drawX = params.position.x * (1.0f - kZoom);
 	float drawY = params.position.y * (1.0f - kZoom);
 
+	// glScissor takes framebuffer rows. The window framebuffer's rows run
+	// bottom-up relative to the canvas, so the rect is flipped there. An
+	// ofFbo bound with its default matrix flip (ExperienceRuntime's scene
+	// FBO) stores canvas row y at FBO row y — flipping there clipped each
+	// fragment's content into the vertically mirrored rect.
+	GLint boundFramebuffer = 0;
+	glGetIntegerv(GL_FRAMEBUFFER_BINDING, &boundFramebuffer);
+	const float scissorY = boundFramebuffer != 0 ? destRect.y : canvasH - destRect.y - destRect.height;
 	glEnable(GL_SCISSOR_TEST);
-	glScissor(static_cast<GLint>(destRect.x), static_cast<GLint>(canvasH - destRect.y - destRect.height),
+	glScissor(static_cast<GLint>(destRect.x), static_cast<GLint>(scissorY),
 		static_cast<GLint>(destRect.width), static_cast<GLint>(destRect.height));
 
 	float fadeAlpha = getAlpha();
@@ -75,9 +86,9 @@ void FTFragment::drawContent(const ofTexture& tex, const ofRectangle& destRect, 
 		ofShader& sh = shaderLib.get(effect);
 		sh.begin();
 		sh.setUniformTexture("tex", tex, 0);
-		sh.setUniform2f("resolution", ofGetWidth(), ofGetHeight());
+		sh.setUniform2f("resolution", canvasWidth(), canvasHeight());
 		if (effect == "dither") {
-			float wScale = ofGetWidth() / 1280.f;
+			float wScale = canvasWidth() / 1280.f;
 			sh.setUniform1f("alpha", params.ditherArc);
 			sh.setUniform1f("opacity", fadeAlpha);
 			sh.setUniform1f("maxPixelation", params.ditherPx * wScale);
@@ -121,3 +132,5 @@ void FTFragment::draw(TimeOffsetVideoBuffer& videoBuffer, ShaderLibrary& shaderL
 	chrome.setMotion(motion);
 	chrome.draw();
 }
+
+} // namespace fragmenttrail

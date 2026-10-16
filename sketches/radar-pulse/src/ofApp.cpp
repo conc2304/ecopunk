@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "../../../shared/src/video-playback/SharedMediaRoot.h"
 #include <sstream>
 
 namespace {
@@ -17,14 +18,9 @@ void ofApp::setup() {
 	// before doing custom texture2D-based shader work.
 	ofDisableArbTex();
 
-	// Shared media collection, same convention as quadrant-crosshair/
-	// blueprint_emergence: an absolute path on the Pi, the local (symlinked)
-	// bin/data folder otherwise.
-#ifdef PLATFORM_PI
-	videoSampler.setup("/home/pi/blueprint/media");
-#else
-	videoSampler.setup(ofToDataPath("sharedMedia", true));
-#endif
+	// Canonical shared media library (assets/shared/media/), same root on
+	// desktop and Pi — see SharedMediaRoot.h.
+	videoSampler.setup(ecopunk::sharedMediaRoot());
 
 	revealMask.setup(kCanvasWidth, kCanvasHeight, 0.965f);
 	revealMask.setMaxOpacity(1.0f);
@@ -113,7 +109,7 @@ void ofApp::draw() {
 		ss << "composite draw: " << msComposite << " ms\n";
 		ss << "active pulses: " << pulseEmitter.getActivePulses().size() << "\n";
 		ss << "stamp blend: " << (revealMask.isUsingMaxBlend() ? "GL_MAX" : "sorted alpha-over fallback") << "\n";
-		if (!videoSampler.isReady()) ss << "(no media/*.mp4 found via sharedMedia/ — showing mask+widget debug view)\n";
+		if (!videoSampler.isReady()) ss << "(no *.mp4 found in assets/shared/media/ — showing mask+widget debug view)\n";
 		else ss << "clip: " << videoSampler.getCurrentFilename() << "\n";
 		ss << "[a] add emitter   [d] toggle this overlay";
 		ofSetColor(255);

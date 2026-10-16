@@ -109,15 +109,40 @@ void ofApp::setup() {
 		&& !blobLifecycleRequested && !blobSoakRequested
 		&& (blueprintHarnessRequested || std::getenv("EXPERIENCE_RUNTIME_BLUEPRINT_SCENE") != nullptr);
 
+	// RT-006: EXPERIENCE_RUNTIME_FRAGMENT_SCENE / EXPERIENCE_RUNTIME_QUADRANT_SCENE
+	// start a normal run in Fragment Trail / Quadrant Crosshair (same opt-in
+	// pattern).
+	bool wantFragmentScene = !wantTemporalScene && !wantBlueprintScene && !switchHarnessRequested
+		&& !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& std::getenv("EXPERIENCE_RUNTIME_FRAGMENT_SCENE") != nullptr;
+	bool wantQuadrantScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !switchHarnessRequested
+		&& !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& std::getenv("EXPERIENCE_RUNTIME_QUADRANT_SCENE") != nullptr;
+
+	// Roster: every harness keeps the ring it was accepted against — RT-002/
+	// RT-003 the two-scene ring, every other existing harness (and the RT-004
+	// stall driver's scripted key sequences) the three-scene ring. The normal
+	// run, and the full-ring circuit proof, get the full five-scene roster.
+	using Roster = ExperienceRuntime::ProductionRoster;
+	const bool anyThreeSceneHarness = blobLifecycleRequested || blobSoakRequested || temporalLifecycleRequested
+		|| skinHarnessRequested || artExportRequested || focusHarnessRequested || blueprintHarnessRequested
+		|| blueprintHudHarnessRequested || paritySoakRequested || resumeWindowRequested || cadenceRequested
+		|| temporalWarmRequested || (threeSceneRequested && !ThreeSceneCircuitHarness::isFullRingRequested())
+		|| Rt004StallDriver::isRequested();
+	const Roster roster = (switchHarnessRequested || acceptanceRequested) ? Roster::BlobTemporal
+		: anyThreeSceneHarness ? Roster::ThreeScene : Roster::Full;
+
 	if (!glHarnessRequested) {
 		if (wantTemporalScene) {
-			runtime.installTemporalProductionScene();
+			runtime.installTemporalProductionScene(roster);
 		} else if (wantBlueprintScene) {
-			runtime.installBlueprintProductionScene();
+			runtime.installBlueprintProductionScene(roster);
+		} else if (wantFragmentScene && roster == Roster::Full) {
+			runtime.installFragmentProductionScene();
+		} else if (wantQuadrantScene && roster == Roster::Full) {
+			runtime.installQuadrantProductionScene();
 		} else {
-			// RT-002/RT-003 acceptance harnesses keep the two-scene ring they
-			// were accepted against; every other run gets the full roster.
-			runtime.installBlobProductionScene(!(switchHarnessRequested || acceptanceRequested));
+			runtime.installBlobProductionScene(roster);
 		}
 	}
 	if (Rt004FramePhaseProbe::isRequested()) framePhaseProbe = std::make_unique<Rt004FramePhaseProbe>(runtime);

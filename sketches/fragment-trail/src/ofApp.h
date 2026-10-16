@@ -3,19 +3,15 @@
 #include "ofMain.h"
 #include "ofxGui.h"
 #include "TimeOffsetVideoBuffer.h"
-#include "CrosshairSystem.h"
-#include "TriggerBus.h"
-#include "LFOBank.h"
 #include "ShaderLibrary.h"
-#include "FTFragmentPool.h"
-#include "FTModeController.h"
-#include "FTParameterPanel.h"
-#include "FTBackgroundLayer.h"
-#include "FTOverlayDirector.h"
-#include "HudOverlayLayer.h"
+#include "FragmentSceneCore.h"
 #include "HudOverlayDialPanel.h"
-#include "HudOverlayDialState.h"
 
+// Standalone Fragment Trail: owns the window, its own media (the local
+// TimeOffsetVideoBuffer fork scanning bin/data/media), the local
+// ShaderLibrary, and the dev GUI. The artwork itself is
+// fragmenttrail::FragmentSceneCore — the same core ExperienceRuntime's
+// FragmentProductionScene runs.
 class ofApp : public ofBaseApp {
 public:
 	void setup() override;
@@ -26,15 +22,8 @@ public:
 
 private:
 	TimeOffsetVideoBuffer videoBuffer;
-	CrosshairSystem crosshair;
-	TriggerBus triggerBus;
-	LFOBank lfoBank;
 	ShaderLibrary shaderLib;
-
-	FTFragmentPool pool;
-	FTModeController modeController;
-	FTParameterPanel paramPanel;
-	FTBackgroundLayer backgroundLayer;
+	fragmenttrail::FragmentSceneCore core;
 
 	// HUD Glitch Overlay System — here it composites live into the scene
 	// (unlike quadrant-crosshair/blueprint_emergence/temporal-fields' own
@@ -42,10 +31,7 @@ private:
 	// FTOverlayDirector drives the organisms off real fragment lifecycle
 	// events instead of the internal random scheduler (which is disabled).
 	// 'o' here only shows/hides the dial-tuning panel.
-	hudoverlay::HudOverlayLayer hudOverlay;
 	hudoverlay::HudOverlayDialPanel hudOverlayPanel;
-	hudoverlay::HudOverlayDialState hudOverlayDials;
-	FTOverlayDirector overlayDirector;
 
 	// Section 9's resolution: kept small (Temporal Fields' own 5-8 default
 	// range), not raised to match maxFragments — see FTFragmentPool's

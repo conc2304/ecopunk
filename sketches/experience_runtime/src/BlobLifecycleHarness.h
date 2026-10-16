@@ -76,6 +76,9 @@ private:
 		CycleEnd,        // deactivateScene()
 		FinalActivate,   // one more activate() after the 20 cycles, before shutdown
 		FinalFrames,
+		EffectStep,      // curated fragment-effect policy: NextMedia -> exactly one effect change, captured
+		EffectInactive,  // media change while deactivated -> no selection until reactivated
+		EffectResume,    // reactivated -> exactly one catch-up change
 		Shutdown,        // sceneManager.shutdown() + post-shutdown command-rejection checks
 		Soak,            // Mode::Soak only — continuous real-time operation, no cycling
 		Done
@@ -110,6 +113,24 @@ private:
 	// path — see BlobProductionScene's own comment on why there are two),
 	// read live through ExperienceRuntime::blobSceneForTesting() rather
 	// than estimated.
+	// Curated fragment-effect policy proof (EffectStep/EffectInactive/
+	// EffectResume) — see BlobEffectPolicy.h.
+	void beginEffectStep(const std::string & label);
+	bool effectStepSettled(int framesSinceMediaChange) const;
+	void trackEffectPerFrame();
+	std::optional<std::string> currentMediaId() const;
+	int effectStep_ = 0;
+	int effectStepChangesBefore_ = 0;
+	std::string effectStepEffectBefore_;
+	std::optional<std::string> effectStepMediaBefore_;
+	int effectStepFramesSinceMediaChange_ = -1;
+	std::optional<std::string> effectTrackLastMedia_;
+	std::string effectTrackLastEffect_;
+	int effectChangesWithoutMediaChange_ = 0;
+	int effectTrackFramesSinceMedia_ = 0;
+	static constexpr int kEffectSettleFrames = 60;
+	static constexpr int kEffectStepTimeoutFrames = 900;
+
 	int peakFragmentScratchWidth_ = 0;
 	int peakFragmentScratchHeight_ = 0;
 	int peakBackgroundScratchWidth_ = 0;

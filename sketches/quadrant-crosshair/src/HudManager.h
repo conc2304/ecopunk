@@ -9,6 +9,8 @@
 #include "NatureCopy.h"
 #include <vector>
 
+namespace quadrantcrosshair {
+
 class HudManager {
 public:
     void setup(TriggerBus&, CrosshairSystem&, LFOBank&,
@@ -19,8 +21,20 @@ public:
     // ── In-code dials ──────────────────────────────────────────────────
     bool showBioGauge   = false;   // motion energy ring (top-center left)
     bool showDwellGauge = false;   // dwell semi-circle (top-center right)
+    // Information layer: per-quadrant telemetry cards, media status light,
+    // log scroll and the bottom slot-name legend. Hosted in ExperienceRuntime
+    // these duplicate the production HUD (its four-channel strip, media
+    // slot) and are not drawn; the artwork layer — rotating contours/hex
+    // grid/node network/reticles/flow field, the crosshair scanner and glitch
+    // tears — always is. Draw-only: update() runs the same either way.
+    bool showInformationLayer = true;
 
     void onVideoFileChanged(const std::string& basename);
+
+    // Test-only: show rotation element elemIdx (0 Contours, 1 HexGrid,
+    // 2 Network, 3 Reticles, 4 FlowField) in slot 0 at full alpha now, as if
+    // it had faded in. Never called by the artwork itself.
+    void showElementForTesting(int elemIdx);
 
 private:
     // Pool index → widget mapping
@@ -87,3 +101,5 @@ private:
     void          updateTelemetryCards();
     ofVec2f       panelBasePos(int q) const;
 };
+
+} // namespace quadrantcrosshair

@@ -339,10 +339,3 @@ constexpr float CIRCLE_TRIGGER_MAX_FRACTION = BE_VALUES.CIRCLE_TRIGGER_MAX_FRACT
 constexpr int CIRCLE_PLACEMENT_MAX_ATTEMPTS = BE_VALUES.CIRCLE_PLACEMENT_MAX_ATTEMPTS;
 constexpr float IRIS_OPEN_LEAD_FRACTION = BE_VALUES.IRIS_OPEN_LEAD_FRACTION; // how far ahead the outline leads the fill
 constexpr float GHOST_RING_SCALE = BE_VALUES.GHOST_RING_SCALE; // ghost ring radius as a multiple of targetRadius
-
-// Media path
-#ifdef PLATFORM_PI
-constexpr char MEDIA_PATH[] = "/home/pi/blueprint/media/";
-#else
-constexpr char MEDIA_PATH[] = "media/";
-#endif

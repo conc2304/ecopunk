@@ -31,7 +31,10 @@
 // Opt-in: EXPERIENCE_RUNTIME_THREE_SCENE_HARNESS=1. Exits 0 only if every check passed.
 class ThreeSceneCircuitHarness {
 public:
+	// EXPERIENCE_RUNTIME_THREE_SCENE_HARNESS (three-scene ring, RT-005) or
+	// EXPERIENCE_RUNTIME_FULL_RING_HARNESS (the full five-scene ring).
 	static bool isRequested();
+	static bool isFullRingRequested();
 	explicit ThreeSceneCircuitHarness(ExperienceRuntime& runtime);
 	void step(float dt);
 
@@ -64,6 +67,19 @@ private:
 	std::string legLabel() const;
 
 	ExperienceRuntime& runtime_;
+	bool fullRing_ = false;
+	std::string captureDir_;
+	int followerLagFrames_ = 0;
+	int fragmentFollowerFramesChecked_ = 0;
+	int quadrantMediaLagFrames_ = 0;
+	int quadrantFramesChecked_ = 0;
+	uint64_t lastQuadrantGeneration_ = 0;
+	bool quadrantExpansionTriggered_ = false;
+	bool quadrantExpansionChecked_ = false;
+	bool quadrantReticlesShown_ = false;
+	int glStateFramesChecked_ = 0;
+	int glStateLeaks_ = 0;
+	float expansionTriggerSeconds_ = 0.0f;
 	std::vector<std::string> ring_;
 	std::vector<Leg> legs_;
 	size_t leg_ = 0;

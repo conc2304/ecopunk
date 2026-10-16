@@ -1,5 +1,8 @@
 #include "MotionExtraction.h"
 #include <cmath>
+#include "QCCanvas.h"
+
+namespace quadrantcrosshair {
 
 void MotionExtraction::setup() {
     ofFbo::Settings accumSettings;
@@ -22,11 +25,11 @@ void MotionExtraction::setup() {
 
     ofFbo::Settings extractSettings;
 #ifdef PLATFORM_PI
-    extractSettings.width  = std::min(ofGetWidth(),  640);
-    extractSettings.height = std::min(ofGetHeight(), 360);
+    extractSettings.width  = static_cast<int>(std::min(canvasWidth(),  640.f));
+    extractSettings.height = static_cast<int>(std::min(canvasHeight(), 360.f));
 #else
-    extractSettings.width  = ofGetWidth();
-    extractSettings.height = ofGetHeight();
+    extractSettings.width  = static_cast<int>(canvasWidth());
+    extractSettings.height = static_cast<int>(canvasHeight());
 #endif
     extractSettings.internalformat = GL_RGB;
     extractSettings.useDepth       = false;
@@ -45,8 +48,25 @@ void MotionExtraction::setup() {
 
     allocateHistory();
 
-    accumShader.load("shaders/vert.glsl",   "shaders/motion_accum.glsl");
-    extractShader.load("shaders/vert.glsl", "shaders/motion_extract.glsl");
+    accumShader.load(vertShaderPath,   accumShaderPath);
+    extractShader.load(vertShaderPath, extractShaderPath);
+}
+
+void MotionExtraction::reset() {
+    fboAccumA.begin(); ofClear(128, 128, 128, 255); fboAccumA.end();
+    fboAccumB.begin(); ofClear(128, 128, 128, 255); fboAccumB.end();
+    fboMotion.begin(); ofClear(0, 0, 0, 255); fboMotion.end();
+    fboMotionDelayed.begin(); ofClear(0, 0, 0, 255); fboMotionDelayed.end();
+    for (auto& f : frameHistory) { f.begin(); ofClear(128, 128, 128, 255); f.end(); }
+    historyWriteIndex = 0;
+    historyCount      = 0;
+    pingPong          = false;
+    motionEnergy      = 0.f;
+    motionCentroidX   = 0.5f;
+    motionCentroidY   = 0.5f;
+    prevAccumSet         = false;
+    prevAccumSnapshotAge = 0;
+    sampleThrottleCount  = 0;
 }
 
 void MotionExtraction::allocateHistory() {
@@ -72,7 +92,7 @@ void MotionExtraction::allocateHistory() {
     historyCount      = 0;
 }
 
-void MotionExtraction::update(ofTexture& videoTex, float decayWeight, float sensitivity) {
+void MotionExtraction::update(const ofTexture& videoTex, float decayWeight, float sensitivity) {
     decayWeight = ofClamp(decayWeight, 0.0f, 0.999f);
     sensitivity = std::max(0.0f, sensitivity);
 
@@ -93,7 +113,7 @@ void MotionExtraction::update(ofTexture& videoTex, float decayWeight, float sens
     sampleControlValues();
 }
 
-void MotionExtraction::updateExtract(ofTexture& videoTex, float sensitivity,
+void MotionExtraction::updateExtract(const ofTexture& videoTex, float sensitivity,
                                       int refMode, ofFbo& targetFbo) {
     targetFbo.begin();
     ofClear(0, 0, 0, 255);
@@ -115,14 +135,14 @@ void MotionExtraction::updateExtract(ofTexture& videoTex, float sensitivity,
     ofSetColor(255);
 
     // Draw current video as the geometry source so vTexCoord matches the output.
-    videoTex.draw(0, 0, ofGetWidth(), ofGetHeight());
+    videoTex.draw(0, 0, canvasWidth(), canvasHeight());
 
     extractShader.end();
 
     targetFbo.end();
 }
 
-void MotionExtraction::updateAccum(ofTexture& videoTex, float decayWeight) {
+void MotionExtraction::updateAccum(const ofTexture& videoTex, float decayWeight) {
     // src: last result; dst: buffer to write into this frame
     ofFbo& src = pingPong ? fboAccumB : fboAccumA;
     ofFbo& dst = pingPong ? fboAccumA : fboAccumB;
@@ -150,7 +170,7 @@ void MotionExtraction::updateAccum(ofTexture& videoTex, float decayWeight) {
     pingPong = !pingPong;
 }
 
-void MotionExtraction::updateFrameHistory(ofTexture& videoTex) {
+void MotionExtraction::updateFrameHistory(const ofTexture& videoTex) {
     if (frameHistory.empty()) {
         return;
     }
@@ -286,3 +306,5 @@ ofTexture& MotionExtraction::getDelayedTexture() {
 
     return frameHistory[index].getTexture();
 }
+
+} // namespace quadrantcrosshair

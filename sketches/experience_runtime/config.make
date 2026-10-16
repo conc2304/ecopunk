@@ -205,6 +205,26 @@ PROJECT_CFLAGS = -I../../shared/src/scene -I../../shared/src/hud-runtime \
 # (header names checked: no collision with any other include directory).
 PROJECT_CFLAGS += $(addprefix -I,$(wildcard ../../shared/src/hud/*/))
 
+# Fragment Trail (RT-006) and Quadrant Crosshair production scenes. Each
+# scene's own sources are compiled through wrapper translation units
+# (src/FragmentTrail_*.cpp, src/HudOverlay_*.cpp, src/QuadrantCrosshair_*.cpp)
+# rather than symlinks: a wrapper's #include of the real .cpp makes that
+# file's quoted includes resolve from its own directory first. The two scene
+# source directories are added LAST, so bare "LFOBank.h"/"TriggerBus.h"/
+# "ShaderLibrary.h"/"MotionExtraction.h"/"GridState.h"/
+# "TimeOffsetVideoBuffer.h" includes from every other source still find the
+# shared/src classes; each scene's same-named forks live in its own namespace
+# (fragmenttrail, quadrantcrosshair). shared/src/hud: both scenes'
+# "HudElements.h"; hud_overlay(+organisms): Fragment's in-artwork overlay.
+# FT_PRODUCTION_RUNTIME: Fragment binds to the shared canonical
+# TimeOffsetVideoBuffer/ShaderLibrary (fragment-trail/src/FTVideoTypes.h) and
+# compiles FTParameterPanel without ofxGui. QC_PRODUCTION_RUNTIME: keeps
+# Quadrant's MotionExtraction fork namespaced only (see
+# quadrant-crosshair/src/MotionExtraction.h).
+PROJECT_CFLAGS += -DFT_PRODUCTION_RUNTIME -DQC_PRODUCTION_RUNTIME \
+	-I../../shared/src/hud -I../../shared/src/hud_overlay -I../../shared/src/hud_overlay/organisms \
+	-I../fragment-trail/src -I../quadrant-crosshair/src
+
 # Production-parity closure: Temporal's TFParameterPanel (tuned defaults,
 # evolution/waypoint drift, preset timeline) is compiled in with its ofxPanel
 # widget tree compiled out — see TFParameterPanel.h. No ofxGui in this build.
@@ -260,9 +280,18 @@ Release Debug: sync-shared-shader-runtime-assets
 sync-shared-shader-runtime-assets:
 	@python3 ../../scripts/sync-shared-shader-runtime-assets.py $(CURDIR)
 
-# Shared Effect Knowledge pack (TFEffectPicker imports
-# shared-video-effects/knowledge/effect-knowledge-pack.json). This sketch has
-# no effect-manifest.json, so the existing sync only writes the pack.
+# RT-006: Fragment Trail's scene-local data (bg_dim.glsl), from
+# sketches/fragment-trail/data/ — same deterministic model.
+Release Debug: sync-fragment-runtime-assets
+.PHONY: sync-fragment-runtime-assets
+sync-fragment-runtime-assets:
+	@python3 ../../scripts/sync-fragment-runtime-assets.py $(CURDIR)
+
+# Shared video-effect assets into bin/data/shared-video-effects/: the Shared
+# Effect Knowledge pack (TFEffectPicker imports
+# shared-video-effects/knowledge/effect-knowledge-pack.json) and, per this
+# sketch's effect-manifest.json, the canonical shader files Quadrant
+# Crosshair's ShaderLibrary loads (AssetLayout::CanonicalSync).
 Release Debug: sync-video-effect-assets
 .PHONY: sync-video-effect-assets
 sync-video-effect-assets:

@@ -64,6 +64,11 @@ BLOB_SEMANTIC_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/scene
 BLOB_SEMANTIC_SRC = blob_semantic_mapping_tests.cpp ../src/BlobSemanticMapping.cpp
 BLOB_SEMANTIC_BIN = blob_semantic_mapping_tests
 
+# Blob curated fragment-effect policy (../src/BlobEffectPolicy.h/.cpp) —
+# OF-free, standard library only.
+BLOB_EFFECT_POLICY_SRC = blob_effect_policy_tests.cpp ../src/BlobEffectPolicy.cpp
+BLOB_EFFECT_POLICY_BIN = blob_effect_policy_tests
+
 # Temporal Production Scene #2 Migration: temporalsemantics::compute()
 # (../src/TemporalSemanticMapping.h/.cpp) has the exact same OF-free
 # dependency shape as blobsemantics::compute() above (only
@@ -77,6 +82,16 @@ TEMPORAL_SEMANTIC_BIN = temporal_semantic_mapping_tests
 BLUEPRINT_SEMANTIC_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/scene
 BLUEPRINT_SEMANTIC_SRC = blueprint_semantic_mapping_tests.cpp ../src/BlueprintSemanticMapping.cpp
 BLUEPRINT_SEMANTIC_BIN = blueprint_semantic_mapping_tests
+
+# Quadrant Crosshair: quadrantsemantics::compute() — same OF-free shape as above.
+QUADRANT_SEMANTIC_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/scene
+QUADRANT_SEMANTIC_SRC = quadrant_semantic_mapping_tests.cpp ../src/QuadrantSemanticMapping.cpp
+QUADRANT_SEMANTIC_BIN = quadrant_semantic_mapping_tests
+
+# RT-006: fragmentsemantics::compute() — same OF-free shape as above.
+FRAGMENT_SEMANTIC_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/scene
+FRAGMENT_SEMANTIC_SRC = fragment_semantic_mapping_tests.cpp ../src/FragmentSemanticMapping.cpp
+FRAGMENT_SEMANTIC_BIN = fragment_semantic_mapping_tests
 
 # RT-003: sceneswitch::Controller (../src/SceneSwitchController.h) is the
 # header-only, OF-free production state machine behind SceneManager's
@@ -121,12 +136,15 @@ $(WALL_CLOCK_BIN): $(WALL_CLOCK_SRC) ../../../shared/src/hud-runtime/WallClockSa
 $(FOCUS_BIN): $(FOCUS_SRC) ../src/HudFocusNavigator.h
 	$(CXX) $(CXXFLAGS) $(FOCUS_SRC) -o $(FOCUS_BIN)
 
-test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN)
+test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN)
 	./$(LIFECYCLE_BIN)
 	./$(SESSION2_BIN)
 	./$(BLOB_SEMANTIC_BIN)
+	./$(BLOB_EFFECT_POLICY_BIN)
 	./$(TEMPORAL_SEMANTIC_BIN)
 	./$(BLUEPRINT_SEMANTIC_BIN)
+	./$(FRAGMENT_SEMANTIC_BIN)
+	./$(QUADRANT_SEMANTIC_BIN)
 	./$(SCENE_SWITCH_BIN)
 	./$(SKIN_LOADER_BIN)
 	./$(FOCUS_BIN)
@@ -137,6 +155,18 @@ blueprint-semantic: $(BLUEPRINT_SEMANTIC_BIN)
 
 $(BLUEPRINT_SEMANTIC_BIN): $(BLUEPRINT_SEMANTIC_SRC) ../src/BlueprintSemanticMapping.h
 	$(CXX) $(BLUEPRINT_SEMANTIC_CXXFLAGS) $(BLUEPRINT_SEMANTIC_SRC) -o $(BLUEPRINT_SEMANTIC_BIN)
+
+fragment-semantic: $(FRAGMENT_SEMANTIC_BIN)
+	./$(FRAGMENT_SEMANTIC_BIN)
+
+$(FRAGMENT_SEMANTIC_BIN): $(FRAGMENT_SEMANTIC_SRC) ../src/FragmentSemanticMapping.h
+	$(CXX) $(FRAGMENT_SEMANTIC_CXXFLAGS) $(FRAGMENT_SEMANTIC_SRC) -o $(FRAGMENT_SEMANTIC_BIN)
+
+quadrant-semantic: $(QUADRANT_SEMANTIC_BIN)
+	./$(QUADRANT_SEMANTIC_BIN)
+
+$(QUADRANT_SEMANTIC_BIN): $(QUADRANT_SEMANTIC_SRC) ../src/QuadrantSemanticMapping.h
+	$(CXX) $(QUADRANT_SEMANTIC_CXXFLAGS) $(QUADRANT_SEMANTIC_SRC) -o $(QUADRANT_SEMANTIC_BIN)
 
 skin: $(SKIN_LOADER_BIN)
 	./$(SKIN_LOADER_BIN)
@@ -156,6 +186,9 @@ $(SESSION2_BIN): $(SESSION2_SRC)
 $(BLOB_SEMANTIC_BIN): $(BLOB_SEMANTIC_SRC) ../src/BlobSemanticMapping.h
 	$(CXX) $(BLOB_SEMANTIC_CXXFLAGS) $(BLOB_SEMANTIC_SRC) -o $(BLOB_SEMANTIC_BIN)
 
+$(BLOB_EFFECT_POLICY_BIN): $(BLOB_EFFECT_POLICY_SRC) ../src/BlobEffectPolicy.h
+	$(CXX) $(CXXFLAGS) $(BLOB_EFFECT_POLICY_SRC) -o $(BLOB_EFFECT_POLICY_BIN)
+
 $(TEMPORAL_SEMANTIC_BIN): $(TEMPORAL_SEMANTIC_SRC) ../src/TemporalSemanticMapping.h
 	$(CXX) $(TEMPORAL_SEMANTIC_CXXFLAGS) $(TEMPORAL_SEMANTIC_SRC) -o $(TEMPORAL_SEMANTIC_BIN)
 
@@ -163,4 +196,4 @@ $(SCENE_SWITCH_BIN): $(SCENE_SWITCH_SRC) ../src/SceneSwitchController.h
 	$(CXX) $(CXXFLAGS) $(SCENE_SWITCH_SRC) -o $(SCENE_SWITCH_BIN)
 
 clean:
-	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN)
+	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN)

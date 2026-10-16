@@ -2,6 +2,8 @@
 #include "ofMain.h"
 #include <array>
 
+namespace quadrantcrosshair {
+
 enum LFOIndex {
     LFO_CROSSHAIR_PULSE = 0,
     LFO_ARM_H,
@@ -33,3 +35,5 @@ private:
     std::array<Lane, LFO_COUNT> lanes;
     float timeAccum = 0.f;
 };
+
+} // namespace quadrantcrosshair

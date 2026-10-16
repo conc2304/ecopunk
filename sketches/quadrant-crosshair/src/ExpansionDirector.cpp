@@ -1,10 +1,13 @@
 #include "ExpansionDirector.h"
+#include "QCCanvas.h"
+
+namespace quadrantcrosshair {
 
 void ExpansionDirector::setup() {
     state           = ExpansionState::IDLE;
     expansionT      = 0.f;
     uiFadeAlpha     = 1.f;
-    travelledPos    = { ofGetWidth() * 0.5f, ofGetHeight() * 0.5f };
+    travelledPos    = { canvasWidth() * 0.5f, canvasHeight() * 0.5f };
     nextTriggerTime = ofRandom(120.f, 300.f);
     timerAccum      = 0.f;
 }
@@ -130,7 +133,7 @@ void ExpansionDirector::updateTravelBack(float dt) {
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 glm::vec2 ExpansionDirector::cornerPosition(int quadrantID) {
-    float W = ofGetWidth(), H = ofGetHeight();
+    float W = canvasWidth(), H = canvasHeight();
     // The quadrant regions are defined by (cx,cy):
     //   Q0 TL: w=cx, h=cy       → fills screen when cx→W and cy→H (crosshair at BR)
     //   Q1 TR: w=W-cx, h=cy     → fills screen when cx→0 and cy→H (crosshair at BL)
@@ -149,3 +152,5 @@ glm::vec2 ExpansionDirector::cornerPosition(int quadrantID) {
 float ExpansionDirector::easeInOut(float t) {
     return t < 0.5f ? 4.f * t * t * t : 1.f - powf(-2.f * t + 2.f, 3.f) / 2.f;
 }
+
+} // namespace quadrantcrosshair

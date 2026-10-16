@@ -1,5 +1,8 @@
 #include "CrosshairSystem.h"
 #include <algorithm>
+#include "FTCanvas.h"
+
+namespace fragmenttrail {
 
 namespace {
 // ofNoise() rarely reaches its theoretical 0..1 bounds in a real run (measured
@@ -73,7 +76,7 @@ void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 	float ny = stretchNoise(ofNoise(noiseT * p.freqA + seedYA)) * p.ampA
 		+ stretchNoise(ofNoise(noiseT * p.freqB + seedYB)) * p.ampB;
 
-	float W = ofGetWidth(), H = ofGetHeight();
+	float W = canvasWidth(), H = canvasHeight();
 	glm::vec2 noisePos = {
 		ofMap(nx, 0, 1, p.margin, W - p.margin),
 		ofMap(ny, 0, 1, p.margin, H - p.margin)
@@ -193,7 +196,7 @@ void CrosshairSystem::addArmQuad(ofMesh & mesh, glm::vec2 a, glm::vec2 b,
 }
 
 void CrosshairSystem::drawGradientArms(float cx, float cy, float opacH, float opacV) {
-	float W = ofGetWidth(), H = ofGetHeight();
+	float W = canvasWidth(), H = canvasHeight();
 	float T = lineWidth * 0.5f;
 
 	// Full opacity — brightness dims to black at edges instead of going transparent
@@ -223,7 +226,7 @@ void CrosshairSystem::drawGradientArms(float cx, float cy, float opacH, float op
 }
 
 void CrosshairSystem::drawDashArms(float cx, float cy, float speed, float uiFadeAlpha) {
-	float W = ofGetWidth(), H = ofGetHeight();
+	float W = canvasWidth(), H = canvasHeight();
 	float T = lineWidth * 0.5f;
 	float dash = 12.f;
 	float gap = ofMap(speed, HIGH_THRESH, HIGH_THRESH * 4.f, 4.f, 20.f, true);
@@ -342,3 +345,5 @@ void CrosshairSystem::setPreset(int index) {
 void CrosshairSystem::nextPreset() {
 	setPreset((presetIndex + 1) % (int)presets.size());
 }
+
+} // namespace fragmenttrail

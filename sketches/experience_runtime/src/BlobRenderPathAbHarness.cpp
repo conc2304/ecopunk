@@ -1,11 +1,14 @@
 #include "BlobRenderPathAbHarness.h"
 
+#include "BlobEffectPolicy.h"
 #include "BlobSceneCore.h"
 #include "ShaderLibrary.h"
 #include "VideoRegionEffectRenderer.h"
 #include "ofMain.h"
 
+#include <algorithm>
 #include <cstdlib>
+#include <map>
 #include <vector>
 
 namespace {
@@ -13,7 +16,23 @@ namespace {
 	constexpr int kW = 1280;
 	constexpr int kH = 720;
 	constexpr const char * kLog = "BlobRenderPathAbHarness";
-	constexpr const char * kProductionEffect = "desaturate";
+	// Production effects are the curated Blob shader treatments plus the
+	// background effect (BlobEffectPolicy.h): each must meet the same
+	// direct-vs-3-stage bound desaturate was accepted under for BLOB-002.
+	// Every other effect is still rendered and diffed and reported as
+	// within/outside that bound, but does not fail the run.
+	bool isProductionEffect(const std::string & effect) {
+		if (effect.empty() || effect == blobeffects::backgroundEffectId()) {
+			return true; // empty = the Original (unshaded) treatment
+		}
+		for (const auto & t : blobeffects::curatedFragmentTreatments()) {
+			if (!t.isOriginal() && t.effectId == effect) {
+				return true;
+			}
+		}
+		return false;
+	}
+	std::string effectLabel(const std::string & effect) { return effect.empty() ? std::string("original") : effect; }
 	// A controlled real Blob scene-only frame, relative to bin/data.
 	constexpr const char * kSourceImage = "../../../../docs/reviews/blob-parity-captures-controlled/runtime_scene_only.png";
 
@@ -178,11 +197,30 @@ bool BlobRenderPathAbHarness::run() {
 	};
 
 	std::vector<Case> cases = buildCases();
-	for (const std::string & effect : BlobSceneCore::effectChoices()) {
-		check(lib.has(effect), effect + " loaded");
+
+	// The opaque source background alone. A source-aligned Original
+	// (unshaded) fragment over it must reproduce these pixels exactly —
+	// the direct ground truth for Original crop/placement.
+	ofPixels sourceOnly;
+	{
+		std::string glIssue;
+		renderCase(fboDirect, direct, lib, source.getTexture(), Case { "source_only", {} }, "", true, glIssue);
+		fboDirect.readToPixels(sourceOnly);
+	}
+	std::map<std::string, int> toleranceMisses; // per effect, over direct-path cases
+	std::vector<std::string> effects(BlobSceneCore::effectChoices().begin(), BlobSceneCore::effectChoices().end());
+	effects.push_back(""); // Original treatment: unshaded crop
+	for (const std::string & effect : effects) {
+		// The unshaded crop has no shader, so the direct renderer draws it
+		// straight from the source at any alpha/amount — fades included.
+		bool unshaded = effect.empty();
+		toleranceMisses[effectLabel(effect)] = 0;
+		if (!unshaded) {
+			check(lib.has(effect), effect + " loaded");
+		}
 		for (const Case & c : cases) {
 			for (bool opaque : { true, false }) {
-				std::string tag = effect + "/" + c.name + (opaque ? "/opaque_bg" : "/transparent_bg");
+				std::string tag = effectLabel(effect) + "/" + c.name + (opaque ? "/opaque_bg" : "/transparent_bg");
 
 				direct.resetStageTimings();
 				legacy.resetStageTimings();
@@ -194,7 +232,7 @@ bool BlobRenderPathAbHarness::run() {
 				const auto & sd = direct.getStageTimings();
 				const auto & sl = legacy.getStageTimings();
 				check(sl.legacyDraws == n && sl.directDraws == 0, tag + " legacy renderer took 3-stage path only");
-				if (c.expectSamePath) {
+				if (c.expectSamePath && !unshaded) {
 					check(sd.legacyDraws == n && sd.directDraws == 0, tag + " fade/reduced-amount falls back to 3-stage path");
 				} else {
 					check(sd.directDraws == n && sd.legacyDraws == 0, tag + " direct renderer took direct path");
@@ -203,7 +241,8 @@ bool BlobRenderPathAbHarness::run() {
 				ofPixels pa, pb;
 				fboDirect.readToPixels(pa);
 				fboLegacy.readToPixels(pb);
-				bool saveImages = (effect == kProductionEffect && opaque) || (effect == "ascii_solarpunk" && opaque && c.name == "ten_fragments");
+				bool production = isProductionEffect(effect);
+				bool saveImages = (production && opaque) || (effect == "ascii_solarpunk" && opaque && c.name == "ten_fragments");
 				ofPixels amplified;
 				if (saveImages) {
 					amplified.allocate(kW, kH, OF_PIXELS_RGB);
@@ -214,9 +253,28 @@ bool BlobRenderPathAbHarness::run() {
 								  << " meanRgb=" << s.meanRgb << " pctRgb>8=" << s.pctRgbOver8 << " pctA>8=" << s.pctAOver8
 								  << " alphaLostByDirect=" << s.maxAlphaLostByDirect;
 
-				if (c.expectSamePath) {
+				bool withinTolerance = c.fractionalBounds
+					? (s.meanRgb <= 1.0 && s.pctRgbOver8 <= 0.1 && s.maxAlphaLostByDirect <= 2)
+					: (s.maxRgb <= 2 && s.maxA <= 2);
+				if ((!c.expectSamePath || unshaded) && !withinTolerance && !(unshaded && c.fractionalBounds)) {
+					toleranceMisses[effectLabel(effect)]++;
+				}
+
+				if (c.expectSamePath && !unshaded) {
 					check(s.maxRgb == 0 && s.maxA == 0, tag + " identical (both 3-stage)");
-				} else if (effect == kProductionEffect) {
+				} else if (unshaded && c.fractionalBounds) {
+					// Original never changes path in production (direct at
+					// every alpha), so the legacy comparison is informational
+					// only here: legacy's extra resample is what differs.
+					// Correctness is checked against the source instead.
+					if (opaque) {
+						DiffStats truth = diff(pa, sourceOnly, nullptr);
+						ofLogNotice(kLog) << "DIFF " << tag << " vs source_only maxRgb=" << truth.maxRgb << " meanRgb=" << truth.meanRgb
+										  << " pctRgb>8=" << truth.pctRgbOver8;
+						check(truth.maxRgb <= 2, tag + " Original reproduces source pixels exactly (crop/placement)");
+					}
+					check(s.maxAlphaLostByDirect <= 2, tag + " direct path never less opaque than 3-stage");
+				} else if (production) {
 					// Bounds fixed before the first run: integer-aligned
 					// fragments map 1:1 in both paths; fractional ones only
 					// differ by the old path's extra bilinear resample.
@@ -236,13 +294,20 @@ bool BlobRenderPathAbHarness::run() {
 				}
 
 				if (saveImages) {
-					std::string base = "captures/blob_render_ab/" + effect + "_" + c.name;
+					std::string base = "captures/blob_render_ab/" + effectLabel(effect) + "_" + c.name;
 					ofSaveImage(pa, base + "_direct.png");
 					ofSaveImage(pb, base + "_legacy.png");
 					ofSaveImage(amplified, base + "_diff_x8.png");
 				}
 			}
 		}
+	}
+
+	for (const auto & kv : toleranceMisses) {
+		ofLogNotice(kLog) << "ELIGIBILITY " << kv.first << ": "
+						  << (kv.second == 0 ? std::string("within BLOB-002 tolerance")
+											 : "outside BLOB-002 tolerance in " + ofToString(kv.second) + " case(s)")
+						  << (isProductionEffect(kv.first == "original" ? std::string() : kv.first) ? " [production]" : "");
 	}
 
 	ofLogNotice(kLog) << "RESULT: " << (checks - failures) << "/" << checks << " checks passed — "

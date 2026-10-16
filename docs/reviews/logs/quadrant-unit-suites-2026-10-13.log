@@ -1,0 +1,9 @@
+== lifecycle_state_tests: 78/78 checks passed
+== scene_switch_controller_tests: PASS — 127 checks, 0 failures
+== blueprint_semantic_mapping_tests: 23/23 checks passed
+== blob_semantic_mapping_tests: 68/68 checks passed
+== temporal_semantic_mapping_tests: PASS — 34 checks, 0 failures
+== session2_integration_tests: 42/42 checks passed
+== hud_focus_navigator_tests: 27/27 checks passed.
+== hud_skin_loader_tests: 78/78 checks passed.
+== quadrant_semantic_mapping_tests: 46/46 checks passed

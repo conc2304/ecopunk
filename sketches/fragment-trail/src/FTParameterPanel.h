@@ -1,6 +1,15 @@
 #pragma once
 
+// FT_PRODUCTION_RUNTIME (ExperienceRuntime): headless — same ofParameter
+// defaults (setup() below is the single source of truth for both builds),
+// no ofxPanel, draw() is a no-op. The runtime exposes no raw ofxGui.
+#if defined(FT_PRODUCTION_RUNTIME)
+#include "ofParameter.h"
+#else
 #include "ofxGui.h"
+#endif
+
+namespace fragmenttrail {
 
 // Runtime-tunable dials for Fragment Trail's own new parameters (Section 1/3
 // of the brief), following Temporal Fields' TFParameterPanel convention —
@@ -75,6 +84,10 @@ private:
 	ofParameter<float> crosshairAutoCycleInterval;
 
 	ofParameterGroup rootGroup;
+#if !defined(FT_PRODUCTION_RUNTIME)
 	ofxPanel panel;
+#endif
 	bool visible = true;
 };
+
+} // namespace fragmenttrail

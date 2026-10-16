@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "../../../shared/src/video-playback/SharedMediaRoot.h"
 #include <sstream>
 #include <algorithm>
 
@@ -19,11 +20,7 @@ void ofApp::setup() {
 	// comment for why this has to be called first.
 	ofDisableArbTex();
 
-#ifdef PLATFORM_PI
-	videoSampler.setup("/home/pi/blueprint/media");
-#else
-	videoSampler.setup(ofToDataPath("sharedMedia", true));
-#endif
+	videoSampler.setup(ecopunk::sharedMediaRoot());
 
 	revealMask.setup(kCanvasWidth, kCanvasHeight, 0.965f);
 	revealMask.setMaxOpacity(1.0f);
@@ -115,7 +112,7 @@ void ofApp::draw() {
 		ss << "active pulses: " << pulses.size() << "\n";
 		ss << "stamp blend: " << (revealMask.isUsingMaxBlend() ? "GL_MAX" : "sorted alpha-over fallback") << "\n";
 		if (videoSampler.isReady()) ss << "clip: " << videoSampler.getCurrentFilename() << "\n";
-		else ss << "(no media/*.mp4 found via sharedMedia/ -- showing mask+widget debug view)\n";
+		else ss << "(no *.mp4 found in assets/shared/media/ -- showing mask+widget debug view)\n";
 		ss << "[n] next mode   [p] prev mode   [d] toggle this overlay";
 		ofSetColor(255);
 		ofDrawBitmapStringHighlight(ss.str(), 20, 20);

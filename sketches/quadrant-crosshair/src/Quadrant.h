@@ -5,6 +5,8 @@
 #include <string>
 #include <array>
 
+namespace quadrantcrosshair {
+
 struct ShaderSlot {
     enum class State { IDLE, FADE_IN, ACTIVE, FADE_OUT };
     std::string name;
@@ -34,11 +36,16 @@ public:
     void setScaleConfig(float min, float max, float seed);
     void setScaleTarget(float min, float max);
     void update(float dt, float cx, float cy);
-    void draw(ofTexture& videoTex, glm::vec2 videoSize);
+    // Erosion accumulation (off-screen FBO pass) — once per frame, before
+    // draw(), outside any other bound FBO.
+    void accumulateErosion(const ofTexture& videoTex);
+    void draw(const ofTexture& videoTex, glm::vec2 videoSize);
 
     bool pushShader(const std::string& name, float fadeSecs = 1.2f, float dwellSecs = 6.f);
     void clearShaders(float fadeSecs = 1.2f);
     void resetErosion();
+    // Idle shader slots and cleared erosion history, FBOs kept (reactivation).
+    void resetState();
     void resize(int w, int h);
     void drawDebugHUD(const std::string& phaseStr) const;
 
@@ -133,10 +140,12 @@ private:
     int ridgelineW = 0, ridgelineH = 0;
 
     void updateSlot(ShaderSlot& slot, float dt);
-    void drawWithEffect(ofTexture& tex, glm::vec2 videoSize,
+    void drawWithEffect(const ofTexture& tex, glm::vec2 videoSize,
                         const std::string& effect, float alpha,
                         float cx, float cy,
                         float ditherArc, float ditherPx,
                         float hueOffset, float hueSpeed);
     void bindUniforms(ofShader& sh);
 };
+
+} // namespace quadrantcrosshair

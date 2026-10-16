@@ -2,6 +2,8 @@
 #include <cctype>
 #include <algorithm>
 
+namespace quadrantcrosshair {
+
 const std::vector<std::string> DebugMode::SHADER_NAMES = {
     "desaturate", "invert", "recolor", "threshold",
     "dither", "solarize", "scanlines", "channelshift", "motion_effect",
@@ -538,3 +540,5 @@ bool DebugMode::keyPressed(int key) {
 
     return false;
 }
+
+} // namespace quadrantcrosshair

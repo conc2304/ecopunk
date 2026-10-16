@@ -2,6 +2,9 @@
 #include "ofMain.h"
 #include <algorithm>
 #include <cmath>
+#include "FTCanvas.h"
+
+namespace fragmenttrail {
 
 namespace {
 // Canvas-corner anchors used by the expiry->LockSequence gesture — paired
@@ -57,13 +60,13 @@ void FTOverlayDirector::onSpawned(const FTFragment& f) {
 	ofVec2f corner = kCornerOffsets[static_cast<int>(ofRandom(4))];
 	float px = b.x + corner.x * b.width;
 	float py = b.y + corner.y * b.height;
-	tryAccent(ofClamp(px / ofGetWidth(), 0.0f, 1.0f), ofClamp(py / ofGetHeight(), 0.0f, 1.0f));
+	tryAccent(ofClamp(px / canvasWidth(), 0.0f, 1.0f), ofClamp(py / canvasHeight(), 0.0f, 1.0f));
 }
 
 void FTOverlayDirector::onEvicted(const FTFragment& f) {
 	ofVec2f center = f.getBounds().getCenter();
-	float nx = ofClamp(center.x / ofGetWidth(), 0.0f, 1.0f);
-	float ny = ofClamp(center.y / ofGetHeight(), 0.0f, 1.0f);
+	float nx = ofClamp(center.x / canvasWidth(), 0.0f, 1.0f);
+	float ny = ofClamp(center.y / canvasHeight(), 0.0f, 1.0f);
 	tryOrganism([this, nx, ny]() { overlay->triggerFaultCascade(nx, ny); }, false);
 }
 
@@ -72,7 +75,7 @@ void FTOverlayDirector::pollDecayThreshold() {
 	const FTFragment& oldest = pool->getFragments().front();
 	if (oldest.getAlpha() < 1.0f && lastDecayAccentSpawnIndex != oldest.getSpawnIndex()) {
 		ofVec2f center = oldest.getBounds().getCenter();
-		tryAccent(ofClamp(center.x / ofGetWidth(), 0.0f, 1.0f), ofClamp(center.y / ofGetHeight(), 0.0f, 1.0f));
+		tryAccent(ofClamp(center.x / canvasWidth(), 0.0f, 1.0f), ofClamp(center.y / canvasHeight(), 0.0f, 1.0f));
 		lastDecayAccentSpawnIndex = oldest.getSpawnIndex();
 	}
 }
@@ -93,7 +96,7 @@ void FTOverlayDirector::pollHandshake() {
 	const FTFragment& a = fragments.front();
 	const FTFragment& b = fragments.back();
 
-	float canvasW = ofGetWidth(), canvasH = ofGetHeight();
+	float canvasW = canvasWidth(), canvasH = canvasHeight();
 	ofVec2f aC = a.getBounds().getCenter();
 	ofVec2f bC = b.getBounds().getCenter();
 	float anx = ofClamp(aC.x / canvasW, 0.0f, 1.0f), any = ofClamp(aC.y / canvasH, 0.0f, 1.0f);
@@ -115,3 +118,5 @@ void FTOverlayDirector::update(float dt, const hudoverlay::HudOverlayDialState& 
 	pollExpiry();
 	pollHandshake();
 }
+
+} // namespace fragmenttrail

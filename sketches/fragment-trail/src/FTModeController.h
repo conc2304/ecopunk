@@ -5,6 +5,8 @@
 #include "TriggerBus.h"
 #include <string>
 
+namespace fragmenttrail {
+
 // All three mode-switch mechanisms from Section 9, behind a runtime-selectable
 // strategy — defaults to MANUAL_KEY (Pi deployment is headless, per Blueprint
 // Emergence's own handoff; keypress is meant for the desktop tuning pass
@@ -41,3 +43,5 @@ private:
 	float dwellDuration = 12.0f;
 	float dwellTimer = 0.f;
 };
+
+} // namespace fragmenttrail

@@ -9,6 +9,8 @@
 #include <array>
 #include <string>
 
+namespace quadrantcrosshair {
+
 struct DebugParam {
     std::string label;
     float*      value;
@@ -152,3 +154,5 @@ private:
     void adjustParam(int direction, bool coarse);
     void handleTriggerKey(int key);
 };
+
+} // namespace quadrantcrosshair

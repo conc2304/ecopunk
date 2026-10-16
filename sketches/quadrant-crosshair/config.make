@@ -8,4 +8,17 @@
 # ShaderLibrary, TriggerBus, ...) that collide by name with quadrant-crosshair's
 # own independent implementations of the same classes in src/.
 PROJECT_EXTERNAL_SOURCE_PATHS = ../../shared/src
-PROJECT_EXCLUSIONS = ../../shared/src
+# The ExperienceRuntime subsystems added to shared/src after this sketch's
+# exclusion list was written (hud-compositor and its -test directory of
+# standalone *_tests.cpp main()s, hud-runtime, scene, video-playback) are not
+# used here; the recursive sweep otherwise compiles them without their
+# include paths (e.g. video-playback's Rt004StallProbe.h, which lives in the
+# excluded top level) and fails the build. `%` covers nested subdirectories;
+# hud-compositor% also matches hud-compositor-test. video-effects/test (its
+# own *_tests.cpp main()s) likewise. video-effects/ (the shared
+# catalog Quadrant::drawWithEffect() sources its defaults from), hud/,
+# hud_overlay/ and ridgeline/ stay included.
+PROJECT_EXCLUSIONS = ../../shared/src \
+	../../shared/src/hud-compositor% ../../shared/src/hud-runtime% \
+	../../shared/src/scene% ../../shared/src/video-playback% \
+	../../shared/src/video-effects/test%

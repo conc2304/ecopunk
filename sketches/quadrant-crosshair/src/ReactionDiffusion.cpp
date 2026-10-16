@@ -1,5 +1,7 @@
 #include "ReactionDiffusion.h"
 
+namespace quadrantcrosshair {
+
 void ReactionDiffusion::setup() {
     ofFbo::Settings s;
     s.width          = RD_W;
@@ -59,3 +61,5 @@ void ReactionDiffusion::readPixels(ofPixels& out) {
     ofFbo& cur = pingPong ? fboA : fboB;
     cur.readToPixels(out);
 }
+
+} // namespace quadrantcrosshair

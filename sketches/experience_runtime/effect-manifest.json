@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "effects": {
+    "desaturate": { "enabled": true },
+    "invert": { "enabled": true },
+    "recolor": { "enabled": true },
+    "threshold": { "enabled": true },
+    "dither": { "enabled": true },
+    "solarize": { "enabled": true },
+    "scanlines": { "enabled": true },
+    "channelshift": { "enabled": true },
+    "hue_rotate": { "enabled": true },
+    "ascii_solarpunk": { "enabled": true },
+    "heatmap_recolor": { "enabled": true },
+    "bioluminescence": { "enabled": true },
+    "chromatic_aberration": { "enabled": true },
+    "edge_glow": { "enabled": true },
+    "ink_outlines": { "enabled": true },
+    "pixel_drift": { "enabled": true },
+    "pixel_sorting": { "enabled": true },
+    "water_refraction": { "enabled": true },
+    "motion_composite": { "enabled": true },
+    "erosion_accumulation": { "enabled": true }
+  }
+}

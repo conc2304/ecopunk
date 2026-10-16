@@ -15,7 +15,9 @@
 ExperienceRuntime::ExperienceRuntime()
 	: blobScene_(runtimeServices_.video())
 	, temporalScene_(runtimeServices_.video())
-	, blueprintScene_(runtimeServices_.video()) {
+	, blueprintScene_(runtimeServices_.video())
+	, fragmentScene_(runtimeServices_.video())
+	, quadrantScene_(runtimeServices_.video()) {
 	// See ExperienceRuntime.h's constructor comment and blobScene_'s own
 	// declaration comment: runtimeServices_.video() is a valid, stable
 	// reference from the moment runtimeServices_ itself is constructed
@@ -24,17 +26,24 @@ ExperienceRuntime::ExperienceRuntime()
 	// happens later, in setup() below, before either scene is activated.
 }
 
-void ExperienceRuntime::installProductionScenes(const std::string& startupSceneId, bool includeBlueprint) {
+void ExperienceRuntime::installProductionScenes(const std::string& startupSceneId, ProductionRoster roster) {
 	if (!productionScenesInstalled_) {
-		// Fixed registry order = NextScene ring order: Blob, Temporal, Blueprint.
+		// Fixed registry order = NextScene ring order: Blob, Temporal, Blueprint, Fragment, Quadrant.
 		sceneManager_.registerProductionScene(&blobScene_); // no canonical effect producer -> effects = nullopt
 		sceneManager_.registerProductionScene(
 			&temporalScene_, [this] { return temporalScene_.currentEffectActivitySnapshot(); });
-		if (includeBlueprint) {
+		if (roster != ProductionRoster::BlobTemporal) {
 			sceneManager_.registerProductionScene(&blueprintScene_); // no canonical effect producer -> effects = nullopt
 			if (BlueprintProductionScene::kMediaAdvancesAtCycleBoundary) {
 				boundaryDrivenMediaScenes_.push_back(BlueprintProductionScene::kSceneId);
 			}
+		}
+		if (roster == ProductionRoster::Full) {
+			// Neither has a canonical effect producer -> effects = nullopt.
+			// Both use timer-driven Shared Video cadence (not boundary-driven),
+			// like Blob/Temporal.
+			sceneManager_.registerProductionScene(&fragmentScene_);
+			sceneManager_.registerProductionScene(&quadrantScene_);
 		}
 		productionScenesInstalled_ = true;
 	}

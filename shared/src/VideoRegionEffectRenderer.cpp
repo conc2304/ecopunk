@@ -128,6 +128,25 @@ void VideoRegionEffectRenderer::render(const RenderRequest & req, ShaderLibrary 
 	int h = std::max(1, static_cast<int>(std::round(req.destinationBounds.height)));
 
 	uint64_t tStart = ofGetElapsedTimeMicros();
+	bool hasEffect = !req.effectName.empty() && shaderLib.has(req.effectName);
+
+	// 0. Unshaded direct output: with no shader there is nothing that needs
+	// clean local UVs, so the crop goes straight from the shared source
+	// texture into destinationBounds — no scratch FBO, one resample instead
+	// of two. Same single alpha blend as the scratch path below (the scratch
+	// copy of an opaque source is itself opaque), so this also holds for
+	// fading fragments (alpha < 1).
+	if (!hasEffect && directOutputEnabled) {
+		ofSetColor(255, 255, 255, static_cast<int>(ofClamp(req.alpha, 0.0f, 1.0f) * 255));
+		req.sourceTexture->drawSubsection(
+			req.destinationBounds.x, req.destinationBounds.y, req.destinationBounds.width, req.destinationBounds.height,
+			req.sourceCropPixels.x, req.sourceCropPixels.y, req.sourceCropPixels.width, req.sourceCropPixels.height);
+		ofSetColor(255);
+		stageTimings.directDraws++;
+		stageTimings.shaderDirectMs += static_cast<double>(ofGetElapsedTimeMicros() - tStart) / 1000.0;
+		return;
+	}
+
 	ensureScratchFbos(w, h);
 
 	// 1. Capture this region's crop into the scratch source FBO's top-left
@@ -143,17 +162,16 @@ void VideoRegionEffectRenderer::render(const RenderRequest & req, ShaderLibrary 
 	uint64_t tSourceDone = ofGetElapsedTimeMicros();
 	stageTimings.sourceMs += static_cast<double>(tSourceDone - tStart) / 1000.0;
 
-	bool hasEffect = !req.effectName.empty() && shaderLib.has(req.effectName);
-
 	if (!hasEffect) {
-		// No effect configured (or shader failed to load) — composite the
-		// plain crop so the pipeline degrades gracefully instead of
-		// showing nothing.
+		// No effect configured (or shader failed to load), legacy path
+		// forced — composite the plain crop from the scratch copy.
 		ofSetColor(255, 255, 255, static_cast<int>(ofClamp(req.alpha, 0.0f, 1.0f) * 255));
 		scratchSourceFbo.getTexture().drawSubsection(
 			req.destinationBounds.x, req.destinationBounds.y, req.destinationBounds.width, req.destinationBounds.height,
 			0, 0, w, h);
 		ofSetColor(255);
+		stageTimings.legacyDraws++;
+		stageTimings.compositeMs += static_cast<double>(ofGetElapsedTimeMicros() - tSourceDone) / 1000.0;
 		return;
 	}
 

@@ -1,6 +1,8 @@
 #pragma once
 #include "ofMain.h"
 
+namespace quadrantcrosshair {
+
 class MotionExtraction {
 public:
     enum ReferenceMode {
@@ -8,8 +10,18 @@ public:
         REFERENCE_ACCUMULATION  = 1
     };
 
+    // Shader file paths, set before setup(). Defaults are this sketch's own
+    // bin/data layout; ExperienceRuntime passes the paths its shared
+    // MotionExtraction (Blueprint) already loads.
+    void setShaderPaths(const std::string& vert, const std::string& accum, const std::string& extract) {
+        vertShaderPath = vert; accumShaderPath = accum; extractShaderPath = extract;
+    }
     void setup();
-    void update(ofTexture& videoTex, float decayWeight, float sensitivity);
+    // Clears accumulated motion (accum, extraction and history FBOs; energy/
+    // centroid) without reallocating — a fresh start with no trails from
+    // earlier media or an earlier activation.
+    void reset();
+    void update(const ofTexture& videoTex, float decayWeight, float sensitivity);
 
     void setOutputMode(int mode);
     void setReferenceMode(int mode);
@@ -45,6 +57,10 @@ public:
 #endif
 
 private:
+    std::string vertShaderPath = "shaders/vert.glsl";
+    std::string accumShaderPath = "shaders/motion_accum.glsl";
+    std::string extractShaderPath = "shaders/motion_extract.glsl";
+
     ofFbo    fboAccumA, fboAccumB;
     bool     pingPong = false;
     ofShader accumShader;
@@ -76,9 +92,20 @@ private:
 
     void allocateHistory();
 
-    void updateAccum(ofTexture& videoTex, float decayWeight);
+    void updateAccum(const ofTexture& videoTex, float decayWeight);
     // Renders one extraction pass into targetFbo using the given reference mode.
-    void updateExtract(ofTexture& videoTex, float sensitivity, int refMode, ofFbo& targetFbo);
-    void updateFrameHistory(ofTexture& videoTex);
+    void updateExtract(const ofTexture& videoTex, float sensitivity, int refMode, ofFbo& targetFbo);
+    void updateFrameHistory(const ofTexture& videoTex);
     void sampleControlValues();
 };
+
+} // namespace quadrantcrosshair
+
+#if !defined(QC_PRODUCTION_RUNTIME)
+// Standalone build only: this sketch excludes shared/src's top level, so the
+// shared video-effects tree it compiles (effects/MotionExtractionEffect.h)
+// has always resolved "MotionExtraction" to this local class. Keep that
+// global name here. ExperienceRuntime (QC_PRODUCTION_RUNTIME) links the
+// shared ::MotionExtraction too, so there the fork stays namespaced only.
+using quadrantcrosshair::MotionExtraction;
+#endif

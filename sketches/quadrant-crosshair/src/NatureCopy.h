@@ -3,6 +3,8 @@
 #include <vector>
 #include <algorithm>
 
+namespace quadrantcrosshair {
+
 // ── Nature Copy System ────────────────────────────────────────────────────────
 //
 // Classifies a video filename into one of six nature categories and returns a
@@ -169,3 +171,5 @@ inline NatureCopy getCopyForCategory(NatureCategory cat) {
     }
     return c;
 }
+
+} // namespace quadrantcrosshair

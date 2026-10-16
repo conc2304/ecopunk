@@ -1,4 +1,7 @@
 #include "TriggerBus.h"
+#include "FTCanvas.h"
+
+namespace fragmenttrail {
 
 void TriggerBus::setup() {
     cooldowns[TriggerID::EDGE_PROXIMITY]  = 0.f;
@@ -41,7 +44,7 @@ void TriggerBus::addListener(TriggerCallback cb) {
 }
 
 void TriggerBus::checkEdgeProximity(const CrosshairState& s) {
-    float W = ofGetWidth(), H = ofGetHeight();
+    float W = canvasWidth(), H = canvasHeight();
     float minDist = std::min({ s.cx, s.cy, W - s.cx, H - s.cy });
     bool near = minDist < EDGE_ZONE;
     if (near != edgeActive) {
@@ -87,7 +90,7 @@ void TriggerBus::checkDwell(const CrosshairState& s, float dt) {
 }
 
 void TriggerBus::checkQuadrantCenter(const CrosshairState& s) {
-    float W = ofGetWidth(), H = ofGetHeight();
+    float W = canvasWidth(), H = canvasHeight();
     bool near = fabsf(s.cx - W * 0.5f) < CENTER_ZONE
              && fabsf(s.cy - H * 0.5f) < CENTER_ZONE;
     if (near != centerActive) {
@@ -97,7 +100,7 @@ void TriggerBus::checkQuadrantCenter(const CrosshairState& s) {
 }
 
 void TriggerBus::checkCornerNear(const CrosshairState& s) {
-    float W = ofGetWidth(), H = ofGetHeight();
+    float W = canvasWidth(), H = canvasHeight();
     bool tl = s.cx < CORNER_ZONE && s.cy < CORNER_ZONE;
     bool tr = s.cx > W - CORNER_ZONE && s.cy < CORNER_ZONE;
     bool bl = s.cx < CORNER_ZONE && s.cy > H - CORNER_ZONE;
@@ -109,3 +112,5 @@ void TriggerBus::checkCornerNear(const CrosshairState& s) {
         fire({ TriggerID::CORNER_NEAR, near, 1.f, hint });
     }
 }
+
+} // namespace fragmenttrail

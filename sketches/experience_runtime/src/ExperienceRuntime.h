@@ -3,6 +3,8 @@
 #include "AllocationCounter.h"
 #include "BlobProductionScene.h"
 #include "BlueprintProductionScene.h"
+#include "FragmentProductionScene.h"
+#include "QuadrantProductionScene.h"
 #include "HudCompositorBridge.h"
 #include "HudFrameData.h"
 #include "InputRouter.h"
@@ -88,16 +90,36 @@ public:
 	// EXPERIENCE_RUNTIME_TEMPORAL_SCENE run and TemporalLifecycleHarness);
 	// installBlueprintProductionScene() starts in Blueprint.
 	//
-	// BLUE-001: the default roster (NextScene ring order) is [Blob, Temporal,
-	// Blueprint]. includeBlueprint=false keeps the original two-scene ring
-	// [Blob, Temporal] that RT-002's TwoSceneAcceptanceHarness and RT-003's
-	// SceneSwitchHarness were accepted against (both assert exactly that
-	// registry and step '['/']' assuming a two-entry ring).
-	void installBlobProductionScene(bool includeBlueprint = true) {
-		installProductionScenes(BlobProductionScene::kSceneId, includeBlueprint);
+	// Roster (NextScene ring order), fixed registry order Blob, Temporal,
+	// Blueprint, Fragment, Quadrant:
+	//   Full         — [Blob, Temporal, Blueprint, Fragment, Quadrant]: the
+	//                  normal run and the full-ring circuit proof.
+	//   ThreeScene   — [Blob, Temporal, Blueprint] (BLUE-001): the ring the
+	//                  Blueprint roster/HUD, parity-soak and RT-005 harnesses
+	//                  were accepted against (each asserts that registry).
+	//   BlobTemporal — [Blob, Temporal]: the original two-scene ring RT-002's
+	//                  TwoSceneAcceptanceHarness and RT-003's
+	//                  SceneSwitchHarness were accepted against (both assert
+	//                  exactly that registry and step '['/']' assuming it).
+	enum class ProductionRoster { BlobTemporal, ThreeScene, Full };
+
+	void installBlobProductionScene(ProductionRoster roster = ProductionRoster::Full) {
+		installProductionScenes(BlobProductionScene::kSceneId, roster);
 	}
-	void installTemporalProductionScene() { installProductionScenes(TemporalProductionScene::kSceneId, true); }
-	void installBlueprintProductionScene() { installProductionScenes(BlueprintProductionScene::kSceneId, true); }
+	void installTemporalProductionScene(ProductionRoster roster = ProductionRoster::Full) {
+		installProductionScenes(TemporalProductionScene::kSceneId, roster);
+	}
+	void installBlueprintProductionScene(ProductionRoster roster = ProductionRoster::Full) {
+		installProductionScenes(BlueprintProductionScene::kSceneId, roster);
+	}
+	void installFragmentProductionScene() {
+		installProductionScenes(FragmentProductionScene::kSceneId, ProductionRoster::Full);
+	}
+	FragmentProductionScene& fragmentSceneForTesting() { return fragmentScene_; }
+	void installQuadrantProductionScene() {
+		installProductionScenes(QuadrantProductionScene::kSceneId, ProductionRoster::Full);
+	}
+	QuadrantProductionScene& quadrantSceneForTesting() { return quadrantScene_; }
 
 	BlueprintProductionScene& blueprintSceneForTesting() { return blueprintScene_; }
 	// Read-only: the one canonical VideoPlaybackService (resume-window verification).
@@ -241,7 +263,7 @@ public:
 
 private:
 	FocusActivationRecord lastFocusActivation_;
-	void installProductionScenes(const std::string& startupSceneId, bool includeBlueprint);
+	void installProductionScenes(const std::string& startupSceneId, ProductionRoster roster);
 
 	// Per-scene Shared Video cadence, applied every frame from SceneManager's
 	// live owner: a scene listed here drives media changes itself with
@@ -292,6 +314,16 @@ private:
 	// BLUE-001: the third real production scene, same construction-order
 	// rule (declared after runtimeServices_); set up lazily on first switch.
 	BlueprintProductionScene blueprintScene_;
+
+	// RT-006: Fragment Trail, the fourth real production scene, same
+	// construction-order rule (declared after runtimeServices_); set up lazily
+	// on first switch.
+	FragmentProductionScene fragmentScene_;
+
+	// Quadrant Crosshair: the fifth real production scene, same
+	// construction-order rule (declared after runtimeServices_); set up lazily
+	// on first switch.
+	QuadrantProductionScene quadrantScene_;
 
 	bool productionScenesInstalled_ = false;
 

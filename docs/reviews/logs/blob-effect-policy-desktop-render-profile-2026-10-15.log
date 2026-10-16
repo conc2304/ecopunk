@@ -1,0 +1,76 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-15 21:19:42.243 experience_runtime[80207:15484184] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] TFAmbientTextureLayer: loaded 19 background texture(s) from backgrounds
+[notice ] TFAmbientTextureLayer: residency=bounded pairs=19 tintTextures=19 maskTextures=0 cpuTintMiB=0.0 cpuMaskMiB=0.0 gpuEstMiB=28.2 (rgb-padded 37.6) tintPixelsKept=0 rssBeforeMiB=49 rssAfterMiB=90 glError=0x00000000
+[notice ] HudSkin: no HUD skin selected (EXPERIENCE_RUNTIME_HUD_SKIN unset): functional wireframe
+[notice ] BlobRenderProfile: path=direct frames=201 fps=46.9399 frameMs=21.3038 detectorMs=2.37075 trackerMs=0.00525871 regionUpdateMs=0.00458209 sceneDrawMs=0.126423 fragments=0 directDraws=0 legacyDraws=0 sourceMsPerDraw=0 shaderDirectMsPerDraw=0 shaderResultMsPerDraw=0 compositeMsPerDraw=0 regionRenderMsPerFrame=0 scratch=0x0 stalls=2 maxStallMs=405.798
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0002 frameMs=33.3331 detectorMs=2.48503 trackerMs=0.00603311 regionUpdateMs=0.00455629 sceneDrawMs=0.0614437 fragments=0 directDraws=0 legacyDraws=0 sourceMsPerDraw=0 shaderDirectMsPerDraw=0 shaderResultMsPerDraw=0 compositeMsPerDraw=0 regionRenderMsPerFrame=0 scratch=0x0 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=2.55958 trackerMs=0.00613245 regionUpdateMs=0.0045298 sceneDrawMs=0.061298 fragments=0 directDraws=0 legacyDraws=0 sourceMsPerDraw=0 shaderDirectMsPerDraw=0 shaderResultMsPerDraw=0 compositeMsPerDraw=0 regionRenderMsPerFrame=0 scratch=0x0 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=2.49077 trackerMs=0.00616556 regionUpdateMs=0.00478146 sceneDrawMs=0.0607616 fragments=0 directDraws=0 legacyDraws=0 sourceMsPerDraw=0 shaderDirectMsPerDraw=0 shaderResultMsPerDraw=0 compositeMsPerDraw=0 regionRenderMsPerFrame=0 scratch=0x0 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=2.73688 trackerMs=0.00668874 regionUpdateMs=0.00492053 sceneDrawMs=0.0663179 fragments=0 directDraws=0 legacyDraws=0 sourceMsPerDraw=0 shaderDirectMsPerDraw=0 shaderResultMsPerDraw=0 compositeMsPerDraw=0 regionRenderMsPerFrame=0 scratch=0x0 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0004 frameMs=33.3329 detectorMs=2.6565 trackerMs=0.00644371 regionUpdateMs=0.00501987 sceneDrawMs=0.0633245 fragments=0 directDraws=0 legacyDraws=0 sourceMsPerDraw=0 shaderDirectMsPerDraw=0 shaderResultMsPerDraw=0 compositeMsPerDraw=0 regionRenderMsPerFrame=0 scratch=0x0 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=2.80312 trackerMs=0.00684106 regionUpdateMs=0.00516556 sceneDrawMs=0.0678675 fragments=0 directDraws=0 legacyDraws=0 sourceMsPerDraw=0 shaderDirectMsPerDraw=0 shaderResultMsPerDraw=0 compositeMsPerDraw=0 regionRenderMsPerFrame=0 scratch=0x0 stalls=0 maxStallMs=0
+2026-10-15 21:20:22.060 experience_runtime[80207:15485684] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobProductionScene: fragment effect -> recolor
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 92x68
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 116x88
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 116x108
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 240x108
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 240x136
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 240x144
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 344x208
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 388x264
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 576x264
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 576x380
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0002 frameMs=33.3331 detectorMs=2.84378 trackerMs=0.00742384 regionUpdateMs=0.00744371 sceneDrawMs=0.296689 fragments=1.69536 directDraws=186 legacyDraws=70 sourceMsPerDraw=0.0530117 shaderDirectMsPerDraw=0.0853817 shaderResultMsPerDraw=0.0392 compositeMsPerDraw=0.0196429 regionRenderMsPerFrame=0.222325 scratch=576x380 stalls=0 maxStallMs=0
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 728x380
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0004 frameMs=33.3329 detectorMs=3.14636 trackerMs=0.00970861 regionUpdateMs=0.00919868 sceneDrawMs=0.272311 fragments=2.09272 directDraws=247 legacyDraws=69 sourceMsPerDraw=0.0380696 shaderDirectMsPerDraw=0.0460567 shaderResultMsPerDraw=0.0481449 compositeMsPerDraw=0.0236957 regionRenderMsPerFrame=0.187834 scratch=728x380 stalls=0 maxStallMs=0
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 728x432
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 728x528
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 728x537
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 728x544
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=3.2217 trackerMs=0.0112252 regionUpdateMs=0.0111921 sceneDrawMs=0.364404 fragments=3.09272 directDraws=366 legacyDraws=101 sourceMsPerDraw=0.0392784 shaderDirectMsPerDraw=0.0432514 shaderResultMsPerDraw=0.048901 compositeMsPerDraw=0.0252673 regionRenderMsPerFrame=0.275921 scratch=728x544 stalls=0 maxStallMs=0
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 757x544
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=2.92252 trackerMs=0.0105033 regionUpdateMs=0.0110199 sceneDrawMs=0.359801 fragments=3.18543 directDraws=378 legacyDraws=103 sourceMsPerDraw=0.0374532 shaderDirectMsPerDraw=0.0414577 shaderResultMsPerDraw=0.0471845 compositeMsPerDraw=0.0233883 regionRenderMsPerFrame=0.271225 scratch=757x544 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.3331 detectorMs=3.08109 trackerMs=0.0128278 regionUpdateMs=0.0130861 sceneDrawMs=0.42402 fragments=3.72848 directDraws=465 legacyDraws=98 sourceMsPerDraw=0.0368455 shaderDirectMsPerDraw=0.0424495 shaderResultMsPerDraw=0.0670408 compositeMsPerDraw=0.0242347 regionRenderMsPerFrame=0.327338 scratch=757x544 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0004 frameMs=33.3329 detectorMs=2.85607 trackerMs=0.0117417 regionUpdateMs=0.0139603 sceneDrawMs=0.477503 fragments=5.1457 directDraws=623 legacyDraws=154 sourceMsPerDraw=0.0314003 shaderDirectMsPerDraw=0.0369358 shaderResultMsPerDraw=0.0454935 compositeMsPerDraw=0.0242532 regionRenderMsPerFrame=0.385099 scratch=757x544 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=2.94056 trackerMs=0.0143974 regionUpdateMs=0.0146887 sceneDrawMs=0.569172 fragments=6.33775 directDraws=851 legacyDraws=106 sourceMsPerDraw=0.0325465 shaderDirectMsPerDraw=0.0377932 shaderResultMsPerDraw=0.0466415 compositeMsPerDraw=0.0241981 regionRenderMsPerFrame=0.468993 scratch=757x544 stalls=0 maxStallMs=0
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 757x640
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 757x642
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.3331 detectorMs=2.69799 trackerMs=0.0153311 regionUpdateMs=0.0168146 sceneDrawMs=0.72751 fragments=8.27152 directDraws=1082 legacyDraws=167 sourceMsPerDraw=0.0339976 shaderDirectMsPerDraw=0.0370185 shaderResultMsPerDraw=0.0447605 compositeMsPerDraw=0.0224012 regionRenderMsPerFrame=0.620748 scratch=757x642 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0004 frameMs=33.3329 detectorMs=2.66737 trackerMs=0.015245 regionUpdateMs=0.0168609 sceneDrawMs=0.698868 fragments=9.22517 directDraws=1155 legacyDraws=238 sourceMsPerDraw=0.0276439 shaderDirectMsPerDraw=0.0319403 shaderResultMsPerDraw=0.0402941 compositeMsPerDraw=0.0197689 regionRenderMsPerFrame=0.594 scratch=757x642 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0002 frameMs=33.3331 detectorMs=2.86366 trackerMs=0.0138543 regionUpdateMs=0.0171854 sceneDrawMs=0.623675 fragments=7.43046 directDraws=947 legacyDraws=175 sourceMsPerDraw=0.0306159 shaderDirectMsPerDraw=0.0361732 shaderResultMsPerDraw=0.0384286 compositeMsPerDraw=0.0196571 regionRenderMsPerFrame=0.521669 scratch=757x642 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=2.51143 trackerMs=0.0107748 regionUpdateMs=0.0120662 sceneDrawMs=0.455576 fragments=5.62914 directDraws=684 legacyDraws=166 sourceMsPerDraw=0.0277235 shaderDirectMsPerDraw=0.0315994 shaderResultMsPerDraw=0.0365904 compositeMsPerDraw=0.0174819 regionRenderMsPerFrame=0.358642 scratch=757x642 stalls=0 maxStallMs=0
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 896x642
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=2.5446 trackerMs=0.00961589 regionUpdateMs=0.0103311 sceneDrawMs=0.396159 fragments=4.76821 directDraws=541 legacyDraws=179 sourceMsPerDraw=0.0273306 shaderDirectMsPerDraw=0.030268 shaderResultMsPerDraw=0.0368492 compositeMsPerDraw=0.0175251 regionRenderMsPerFrame=0.303219 scratch=896x642 stalls=0 maxStallMs=0
+2026-10-15 21:21:23.046 experience_runtime[80207:15485441] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobProductionScene: fragment effect -> desaturate
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=2.52613 trackerMs=0.010053 regionUpdateMs=0.0110927 sceneDrawMs=0.396821 fragments=4.76821 directDraws=629 legacyDraws=91 sourceMsPerDraw=0.0253264 shaderDirectMsPerDraw=0.0382703 shaderResultMsPerDraw=0.0328352 compositeMsPerDraw=0.015989 regionRenderMsPerFrame=0.309603 scratch=896x642 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0004 frameMs=33.3329 detectorMs=2.35274 trackerMs=0.00613245 regionUpdateMs=0.006 sceneDrawMs=0.150106 fragments=1.4106 directDraws=143 legacyDraws=70 sourceMsPerDraw=0.0243991 shaderDirectMsPerDraw=0.0278392 shaderResultMsPerDraw=0.0339714 compositeMsPerDraw=0.017 regionRenderMsPerFrame=0.0844106 scratch=896x642 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0004 frameMs=33.3329 detectorMs=2.20993 trackerMs=0.00594702 regionUpdateMs=0.0050596 sceneDrawMs=0.0929801 fragments=0.635762 directDraws=68 legacyDraws=28 sourceMsPerDraw=0.0220104 shaderDirectMsPerDraw=0.026 shaderResultMsPerDraw=0.0318214 compositeMsPerDraw=0.0151429 regionRenderMsPerFrame=0.0344106 scratch=896x642 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0002 frameMs=33.3331 detectorMs=2.27153 trackerMs=0.0063245 regionUpdateMs=0.0065298 sceneDrawMs=0.175046 fragments=2.11258 directDraws=277 legacyDraws=42 sourceMsPerDraw=0.0231724 shaderDirectMsPerDraw=0.027426 shaderResultMsPerDraw=0.029381 compositeMsPerDraw=0.0145714 regionRenderMsPerFrame=0.11149 scratch=896x642 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0004 frameMs=33.3329 detectorMs=2.23201 trackerMs=0.00653642 regionUpdateMs=0.00645695 sceneDrawMs=0.167927 fragments=1.70199 directDraws=131 legacyDraws=126 sourceMsPerDraw=0.0224397 shaderDirectMsPerDraw=0.0291527 shaderResultMsPerDraw=0.0329524 compositeMsPerDraw=0.0162302 regionRenderMsPerFrame=0.104523 scratch=896x642 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0002 frameMs=33.3331 detectorMs=2.23984 trackerMs=0.00692715 regionUpdateMs=0.00688079 sceneDrawMs=0.224861 fragments=3.15232 directDraws=336 legacyDraws=140 sourceMsPerDraw=0.0206408 shaderDirectMsPerDraw=0.0241905 shaderResultMsPerDraw=0.0291 compositeMsPerDraw=0.0143 regionRenderMsPerFrame=0.159132 scratch=896x642 stalls=0 maxStallMs=0
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 896x704
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=2.1583 trackerMs=0.00570199 regionUpdateMs=0.00542384 sceneDrawMs=0.113046 fragments=1.13245 directDraws=163 legacyDraws=8 sourceMsPerDraw=0.0239766 shaderDirectMsPerDraw=0.0233742 shaderResultMsPerDraw=0.04425 compositeMsPerDraw=0.0175 regionRenderMsPerFrame=0.0556556 scratch=896x704 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0002 frameMs=33.3331 detectorMs=2.1216 trackerMs=0.00615232 regionUpdateMs=0.00583444 sceneDrawMs=0.164464 fragments=2.01987 directDraws=180 legacyDraws=125 sourceMsPerDraw=0.0197148 shaderDirectMsPerDraw=0.0244389 shaderResultMsPerDraw=0.02916 compositeMsPerDraw=0.014384 regionRenderMsPerFrame=0.105 scratch=896x704 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0004 frameMs=33.3329 detectorMs=2.03716 trackerMs=0.0051457 regionUpdateMs=0.00484106 sceneDrawMs=0.128603 fragments=1.5894 directDraws=170 legacyDraws=70 sourceMsPerDraw=0.0184042 shaderDirectMsPerDraw=0.0215118 shaderResultMsPerDraw=0.0256 compositeMsPerDraw=0.0131 regionRenderMsPerFrame=0.0714106 scratch=896x704 stalls=0 maxStallMs=0
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0003 frameMs=33.333 detectorMs=2.09895 trackerMs=0.00510596 regionUpdateMs=0.00496689 sceneDrawMs=0.0765629 fragments=0.364238 directDraws=41 legacyDraws=14 sourceMsPerDraw=0.0240909 shaderDirectMsPerDraw=0.0313659 shaderResultMsPerDraw=0.0395 compositeMsPerDraw=0.0162143 regionRenderMsPerFrame=0.022457 scratch=896x704 stalls=0 maxStallMs=0

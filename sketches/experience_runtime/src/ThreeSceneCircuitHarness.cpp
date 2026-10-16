@@ -27,7 +27,8 @@ namespace {
 const std::string kBlobId = BlobProductionScene::kSceneId;
 const std::string kTemporalId = TemporalProductionScene::kSceneId;
 const std::string kBlueprintId = BlueprintProductionScene::kSceneId;
-constexpr const char* kCaptureDir = "captures/rt005-three-scene";
+const std::string kFragmentId = FragmentProductionScene::kSceneId;
+const std::string kQuadrantId = QuadrantProductionScene::kSceneId;
 constexpr int kCircuits = 10;
 constexpr float kDwellSeconds = 3.0f;
 constexpr float kStateTimeoutSeconds = 45.0f;
@@ -44,6 +45,8 @@ std::string semanticPrefixFor(const std::string& sceneId) {
 	if (sceneId == kBlobId) return "scene.blob.";
 	if (sceneId == kTemporalId) return "scene.temporal.";
 	if (sceneId == kBlueprintId) return "scene.blueprint.";
+	if (sceneId == kFragmentId) return "scene.fragment.";
+	if (sceneId == kQuadrantId) return "scene.quadrant.";
 	return "?";
 }
 
@@ -51,6 +54,8 @@ std::string shortName(const std::string& sceneId) {
 	if (sceneId == kBlobId) return "blob";
 	if (sceneId == kTemporalId) return "temporal";
 	if (sceneId == kBlueprintId) return "blueprint";
+	if (sceneId == kFragmentId) return "fragment";
+	if (sceneId == kQuadrantId) return "quadrant";
 	return sceneId;
 }
 
@@ -88,28 +93,40 @@ const char* phaseName(SceneTransitionPhase p) {
 } // namespace
 
 bool ThreeSceneCircuitHarness::isRequested() {
-	return std::getenv("EXPERIENCE_RUNTIME_THREE_SCENE_HARNESS") != nullptr;
+	return std::getenv("EXPERIENCE_RUNTIME_THREE_SCENE_HARNESS") != nullptr || isFullRingRequested();
+}
+
+bool ThreeSceneCircuitHarness::isFullRingRequested() {
+	return std::getenv("EXPERIENCE_RUNTIME_FULL_RING_HARNESS") != nullptr;
 }
 
 ThreeSceneCircuitHarness::ThreeSceneCircuitHarness(ExperienceRuntime& runtime) : runtime_(runtime) {
-	std::filesystem::create_directories(ofToDataPath(kCaptureDir, true));
+	fullRing_ = isFullRingRequested();
+	captureDir_ = fullRing_ ? "captures/five-scene-ring" : "captures/rt005-three-scene";
+	std::filesystem::create_directories(ofToDataPath(captureDir_, true));
 	ring_ = runtime_.sceneManagerForTesting().registeredSceneIdsForTesting();
-	check("default roster [Blob, Temporal, Blueprint]",
-		ring_.size() == 3 && ring_[0] == kBlobId && ring_[1] == kTemporalId && ring_[2] == kBlueprintId);
-	if (ring_.size() != 3) {
+	std::vector<std::string> expected = {kBlobId, kTemporalId, kBlueprintId};
+	if (fullRing_) {
+		expected.push_back(kFragmentId);
+		expected.push_back(kQuadrantId);
+	}
+	check(fullRing_ ? "full roster [Blob, Temporal, Blueprint, Fragment, Quadrant]" : "three-scene roster [Blob, Temporal, Blueprint]",
+		ring_ == expected, ofJoinString(ring_, ","));
+	if (ring_ != expected) {
 		finish();
 		return;
 	}
+	const int n = static_cast<int>(ring_.size());
 	int at = 0; // Blob
 	for (int c = 1; c <= kCircuits; ++c) {
 		const bool forward = (c % 2) == 1;
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 0; i < n; ++i) {
 			Leg leg;
 			leg.circuit = c;
 			leg.index = i;
 			leg.key = forward ? ']' : '[';
 			leg.fromId = ring_[static_cast<size_t>(at)];
-			at = forward ? (at + 1) % 3 : (at + 2) % 3;
+			at = forward ? (at + 1) % n : (at + n - 1) % n;
 			leg.toId = ring_[static_cast<size_t>(at)];
 			legs_.push_back(leg);
 		}
@@ -129,13 +146,13 @@ void ThreeSceneCircuitHarness::note(const std::string& line) {
 void ThreeSceneCircuitHarness::captureWindow(const std::string& name) {
 	ofImage img;
 	img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
-	img.save(std::string(kCaptureDir) + "/" + name + ".png");
+	img.save(captureDir_ + "/" + name + ".png");
 	capturedThisFrame_ = true;
-	note("capture: bin/data/" + std::string(kCaptureDir) + "/" + name + ".png");
+	note("capture: bin/data/" + captureDir_ + "/" + name + ".png");
 }
 
 void ThreeSceneCircuitHarness::captureScene(const std::string& name) {
-	const std::string path = std::string(kCaptureDir) + "/" + name + ".png";
+	const std::string path = captureDir_ + "/" + name + ".png";
 	capturedThisFrame_ = true;
 	if (runtime_.saveSceneFrameCaptureForTesting(path)) note("capture: bin/data/" + path);
 }
@@ -185,6 +202,18 @@ std::string ThreeSceneCircuitHarness::legLabel() const {
 }
 
 void ThreeSceneCircuitHarness::checkIdleInvariants() {
+	// GL state after a full presented frame (scene FBO pass + HUD): no scene
+	// may leave scissor testing on or an FBO bound.
+	{
+		GLint boundFramebuffer = 0;
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &boundFramebuffer);
+		glStateFramesChecked_++;
+		if (glIsEnabled(GL_SCISSOR_TEST) || boundFramebuffer != 0) {
+			glStateLeaks_++;
+			if (glStateLeaks_ <= 3) note(std::string("GL state leak after frame: scissor=") + (glIsEnabled(GL_SCISSOR_TEST) ? "1" : "0")
+				+ " fbo=" + ofToString(boundFramebuffer) + " owner=" + runtime_.currentHudFrameData().sceneManager.activeSceneId);
+		}
+	}
 	const HudFrameData& f = runtime_.currentHudFrameData();
 	if (f.sceneManager.transitionPhase != SceneTransitionPhase::Idle) {
 		// No live owner's controls may be published mid-transition.
@@ -207,6 +236,33 @@ void ThreeSceneCircuitHarness::checkIdleInvariants() {
 	else if (active == kBlueprintId
 		&& runtime_.blueprintSceneForTesting().coreForTesting().composition().getFragments().size() > static_cast<size_t>(MAX_FRAGMENTS))
 		why = "Blueprint fragment count above MAX_FRAGMENTS";
+	else if (active == kFragmentId
+		&& runtime_.fragmentSceneForTesting().coreForTesting().pool().getFragmentCount()
+			> runtime_.fragmentSceneForTesting().coreForTesting().parameters().getMaxFragments())
+		why = "Fragment count above its maxFragments cap";
+	if (why.empty() && active == kFragmentId) {
+		// Canonical media authority: Fragment's follower must load exactly the
+		// canonical selection (it may observe a change one frame late).
+		const std::string& loaded = runtime_.fragmentSceneForTesting().videoAdapterForTesting().loadedMediaId();
+		if (loaded != *f.video->mediaId) {
+			if (++followerLagFrames_ > 3) why = "Fragment follower on " + loaded + ", canonical " + *f.video->mediaId;
+		} else {
+			followerLagFrames_ = 0;
+		}
+		fragmentFollowerFramesChecked_++;
+	}
+	if (why.empty() && active == kQuadrantId) {
+		// Ordinary Shared Video consumer: the scene's observed media identity
+		// must be the canonical selection (it observes a change at most one
+		// frame late).
+		const std::string observed = runtime_.quadrantSceneForTesting().observedMediaIdForTesting();
+		if (observed != *f.video->mediaId) {
+			if (++quadrantMediaLagFrames_ > 3) why = "Quadrant observes " + observed + ", canonical " + *f.video->mediaId;
+		} else {
+			quadrantMediaLagFrames_ = 0;
+		}
+		quadrantFramesChecked_++;
+	}
 	if (!why.empty()) {
 		invariantFailures_++;
 		if (invariantFailures_ <= 5) note("invariant violation: " + why);
@@ -266,7 +322,9 @@ void ThreeSceneCircuitHarness::onTransitionFrame() {
 	}
 
 	// Transition captures involving Blueprint (first forward and first backward circuit).
-	if ((l.circuit == 1 || l.circuit == 2) && (l.fromId == kBlueprintId || l.toId == kBlueprintId)) {
+	const bool featured = fullRing_ ? (l.fromId == kFragmentId || l.toId == kFragmentId || l.fromId == kQuadrantId || l.toId == kQuadrantId)
+		: (l.fromId == kBlueprintId || l.toId == kBlueprintId);
+	if ((l.circuit == 1 || l.circuit == 2) && featured) {
 		const std::string tag = "t_c" + ofToString(l.circuit) + "_" + shortName(l.fromId) + "_to_" + shortName(l.toId);
 		if (phase == SceneTransitionPhase::FadingOut && framesInPhase_ == 6) captureWindow(tag + "_fadeout_mid");
 		if (phase == SceneTransitionPhase::FadingIn && framesInPhase_ == 6) captureWindow(tag + "_fadein_mid");
@@ -315,6 +373,30 @@ void ThreeSceneCircuitHarness::onLanded() {
 		const BEComposition& c = runtime_.blueprintSceneForTesting().coreForTesting().composition();
 		if (c.getCycleElapsedSeconds() > 2.0f) why += " | Blueprint cycle not fresh (" + ofToString(c.getCycleElapsedSeconds(), 2) + " s)";
 		if (haveBlueprintExitSeed_ && c.getCycleSeed() == blueprintExitSeed_) why += " | Blueprint seed unchanged since exit";
+	}
+	if (l.toId == kFragmentId) {
+		const auto& pool = runtime_.fragmentSceneForTesting().coreForTesting().pool();
+		const int spawned = pool.getSpawnCount();
+		for (const auto& frag : pool.getFragments()) {
+			if (frag.getSpawnIndex() > spawned || frag.getSpawnIndex() <= 0) {
+				why += " | Fragment pool holds a fragment not spawned this activation";
+				break;
+			}
+		}
+		if (spawned > static_cast<int>(framesInState_) + 1) why += " | Fragment spawn count " + ofToString(spawned) + " exceeds live frames";
+	}
+	if (l.fromId == kFragmentId) {
+		const auto& buffer = runtime_.fragmentSceneForTesting().videoAdapterForTesting().buffer();
+		if (buffer.getHistoryFrameCount() != 0 || buffer.hasMedia())
+			why += " | Fragment follower not released while inactive (history " + ofToString(buffer.getHistoryFrameCount())
+				+ " frames, decoder " + (buffer.hasMedia() ? "open" : "closed") + ")";
+	}
+	if (l.toId == kQuadrantId) {
+		auto& qs = runtime_.quadrantSceneForTesting();
+		if (qs.coreForTesting().expansionDirector().isActive()) why += " | Quadrant expansion carried over into a new activation";
+		if (f.scene.semantic && f.scene.semantic->timing.generation <= lastQuadrantGeneration_)
+			why += " | Quadrant generation did not advance";
+		if (f.scene.semantic) lastQuadrantGeneration_ = f.scene.semantic->timing.generation;
 	}
 	const int gl = drainGlErrors();
 	glErrors_ += gl;
@@ -378,6 +460,44 @@ void ThreeSceneCircuitHarness::onDwellFrame() {
 		// (4) slots, each for tens of seconds, so placement is deliberately slow.
 		dwellDone = (bp.getFragments().size() >= 2 && secondsInState_ >= kDwellSeconds) || secondsInState_ > 30.0f;
 	}
+	if (firstVisit && l.toId == kQuadrantId && !quadrantReticlesShown_ && secondsInState_ >= 0.5f) {
+		// Harness-only: put the labelled reticle layer on screen so the
+		// first-visit capture shows HUD-layer bitmap text drawn inside the
+		// runtime's scene FBO (orientation check).
+		quadrantReticlesShown_ = true;
+		runtime_.quadrantSceneForTesting().coreForTesting().hudLayer().showElementForTesting(3);
+	}
+	if (firstVisit && l.toId == kQuadrantId && !quadrantExpansionChecked_) {
+		// Harness-only: force the artwork's own expansion gesture (the
+		// standalone's 'E' test key; not a production command), then switch
+		// away while it is still active — the next activation must come back
+		// with expansion idle (landing check above).
+		auto& core = runtime_.quadrantSceneForTesting().coreForTesting();
+		if (dwellDone && !quadrantExpansionTriggered_ && capturedThisLeg_) {
+			quadrantExpansionTriggered_ = true;
+			expansionTriggerSeconds_ = secondsInState_;
+			core.expansionDirector().trigger({ core.crosshair().getState().cx, core.crosshair().getState().cy });
+		}
+		if (quadrantExpansionTriggered_) {
+			const auto state = core.expansionDirector().getState();
+			const bool held = state == quadrantcrosshair::ExpansionState::HOLD;
+			if (held || secondsInState_ - expansionTriggerSeconds_ > 25.0f) {
+				quadrantExpansionChecked_ = true;
+				const HudFrameData& hf = runtime_.currentHudFrameData();
+				const SceneMetric* progress = nullptr;
+				if (hf.scene.semantic) {
+					for (const auto& m : hf.scene.semantic->metrics)
+						if (m.metricId == "scene.quadrant.metric.expansion_progress") progress = &m;
+				}
+				check("Quadrant expansion reaches HOLD and publishes expanding + expansion_progress",
+					held && hf.scene.semantic && hf.scene.semantic->state.primaryStateId == "scene.quadrant.state.expanding"
+						&& progress && progress->value && *progress->value > 0.99f,
+					hf.scene.semantic ? hf.scene.semantic->state.primaryStateId : std::string("(no semantic)"));
+				captureWindow("s_quadrant_expanded_window");
+				captureScene("s_quadrant_expanded_scene");
+			}
+		}
+	}
 	if (firstVisit && dwellDone && !capturedThisLeg_) {
 		capturedThisLeg_ = true;
 		ofPixels px;
@@ -386,6 +506,20 @@ void ThreeSceneCircuitHarness::onDwellFrame() {
 			check("Blueprint renders placed fragments through the production scene FBO",
 				bp.getFragments().size() >= 2 && luma > 4.0f,
 				ofToString(bp.getFragments().size()) + " fragments, scene mean " + ofToString(luma, 1));
+		} else if (l.toId == kFragmentId) {
+			const int count = runtime_.fragmentSceneForTesting().coreForTesting().pool().getFragmentCount();
+			check("Fragment renders a live trail through the production scene FBO", count >= 3 && luma > 4.0f,
+				ofToString(count) + " fragments, scene mean " + ofToString(luma, 1));
+		} else if (l.toId == kQuadrantId) {
+			const HudFrameData& hf = runtime_.currentHudFrameData();
+			int channels = 0;
+			if (hf.scene.semantic) {
+				for (const auto& m : hf.scene.semantic->metrics)
+					if (m.metricId.rfind("scene.quadrant.metric.channel_", 0) == 0 && m.metricId.size() > 6
+						&& m.metricId.compare(m.metricId.size() - 6, 6, "_state") == 0) channels++;
+			}
+			check("Quadrant renders through the production scene FBO and publishes four channel states",
+				luma > 4.0f && channels == 4, "scene mean " + ofToString(luma, 1) + ", " + ofToString(channels) + " channel states");
 		} else if (l.toId == kTemporalId) {
 			check("Temporal renders a live (non-black) scene frame", luma > 4.0f, "scene mean " + ofToString(luma, 1));
 		} else {
@@ -401,8 +535,9 @@ void ThreeSceneCircuitHarness::onDwellFrame() {
 
 	const bool waitingOnMedia = mediaCircuit && !nextMediaChecked_;
 	const bool waitingOnReseed = reseedCircuit && !reseedChecked_;
-	if (dwellDone && !waitingOnMedia && !waitingOnReseed && framesInState_ >= 2) {
-		if (l.index == 2) endOfCircuit();
+	const bool waitingOnExpansion = firstVisit && l.toId == kQuadrantId && fullRing_ && !quadrantExpansionChecked_;
+	if (dwellDone && !waitingOnMedia && !waitingOnReseed && !waitingOnExpansion && framesInState_ >= 2) {
+		if (l.index == static_cast<int>(ring_.size()) - 1) endOfCircuit();
 		leg_++;
 		if (leg_ >= legs_.size()) {
 			finish();
@@ -474,15 +609,18 @@ void ThreeSceneCircuitHarness::finish() {
 		allLegs, ofToString(std::min(leg_, legs_.size())) + " done");
 	if (allLegs) check("run returns to Blob after the final circuit", active == kBlobId, active);
 
-	int visits[3] = {1, 0, 0}; // Blob startup activation
+	std::vector<int> visits(ring_.size(), 0);
+	if (!visits.empty()) visits[0] = 1; // Blob startup activation
 	for (size_t i = 0; i < std::min(leg_, legs_.size()); ++i) {
-		for (int s = 0; s < 3; ++s) {
-			if (legs_[i].toId == ring_[static_cast<size_t>(s)]) visits[s]++;
+		for (size_t s = 0; s < ring_.size(); ++s) {
+			if (legs_[i].toId == ring_[s]) visits[s]++;
 		}
 	}
-	for (int s = 0; s < 3; ++s) {
+	long long totalUpdates = 0;
+	for (size_t s = 0; s < ring_.size(); ++s) {
 		const std::string& id = ring_[static_cast<size_t>(s)];
 		const auto& c = *sm.countersForTesting(id);
+		totalUpdates += c.updateCalls;
 		const int expectDeact = visits[s] - (id == active ? 1 : 0);
 		check(shortName(id) + " lifecycle: one setup, activations == visits, capabilities once per activation, "
 				"one status pull + draw per live update",
@@ -496,6 +634,16 @@ void ThreeSceneCircuitHarness::finish() {
 	}
 
 	const auto& pc = runtime_.presentationCountersForTesting();
+	check("no inactive scene updates (scene updates == live scene frames)",
+		totalUpdates == static_cast<long long>(pc.liveSceneFrames),
+		ofToString(totalUpdates) + " updates, " + ofToString(pc.liveSceneFrames) + " live frames");
+	if (fullRing_) {
+		check("Fragment follower always on the canonical selection", fragmentFollowerFramesChecked_ > 0,
+			ofToString(fragmentFollowerFramesChecked_) + " Fragment Idle frames checked");
+		check("Quadrant always observes the canonical media selection", quadrantFramesChecked_ > 0,
+			ofToString(quadrantFramesChecked_) + " Quadrant Idle frames checked");
+		check("Quadrant expansion exercised", quadrantExpansionChecked_);
+	}
 	check("one HudFrameData assembly per presented frame", pc.hudFrameDataAssemblies == pc.hudDraws,
 		ofToString(pc.hudFrameDataAssemblies) + " assemblies, " + ofToString(pc.hudDraws) + " HUD draws, "
 			+ ofToString(pc.liveSceneFrames) + " live / " + ofToString(pc.staticSceneFrames) + " static scene frames");
@@ -508,6 +656,8 @@ void ThreeSceneCircuitHarness::finish() {
 	const int gl = drainGlErrors();
 	glErrors_ += gl;
 	check("no GL errors at any landing or at end of run", glErrors_ == 0, ofToString(glErrors_));
+	check("no scissor/FBO state left set after any presented frame", glStateLeaks_ == 0 && glStateFramesChecked_ > 0,
+		ofToString(glStateFramesChecked_) + " frames, " + ofToString(glStateLeaks_) + " leaks");
 
 	if (rssMiBPerCircuit_.size() >= 3) {
 		const double base = rssMiBPerCircuit_[1];
@@ -533,7 +683,7 @@ void ThreeSceneCircuitHarness::finish() {
 	}
 
 	note("RESULT: " + ofToString(passes_) + " passed, " + ofToString(failures_) + " failed");
-	std::ofstream out(ofToDataPath(std::string(kCaptureDir) + "/results.txt", true));
+	std::ofstream out(ofToDataPath(captureDir_ + "/results.txt", true));
 	for (const auto& line : lines_) out << line << "\n";
 	ofExit(failures_ == 0 ? 0 : 1);
 }

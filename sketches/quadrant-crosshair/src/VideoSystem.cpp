@@ -3,6 +3,8 @@
 #include <numeric>
 #include <random>
 
+namespace quadrantcrosshair {
+
 void VideoSystem::setup(const std::string& mediaPath) {
     ofDirectory dir(mediaPath);
     dir.allowExt("mp4");
@@ -131,3 +133,5 @@ void VideoSystem::nextFile() {
         buildPlaylist();
     loadFile(playlist[playlistPos]);
 }
+
+} // namespace quadrantcrosshair

@@ -9,13 +9,22 @@
 #include <vector>
 #include <string>
 
+namespace quadrantcrosshair {
+
 class QuadrantManager {
 public:
     void setup(ShaderLibrary* lib);
+    // Fresh composition without reallocating the quadrants' FBOs: idle
+    // slots, cleared erosion, re-shuffled decks, staggered silences, new
+    // scale ranges, no contraction or pending trigger effects. setup() ends
+    // with this.
+    void resetComposition();
     void update(float dt, const CrosshairState& state,
                 const LFOBank& lfo, ofTexture& gridTex,
                 ofTexture& motionTex, ofTexture& motionDelayedTex);
-    void draw(ofTexture& videoTex, glm::vec2 videoSize);
+    // Once per frame, after update() and before draw(), outside any bound FBO.
+    void accumulateErosion(const ofTexture& videoTex) { for (auto& q : quads) q.accumulateErosion(videoTex); }
+    void draw(const ofTexture& videoTex, glm::vec2 videoSize);
     void drawHUD();
     void setVideoBrightness(float b) { videoBrightness = b; }
     void resetErosion() { for (auto& q : quads) q.resetErosion(); }
@@ -94,3 +103,5 @@ private:
     std::pair<float,float>  chooseHueRotateParams();
     std::pair<float,float>  pickScaleRange();
 };
+
+} // namespace quadrantcrosshair

@@ -5,6 +5,8 @@
 #include "ofImage.h"
 #include "ofRectangle.h"
 
+namespace fragmenttrail {
+
 // Crossfades between static images from a folder on its own timer. Lazily
 // keeps only current+next ofImage resident, matching TimeOffsetVideoBuffer's
 // "only what's actually shown lives on the GPU" discipline. Copied from
@@ -37,3 +39,5 @@ class FTImageCycler {
 		ofImage nextImg;
 		float holdTimer = 0.0f;
 };
+
+} // namespace fragmenttrail

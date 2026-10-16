@@ -1,6 +1,7 @@
 #include "BlobLifecycleHarness.h"
 
 #include "AllocationCounter.h"
+#include "BlobEffectPolicy.h"
 
 #include "ofAppRunner.h"
 #include "ofFileUtils.h"
@@ -21,6 +22,15 @@ const SceneMetric * findMetric(const SceneSemanticData & data, const std::string
 		}
 	}
 	return nullptr;
+}
+
+bool isCuratedTreatmentId(const std::string & id) {
+	for (const auto & t : blobeffects::curatedFragmentTreatments()) {
+		if (t.id() == id) {
+			return true;
+		}
+	}
+	return false;
 }
 
 } // namespace
@@ -133,6 +143,57 @@ void BlobLifecycleHarness::captureScreenshot(const std::string & label) {
 	std::string scenePath = "captures/blob_lifecycle_" + label + "_scene_only.png";
 	bool saved = runtime_.saveSceneFrameCaptureForTesting(scenePath);
 	logResult("saveSceneFrameCaptureForTesting() succeeds (" + label + ")", saved, scenePath);
+}
+
+std::optional<std::string> BlobLifecycleHarness::currentMediaId() const {
+	const HudFrameData & frame = runtime_.currentHudFrameData();
+	return frame.video.has_value() ? frame.video->mediaId : std::nullopt;
+}
+
+void BlobLifecycleHarness::beginEffectStep(const std::string & label) {
+	BlobProductionScene & blob = runtime_.blobSceneForTesting();
+	SceneManager & sceneManager = runtime_.sceneManagerForTesting();
+	effectStepChangesBefore_ = blob.fragmentEffectChangeCountForTesting();
+	effectStepEffectBefore_ = blob.fragmentTreatmentIdForTesting();
+	effectStepMediaBefore_ = currentMediaId();
+	effectStepFramesSinceMediaChange_ = -1;
+	framesInPhase_ = 0;
+	// next() rejects at the catalog's end; previous() then still changes media.
+	bool navigated = sceneManager.dispatchSceneCommand(SceneCommand::NextMedia)
+		|| sceneManager.dispatchSceneCommand(SceneCommand::PreviousMedia);
+	logResult("Effect policy " + label + ": media navigation accepted", navigated,
+		"effect before=" + effectStepEffectBefore_);
+}
+
+bool BlobLifecycleHarness::effectStepSettled(int framesSinceMediaChange) const {
+	// Long enough after the change that fragments on screen were created
+	// under the newly selected effect, and at least one is present.
+	// Prefer a few fragments for a representative capture; settle for one
+	// on sparse-motion clips.
+	int fragments = runtime_.currentHudFrameData().scene.activeItemCount.value_or(0);
+	return (framesSinceMediaChange >= kEffectSettleFrames && fragments >= 3)
+		|| (framesSinceMediaChange >= 5 * kEffectSettleFrames && fragments >= 1);
+}
+
+void BlobLifecycleHarness::trackEffectPerFrame() {
+	BlobProductionScene & blob = runtime_.blobSceneForTesting();
+	std::optional<std::string> media = currentMediaId();
+	if (media != effectTrackLastMedia_) {
+		effectTrackFramesSinceMedia_ = 0;
+		effectTrackLastMedia_ = media;
+	} else {
+		effectTrackFramesSinceMedia_++;
+	}
+	// Allow one frame of lag between the shared status and the scene's own
+	// update() observing it; any later change is a reselection bug.
+	if (blob.fragmentTreatmentIdForTesting() != effectTrackLastEffect_) {
+		if (effectTrackFramesSinceMedia_ > 1) {
+			effectChangesWithoutMediaChange_++;
+			ofLogError("BlobLifecycleHarness") << "fragment effect changed without a media change: "
+				<< effectTrackLastEffect_ << " -> " << blob.fragmentTreatmentIdForTesting();
+		}
+		effectTrackLastEffect_ = blob.fragmentTreatmentIdForTesting();
+	}
 }
 
 void BlobLifecycleHarness::logSoakStatusLine() {
@@ -416,8 +477,119 @@ void BlobLifecycleHarness::step(float dt) {
 			if (framesInPhase_ >= kFinalFrames) {
 				logResult("Final activate + update/draw sequence (after all 20 cycles) succeeded", true, "");
 				captureScreenshot("final_active");
-				phase_ = Phase::Shutdown;
+				BlobProductionScene & blob = runtime_.blobSceneForTesting();
+				logResult("Fragment treatment is a curated Blob treatment before the effect-policy proof",
+					isCuratedTreatmentId(blob.fragmentTreatmentIdForTesting()), blob.fragmentTreatmentIdForTesting());
+				const BlobSceneCore::BackgroundConfig & bg = blob.backgroundConfigForTesting();
+				logResult("Production background is the desaturated world (mode 2, " + blobeffects::backgroundEffectId() + ")",
+					bg.mode == 2 && bg.effectName == blobeffects::backgroundEffectId() && bg.effectAmount >= 1.0f,
+					"mode=" + ofToString(bg.mode) + " effect=" + bg.effectName);
+				// Background-only proof: the hidden Reset drops every fragment
+				// with no fade, so the next frame is the desaturated world alone
+				// (a fragment born that frame would still be at ~0 opacity).
+				sceneManager.dispatchSceneCommand(SceneCommand::Reset);
+				runOneFrame(dt);
+				int fragmentsAfterReset = runtime_.currentHudFrameData().scene.activeItemCount.value_or(0);
+				logResult("Background-only frame after Reset has no established fragments", fragmentsAfterReset <= 1,
+					"fragments=" + ofToString(fragmentsAfterReset));
+				captureScreenshot("background_only");
+
+				effectTrackLastMedia_ = currentMediaId();
+				effectTrackLastEffect_ = blob.fragmentTreatmentIdForTesting();
+				effectStep_ = 0;
+				beginEffectStep("step 0");
+				phase_ = Phase::EffectStep;
 			}
+			break;
+		}
+
+		case Phase::EffectStep:
+		case Phase::EffectResume: {
+			runOneFrame(dt);
+			trackEffectPerFrame();
+			framesInPhase_++;
+			if (effectStepFramesSinceMediaChange_ < 0 && currentMediaId() != effectStepMediaBefore_) {
+				effectStepFramesSinceMediaChange_ = 0;
+			} else if (effectStepFramesSinceMediaChange_ >= 0) {
+				effectStepFramesSinceMediaChange_++;
+			}
+
+			bool settled = effectStepSettled(effectStepFramesSinceMediaChange_);
+			bool timedOut = framesInPhase_ >= kEffectStepTimeoutFrames;
+			if (!settled && !timedOut) {
+				break;
+			}
+
+			BlobProductionScene & blob = runtime_.blobSceneForTesting();
+			const std::string effect = blob.fragmentTreatmentIdForTesting();
+			bool original = effect == "original";
+			std::string label = phase_ == Phase::EffectResume ? "resume" : "step " + ofToString(effectStep_);
+			int changes = blob.fragmentEffectChangeCountForTesting() - effectStepChangesBefore_;
+			int fragments = runtime_.currentHudFrameData().scene.activeItemCount.value_or(0);
+
+			logResult("Effect policy " + label + ": media changed and fragments settled before timeout", settled,
+				"frames=" + ofToString(framesInPhase_) + " fragments=" + ofToString(fragments));
+			logResult("Effect policy " + label + ": exactly one effect selection for one media change", changes == 1,
+				"changes=" + ofToString(changes) + " " + effectStepEffectBefore_ + " -> " + effect);
+			logResult("Effect policy " + label + ": selected effect is curated and differs from the previous one",
+				effect != effectStepEffectBefore_ && isCuratedTreatmentId(effect), effect);
+			logResult("Effect policy " + label + ": region effectName matches the treatment (empty = unshaded Original)",
+				blob.fragmentEffectForTesting() == (original ? std::string() : effect), "effectName='" + blob.fragmentEffectForTesting() + "'");
+			// Original runs no region effect, so it reports no region entry;
+			// the desaturated background is always reported.
+			bool anyRegion = false;
+			bool selectedRegion = false;
+			bool backgroundReported = false;
+			for (const std::string & e : runtime_.currentHudFrameData().scene.activeEffects) {
+				anyRegion = anyRegion || e.rfind("region: ", 0) == 0;
+				selectedRegion = selectedRegion || e == "region: " + effect;
+				backgroundReported = backgroundReported || e == "background: " + blobeffects::backgroundEffectId();
+			}
+			bool regionHonest = original ? !anyRegion : selectedRegion;
+			logResult("Effect policy " + label + ": SceneHudStatus.activeEffects reports the treatment and desaturated background",
+				regionHonest && backgroundReported, effect);
+			logResult("Effect policy " + label + ": HudFrameData.effects stays std::nullopt (no Blob activity producer)",
+				!runtime_.currentHudFrameData().effects.has_value(), "");
+			captureScreenshot("effect_" + (phase_ == Phase::EffectResume ? std::string("resume") : ofToString(effectStep_)) + "_" + effect);
+
+			if (phase_ == Phase::EffectResume) {
+				logResult("No fragment-effect change without a media change, across the whole effect-policy proof",
+					effectChangesWithoutMediaChange_ == 0, "violations=" + ofToString(effectChangesWithoutMediaChange_));
+				phase_ = Phase::Shutdown;
+				break;
+			}
+
+			effectStep_++;
+			// One full lap plus one, so the wrap back to the first effect is exercised.
+			if (effectStep_ <= static_cast<int>(blobeffects::curatedFragmentTreatments().size())) {
+				beginEffectStep("step " + ofToString(effectStep_));
+			} else {
+				phase_ = Phase::EffectInactive;
+			}
+			break;
+		}
+
+		case Phase::EffectInactive: {
+			BlobProductionScene & blob = runtime_.blobSceneForTesting();
+			sceneManager.deactivateScene();
+			std::string effectBefore = blob.fragmentTreatmentIdForTesting();
+			int changesBefore = blob.fragmentEffectChangeCountForTesting();
+			bool navigated = sceneManager.dispatchSceneCommand(SceneCommand::NextMedia)
+				|| sceneManager.dispatchSceneCommand(SceneCommand::PreviousMedia);
+			logResult("Effect policy inactive: media navigation accepted while deactivated", navigated, "");
+			logResult("Effect policy inactive: no effect selection while deactivated",
+				blob.fragmentTreatmentIdForTesting() == effectBefore && blob.fragmentEffectChangeCountForTesting() == changesBefore,
+				effectBefore + " -> " + blob.fragmentTreatmentIdForTesting());
+
+			// Reactivate without another navigation: the catch-up change must
+			// happen exactly once, on the first active update that sees it.
+			sceneManager.activateScene();
+			effectStepChangesBefore_ = changesBefore;
+			effectStepEffectBefore_ = effectBefore;
+			effectStepMediaBefore_ = effectTrackLastMedia_;
+			effectStepFramesSinceMediaChange_ = -1;
+			framesInPhase_ = 0;
+			phase_ = Phase::EffectResume;
 			break;
 		}
 

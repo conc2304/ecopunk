@@ -4,6 +4,8 @@
 #include "HudOverlayDialState.h"
 #include <functional>
 
+namespace fragmenttrail {
+
 // Pure decision/glue layer between FTFragmentPool's real lifecycle events
 // and HudOverlayLayer's organism/accent triggers — owns no rendering.
 // Registers itself with the pool's spawn/evict callbacks in setup(); polls
@@ -51,3 +53,5 @@ private:
 	bool tryOrganism(const std::function<void()>& fire, bool isHandshake);
 	float speedScale() const;
 };
+
+} // namespace fragmenttrail

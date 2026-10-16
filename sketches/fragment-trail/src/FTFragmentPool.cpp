@@ -1,5 +1,7 @@
 #include "FTFragmentPool.h"
 
+namespace fragmenttrail {
+
 namespace {
 const std::vector<std::string> kEffectPool = {
 	"desaturate", "invert", "recolor", "threshold", "dither", "solarize", "scanlines", "channelshift",
@@ -175,3 +177,5 @@ void FTFragmentPool::draw(TimeOffsetVideoBuffer& videoBuffer, ShaderLibrary& sha
 	}
 	ofDisableAlphaBlending();
 }
+
+} // namespace fragmenttrail

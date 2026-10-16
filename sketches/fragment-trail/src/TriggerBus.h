@@ -4,6 +4,8 @@
 #include <functional>
 #include <map>
 
+namespace fragmenttrail {
+
 enum class TriggerID {
     EDGE_PROXIMITY,
     VELOCITY_HIGH,
@@ -65,3 +67,5 @@ private:
     static constexpr float DWELL_SECS   =   6.0f;
     static constexpr float COOLDOWN_SEC =   1.5f;
 };
+
+} // namespace fragmenttrail

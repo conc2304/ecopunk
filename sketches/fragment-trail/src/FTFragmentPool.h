@@ -3,11 +3,12 @@
 #include "ofMain.h"
 #include "FTFragment.h"
 #include "CrosshairSystem.h"
-#include "TimeOffsetVideoBuffer.h"
-#include "ShaderLibrary.h"
+#include "FTVideoTypes.h"
 #include <vector>
 #include <string>
 #include <functional>
+
+namespace fragmenttrail {
 
 // Owns the whole population of fragments: spawn throttle (Section 1), age
 // decay + hard-cap eviction, and Mode-A playhead acquire/release against
@@ -53,6 +54,8 @@ public:
 	// retain a reference/pointer past the current frame: push_back()/erase()
 	// elsewhere in this class can reallocate or invalidate it.
 	const std::vector<FTFragment>& getFragments() const { return fragments; }
+	// Total fragments spawned since setup() — monotonic within one setup().
+	int getSpawnCount() const { return spawnCounter; }
 
 	// Fired synchronously from spawnOne()/the hard-cap eviction loop below —
 	// same "let an external consumer react to a real event" pattern as
@@ -89,3 +92,5 @@ private:
 	void spawnOne(glm::vec2 pos, FTContentMode mode, const std::string& modeCEffectName, TimeOffsetVideoBuffer& videoBuffer);
 	std::string makeHexLabel();
 };
+
+} // namespace fragmenttrail

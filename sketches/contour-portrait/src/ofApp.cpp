@@ -1,5 +1,6 @@
 #include "ofApp.h"
 #include "ContourPresets.h"
+#include "../../../shared/src/video-playback/SharedMediaRoot.h"
 
 namespace {
 	const int kCanvasWidth = 1280;
@@ -78,12 +79,11 @@ void ofApp::applyInputMode(int mode) {
 	} else if (mode == ContourSource::INPUT_VIDEO) {
 		// Sketch-local bin/data/media/ wins if the user drops a clip there
 		// (e.g. a real portrait/silhouette test clip); otherwise falls back
-		// to the shared clip pool every other sketch in this repo already
-		// symlinks in (bin/data/sharedMedia -> blueprint_emergence's media
-		// folder) so this sketch has something to play out of the box.
+		// to the canonical shared library (assets/shared/media/, see
+		// SharedMediaRoot.h) so this sketch has something to play out of the box.
 		ofDirectory localMedia(ofToDataPath("media", true));
 		bool localHasClips = localMedia.exists() && localMedia.listDir() > 0;
-		std::string dir = localHasClips ? ofToDataPath("media", true) : ofToDataPath("sharedMedia", true);
+		std::string dir = localHasClips ? ofToDataPath("media", true) : ecopunk::sharedMediaRoot();
 		source.applyMode(ContourSource::INPUT_VIDEO, "", dir, 0);
 	} else {
 		source.applyMode(ContourSource::INPUT_CAMERA, "", "", 0);

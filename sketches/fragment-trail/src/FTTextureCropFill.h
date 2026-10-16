@@ -5,6 +5,8 @@
 #include "ofGraphics.h"
 #include "ofMath.h"
 
+namespace fragmenttrail {
+
 // "background-size: cover" for ofTexture — crops the longer axis, centered,
 // never stretches. Copied from temporal-fields/src/TFTextureCropFill.h (same
 // need here: FTBackgroundLayer's video/image sections aren't canvas-proportional
@@ -35,3 +37,5 @@ inline void ftDrawTextureCroppedToFill(const ofTexture& tex, const ofRectangle& 
 	tex.drawSubsection(destRect.x, destRect.y, destRect.width, destRect.height, src.x, src.y, src.width, src.height);
 	ofSetColor(255);
 }
+
+} // namespace fragmenttrail

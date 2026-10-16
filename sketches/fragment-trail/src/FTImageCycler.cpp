@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <utility>
 
+namespace fragmenttrail {
+
 void FTImageCycler::setup(const std::string& folderPath) {
 	ofDirectory dir;
 	dir.allowExt("jpg");
@@ -79,3 +81,5 @@ void FTImageCycler::draw(const ofRectangle& destRect, float alpha) {
 	}
 	ftDrawTextureCroppedToFill(currentImg.getTexture(), destRect, alpha * (1.0f - fadeProgress));
 }
+
+} // namespace fragmenttrail

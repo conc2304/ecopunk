@@ -2,6 +2,8 @@
 #include "ofMain.h"
 #include <array>
 
+namespace fragmenttrail {
+
 // Trimmed copy of quadrant-crosshair/src/LFOBank.h — CrosshairSystem::update()
 // requires an LFOBank& for its line-width pulse (LFO_CROSSHAIR_PULSE), but
 // none of quadrant-crosshair's other lanes (thresholds, dither scale, scan
@@ -27,3 +29,5 @@ private:
 	std::array<Lane, LFO_COUNT> lanes;
 	float timeAccum = 0.f;
 };
+
+} // namespace fragmenttrail

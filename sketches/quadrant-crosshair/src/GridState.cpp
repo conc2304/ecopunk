@@ -1,4 +1,7 @@
 #include "GridState.h"
+#include "QCCanvas.h"
+
+namespace quadrantcrosshair {
 
 void GridState::setup() {
     grid.fill(0.f);
@@ -6,7 +9,7 @@ void GridState::setup() {
 }
 
 void GridState::update(float cx, float cy, float dt, float decayRate) {
-    float W   = ofGetWidth(),  H  = ofGetHeight();
+    float W   = canvasWidth(),  H  = canvasHeight();
     int   col = (int)ofMap(cx, 0, W, 0, COLS - 1, true);
     int   row = (int)ofMap(cy, 0, H, 0, ROWS - 1, true);
 
@@ -22,3 +25,5 @@ void GridState::uploadTexture() {
         bytes[i] = (uint8_t)(grid[i] * 255.f);
     gridTex.loadData(bytes.data(), COLS, ROWS, GL_LUMINANCE);
 }
+
+} // namespace quadrantcrosshair
