@@ -44,8 +44,8 @@ const std::string& effectDisplayLabel(const HudFrameData& frame, const std::stri
 
 // The production presentation allowlist, kept as its two provenance parts so
 // tooling (HudArtReferenceExporter) can tell them apart without a second list.
-// Both together remain a permitted HUD-006 subset — no geometry or Blueprint
-// identity change.
+// All parts together remain a permitted HUD-006 subset — no geometry or
+// Blueprint identity change.
 //
 // Part 1: this task's §13 first vertical slice (13 regions with media_viewport).
 const std::unordered_set<std::string>& originalSliceRegions() {
@@ -65,6 +65,15 @@ const std::unordered_set<std::string>& originalSliceRegions() {
 const std::unordered_set<std::string>& livingHudRegions() {
 	static const std::unordered_set<std::string> regions = {
 		"universal.effect_summary", "universal.timing",
+	};
+	return regions;
+}
+
+// Part 3: HUD Clock v0.1 (16 regions in total) — flexible.secondary_b
+// (runtime-owned HudFrameData::wallClock; Hide when no valid snapshot).
+const std::unordered_set<std::string>& clockRegions() {
+	static const std::unordered_set<std::string> regions = {
+		"flexible.secondary_b",
 	};
 	return regions;
 }
@@ -103,7 +112,8 @@ void HudWireframeRenderer::setScene(const std::string& sceneId) {
 }
 
 bool HudWireframeRenderer::regionInMinimalSlice(const std::string& regionId) {
-	return originalSliceRegions().count(regionId) != 0 || livingHudRegions().count(regionId) != 0;
+	return originalSliceRegions().count(regionId) != 0 || livingHudRegions().count(regionId) != 0
+		|| clockRegions().count(regionId) != 0;
 }
 
 bool HudWireframeRenderer::regionInOriginalMinimalSlice(const std::string& regionId) {

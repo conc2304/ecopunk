@@ -251,7 +251,32 @@ void ExperienceRuntime::reallocateSceneFboForActiveSceneIfNeeded() {
 									 << " for incoming scene \"" << lastSceneManagerStatus_.activeSceneId << "\"";
 }
 
+namespace {
+// RT-008 diagnostic switches (off by default; read every frame so the RT-004
+// ab-compact driver can toggle them in-process). Measurement only — they
+// change what is rendered and must never ship as an optimization.
+//   EXPERIENCE_RUNTIME_DIAG_SCENE_CONTROL=clear  scene FBO cleared, active
+//     scene not drawn (scene/video update() still run; draw-time work such as
+//     Temporal's lazy playhead uploads is skipped with the draw).
+//   EXPERIENCE_RUNTIME_DIAG_HUD_OMIT=1  HUD update/draw skipped; the window
+//     shows only the background.
+bool diagSwitchOn(const char* name, const char* value, bool& last) {
+	const char* v = std::getenv(name);
+	const bool on = v != nullptr && std::string(v) == value;
+	if (on != last) {
+		ofLogNotice("ExperienceRuntime") << "RT-008 diagnostic " << name << " " << (on ? "ON" : "off");
+		last = on;
+	}
+	return on;
+}
+}
+
 void ExperienceRuntime::draw() {
+	static bool lastSceneControlClear = false;
+	static bool lastHudOmit = false;
+	const bool diagSceneClear = diagSwitchOn("EXPERIENCE_RUNTIME_DIAG_SCENE_CONTROL", "clear", lastSceneControlClear);
+	const bool diagHudOmit = diagSwitchOn("EXPERIENCE_RUNTIME_DIAG_HUD_OMIT", "1", lastHudOmit);
+
 	// RT-003: the incoming scene's first active frame — make the runtime-owned
 	// scene FBO match its native size before it draws.
 	if (sceneManager_.activationSucceededThisFrame()) {
@@ -272,7 +297,7 @@ void ExperienceRuntime::draw() {
 		// regardless of what the scene left behind. Drawing must not trigger
 		// another status pull — drawActiveScene() only calls
 		// drawToCurrentTarget(), never hudStatus().
-		{
+		if (!diagSceneClear) {
 			SceneRenderGuard guard(sceneFbo_);
 			RT004_SCOPE("SceneManager.drawActiveScene");
 			sceneManager_.drawActiveScene();
@@ -318,6 +343,9 @@ void ExperienceRuntime::draw() {
 	// snapshot, transported unchanged. std::nullopt here means "no
 	// snapshot available," not "zero effects" — see HudFrameData.h.
 	currentHudFrameData_.effects = sceneManager_.currentEffectActivityStatus();
+	// HUD Clock v0.1: runtime-owned OS wall clock — one coherent local-time
+	// conversion per distinct second (see WallClockSampler.h), never a scene's.
+	currentHudFrameData_.wallClock = wallClockSampler_.sample(std::chrono::system_clock::now());
 	presentationCounters_.hudFrameDataAssemblies++;
 
 	// Step 16: hand the ONE assembled HudFrameData to the compositor
@@ -337,9 +365,11 @@ void ExperienceRuntime::draw() {
 	// nothing else changes).
 	long long hudAllocBefore = alloccounter::newCount();
 	long long hudDeallocBefore = alloccounter::deleteCount();
-	{ RT004_SCOPE("Hud.update"); hudCompositorBridge_.update(lastDt_, currentHudFrameData_); }
-	{ RT004_SCOPE("Hud.draw"); hudCompositorBridge_.draw(); }
-	presentationCounters_.hudDraws++;
+	if (!diagHudOmit) {
+		{ RT004_SCOPE("Hud.update"); hudCompositorBridge_.update(lastDt_, currentHudFrameData_); }
+		{ RT004_SCOPE("Hud.draw"); hudCompositorBridge_.draw(); }
+		presentationCounters_.hudDraws++;
+	}
 	lastHudOnlyNewCount_ = alloccounter::newCount() - hudAllocBefore;
 	lastHudOnlyDeleteCount_ = alloccounter::deleteCount() - hudDeallocBefore;
 

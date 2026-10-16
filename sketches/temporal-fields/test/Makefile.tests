@@ -25,14 +25,19 @@ CXX ?= c++
 CXXFLAGS = -std=c++17 -Wall -Wextra -I$(OF_ROOT)/libs/json/include
 SRC = tf_timeline_tests.cpp ../src/TFPresetTimeline.cpp
 BIN = tf_timeline_tests
+AMBIENT_BIN = tf_ambient_selection_tests
 
 .PHONY: test clean
 
-test: $(BIN)
+test: $(BIN) $(AMBIENT_BIN)
 	./$(BIN)
+	./$(AMBIENT_BIN)
 
 $(BIN): $(SRC) ../src/TFPresetTimeline.h ../src/TFTimelineBinding.h ../src/TFTimelineEasing.h
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(BIN)
 
+$(AMBIENT_BIN): tf_ambient_selection_tests.cpp ../src/TFAmbientSelection.h
+	$(CXX) $(CXXFLAGS) tf_ambient_selection_tests.cpp -o $(AMBIENT_BIN)
+
 clean:
-	rm -f $(BIN)
+	rm -f $(BIN) $(AMBIENT_BIN)

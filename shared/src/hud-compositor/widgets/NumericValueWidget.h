@@ -14,6 +14,10 @@ public:
 	HudWidgetType widgetType() const override { return HudWidgetType::NumericValue; }
 	void draw(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const override;
 
+	// Smallest caption baseline offset from the region top that keeps the
+	// 8x13 bitmap font's cap height (~9 px above baseline) inside the region.
+	static constexpr float kCaptionMinBaselineOffset = 11.0f;
+
 private:
 	mutable HudTextMetricsCache textCache_;
 };

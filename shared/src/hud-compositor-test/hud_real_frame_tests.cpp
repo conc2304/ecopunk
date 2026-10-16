@@ -617,7 +617,135 @@ void test_real_exhaustive_canonical_coverage() {
 
 } // namespace
 
+// ---------------------------------------------------------------------
+// HUD Clock v0.1 — runtime.clock.* against the real HudFrameData::wallClock.
+// ---------------------------------------------------------------------
+namespace {
+
+WallClockStatus clockAt(int64_t unixSeconds, int32_t offset, const std::string& abbreviation, std::optional<bool> isDst) {
+	WallClockStatus c;
+	c.unixSeconds = unixSeconds;
+	c.utcOffsetSeconds = offset;
+	c.timezoneAbbreviation = abbreviation;
+	c.isDst = isDst;
+	return c;
+}
+
+} // namespace
+
+void test_real_clock_missing_and_invalid_snapshot() {
+	HudRealFrameResolver resolver;
+	HudFrameData frame = makeMinimalRealFrame();
+
+	// Absent snapshot: both sources known, typed, and missing.
+	auto secs = resolver.resolve("runtime.clock.local_seconds", frame);
+	auto label = resolver.resolve("runtime.clock.local_label", frame);
+	HUD_CHECK(secs && !secs->present && secs->valueType == HudSourceValueType::DurationSeconds);
+	HUD_CHECK(label && !label->present && label->valueType == HudSourceValueType::Text);
+
+	// Snapshots that cannot be a real local time also resolve missing.
+	frame.wallClock = clockAt(0, 90000, "BAD", std::nullopt); // offset >= one day
+	HUD_CHECK(!resolver.resolve("runtime.clock.local_seconds", frame)->present);
+	HUD_CHECK(!resolver.resolve("runtime.clock.local_label", frame)->present);
+	frame.wallClock = clockAt(hudclock::kMaxUnixSeconds + 1, 0, "UTC", false); // year > 9999
+	HUD_CHECK(!resolver.resolve("runtime.clock.local_seconds", frame)->present);
+	HUD_CHECK(!resolver.resolve("runtime.clock.local_label", frame)->present);
+	HUD_CHECK(resolver.clockTextCacheForTesting().labelBuilds() == 0); // nothing formatted from bad data
+}
+
+void test_real_clock_values_and_dst() {
+	HudRealFrameResolver resolver;
+	HudFrameData frame = makeMinimalRealFrame();
+
+	// 2026-10-15T12:34:56Z in CEST.
+	frame.wallClock = clockAt(1792067696, 7200, "CEST", true);
+	auto secs = resolver.resolve("runtime.clock.local_seconds", frame);
+	auto label = resolver.resolve("runtime.clock.local_label", frame);
+	HUD_CHECK(secs && secs->present && secs->numberValue == 14.0f * 3600 + 34 * 60 + 56); // time of day, not epoch
+	HUD_CHECK(label && label->present);
+	HUD_CHECK_EQ_STR(label->textValue, "THU 15 OCT 2026 CEST");
+
+	// New York fall back, exactly as the OS reports it on each side.
+	frame.wallClock = clockAt(1793512799, -14400, "EDT", true); // 01:59:59 EDT
+	HUD_CHECK(resolver.resolve("runtime.clock.local_seconds", frame)->numberValue == 1 * 3600 + 59 * 60 + 59);
+	HUD_CHECK_EQ_STR(resolver.resolve("runtime.clock.local_label", frame)->textValue, "SUN 01 NOV 2026 EDT");
+	frame.wallClock = clockAt(1793512800, -18000, "EST", false); // 01:00:00 EST
+	HUD_CHECK(resolver.resolve("runtime.clock.local_seconds", frame)->numberValue == 1 * 3600);
+	HUD_CHECK_EQ_STR(resolver.resolve("runtime.clock.local_label", frame)->textValue, "SUN 01 NOV 2026 EST");
+
+	// Spring forward: 01:59:59 EST -> 03:00:00 EDT.
+	frame.wallClock = clockAt(1772953200, -14400, "EDT", true);
+	HUD_CHECK(resolver.resolve("runtime.clock.local_seconds", frame)->numberValue == 3 * 3600);
+	HUD_CHECK_EQ_STR(resolver.resolve("runtime.clock.local_label", frame)->textValue, "SUN 08 MAR 2026 EDT");
+
+	// Zone without a usable abbreviation: numeric offset, never empty.
+	frame.wallClock = clockAt(1791547200, 20700, "", std::nullopt);
+	HUD_CHECK_EQ_STR(resolver.resolve("runtime.clock.local_label", frame)->textValue, "FRI 09 OCT 2026 +0545");
+}
+
+// Same snapshot -> identical clock values regardless of which scene owns the
+// frame, its health, or whether it publishes semantic data at all.
+void test_real_clock_scene_independent() {
+	const WallClockStatus clock = clockAt(1792067696, 19800, "IST", false);
+	HudRealFrameResolver resolver;
+
+	struct SceneCase { const char* id; SceneHealth health; };
+	const SceneCase cases[] = {
+		{"blob-region-prototype", SceneHealth::Ready},
+		{"temporal-fields", SceneHealth::Degraded},
+		{"blueprint_emergence", SceneHealth::Loading},
+		{"", SceneHealth::Failed},
+	};
+	for (const auto& sc : cases) {
+		HudFrameData frame = makeMinimalRealFrame();
+		frame.scene.sceneId = sc.id;
+		frame.sceneManager.activeSceneId = sc.id;
+		frame.scene.health = sc.health;
+		frame.scene.semantic.reset();
+		frame.wallClock = clock;
+		auto secs = resolver.resolve("runtime.clock.local_seconds", frame);
+		auto label = resolver.resolve("runtime.clock.local_label", frame);
+		HUD_CHECK(secs && secs->present && secs->numberValue == 18.0f * 3600 + 4 * 60 + 56);
+		HUD_CHECK(label && label->present);
+		HUD_CHECK_EQ_STR(label->textValue, "THU 15 OCT 2026 IST");
+	}
+	HUD_CHECK(resolver.clockTextCacheForTesting().labelBuilds() == 1); // one build served all four scenes
+}
+
+void test_real_clock_label_cache_through_resolver() {
+	HudRealFrameResolver resolver;
+	HudFrameData frame = makeMinimalRealFrame();
+	const int64_t t = 1792065600; // 2026-10-15T12:00:00Z
+
+	// 120 frames at 60 fps inside one second, then later seconds of the same day.
+	frame.wallClock = clockAt(t, 7200, "CEST", true);
+	for (int i = 0; i < 120; ++i) resolver.resolve("runtime.clock.local_label", frame);
+	frame.wallClock = clockAt(t + 3599, 7200, "CEST", true);
+	resolver.resolve("runtime.clock.local_label", frame);
+	HUD_CHECK(resolver.clockTextCacheForTesting().labelBuilds() == 1);
+
+	// OS timezone reconfigured (Berlin -> Kolkata) at the same instant.
+	frame.wallClock = clockAt(t, 19800, "IST", false);
+	HUD_CHECK_EQ_STR(resolver.resolve("runtime.clock.local_label", frame)->textValue, "THU 15 OCT 2026 IST");
+	HUD_CHECK(resolver.clockTextCacheForTesting().labelBuilds() == 2);
+
+	// Wall clock corrected back a day.
+	frame.wallClock = clockAt(t - 86400, 19800, "IST", false);
+	HUD_CHECK_EQ_STR(resolver.resolve("runtime.clock.local_label", frame)->textValue, "WED 14 OCT 2026 IST");
+	HUD_CHECK(resolver.clockTextCacheForTesting().labelBuilds() == 3);
+
+	// Snapshot lost, then restored: missing in between, correct afterwards.
+	frame.wallClock.reset();
+	HUD_CHECK(!resolver.resolve("runtime.clock.local_label", frame)->present);
+	frame.wallClock = clockAt(t - 86400, 19800, "IST", false);
+	HUD_CHECK_EQ_STR(resolver.resolve("runtime.clock.local_label", frame)->textValue, "WED 14 OCT 2026 IST");
+}
+
 int main() {
+	test_real_clock_missing_and_invalid_snapshot();
+	test_real_clock_values_and_dst();
+	test_real_clock_scene_independent();
+	test_real_clock_label_cache_through_resolver();
 	test_real_identity_and_health();
 	test_real_semantic_present_vs_absent();
 	test_real_metric_lookup();

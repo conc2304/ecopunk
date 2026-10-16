@@ -1,5 +1,7 @@
 #include "HudFormattingService.h"
 
+#include "HudClockFormat.h"
+
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
@@ -126,6 +128,14 @@ std::string HudFormattingService::format(const HudResolvedValue& value, HudForma
 			// coincidence.
 			if (value.valueType == HudSourceValueType::Text) return value.textValue;
 			return vocabulary.resolve(sceneId, value.textValue);
+		case HudFormatKind::ClockTime: {
+			// One binding format covers every role: the clock binding's Text
+			// label role is already-final text, only the time role is formatted.
+			if (value.valueType == HudSourceValueType::Text) return value.textValue;
+			// Presentation memo: rebuilt only when the displayed minute changes.
+			static hudclock::ClockTextCache cache;
+			return cache.time(static_cast<int64_t>(std::floor(value.numberValue)));
+		}
 	}
 	return "";
 }

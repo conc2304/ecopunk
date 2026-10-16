@@ -269,6 +269,26 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 		return HudResolvedValue::missing(staticType ? *staticType : HudSourceValueType::Identifier, HudDataClass::Literal);
 	}
 
+	// -- HUD Clock v0.1: runtime-owned HudFrameData::wallClock. Both sources
+	// derive from the same snapshot; an absent snapshot, or one whose instant/
+	// offset could not be a real local time, resolves MISSING — never a
+	// guessed time. local_seconds is time of day, never epoch seconds (float
+	// would lose ~2 min of precision at today's epoch values).
+	if (sourceId == "runtime.clock.local_seconds" || sourceId == "runtime.clock.local_label") {
+		const bool isSeconds = sourceId == "runtime.clock.local_seconds";
+		const HudSourceValueType type = isSeconds ? HudSourceValueType::DurationSeconds : HudSourceValueType::Text;
+		if (!frame.wallClock || !hudclock::isValidInstant(frame.wallClock->unixSeconds, frame.wallClock->utcOffsetSeconds)) {
+			return HudResolvedValue::missing(type, HudDataClass::Literal);
+		}
+		const WallClockStatus& clock = *frame.wallClock;
+		if (isSeconds) {
+			return HudResolvedValue::number(type,
+				static_cast<float>(hudclock::localSecondsOfDay(clock.unixSeconds, clock.utcOffsetSeconds)), HudDataClass::Literal);
+		}
+		return HudResolvedValue::text(
+			clockText_.label(clock.unixSeconds, clock.utcOffsetSeconds, clock.timezoneAbbreviation, clock.isDst));
+	}
+
 	// -- Controls: derived, never a real dedicated field (see this file's
 	// header comment / this task's §5). Three-state distinction:
 	//   - UNSUPPORTED (this task's "unsupported"): no real capability

@@ -102,6 +102,20 @@ ScenePresentationProfile buildUniversalProfile() {
 		p.bindings.push_back(b);
 	}
 
+	// -- HUD Clock v0.1 (Architecture-approved): runtime-owned local wall
+	// clock in the frozen flexible.secondary_b region (NumericValue is an
+	// accepted widget there). value = local time of day -> "14:32"; the
+	// contracted optional label role carries "THU 15 OCT 2026 CEST". Hide:
+	// no valid snapshot -> the region stays recessed. Read-only — no
+	// "enabled" role, so focus navigation never treats it as a control.
+	{
+		auto b = makeBinding("universal.clock.value", "flexible.secondary_b",
+			HudWidgetType::NumericValue, HudMissingPolicy::Hide, HudFormatKind::ClockTime);
+		b.addSource({"value", "runtime.clock.local_seconds", true});
+		b.addSource({"label", "runtime.clock.local_label", false});
+		p.bindings.push_back(b);
+	}
+
 	// -- Traces (deferred/secondary per §13; still defined here) --------
 	{
 		auto b = makeBinding("universal.activity_trace.spark", "universal.activity_trace",

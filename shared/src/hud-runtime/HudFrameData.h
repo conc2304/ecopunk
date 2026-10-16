@@ -40,6 +40,10 @@
 // deliberately undefined/unadded here — still-unapproved concepts outside
 // this increment's scope.
 //
+// UPDATED for HUD Clock v0.1 (Architecture-approved): adds one additive
+// `std::optional<WallClockStatus> wallClock` field — see the member's own
+// comment and WallClockStatus.h.
+//
 // Lives in shared/src/hud-runtime/ rather than shared/src/hud-compositor/
 // (an existing, separate, in-progress HUD Runtime workstream directory —
 // see this task's own implementation report, "Newly discovered risks")
@@ -56,6 +60,7 @@
 #include "SceneContract.h"
 #include "VideoPlaybackStatus.h"
 #include "EffectActivityStatus.h"
+#include "WallClockStatus.h"
 
 #include <optional>
 
@@ -81,4 +86,11 @@ struct HudFrameData {
 	// shared/src/video-effects/knowledge/EffectActivityStatus.h and this
 	// file's header comment above (DEC-015/DEC-016).
 	std::optional<videoeffects::EffectActivityStatus> effects;
+
+	// HUD Clock v0.1 (approved, docs/reviews/hud-clock-v0.1-contract-change-
+	// proposal.md): the runtime-owned OS wall-clock snapshot, sampled by
+	// ExperienceRuntime (WallClockSampler.h), never by a scene. Absent
+	// (nullopt) when no valid OS sample/conversion exists this frame —
+	// never a fabricated or fixed-offset time.
+	std::optional<WallClockStatus> wallClock;
 };

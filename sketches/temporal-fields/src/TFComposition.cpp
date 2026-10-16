@@ -154,6 +154,7 @@ void TFComposition::switchToPattern(TFPatternType type) {
 	activeType = type;
 	cycleSeed = static_cast<int>(ofRandom(1, 1000000));
 	srand(cycleSeed);
+	cycleGeneration++;
 
 	ofLogNotice("TFComposition") << "pattern -> " << tfPatternTypeName(activeType) << " seed=" << cycleSeed;
 

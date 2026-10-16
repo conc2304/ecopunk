@@ -37,7 +37,8 @@ enum class HudFormatKind : uint8_t {
 	Duration,
 	Bytes,
 	Temperature,
-	VocabularyValue
+	VocabularyValue,
+	ClockTime // HUD Clock v0.1: local seconds-of-day -> "HH:MM"; Text values pass through
 };
 
 // A named role within one binding ("primary", "label", "secondary", …) —

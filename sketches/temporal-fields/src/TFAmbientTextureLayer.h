@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include "ofImage.h"
@@ -110,12 +111,44 @@ class TFAmbientTextureLayer {
 		void drawUnderlay() const;
 		void drawOverlay() const;
 
+		// TEMP-008B: production draws ONE selected underlay and ONE selected
+		// overlay per composition cycle (each with its own authored opacity
+		// and blend mode). selectForCycle() is idempotent per generation;
+		// callers pass TFComposition::getCycleGeneration()/getCycleSeed()
+		// before drawing. EXPERIENCE_RUNTIME_TEMPORAL_AMBIENT_MODE=legacy-stack
+		// (read per draw, A/B and developer preview only) restores the
+		// previous every-layer stack.
+		enum class Mode { CyclePair, LegacyStack };
+		static Mode currentMode();
+		void selectForCycle(uint64_t generation, int cycleSeed);
+		int selectedUnderlay() const { return selectedUnderlay_; } // index into textureAt(), -1 = none
+		int selectedOverlay() const { return selectedOverlay_; }
+		uint64_t selectionGeneration() const { return selectionGeneration_; }
+		size_t layerCount(TFBackgroundTexture::Layer layer) const;
+		// Draw calls issued by the most recent drawUnderlay()/drawOverlay().
+		int lastUnderlayDrawCalls() const { return lastUnderlayDraws_; }
+		int lastOverlayDrawCalls() const { return lastOverlayDraws_; }
+		// Test-only: every layer of both groups regardless of mode/selection
+		// (texture residency integrity checks, e.g. TemporalWarmHarness).
+		void drawAllLayersForTesting() const;
+
 		// Mounted into TFParameterPanel's ofxGui panel by the caller --
 		// this class only builds the group, it doesn't know about ofxPanel.
 		ofParameterGroup& getParamGroup() { return group; }
 
 	private:
-		void drawLayer(TFBackgroundTexture::Layer layer) const;
+		void drawLayer(TFBackgroundTexture::Layer layer, bool allLayers) const;
+		void drawTexture(const TFBackgroundTexture& tex) const;
+		std::string selectedId(int index) const;
+
+		std::vector<int> underlayIndices_; // indices into textures, discovery order
+		std::vector<int> overlayIndices_;
+		int selectedUnderlay_ = -1;
+		int selectedOverlay_ = -1;
+		uint64_t selectionGeneration_ = 0;
+		bool hasSelection_ = false;
+		mutable int lastUnderlayDraws_ = 0;
+		mutable int lastOverlayDraws_ = 0;
 
 		// Never copied or reallocated after setup() (reserved up front): an
 		// ofImage copy re-creates its texture from its CPU pixels, which

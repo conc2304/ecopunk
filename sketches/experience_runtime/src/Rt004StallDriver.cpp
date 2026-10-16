@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <fstream>
 #include <sstream>
 
 bool Rt004StallDriver::isRequested() {
@@ -62,6 +63,63 @@ Rt004StallDriver::Rt004StallDriver(ExperienceRuntime & runtime)
 		   << " decodeMaxMs=" << decodeMax << " uploadMaxMs=" << uploadMax;
 		log(os.str());
 		script_.push_back({ 1.0f, 0, "exit" });
+		return;
+	}
+	if (scriptName != nullptr && std::string(scriptName) == "ab-steady") {
+		// TEMP-008 matched-workload A/B: like ab-compact, but windows start
+		// only after Temporal's history has had time to fill (ab-compact's
+		// A window overlaps the fill, so A and B saw different history
+		// depths), and A/B windows are interleaved so thermal drift and
+		// pattern cycling spread over both. Each window is summarised as a
+		// LABEL-WINDOW line (p50/p95/p99, history depth, RSS, CmaFree).
+		// Run with EXPERIENCE_RUNTIME_VIDEO_DWELL=900,900 (no media change).
+		const char* ab = std::getenv("EXPERIENCE_RUNTIME_STALL_DRIVER_AB_ENV");
+		const std::string abEnv = ab ? ab : "";
+		const std::string abOff = abEnv.substr(0, abEnv.find('=') + 1);
+		float warmup = 60.0f;
+		if (const char* s = std::getenv("EXPERIENCE_RUNTIME_STALL_DRIVER_WARMUP_SECONDS")) warmup = std::max(10.0f, static_cast<float>(std::atof(s)));
+		float windowSeconds = 20.0f;
+		if (const char* s = std::getenv("EXPERIENCE_RUNTIME_STALL_DRIVER_STEADY_SECONDS")) windowSeconds = std::max(5.0f, static_cast<float>(std::atof(s)));
+		int pairs = 3;
+		if (const char* s = std::getenv("EXPERIENCE_RUNTIME_STALL_DRIVER_AB_PAIRS")) pairs = std::max(1, std::atoi(s));
+		labelWindows_ = true;
+		script_.push_back({ 3.0f, ']', "Blob->Temporal (first activation)" });
+		script_.push_back({ 3.0f, kMarkWindow, "warmup" });
+		float t = 3.0f + warmup;
+		for (int i = 0; i < pairs; i++) {
+			for (int b = 0; b < 2; b++) {
+				const bool toggled = b == 1 && !abEnv.empty();
+				if (b == 1 && !abEnv.empty()) script_.push_back({ t, kSetEnv, abEnv });
+				if (b == 0 && i > 0 && !abEnv.empty()) script_.push_back({ t, kSetEnv, abOff });
+				script_.push_back({ t, kMarkWindow, "settle" });
+				script_.push_back({ t + 2.0f, kMarkWindow, std::string(toggled ? "steady-B" : "steady-A") + "-" + std::to_string(i + 1) });
+				t += 2.0f + windowSeconds;
+			}
+		}
+		if (!abEnv.empty()) script_.push_back({ t, kSetEnv, abOff });
+		script_.push_back({ t, kMarkWindow, "end" });
+		script_.push_back({ t, 0, "exit" });
+		log("=== RT-004 stall driver: script ab-steady, toggle \"" + abEnv + "\", warmup " + std::to_string(warmup) + " s, "
+			+ std::to_string(pairs) + " pairs x " + std::to_string(windowSeconds) + " s ===");
+		return;
+	}
+	if (scriptName != nullptr && std::string(scriptName) == "ambient-cycles") {
+		// TEMP-008B: ambient pair per composition cycle across the real
+		// lifecycle — first activation, a second capture inside the same
+		// cycle (stability), deactivate/reactivate, Reset, and one natural
+		// 90 s cycle boundary. Scene-only captures; AMBIENT lines report the
+		// selected pair and draw count at each step.
+		script_.push_back({ 3.0f, ']', "Blob->Temporal (first activation)" });
+		script_.push_back({ 10.0f, kCapture, "captures/ambient_c1a_activation.png" });
+		script_.push_back({ 25.0f, kCapture, "captures/ambient_c1b_same_cycle.png" });
+		script_.push_back({ 27.0f, ']', "Temporal->Blueprint (deactivate)" });
+		script_.push_back({ 33.0f, '[', "Blueprint->Temporal (reactivate)" });
+		script_.push_back({ 40.0f, kCapture, "captures/ambient_c2_reactivated.png" });
+		script_.push_back({ 42.0f, '1', "SceneCommand::Reset" });
+		script_.push_back({ 48.0f, kCapture, "captures/ambient_c3_reset.png" });
+		script_.push_back({ 150.0f, kCapture, "captures/ambient_c4_natural_cycle.png" });
+		script_.push_back({ 152.0f, 0, "exit" });
+		log("=== RT-004 stall driver: script ambient-cycles ===");
 		return;
 	}
 	if (scriptName != nullptr && std::string(scriptName) == "first-activation") {
@@ -349,10 +407,59 @@ void Rt004StallDriver::runMaskCycles(int cycles) {
 	}
 }
 
+namespace {
+// Linux /proc field in MiB, or -1 where unavailable (macOS).
+double procFieldMiB(const char* path, const char* field) {
+	std::ifstream in(path);
+	std::string line;
+	const std::string key(field);
+	while (std::getline(in, line)) {
+		if (line.compare(0, key.size(), key) == 0) return std::atof(line.c_str() + key.size()) / 1024.0;
+	}
+	return -1.0;
+}
+}
+
+void Rt004StallDriver::closeLabelWindow() {
+	if (!labelWindows_) return;
+	if (!labelName_.empty() && !labelMs_.empty()) {
+		std::vector<double> v = labelMs_;
+		std::sort(v.begin(), v.end());
+		auto pct = [&v](double p) { return v[std::min(v.size() - 1, static_cast<size_t>(p * (v.size() - 1) + 0.5))]; };
+		double sum = 0.0;
+		for (double x : v) sum += x;
+		const TimeOffsetVideoBuffer& b = runtime_.temporalSceneForTesting().videoAdapterForTesting().buffer();
+		std::ostringstream os;
+		os.setf(std::ios::fixed);
+		os.precision(2);
+		os << "LABEL-WINDOW " << labelName_ << " t=" << labelStart_ << "-" << elapsed_ << "s frames=" << v.size()
+		   << " fps=" << (sum > 0 ? 1000.0 * v.size() / sum : 0.0) << " p50=" << pct(0.50) << " p95=" << pct(0.95)
+		   << " p99=" << pct(0.99) << " max=" << v.back() << " historyFrames=" << b.getHistoryFrameCount() << "/"
+		   << b.getHistoryCapacityFrames() << " pattern=" << labelLastPattern_ << " patternChanges=" << labelPatternChanges_
+		   << " ambientMode=" << (TFAmbientTextureLayer::currentMode() == TFAmbientTextureLayer::Mode::LegacyStack ? "legacy-stack" : "cycle-pair")
+		   << " ambientDraws=" << labelLastAmbientDraws_
+		   << " vmRssMiB=" << procFieldMiB("/proc/self/status", "VmRSS:") << " cmaFreeMiB=" << procFieldMiB("/proc/meminfo", "CmaFree:")
+		   << " glError=0x" << std::hex << glGetError();
+		log(os.str());
+	}
+	labelName_.clear();
+	labelMs_.clear();
+	labelPatternChanges_ = 0;
+	labelLastPattern_ = -1;
+}
+
 void Rt004StallDriver::step(float dt) {
 	elapsed_ += dt;
 
 	double frameMs = ofGetLastFrameTime() * 1000.0;
+	if (labelWindows_ && !labelName_.empty()) {
+		labelMs_.push_back(frameMs);
+		const int pattern = static_cast<int>(runtime_.temporalSceneForTesting().coreForTesting().activePatternType());
+		if (labelLastPattern_ >= 0 && pattern != labelLastPattern_) labelPatternChanges_++;
+		const TFAmbientTextureLayer& ambient = runtime_.temporalSceneForTesting().coreForTesting().ambientTextures();
+		labelLastAmbientDraws_ = ambient.lastUnderlayDrawCalls() + ambient.lastOverlayDrawCalls();
+		labelLastPattern_ = pattern;
+	}
 	windowFrames_++;
 	windowSumMs_ += frameMs;
 	windowMaxMs_ = std::max(windowMaxMs_, frameMs);
@@ -375,11 +482,28 @@ void Rt004StallDriver::step(float dt) {
 		log(os.str());
 		rt004::Probe::get().note("driver.action", a.label);
 		if (a.key == 0) {
+			closeLabelWindow();
 			ofExit();
 			return;
 		}
 		if (a.key == kMarkWindow) {
+			closeLabelWindow();
+			labelName_ = a.label;
+			labelStart_ = elapsed_;
 			rt004::Probe::get().setContext("window", a.label);
+			continue;
+		}
+		if (a.key == kCapture) {
+			const TFAmbientTextureLayer& ambient = runtime_.temporalSceneForTesting().coreForTesting().ambientTextures();
+			const bool saved = runtime_.saveSceneFrameCaptureForTesting(a.label);
+			std::ostringstream amb;
+			amb << "AMBIENT capture=" << a.label << " saved=" << saved << " generation=" << ambient.selectionGeneration()
+				<< " underlay=" << (ambient.selectedUnderlay() >= 0 ? ambient.textureAt(ambient.selectedUnderlay()).baseName : "none")
+				<< " overlay=" << (ambient.selectedOverlay() >= 0 ? ambient.textureAt(ambient.selectedOverlay()).baseName : "none")
+				<< " underlayDraws=" << ambient.lastUnderlayDrawCalls() << " overlayDraws=" << ambient.lastOverlayDrawCalls()
+				<< " underlayPool=" << ambient.layerCount(TFBackgroundTexture::Layer::UNDERLAY)
+				<< " overlayPool=" << ambient.layerCount(TFBackgroundTexture::Layer::OVERLAY);
+			log(amb.str());
 			continue;
 		}
 		if (a.key == kMaskCycles) {

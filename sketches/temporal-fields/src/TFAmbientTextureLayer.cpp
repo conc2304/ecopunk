@@ -1,4 +1,6 @@
 #include "TFAmbientTextureLayer.h"
+#include "TFAmbientSelection.h"
+#include <cstdlib>
 #include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 #include <set>
 #include "ofFileUtils.h"
@@ -257,6 +259,14 @@ void TFAmbientTextureLayer::setup(int canvasW_, int canvasH_, const std::string&
 		}
 	}
 
+	underlayIndices_.clear();
+	overlayIndices_.clear();
+	for (std::size_t i = 0; i < textures.size(); i++) {
+		(textures[i].layer == TFBackgroundTexture::Layer::OVERLAY ? overlayIndices_ : underlayIndices_).push_back(static_cast<int>(i));
+	}
+	selectedUnderlay_ = selectedOverlay_ = -1;
+	hasSelection_ = false;
+
 	loaded = true;
 	ofLogNotice("TFAmbientTextureLayer") << "loaded " << textures.size() << " background texture(s) from " << folderPath;
 
@@ -276,7 +286,40 @@ void TFAmbientTextureLayer::setup(int canvasW_, int canvasH_, const std::string&
 	if (glErr != GL_NO_ERROR) ofLogError("TFAmbientTextureLayer") << "GL error after ambient load: 0x" << ofToHex(static_cast<int>(glErr));
 }
 
-void TFAmbientTextureLayer::drawLayer(TFBackgroundTexture::Layer layer) const {
+TFAmbientTextureLayer::Mode TFAmbientTextureLayer::currentMode() {
+	const char* v = std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_AMBIENT_MODE");
+	return (v != nullptr && std::string(v) == "legacy-stack") ? Mode::LegacyStack : Mode::CyclePair;
+}
+
+size_t TFAmbientTextureLayer::layerCount(TFBackgroundTexture::Layer layer) const {
+	return layer == TFBackgroundTexture::Layer::OVERLAY ? overlayIndices_.size() : underlayIndices_.size();
+}
+
+std::string TFAmbientTextureLayer::selectedId(int index) const {
+	return index >= 0 ? textures[static_cast<size_t>(index)].baseName : std::string("none");
+}
+
+void TFAmbientTextureLayer::selectForCycle(uint64_t generation, int cycleSeed) {
+	if (hasSelection_ && generation == selectionGeneration_) {
+		return; // same cycle: selection stays stable
+	}
+	auto pick = [cycleSeed](const std::vector<int>& group, int previous, uint64_t salt) {
+		int previousSlot = -1;
+		for (size_t i = 0; i < group.size(); i++) {
+			if (group[i] == previous) previousSlot = static_cast<int>(i);
+		}
+		const int slot = tfambient::pickForCycle(static_cast<int>(group.size()), cycleSeed, salt, previousSlot);
+		return slot < 0 ? -1 : group[static_cast<size_t>(slot)];
+	};
+	selectedUnderlay_ = pick(underlayIndices_, selectedUnderlay_, tfambient::kUnderlaySalt);
+	selectedOverlay_ = pick(overlayIndices_, selectedOverlay_, tfambient::kOverlaySalt);
+	selectionGeneration_ = generation;
+	hasSelection_ = true;
+	ofLogNotice("TFAmbientTextureLayer") << "cycle " << generation << " (seed " << cycleSeed << "): underlay="
+		<< selectedId(selectedUnderlay_) << " overlay=" << selectedId(selectedOverlay_);
+}
+
+void TFAmbientTextureLayer::drawLayer(TFBackgroundTexture::Layer layer, bool allLayers) const {
 	if (!blendFadeShaderLoaded) {
 		blendFadeShaderLoaded = true;
 		if (!blendFadeShader.load("shaders/textureBlendFade.vert", "shaders/textureBlendFade.frag")) {
@@ -285,57 +328,73 @@ void TFAmbientTextureLayer::drawLayer(TFBackgroundTexture::Layer layer) const {
 		}
 	}
 
+	int draws = 0;
 	ofEnableAlphaBlending();
-	for (const auto& tex : textures) {
-		if (tex.layer != layer) {
-			continue;
+	if (allLayers) {
+		for (const auto& tex : textures) {
+			if (tex.layer == layer && tex.opacity.get() > 0.0f) {
+				drawTexture(tex);
+				draws++;
+			}
 		}
-		float alpha = ofClamp(tex.opacity.get(), 0.0f, kMaxOpacity);
-		if (alpha <= 0.0f) {
-			continue;
+	} else {
+		const int selected = layer == TFBackgroundTexture::Layer::OVERLAY ? selectedOverlay_ : selectedUnderlay_;
+		if (selected >= 0 && textures[static_cast<size_t>(selected)].opacity.get() > 0.0f) {
+			drawTexture(textures[static_cast<size_t>(selected)]);
+			draws++;
 		}
-
-		bool useShader = (tex.blendMode == OF_BLENDMODE_SCREEN || tex.blendMode == OF_BLENDMODE_MULTIPLY)
-			&& blendFadeShader.isLoaded();
-
-		ofEnableBlendMode(tex.blendMode);
-		if (useShader) {
-			// oF's built-in SCREEN/MULTIPLY glBlendFunc combos don't
-			// reference source alpha the way ALPHA blending does (SCREEN
-			// ignores it entirely; MULTIPLY saturates near 1.0 at low
-			// alpha), so the opacity slider would have no visible effect
-			// through ofSetColor's alpha channel alone. The shader instead
-			// pre-tints the source color toward that blend mode's identity
-			// color (black for screen, white for multiply) by `opacity`,
-			// which does fade smoothly to "no effect" at opacity 0.
-			ofFloatColor identity = (tex.blendMode == OF_BLENDMODE_MULTIPLY)
-				? ofFloatColor(1.0f, 1.0f, 1.0f)
-				: ofFloatColor(0.0f, 0.0f, 0.0f);
-			blendFadeShader.begin();
-			blendFadeShader.setUniformTexture("tex", tex.tint.getTexture(), 0);
-			blendFadeShader.setUniform1f("opacity", alpha);
-			// Component form: oF 0.12.0 has no setUniform3f(ofFloatColor).
-			blendFadeShader.setUniform3f("identityColor", identity.r, identity.g, identity.b);
-			tex.tint.draw(0, 0, canvasW, canvasH);
-			blendFadeShader.end();
-		} else {
-			// OF_BLENDMODE_ALPHA (or the shader failed to load) -- opacity
-			// via vertex-color alpha works correctly for this blend func.
-			ofSetColor(255, 255, 255, alpha * 255.0f);
-			tex.tint.draw(0, 0, canvasW, canvasH);
-		}
-		// Reset before the next texture/draw call -- leaving a non-alpha
-		// blend mode active would corrupt whatever draws after this (the
-		// next texture, fragments, HUD).
-		ofEnableBlendMode(OF_BLENDMODE_ALPHA);
 	}
 	ofSetColor(255);
+	(layer == TFBackgroundTexture::Layer::OVERLAY ? lastOverlayDraws_ : lastUnderlayDraws_) = draws;
+}
+
+void TFAmbientTextureLayer::drawTexture(const TFBackgroundTexture& tex) const {
+	float alpha = ofClamp(tex.opacity.get(), 0.0f, kMaxOpacity);
+
+	bool useShader = (tex.blendMode == OF_BLENDMODE_SCREEN || tex.blendMode == OF_BLENDMODE_MULTIPLY)
+		&& blendFadeShader.isLoaded();
+
+	ofEnableBlendMode(tex.blendMode);
+	if (useShader) {
+		// oF's built-in SCREEN/MULTIPLY glBlendFunc combos don't
+		// reference source alpha the way ALPHA blending does (SCREEN
+		// ignores it entirely; MULTIPLY saturates near 1.0 at low
+		// alpha), so the opacity slider would have no visible effect
+		// through ofSetColor's alpha channel alone. The shader instead
+		// pre-tints the source color toward that blend mode's identity
+		// color (black for screen, white for multiply) by `opacity`,
+		// which does fade smoothly to "no effect" at opacity 0.
+		ofFloatColor identity = (tex.blendMode == OF_BLENDMODE_MULTIPLY)
+			? ofFloatColor(1.0f, 1.0f, 1.0f)
+			: ofFloatColor(0.0f, 0.0f, 0.0f);
+		blendFadeShader.begin();
+		blendFadeShader.setUniformTexture("tex", tex.tint.getTexture(), 0);
+		blendFadeShader.setUniform1f("opacity", alpha);
+		// Component form: oF 0.12.0 has no setUniform3f(ofFloatColor).
+		blendFadeShader.setUniform3f("identityColor", identity.r, identity.g, identity.b);
+		tex.tint.draw(0, 0, canvasW, canvasH);
+		blendFadeShader.end();
+	} else {
+		// OF_BLENDMODE_ALPHA (or the shader failed to load) -- opacity
+		// via vertex-color alpha works correctly for this blend func.
+		ofSetColor(255, 255, 255, alpha * 255.0f);
+		tex.tint.draw(0, 0, canvasW, canvasH);
+	}
+	// Reset before the next texture/draw call -- leaving a non-alpha
+	// blend mode active would corrupt whatever draws after this (the
+	// next texture, fragments, HUD).
+	ofEnableBlendMode(OF_BLENDMODE_ALPHA);
 }
 
 void TFAmbientTextureLayer::drawUnderlay() const {
-	drawLayer(TFBackgroundTexture::Layer::UNDERLAY);
+	drawLayer(TFBackgroundTexture::Layer::UNDERLAY, currentMode() == Mode::LegacyStack);
 }
 
 void TFAmbientTextureLayer::drawOverlay() const {
-	drawLayer(TFBackgroundTexture::Layer::OVERLAY);
+	drawLayer(TFBackgroundTexture::Layer::OVERLAY, currentMode() == Mode::LegacyStack);
+}
+
+void TFAmbientTextureLayer::drawAllLayersForTesting() const {
+	drawLayer(TFBackgroundTexture::Layer::UNDERLAY, true);
+	drawLayer(TFBackgroundTexture::Layer::OVERLAY, true);
 }

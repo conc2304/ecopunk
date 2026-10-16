@@ -98,8 +98,9 @@ std::string TemporalWarmHarness::ambientRenderCheck(const std::string& when) {
 	const bool fboOk = fbo.checkStatus();
 	fbo.begin();
 	ofClear(128, 128, 128, 255);
-	ambient.drawUnderlay();
-	ambient.drawOverlay();
+	// TEMP-008B: every resident layer, independent of the per-cycle pair
+	// production now draws, so this stays a residency-integrity check.
+	ambient.drawAllLayersForTesting();
 	fbo.end();
 	ofPixels px;
 	fbo.readToPixels(px);

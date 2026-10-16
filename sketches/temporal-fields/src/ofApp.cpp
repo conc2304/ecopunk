@@ -304,6 +304,8 @@ void ofApp::draw() {
 	// else -- same "underlay" slot as TFMoireUnderlay, drawn independently
 	// of TFHudLayer's widget rotation so their opacity sliders are always
 	// live rather than gated behind a rotation roll.
+	// TEMP-008B: same per-cycle selection as production (shared code path).
+	ambientTextures.selectForCycle(composition.getCycleGeneration(), composition.getCycleSeed());
 	ambientTextures.drawUnderlay();
 
 	// Underlay first: sits beneath the composition, so it shows through

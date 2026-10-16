@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "../hud-compositor/FakeHudSemanticTypes.h"
+#include "../hud-compositor/HudClockFormat.h"
 #include "../hud-compositor/HudDataTypes.h"
 #include "../hud-compositor/HudFormattingService.h"
 #include "../hud-compositor/HudHistoryStore.h"
@@ -1021,7 +1022,209 @@ void test_formatting_spot_checks() {
 
 } // namespace
 
+// ---------------------------------------------------------------------
+// HUD Clock v0.1 — pure formatting (HudClockFormat.h). Every instant below
+// is fixed; nothing reads the live system clock or depends on TZ.
+// ---------------------------------------------------------------------
+namespace clockfx {
+constexpr int64_t kNyFallBackAt = 1793512800;      // 2026-11-01T06:00:00Z
+constexpr int64_t kNySpringForwardAt = 1772953200; // 2026-03-08T07:00:00Z
+constexpr int64_t kLeapDayLastSecondUtc = 1835481599; // 2028-02-29T23:59:59Z
+constexpr int64_t kYearLastSecondUtc = 1798761599;    // 2026-12-31T23:59:59Z
+constexpr int64_t kStJohnsNoonUtc = 1768478400;       // 2026-01-15T12:00:00Z
+} // namespace clockfx
+
+void test_clock_midnight_and_date_rollover() {
+	using namespace hudclock;
+	// 23:59:59 local -> 00:00:00 local the next day (CEST, +2 h).
+	const int64_t lastSecond = 1792101599; // 2026-10-15T21:59:59Z = 23:59:59 CEST
+	HUD_CHECK(localSecondsOfDay(lastSecond, 7200) == 86399);
+	HUD_CHECK_EQ_STR(timeText(localSecondsOfDay(lastSecond, 7200)), "23:59");
+	HUD_CHECK_EQ_STR(labelText(lastSecond, 7200, "CEST"), "THU 15 OCT 2026 CEST");
+	HUD_CHECK(localSecondsOfDay(lastSecond + 1, 7200) == 0); // exactly midnight
+	HUD_CHECK_EQ_STR(timeText(localSecondsOfDay(lastSecond + 1, 7200)), "00:00");
+	HUD_CHECK_EQ_STR(labelText(lastSecond + 1, 7200, "CEST"), "FRI 16 OCT 2026 CEST");
+	// The epoch itself, and a pre-1970 instant (floor, not truncation).
+	HUD_CHECK_EQ_STR(labelText(0, 0, "UTC"), "THU 01 JAN 1970 UTC");
+	HUD_CHECK_EQ_STR(labelText(-1, 0, "UTC"), "WED 31 DEC 1969 UTC");
+	HUD_CHECK(localSecondsOfDay(-1, 0) == 86399);
+}
+
+void test_clock_leap_day_and_year_rollover() {
+	using namespace hudclock;
+	HUD_CHECK_EQ_STR(labelText(clockfx::kLeapDayLastSecondUtc, 0, "UTC"), "TUE 29 FEB 2028 UTC");
+	HUD_CHECK_EQ_STR(labelText(clockfx::kLeapDayLastSecondUtc + 1, 0, "UTC"), "WED 01 MAR 2028 UTC");
+	HUD_CHECK_EQ_STR(labelText(clockfx::kYearLastSecondUtc, 0, "UTC"), "THU 31 DEC 2026 UTC");
+	HUD_CHECK_EQ_STR(labelText(clockfx::kYearLastSecondUtc + 1, 0, "UTC"), "FRI 01 JAN 2027 UTC");
+	// 2100 is not a leap year: 28 Feb -> 1 Mar.
+	const int64_t feb28of2100 = 4107456000; // 2100-02-28T00:00:00Z
+	HUD_CHECK_EQ_STR(labelText(feb28of2100 + 86400, 0, "UTC"), "MON 01 MAR 2100 UTC");
+}
+
+void test_clock_offsets_positive_negative_fractional() {
+	using namespace hudclock;
+	const int64_t noonUtc = clockfx::kStJohnsNoonUtc;
+	// Negative fractional (St. John's NST -03:30): 08:30 local.
+	HUD_CHECK_EQ_STR(timeText(localSecondsOfDay(noonUtc, -12600)), "08:30");
+	HUD_CHECK_EQ_STR(labelText(noonUtc, -12600, "NST"), "THU 15 JAN 2026 NST");
+	// Positive fractional (+05:30, +05:45).
+	HUD_CHECK_EQ_STR(timeText(localSecondsOfDay(noonUtc, 19800)), "17:30");
+	HUD_CHECK_EQ_STR(timeText(localSecondsOfDay(noonUtc, 20700)), "17:45");
+	// Far offsets cross the date line in opposite directions.
+	HUD_CHECK_EQ_STR(labelText(noonUtc, 14 * 3600, "+14"), "FRI 16 JAN 2026 +14");
+	HUD_CHECK_EQ_STR(labelText(noonUtc - 6 * 3600, -12 * 3600, "-12"), "WED 14 JAN 2026 -12");
+	// Numeric fallback when the OS supplies no usable abbreviation.
+	HUD_CHECK_EQ_STR(offsetText(19800), "+0530");
+	HUD_CHECK_EQ_STR(offsetText(-12600), "-0330");
+	HUD_CHECK_EQ_STR(offsetText(0), "+00");
+	HUD_CHECK_EQ_STR(offsetText(-18000), "-05");
+	HUD_CHECK_EQ_STR(zoneText("", 20700), "+0545");
+	HUD_CHECK_EQ_STR(zoneText("TOOLONGZ", 3600), "+01");      // > 6 glyphs
+	HUD_CHECK_EQ_STR(zoneText("C\xC3\x89T", 3600), "+01");     // non-ASCII (bitmap font is ASCII-only)
+	HUD_CHECK_EQ_STR(zoneText("A B", 3600), "+01");           // embedded space
+	// Worst case still inside the 23-glyph budget of flexible.secondary_b.
+	HUD_CHECK(labelText(noonUtc, 20700, "").size() <= 23);
+	HUD_CHECK(labelText(noonUtc, 0, "ABCDEF").size() <= 23);
+}
+
+void test_clock_dst_transitions_formatting() {
+	using namespace hudclock;
+	// Values exactly as the OS reports them (TZ=America/New_York `date -r`).
+	// Spring forward: 01:59:59 EST -> 03:00:00 EDT.
+	HUD_CHECK_EQ_STR(timeText(localSecondsOfDay(clockfx::kNySpringForwardAt - 1, -18000)), "01:59");
+	HUD_CHECK_EQ_STR(timeText(localSecondsOfDay(clockfx::kNySpringForwardAt, -14400)), "03:00");
+	HUD_CHECK_EQ_STR(labelText(clockfx::kNySpringForwardAt, -14400, "EDT"), "SUN 08 MAR 2026 EDT");
+	// Fall back: 01:59:59 EDT -> 01:00:00 EST (local time repeats; offset differs).
+	HUD_CHECK_EQ_STR(timeText(localSecondsOfDay(clockfx::kNyFallBackAt - 1, -14400)), "01:59");
+	HUD_CHECK_EQ_STR(timeText(localSecondsOfDay(clockfx::kNyFallBackAt, -18000)), "01:00");
+	HUD_CHECK_EQ_STR(labelText(clockfx::kNyFallBackAt, -18000, "EST"), "SUN 01 NOV 2026 EST");
+}
+
+void test_clock_invalid_instants() {
+	using namespace hudclock;
+	HUD_CHECK(isValidInstant(0, 0));
+	HUD_CHECK(isValidInstant(kMaxUnixSeconds, kMaxAbsUtcOffsetSeconds));
+	HUD_CHECK(!isValidInstant(kMaxUnixSeconds + 1, 0));
+	HUD_CHECK(!isValidInstant(kMinUnixSeconds - 1, 0));
+	HUD_CHECK(!isValidInstant(0, 86400));
+	HUD_CHECK(!isValidInstant(0, -86400));
+	HUD_CHECK(!isValidInstant(INT64_MAX, 0));
+	HUD_CHECK_EQ_STR(labelText(kMinUnixSeconds, 0, "UTC"), "MON 01 JAN 0001 UTC");
+	HUD_CHECK_EQ_STR(labelText(kMaxUnixSeconds, 0, "UTC"), "FRI 31 DEC 9999 UTC");
+}
+
+void test_clock_cache_invalidation() {
+	using namespace hudclock;
+	ClockTextCache cache;
+	const int64_t t = 1792065600; // 2026-10-15T12:00:00Z
+
+	// Time text: rebuilt only on a new displayed minute.
+	HUD_CHECK_EQ_STR(cache.time(localSecondsOfDay(t, 7200)), "14:00");
+	HUD_CHECK_EQ_STR(cache.time(localSecondsOfDay(t + 59, 7200)), "14:00");
+	HUD_CHECK(cache.timeBuilds() == 1);
+	HUD_CHECK_EQ_STR(cache.time(localSecondsOfDay(t + 60, 7200)), "14:01");
+	HUD_CHECK(cache.timeBuilds() == 2);
+
+	// Label: same date/zone -> no rebuild across many seconds.
+	HUD_CHECK_EQ_STR(cache.label(t, 7200, "CEST", true), "THU 15 OCT 2026 CEST");
+	cache.label(t + 3600, 7200, "CEST", true);
+	HUD_CHECK(cache.labelBuilds() == 1);
+
+	// Wall-clock correction backward across midnight -> new date, rebuilt.
+	HUD_CHECK_EQ_STR(cache.label(t - 15 * 3600, 7200, "CEST", true), "WED 14 OCT 2026 CEST"); // 14:00 -> 23:00 the day before
+	HUD_CHECK(cache.labelBuilds() == 2);
+	// Correction back again, within the same displayed minute as before.
+	cache.time(localSecondsOfDay(t + 60, 7200));
+	HUD_CHECK(cache.timeBuilds() == 2);
+
+	// Timezone change (same instant): offset + abbreviation -> rebuilt.
+	HUD_CHECK_EQ_STR(cache.label(t, 19800, "IST", false), "THU 15 OCT 2026 IST");
+	HUD_CHECK(cache.labelBuilds() == 3);
+	HUD_CHECK_EQ_STR(cache.time(localSecondsOfDay(t, 19800)), "17:30");
+	// Abbreviation-only change (same offset), and DST-flag-only change.
+	cache.label(t, 19800, "+0530", false);
+	HUD_CHECK(cache.labelBuilds() == 4);
+	cache.label(t, 19800, "+0530", std::nullopt);
+	HUD_CHECK(cache.labelBuilds() == 5);
+	// Fall back: identical local wall time, different offset/abbreviation.
+	cache.label(clockfx::kNyFallBackAt - 1, -14400, "EDT", true);
+	const uint64_t before = cache.labelBuilds();
+	HUD_CHECK_EQ_STR(cache.label(clockfx::kNyFallBackAt, -18000, "EST", false), "SUN 01 NOV 2026 EST");
+	HUD_CHECK(cache.labelBuilds() == before + 1);
+}
+
+void test_clock_format_kind() {
+	HudVocabularyResolver vocab;
+	HUD_CHECK_EQ_STR(HudFormattingService::format(HudResolvedValue::number(HudSourceValueType::DurationSeconds, 52320.0f),
+		HudFormatKind::ClockTime, "blob-region-prototype", vocab), "14:32");
+	HUD_CHECK_EQ_STR(HudFormattingService::format(HudResolvedValue::number(HudSourceValueType::DurationSeconds, 0.0f),
+		HudFormatKind::ClockTime, "blob-region-prototype", vocab), "00:00");
+	HUD_CHECK_EQ_STR(HudFormattingService::format(HudResolvedValue::number(HudSourceValueType::DurationSeconds, 86399.0f),
+		HudFormatKind::ClockTime, "blob-region-prototype", vocab), "23:59");
+	// The label role shares the binding's format and must pass through untouched.
+	HUD_CHECK_EQ_STR(HudFormattingService::format(HudResolvedValue::text("THU 15 OCT 2026 CEST"),
+		HudFormatKind::ClockTime, "blob-region-prototype", vocab), "THU 15 OCT 2026 CEST");
+	HUD_CHECK_EQ_STR(HudFormattingService::format(HudResolvedValue::missing(HudSourceValueType::DurationSeconds, HudDataClass::Literal),
+		HudFormatKind::ClockTime, "blob-region-prototype", vocab), "");
+}
+
+// The clock binding compiles valid, identically, for every scene (and for
+// no known scene): it is universal, scene-independent, read-only, and sits
+// in the frozen flexible.secondary_b region without displacing anything.
+void test_clock_binding_scene_independent() {
+	HudRegionCatalog regions;
+	HudVocabularyResolver vocab;
+	HudProfileCompiler compiler(regions, vocab);
+	HudPresentationProfileRegistry registry;
+
+	std::vector<std::string> sceneIds = registry.knownSceneIds();
+	sceneIds.push_back("unknown-scene");
+	for (const auto& sceneId : sceneIds) {
+		auto compiled = compiler.compile(sceneId, registry);
+		int clockBindings = 0;
+		int secondaryBOccupants = 0;
+		for (const auto& c : compiled.bindings) {
+			if (c.binding.regionId == "flexible.secondary_b") secondaryBOccupants++;
+			if (c.binding.bindingId != "universal.clock.value") continue;
+			clockBindings++;
+			HUD_CHECK(c.valid);
+			HUD_CHECK(c.binding.widgetType == HudWidgetType::NumericValue);
+			HUD_CHECK(c.binding.format == HudFormatKind::ClockTime);
+			HUD_CHECK(c.binding.missingPolicy == HudMissingPolicy::Hide);
+			HUD_CHECK(c.binding.findSource("enabled") == nullptr); // never a focusable control
+			const auto* value = c.binding.findSource("value");
+			const auto* label = c.binding.findSource("label");
+			HUD_CHECK(value != nullptr && value->sourceId == "runtime.clock.local_seconds");
+			HUD_CHECK(label != nullptr && label->sourceId == "runtime.clock.local_label");
+		}
+		HUD_CHECK(clockBindings == 1);
+		HUD_CHECK(secondaryBOccupants == 1);
+		for (const auto& issue : compiled.issues) {
+			HUD_CHECK(issue.bindingId != "universal.clock.value");
+		}
+	}
+
+	// Static source typing, and the fake (Validation Studio) path never
+	// invents a clock: both sources resolve missing there.
+	HUD_CHECK(HudSourceResolver::staticValueTypeOf("runtime.clock.local_seconds") == HudSourceValueType::DurationSeconds);
+	HUD_CHECK(HudSourceResolver::staticValueTypeOf("runtime.clock.local_label") == HudSourceValueType::Text);
+	HudSourceResolver fakeResolver;
+	FakeHudFrameData fake;
+	auto secs = fakeResolver.resolve("runtime.clock.local_seconds", fake);
+	auto label = fakeResolver.resolve("runtime.clock.local_label", fake);
+	HUD_CHECK(secs && !secs->present);
+	HUD_CHECK(label && !label->present);
+}
+
 int main() {
+	test_clock_midnight_and_date_rollover();
+	test_clock_leap_day_and_year_rollover();
+	test_clock_offsets_positive_negative_fractional();
+	test_clock_dst_transitions_formatting();
+	test_clock_invalid_instants();
+	test_clock_cache_invalidation();
+	test_clock_format_kind();
+	test_clock_binding_scene_independent();
 	test_missing_vs_zero();
 	test_missing_vs_empty_list();
 	test_source_lookup();

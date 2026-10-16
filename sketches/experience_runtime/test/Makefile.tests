@@ -101,15 +101,27 @@ SKIN_LOADER_BIN = hud_skin_loader_tests
 FOCUS_SRC = hud_focus_navigator_tests.cpp ../src/HudFocusNavigator.cpp
 FOCUS_BIN = hud_focus_navigator_tests
 
-.PHONY: test session2 skin focus clean
+# HUD Clock v0.1: WallClockSampler (OF-free, header-only) end to end through
+# the HUD's pure HudClockFormat.h. Uses real OS zoneinfo via explicit TZ.
+WALL_CLOCK_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/hud-runtime -I../../../shared/src/hud-compositor
+WALL_CLOCK_SRC = wall_clock_sampler_tests.cpp
+WALL_CLOCK_BIN = wall_clock_sampler_tests
+
+.PHONY: test session2 skin focus wall-clock clean
 
 focus: $(FOCUS_BIN)
 	./$(FOCUS_BIN)
 
+wall-clock: $(WALL_CLOCK_BIN)
+	./$(WALL_CLOCK_BIN)
+
+$(WALL_CLOCK_BIN): $(WALL_CLOCK_SRC) ../../../shared/src/hud-runtime/WallClockSampler.h ../../../shared/src/hud-runtime/WallClockStatus.h ../../../shared/src/hud-compositor/HudClockFormat.h
+	$(CXX) $(WALL_CLOCK_CXXFLAGS) $(WALL_CLOCK_SRC) -o $(WALL_CLOCK_BIN)
+
 $(FOCUS_BIN): $(FOCUS_SRC) ../src/HudFocusNavigator.h
 	$(CXX) $(CXXFLAGS) $(FOCUS_SRC) -o $(FOCUS_BIN)
 
-test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN)
+test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN)
 	./$(LIFECYCLE_BIN)
 	./$(SESSION2_BIN)
 	./$(BLOB_SEMANTIC_BIN)
@@ -118,6 +130,7 @@ test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_
 	./$(SCENE_SWITCH_BIN)
 	./$(SKIN_LOADER_BIN)
 	./$(FOCUS_BIN)
+	./$(WALL_CLOCK_BIN)
 
 blueprint-semantic: $(BLUEPRINT_SEMANTIC_BIN)
 	./$(BLUEPRINT_SEMANTIC_BIN)
@@ -150,4 +163,4 @@ $(SCENE_SWITCH_BIN): $(SCENE_SWITCH_SRC) ../src/SceneSwitchController.h
 	$(CXX) $(CXXFLAGS) $(SCENE_SWITCH_SRC) -o $(SCENE_SWITCH_BIN)
 
 clean:
-	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN)
+	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN)

@@ -66,6 +66,10 @@ class TFComposition {
 		CyclePhase getPhase() const { return phase; }
 		TFPatternType getActivePatternType() const { return activeType; }
 		int getCycleSeed() const { return cycleSeed; }
+		// Increments once per new cycle (every switchToPattern(): startCycle,
+		// auto-advance, forcePattern) — lets per-cycle consumers (ambient
+		// selection) detect the boundary without a second timer.
+		uint64_t getCycleGeneration() const { return cycleGeneration; }
 		float getPhaseElapsed() const { return phaseElapsed; }
 
 		// Manual override for testing — jumps straight to the next pattern
@@ -117,6 +121,7 @@ class TFComposition {
 		TFPatternType activeType = TFPatternType::BSP;
 		float phaseElapsed = 0.0f;
 		int cycleSeed = 0;
+		uint64_t cycleGeneration = 0;
 		bool autoCycleSuspended = false;
 
 		float transitionDuration = 0.8f;

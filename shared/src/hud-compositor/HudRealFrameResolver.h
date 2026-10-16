@@ -31,6 +31,7 @@
 // consumer" requirement.
 // ============================================================================
 
+#include "HudClockFormat.h"
 #include "HudDataTypes.h"
 #include "HudSourceResolver.h"
 #include "HudVocabularyResolver.h" // for the shared static canonical-ID table
@@ -75,6 +76,13 @@ private:
 
 	bool compatibilityFallbackEnabled_ = false;
 	const HudVocabularyResolver* vocabulary_ = nullptr;
+
+	// HUD Clock v0.1 label cache — presentation-only memo, rebuilt only when
+	// the displayed local date / offset / abbreviation / DST state changes.
+	mutable hudclock::ClockTextCache clockText_;
+
+public:
+	const hudclock::ClockTextCache& clockTextCacheForTesting() const { return clockText_; }
 };
 
 } // namespace hudpresent

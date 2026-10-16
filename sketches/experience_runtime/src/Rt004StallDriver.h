@@ -32,6 +32,7 @@ private:
 	static constexpr int kSetLegacyDownscale = -2; // label "1" = legacy history downscale, "0" = cached
 	static constexpr int kSetEnv = -3;             // label "NAME=VALUE" sets, "NAME=" unsets
 	static constexpr int kMaskCycles = -4;         // label = cycle count (blob-short)
+	static constexpr int kCapture = -5;            // label = scene-only capture path under bin/data (ambient-cycles)
 	void runMaskCycles(int cycles);
 
 	void log(const std::string & line);
@@ -46,4 +47,15 @@ private:
 	int windowFrames_ = 0;
 	double windowSumMs_ = 0.0;
 	double windowMaxMs_ = 0.0;
+
+	// TEMP-008: per-labelled-window frame intervals (kMarkWindow boundaries),
+	// summarised as a LABEL-WINDOW line when the next window starts.
+	void closeLabelWindow();
+	bool labelWindows_ = false; // ab-steady only; other scripts unchanged
+	std::string labelName_;
+	float labelStart_ = 0.0f;
+	std::vector<double> labelMs_;
+	int labelPatternChanges_ = 0;
+	int labelLastPattern_ = -1;
+	int labelLastAmbientDraws_ = 0; // ambient draws in the most recent frame
 };

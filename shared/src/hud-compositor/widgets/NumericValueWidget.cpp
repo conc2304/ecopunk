@@ -18,10 +18,23 @@ void NumericValueWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 	// typography strategy comment) — not scale-adjusted.
 	float localMaxWidth = std::max(0.0f, bounds.width - pad * 2.0f);
 
-	if (!input.captionText.empty()) {
+	// The contracted optional "label" role (HudWidgetContract: Identifier/
+	// Text) is dynamic caption text — e.g. HUD Clock v0.1's local date/zone
+	// line — and takes the caption line when it renders. Bindings with no
+	// label source draw the static caption exactly as before.
+	const auto* labelRole = input.findRole("label");
+	const bool dynamicLabel = labelRole && labelRole->shouldRender && !labelRole->useAmbientFallback
+		&& !labelRole->formattedText.empty();
+	const std::string& captionLine = dynamicLabel ? labelRole->formattedText : input.captionText;
+	if (!captionLine.empty()) {
 		ofSetColor(scaledAlpha(colors.muted, opacity));
-		const auto& caption = textCache_.truncateToWidth(input.captionText, localMaxWidth);
-		drawText(caption.text, bounds.x + pad, bounds.y + wu(bounds, 12.0f));
+		const auto& caption = textCache_.truncateToWidth(captionLine, localMaxWidth);
+		// Native bitmap glyphs rise ~9 px above their baseline regardless of
+		// region size; in short regions (universal.timing 36 px,
+		// flexible.secondary_b 43.2 px) the scaled baseline alone put the
+		// caption's tops above the region edge. Taller regions are unchanged.
+		const float captionBaseline = bounds.y + std::max(wu(bounds, 12.0f), kCaptionMinBaselineOffset);
+		drawText(caption.text, bounds.x + pad, captionBaseline);
 	}
 
 	if (valueRole && valueRole->shouldRender) {

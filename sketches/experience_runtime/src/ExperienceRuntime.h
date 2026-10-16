@@ -10,6 +10,7 @@
 #include "SceneContract.h"
 #include "SceneManager.h"
 #include "TemporalProductionScene.h"
+#include "WallClockSampler.h"
 
 #include "ofFbo.h"
 #include "ofImage.h"
@@ -300,6 +301,9 @@ private:
 	// scene/service state; SceneFrame::texture is the sole intentional
 	// non-owning reference (into sceneFbo_, which outlives every frame).
 	HudFrameData currentHudFrameData_;
+
+	// HUD Clock v0.1: sole producer of HudFrameData::wallClock.
+	wallclock::WallClockSampler wallClockSampler_;
 
 	// Captured during update() (step 6) and reused, unchanged, when
 	// assembling HudFrameData during draw() (step 13) — avoids a second,

@@ -46,6 +46,8 @@ enum class CanonicalSource : uint8_t {
 	RuntimeThrottled,
 	RuntimeQualityProfile,
 	RuntimeHealth,
+	RuntimeClockLocalSeconds,
+	RuntimeClockLocalLabel,
 	ControlScenePreviousAvailable,
 	ControlSceneNextAvailable,
 	ControlMediaPreviousAvailable,
@@ -119,6 +121,9 @@ const std::vector<CanonicalEntry>& canonicalTable() {
 		{"runtime.throttled", CanonicalSource::RuntimeThrottled, HudSourceValueType::Boolean},
 		{"runtime.quality_profile", CanonicalSource::RuntimeQualityProfile, HudSourceValueType::Identifier},
 		{"runtime.health", CanonicalSource::RuntimeHealth, HudSourceValueType::Identifier},
+		// HUD Clock v0.1 (approved): runtime-owned HudFrameData::wallClock.
+		{"runtime.clock.local_seconds", CanonicalSource::RuntimeClockLocalSeconds, HudSourceValueType::DurationSeconds},
+		{"runtime.clock.local_label", CanonicalSource::RuntimeClockLocalLabel, HudSourceValueType::Text},
 		{"control.scene.previous.available", CanonicalSource::ControlScenePreviousAvailable, HudSourceValueType::Boolean},
 		{"control.scene.next.available", CanonicalSource::ControlSceneNextAvailable, HudSourceValueType::Boolean},
 		{"control.media.previous.available", CanonicalSource::ControlMediaPreviousAvailable, HudSourceValueType::Boolean},
@@ -393,6 +398,11 @@ std::optional<HudResolvedValue> HudSourceResolver::resolveCanonical(const std::s
 			// No real field — see FakeHudSemanticTypes.h's reconciliation note.
 			if (!runtime.runtimeHealthId) return HudResolvedValue::missing(HudSourceValueType::Identifier, HudDataClass::Literal);
 			return HudResolvedValue::identifier(*runtime.runtimeHealthId);
+		case CanonicalSource::RuntimeClockLocalSeconds:
+		case CanonicalSource::RuntimeClockLocalLabel:
+			// The fake frame carries no wall clock (deterministic Validation
+			// Studio scenarios); only HudRealFrameResolver backs these.
+			return HudResolvedValue::missing(it->second->valueType, HudDataClass::Literal);
 
 		case CanonicalSource::ControlScenePreviousAvailable:
 			return HudResolvedValue::boolean(controls.scenePrevious);

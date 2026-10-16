@@ -1,6 +1,9 @@
 #include "TemporalSceneCore.h"
 #include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 #include "TFSettings.h"
+#include "ofLog.h"
+#include <cstdlib>
+#include <string>
 
 void TemporalSceneCore::setup(TimeOffsetVideoBuffer* buffer, int canvasW, int canvasH) {
 	buffer_ = buffer;
@@ -123,8 +126,22 @@ void TemporalSceneCore::draw() {
 	if (!active_) {
 		return;
 	}
-	{ RT004_SCOPE("TemporalCore.background.draw"); backgroundLayer_.draw(); }
-	{ RT004_SCOPE("TemporalCore.ambient.underlay"); ambientTextures_.drawUnderlay(); }
-	{ RT004_SCOPE("TemporalCore.composition.draw"); composition_.draw(); }
-	{ RT004_SCOPE("TemporalCore.ambient.overlay"); ambientTextures_.drawOverlay(); }
+	// TEMP-008B: one underlay + one overlay per composition cycle; no-op
+	// within a cycle (idempotent per generation).
+	ambientTextures_.selectForCycle(composition_.getCycleGeneration(), composition_.getCycleSeed());
+	// RT-008 diagnostic (off by default): EXPERIENCE_RUNTIME_DIAG_TEMPORAL_OMIT
+	// = background|underlay|composition|overlay skips that one pass. Read
+	// every frame so the RT-004 ab-compact driver can toggle it in-process.
+	// Changes the rendered frame — measurement only, never a fix.
+	const char* omitEnv = std::getenv("EXPERIENCE_RUNTIME_DIAG_TEMPORAL_OMIT");
+	const std::string omit = omitEnv ? omitEnv : "";
+	static std::string lastOmit;
+	if (omit != lastOmit) {
+		ofLogNotice("TemporalSceneCore") << "RT-008 diagnostic: omit pass = " << (omit.empty() ? "none" : omit);
+		lastOmit = omit;
+	}
+	if (omit != "background") { RT004_SCOPE("TemporalCore.background.draw"); backgroundLayer_.draw(); }
+	if (omit != "underlay") { RT004_SCOPE("TemporalCore.ambient.underlay"); ambientTextures_.drawUnderlay(); }
+	if (omit != "composition") { RT004_SCOPE("TemporalCore.composition.draw"); composition_.draw(); }
+	if (omit != "overlay") { RT004_SCOPE("TemporalCore.ambient.overlay"); ambientTextures_.drawOverlay(); }
 }
