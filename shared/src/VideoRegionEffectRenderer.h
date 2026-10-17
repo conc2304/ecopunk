@@ -66,9 +66,17 @@ public:
 		double shaderDirectMs = 0.0;
 		double shaderResultMs = 0.0;
 		double compositeMs = 0.0;
+		int unshadedDraws = 0; // subset of direct+legacy draws that ran no shader
+		int shaderBinds = 0; // shaded draws (one program bind each)
+		int shaderSwitches = 0; // shaded draws whose program differs from the previous shaded draw
+		int distinctPrograms = 0; // distinct programs bound since the last reset
 	};
 	const StageTimings & getStageTimings() const { return stageTimings; }
-	void resetStageTimings() { stageTimings = StageTimings {}; }
+	void resetStageTimings() {
+		stageTimings = StageTimings {};
+		lastProgram = 0;
+		seenProgramCount = 0;
+	}
 
 	// false forces every effect draw through the 3-stage path — exists so
 	// the same binary can A/B both paths on the Pi.
@@ -90,4 +98,11 @@ private:
 	int scratchH = 0;
 	bool directOutputEnabled = true;
 	StageTimings stageTimings;
+
+	// Bind/switch bookkeeping for StageTimings (reset with it).
+	void countShaderBind(unsigned int program);
+	unsigned int lastProgram = 0;
+	static constexpr int kMaxSeenPrograms = 32;
+	unsigned int seenPrograms[kMaxSeenPrograms] = {};
+	int seenProgramCount = 0;
 };

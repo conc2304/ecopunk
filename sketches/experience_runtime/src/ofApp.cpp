@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "BlobEffectCapacityBench.h"
 #include "BlobRenderPathAbHarness.h"
 #include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated)
 
@@ -269,6 +270,18 @@ void ofApp::draw() {
 	if (Rt004FramePhaseProbe::presentOnlyControl()) { ofClear(0, 0, 0, 255); return; }
 	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness) {
 		runtime.draw();
+
+		// Blob Experiment 2: serve the bench's capture requests (scene-only
+		// from the runtime-owned scene FBO, plus the full composited window).
+		std::string label;
+		if (runtime.blobSceneForTesting().takeCapacityCaptureRequest(label)) {
+			std::string base = "captures/blob_capacity/" + label;
+			runtime.saveSceneFrameCaptureForTesting(base + "_scene_only.png");
+			ofImage img;
+			img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
+			img.save(base + "_hud.png");
+			ofLogNotice("BlobCapacity") << "captured " << base << "_{scene_only,hud}.png";
+		}
 	}
 	// When a harness is active, it drives runtime.draw() itself (see
 	// GlRestorationHarness::step()/BlobLifecycleHarness::step()/
@@ -282,5 +295,9 @@ void ofApp::exit() {
 }
 
 void ofApp::keyPressed(int key) {
+	// Blob Experiment 2: capacity keys first, only when the bench is on.
+	if (runtime.blobSceneForTesting().handleCapacityKey(key)) {
+		return;
+	}
 	runtime.keyPressed(key);
 }

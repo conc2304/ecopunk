@@ -1,0 +1,415 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-16 11:17:57.604 experience_runtime[95759:18772597] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] TFAmbientTextureLayer: loaded 19 background texture(s) from backgrounds
+[notice ] TFAmbientTextureLayer: residency=bounded pairs=19 tintTextures=19 maskTextures=0 cpuTintMiB=0.0 cpuMaskMiB=0.0 gpuEstMiB=28.2 (rgb-padded 37.6) tintPixelsKept=0 rssBeforeMiB=49 rssAfterMiB=90 glError=0x00000000
+[notice ] HudSkin: no HUD skin selected (EXPERIENCE_RUNTIME_HUD_SKIN unset): functional wireframe
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 200x150
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 200x150
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/single/opaque_bg maxRgb=1 maxA=0 meanRgb=0.000266927 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/single/transparent_bg maxRgb=1 maxA=0 meanRgb=0.000266927 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 220x160
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 220x200
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 220x160
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 220x200
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/multiple/opaque_bg maxRgb=1 maxA=1 meanRgb=0.00307111 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/multiple/transparent_bg maxRgb=1 maxA=2 meanRgb=0.00236003 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 300x220
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 300x220
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/overlap/opaque_bg maxRgb=2 maxA=1 meanRgb=0.00595884 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/overlap/transparent_bg maxRgb=2 maxA=2 meanRgb=0.00599284 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1200x660
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1200x660
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/large/opaque_bg maxRgb=1 maxA=0 meanRgb=0.0184842 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/large/transparent_bg maxRgb=1 maxA=0 meanRgb=0.0184842 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/edge/opaque_bg maxRgb=1 maxA=1 meanRgb=5.31684e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/edge/transparent_bg maxRgb=1 maxA=2 meanRgb=5.31684e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/fractional/opaque_bg maxRgb=19 maxA=48 meanRgb=0.00794452 pctRgb>8=0.0103082 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/fractional/transparent_bg maxRgb=34 maxA=112 meanRgb=0.0109592 pctRgb>8=0.0183377 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/ten_fragments/opaque_bg maxRgb=37 maxA=78 meanRgb=0.0881109 pctRgb>8=0.0405816 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/ten_fragments/transparent_bg maxRgb=43 maxA=164 meanRgb=0.0974805 pctRgb>8=0.085612 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF desaturate/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/single/opaque_bg maxRgb=2 maxA=1 meanRgb=0.000208333 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/single/transparent_bg maxRgb=2 maxA=2 meanRgb=0.000250651 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/multiple/opaque_bg maxRgb=2 maxA=1 meanRgb=0.00099537 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/multiple/transparent_bg maxRgb=2 maxA=2 meanRgb=0.00111726 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/overlap/opaque_bg maxRgb=1 maxA=1 meanRgb=0.00047526 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/overlap/transparent_bg maxRgb=2 maxA=2 meanRgb=0.000619213 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/large/opaque_bg maxRgb=1 maxA=0 meanRgb=2.78501e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/large/transparent_bg maxRgb=1 maxA=0 meanRgb=2.78501e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/edge/opaque_bg maxRgb=2 maxA=1 meanRgb=0.000303819 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/edge/transparent_bg maxRgb=2 maxA=2 meanRgb=0.000303819 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/fractional/opaque_bg maxRgb=85 maxA=48 meanRgb=0.015633 pctRgb>8=0.0349392 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/fractional/transparent_bg maxRgb=100 maxA=112 meanRgb=0.0215144 pctRgb>8=0.0349392 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/ten_fragments/opaque_bg maxRgb=164 maxA=78 meanRgb=0.112492 pctRgb>8=0.155382 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/ten_fragments/transparent_bg maxRgb=164 maxA=164 meanRgb=0.132422 pctRgb>8=0.155382 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF invert/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/single/opaque_bg maxRgb=1 maxA=1 meanRgb=0.000116102 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/single/transparent_bg maxRgb=1 maxA=2 meanRgb=0.000128762 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/multiple/opaque_bg maxRgb=1 maxA=1 meanRgb=0.00166233 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/multiple/transparent_bg maxRgb=1 maxA=2 meanRgb=0.00169886 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/overlap/opaque_bg maxRgb=1 maxA=1 meanRgb=0.00294994 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/overlap/transparent_bg maxRgb=1 maxA=2 meanRgb=0.00298611 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/large/opaque_bg maxRgb=1 maxA=0 meanRgb=0.010038 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/large/transparent_bg maxRgb=1 maxA=0 meanRgb=0.010038 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/edge/opaque_bg maxRgb=1 maxA=1 meanRgb=2.35098e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/edge/transparent_bg maxRgb=1 maxA=2 meanRgb=2.35098e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/fractional/opaque_bg maxRgb=46 maxA=48 meanRgb=0.00924913 pctRgb>8=0.0256076 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/fractional/transparent_bg maxRgb=30 maxA=112 meanRgb=0.00813621 pctRgb>8=0.0148655 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/ten_fragments/opaque_bg maxRgb=72 maxA=78 meanRgb=0.0841023 pctRgb>8=0.0919054 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/ten_fragments/transparent_bg maxRgb=37 maxA=164 meanRgb=0.0798336 pctRgb>8=0.077474 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF recolor/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/single/opaque_bg maxRgb=2 maxA=1 meanRgb=0.000168909 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/single/transparent_bg maxRgb=2 maxA=2 meanRgb=0.000192057 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/multiple/opaque_bg maxRgb=254 maxA=1 meanRgb=0.0195555 pctRgb>8=0.00401476 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/multiple/transparent_bg maxRgb=254 maxA=2 meanRgb=0.0196181 pctRgb>8=0.00401476 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/overlap/opaque_bg maxRgb=254 maxA=1 meanRgb=0.0324548 pctRgb>8=0.0062934 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/overlap/transparent_bg maxRgb=254 maxA=2 meanRgb=0.0325412 pctRgb>8=0.0062934 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/large/opaque_bg maxRgb=255 maxA=0 meanRgb=0.094809 pctRgb>8=0.0173611 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/large/transparent_bg maxRgb=255 maxA=0 meanRgb=0.094809 pctRgb>8=0.0173611 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/edge/opaque_bg maxRgb=0 maxA=1 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/edge/transparent_bg maxRgb=0 maxA=2 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/fractional/opaque_bg maxRgb=240 maxA=48 meanRgb=0.438458 pctRgb>8=0.581272 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/fractional/transparent_bg maxRgb=240 maxA=112 meanRgb=0.43277 pctRgb>8=0.559245 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/ten_fragments/opaque_bg maxRgb=254 maxA=78 meanRgb=4.74072 pctRgb>8=6.61925 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/ten_fragments/transparent_bg maxRgb=254 maxA=164 meanRgb=4.72357 pctRgb>8=6.56087 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF threshold/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/single/opaque_bg maxRgb=0 maxA=1 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/single/transparent_bg maxRgb=1 maxA=2 meanRgb=6.22106e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/multiple/opaque_bg maxRgb=0 maxA=1 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/multiple/transparent_bg maxRgb=1 maxA=2 meanRgb=0.000270182 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/overlap/opaque_bg maxRgb=0 maxA=1 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/overlap/transparent_bg maxRgb=1 maxA=2 meanRgb=0.00022678 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/large/opaque_bg maxRgb=1 maxA=0 meanRgb=5.60619e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/large/transparent_bg maxRgb=1 maxA=0 meanRgb=5.60619e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/edge/opaque_bg maxRgb=0 maxA=1 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/edge/transparent_bg maxRgb=0 maxA=2 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/fractional/opaque_bg maxRgb=16 maxA=48 meanRgb=0.0012377 pctRgb>8=0.00651042 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/fractional/transparent_bg maxRgb=37 maxA=112 meanRgb=0.00464699 pctRgb>8=0.0262587 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/ten_fragments/opaque_bg maxRgb=33 maxA=78 meanRgb=0.00565357 pctRgb>8=0.0170356 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/ten_fragments/transparent_bg maxRgb=47 maxA=164 meanRgb=0.0164359 pctRgb>8=0.093533 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF dither/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/single/opaque_bg maxRgb=1 maxA=1 meanRgb=1.95313e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/single/transparent_bg maxRgb=2 maxA=2 meanRgb=0.000105252 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/multiple/opaque_bg maxRgb=57 maxA=1 meanRgb=0.000769676 pctRgb>8=0.00390625 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/multiple/transparent_bg maxRgb=57 maxA=2 meanRgb=0.00111364 pctRgb>8=0.00390625 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/overlap/opaque_bg maxRgb=65 maxA=1 meanRgb=0.001301 pctRgb>8=0.0061849 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/overlap/transparent_bg maxRgb=65 maxA=2 meanRgb=0.00162471 pctRgb>8=0.0061849 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/large/opaque_bg maxRgb=87 maxA=0 meanRgb=0.00389902 pctRgb>8=0.0172526 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/large/transparent_bg maxRgb=87 maxA=0 meanRgb=0.00389902 pctRgb>8=0.0172526 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/edge/opaque_bg maxRgb=0 maxA=1 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/edge/transparent_bg maxRgb=0 maxA=2 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/fractional/opaque_bg maxRgb=68 maxA=48 meanRgb=0.033975 pctRgb>8=0.273112 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/fractional/transparent_bg maxRgb=95 maxA=112 meanRgb=0.0386223 pctRgb>8=0.292101 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/ten_fragments/opaque_bg maxRgb=130 maxA=78 meanRgb=0.480783 pctRgb>8=3.5281 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/ten_fragments/transparent_bg maxRgb=135 maxA=164 meanRgb=0.494795 pctRgb>8=3.58496 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF solarize/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/single/opaque_bg maxRgb=1 maxA=1 meanRgb=5.57002e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/single/transparent_bg maxRgb=1 maxA=2 meanRgb=9.11458e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/multiple/opaque_bg maxRgb=1 maxA=1 meanRgb=0.000877821 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/multiple/transparent_bg maxRgb=1 maxA=2 meanRgb=0.00100658 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/overlap/opaque_bg maxRgb=1 maxA=1 meanRgb=0.00146665 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/overlap/transparent_bg maxRgb=1 maxA=2 meanRgb=0.00157299 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/large/opaque_bg maxRgb=1 maxA=0 meanRgb=0.00427951 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/large/transparent_bg maxRgb=1 maxA=0 meanRgb=0.00427951 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/edge/opaque_bg maxRgb=1 maxA=1 meanRgb=1.66377e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/edge/transparent_bg maxRgb=1 maxA=2 meanRgb=1.66377e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/fractional/opaque_bg maxRgb=86 maxA=48 meanRgb=0.20073 pctRgb>8=0.623155 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/fractional/transparent_bg maxRgb=86 maxA=112 meanRgb=0.202024 pctRgb>8=0.636827 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/ten_fragments/opaque_bg maxRgb=144 maxA=78 meanRgb=2.55856 pctRgb>8=9.50152 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/ten_fragments/transparent_bg maxRgb=144 maxA=164 meanRgb=2.55342 pctRgb>8=9.46864 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF scanlines/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/single/opaque_bg maxRgb=1 maxA=1 meanRgb=2.60417e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/single/transparent_bg maxRgb=1 maxA=2 meanRgb=4.84664e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/multiple/opaque_bg maxRgb=1 maxA=1 meanRgb=8.02951e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/multiple/transparent_bg maxRgb=1 maxA=2 meanRgb=0.000225333 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/overlap/opaque_bg maxRgb=1 maxA=1 meanRgb=0.000162037 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/overlap/transparent_bg maxRgb=1 maxA=2 meanRgb=0.000253183 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/large/opaque_bg maxRgb=1 maxA=0 meanRgb=5.60619e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/large/transparent_bg maxRgb=1 maxA=0 meanRgb=5.60619e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/edge/opaque_bg maxRgb=0 maxA=1 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/edge/transparent_bg maxRgb=0 maxA=2 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/fractional/opaque_bg maxRgb=50 maxA=48 meanRgb=0.00319408 pctRgb>8=0.0144314 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/fractional/transparent_bg maxRgb=81 maxA=112 meanRgb=0.00504376 pctRgb>8=0.0299479 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/ten_fragments/opaque_bg maxRgb=73 maxA=78 meanRgb=0.00783203 pctRgb>8=0.0372179 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/ten_fragments/transparent_bg maxRgb=124 maxA=164 meanRgb=0.0176179 pctRgb>8=0.0963542 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF channelshift/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/single/opaque_bg maxRgb=1 maxA=0 meanRgb=3.6169e-07 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/single/transparent_bg maxRgb=1 maxA=0 meanRgb=3.6169e-07 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/multiple/opaque_bg maxRgb=1 maxA=0 meanRgb=2.53183e-06 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/multiple/transparent_bg maxRgb=1 maxA=0 meanRgb=1.44676e-06 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/overlap/opaque_bg maxRgb=1 maxA=0 meanRgb=2.89352e-06 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/overlap/transparent_bg maxRgb=1 maxA=0 meanRgb=7.2338e-07 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/large/opaque_bg maxRgb=1 maxA=0 meanRgb=5.60619e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/large/transparent_bg maxRgb=1 maxA=0 meanRgb=5.60619e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/edge/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/edge/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/fractional/opaque_bg maxRgb=1 maxA=0 meanRgb=3.6169e-06 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/fractional/transparent_bg maxRgb=1 maxA=0 meanRgb=3.6169e-06 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/ten_fragments/opaque_bg maxRgb=1 maxA=0 meanRgb=5.75087e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/ten_fragments/transparent_bg maxRgb=1 maxA=0 meanRgb=5.78704e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF hue_rotate/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/single/opaque_bg maxRgb=0 maxA=1 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/single/transparent_bg maxRgb=1 maxA=2 meanRgb=6.22106e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/multiple/opaque_bg maxRgb=1 maxA=1 meanRgb=0.000197844 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/multiple/transparent_bg maxRgb=1 maxA=2 meanRgb=0.000457176 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/overlap/opaque_bg maxRgb=1 maxA=1 meanRgb=0.00031467 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/overlap/transparent_bg maxRgb=1 maxA=2 meanRgb=0.00054145 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/large/opaque_bg maxRgb=2 maxA=0 meanRgb=0.00223235 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/large/transparent_bg maxRgb=2 maxA=0 meanRgb=0.00223235 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/edge/opaque_bg maxRgb=0 maxA=1 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/edge/transparent_bg maxRgb=0 maxA=2 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/fractional/opaque_bg maxRgb=50 maxA=48 meanRgb=0.00940104 pctRgb>8=0.0167101 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/fractional/transparent_bg maxRgb=50 maxA=112 meanRgb=0.0128103 pctRgb>8=0.0364583 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/ten_fragments/opaque_bg maxRgb=87 maxA=78 meanRgb=0.0611831 pctRgb>8=0.0946181 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/ten_fragments/transparent_bg maxRgb=111 maxA=164 meanRgb=0.072806 pctRgb>8=0.168728 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ascii_solarpunk/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/single/opaque_bg maxRgb=2 maxA=1 meanRgb=0.000239439 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/single/transparent_bg maxRgb=2 maxA=2 meanRgb=0.000267289 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/multiple/opaque_bg maxRgb=3 maxA=1 meanRgb=0.00306098 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/multiple/transparent_bg maxRgb=3 maxA=2 meanRgb=0.00311234 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/overlap/opaque_bg maxRgb=3 maxA=1 meanRgb=0.00495732 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/overlap/transparent_bg maxRgb=3 maxA=2 meanRgb=0.00503653 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/large/opaque_bg maxRgb=4 maxA=0 meanRgb=0.00267976 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/large/transparent_bg maxRgb=4 maxA=0 meanRgb=0.00267976 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/edge/opaque_bg maxRgb=1 maxA=1 meanRgb=3.97859e-06 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/edge/transparent_bg maxRgb=1 maxA=2 meanRgb=3.97859e-06 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/fractional/opaque_bg maxRgb=87 maxA=48 meanRgb=0.0606319 pctRgb>8=0.346571 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/fractional/transparent_bg maxRgb=112 maxA=112 meanRgb=0.0611415 pctRgb>8=0.342231 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/ten_fragments/opaque_bg maxRgb=93 maxA=78 meanRgb=0.486056 pctRgb>8=2.98405 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/ten_fragments/transparent_bg maxRgb=160 maxA=164 meanRgb=0.487468 pctRgb>8=2.99078 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF bioluminescence/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/single/opaque_bg maxRgb=1 maxA=1 meanRgb=0.000157335 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/single/transparent_bg maxRgb=2 maxA=2 meanRgb=0.000184823 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/multiple/opaque_bg maxRgb=2 maxA=1 meanRgb=0.00194878 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/multiple/transparent_bg maxRgb=2 maxA=2 meanRgb=0.00209382 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/overlap/opaque_bg maxRgb=2 maxA=1 meanRgb=0.0034762 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/overlap/transparent_bg maxRgb=2 maxA=2 meanRgb=0.00357711 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/large/opaque_bg maxRgb=1 maxA=0 meanRgb=0.0115896 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/large/transparent_bg maxRgb=1 maxA=0 meanRgb=0.0115896 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/edge/opaque_bg maxRgb=1 maxA=1 meanRgb=2.17014e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/edge/transparent_bg maxRgb=1 maxA=2 meanRgb=2.17014e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/fractional/opaque_bg maxRgb=52 maxA=48 meanRgb=0.0350007 pctRgb>8=0.10178 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/fractional/transparent_bg maxRgb=84 maxA=112 meanRgb=0.0358366 pctRgb>8=0.103516 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/ten_fragments/opaque_bg maxRgb=98 maxA=78 meanRgb=0.321786 pctRgb>8=0.306532 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/ten_fragments/transparent_bg maxRgb=125 maxA=164 meanRgb=0.324166 pctRgb>8=0.306532 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF chromatic_aberration/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/single/opaque_bg maxRgb=3 maxA=1 meanRgb=0.000624277 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/single/transparent_bg maxRgb=3 maxA=2 meanRgb=0.000660446 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/multiple/opaque_bg maxRgb=4 maxA=1 meanRgb=0.00612377 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/multiple/transparent_bg maxRgb=4 maxA=2 meanRgb=0.00627532 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/overlap/opaque_bg maxRgb=5 maxA=1 meanRgb=0.0105802 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/overlap/transparent_bg maxRgb=5 maxA=2 meanRgb=0.0107747 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/large/opaque_bg maxRgb=5 maxA=0 meanRgb=0.0625807 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/large/transparent_bg maxRgb=5 maxA=0 meanRgb=0.0625807 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/edge/opaque_bg maxRgb=1 maxA=1 meanRgb=0.000121166 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/edge/transparent_bg maxRgb=1 maxA=2 meanRgb=0.000121166 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/fractional/opaque_bg maxRgb=138 maxA=48 meanRgb=0.136293 pctRgb>8=0.882704 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/fractional/transparent_bg maxRgb=138 maxA=112 meanRgb=0.142186 pctRgb>8=0.882704 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/ten_fragments/opaque_bg maxRgb=164 maxA=78 meanRgb=1.46403 pctRgb>8=9.33898 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/ten_fragments/transparent_bg maxRgb=164 maxA=164 meanRgb=1.48391 pctRgb>8=9.33898 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF edge_glow/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/single/opaque_bg maxRgb=43 maxA=1 meanRgb=0.000471282 pctRgb>8=0.00336372 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/single/transparent_bg maxRgb=43 maxA=2 meanRgb=0.000470558 pctRgb>8=0.00336372 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/multiple/opaque_bg maxRgb=43 maxA=1 meanRgb=0.0093146 pctRgb>8=0.0490451 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/multiple/transparent_bg maxRgb=43 maxA=2 meanRgb=0.0093146 pctRgb>8=0.0490451 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/overlap/opaque_bg maxRgb=43 maxA=1 meanRgb=0.0189931 pctRgb>8=0.0998264 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/overlap/transparent_bg maxRgb=43 maxA=2 meanRgb=0.0189909 pctRgb>8=0.0998264 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/large/opaque_bg maxRgb=43 maxA=0 meanRgb=0.0555429 pctRgb>8=0.316949 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/large/transparent_bg maxRgb=43 maxA=0 meanRgb=0.0555429 pctRgb>8=0.316949 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/edge/opaque_bg maxRgb=22 maxA=1 meanRgb=4.6658e-05 pctRgb>8=0.000434028 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/edge/transparent_bg maxRgb=22 maxA=2 meanRgb=4.6658e-05 pctRgb>8=0.000434028 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/fractional/opaque_bg maxRgb=116 maxA=48 meanRgb=0.217462 pctRgb>8=1.39301 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/fractional/transparent_bg maxRgb=116 maxA=112 meanRgb=0.213349 pctRgb>8=1.3699 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/ten_fragments/opaque_bg maxRgb=140 maxA=78 meanRgb=2.30989 pctRgb>8=14.9582 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/ten_fragments/transparent_bg maxRgb=140 maxA=164 meanRgb=2.29723 pctRgb>8=14.8894 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF ink_outlines/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/single/opaque_bg maxRgb=1 maxA=1 meanRgb=0.000210503 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/single/transparent_bg maxRgb=2 maxA=2 meanRgb=0.000252459 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/multiple/opaque_bg maxRgb=2 maxA=1 meanRgb=0.0028776 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/multiple/transparent_bg maxRgb=2 maxA=2 meanRgb=0.00310438 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/overlap/opaque_bg maxRgb=2 maxA=1 meanRgb=0.00524667 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/overlap/transparent_bg maxRgb=2 maxA=2 meanRgb=0.00527525 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/large/opaque_bg maxRgb=1 maxA=0 meanRgb=0.0172034 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/large/transparent_bg maxRgb=1 maxA=0 meanRgb=0.0172034 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/edge/opaque_bg maxRgb=1 maxA=1 meanRgb=3.18287e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/edge/transparent_bg maxRgb=1 maxA=2 meanRgb=3.18287e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/fractional/opaque_bg maxRgb=49 maxA=48 meanRgb=0.0395092 pctRgb>8=0.0259332 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/fractional/transparent_bg maxRgb=82 maxA=112 meanRgb=0.0449975 pctRgb>8=0.0358073 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/ten_fragments/opaque_bg maxRgb=97 maxA=78 meanRgb=0.454318 pctRgb>8=0.262044 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/ten_fragments/transparent_bg maxRgb=97 maxA=164 meanRgb=0.452797 pctRgb>8=0.222114 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_drift/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/single/opaque_bg maxRgb=1 maxA=1 meanRgb=1.44676e-06 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/single/transparent_bg maxRgb=1 maxA=2 meanRgb=6.22106e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/multiple/opaque_bg maxRgb=1 maxA=1 meanRgb=0.00108398 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/multiple/transparent_bg maxRgb=1 maxA=2 meanRgb=0.00134838 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/overlap/opaque_bg maxRgb=1 maxA=1 meanRgb=0.00201751 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/overlap/transparent_bg maxRgb=2 maxA=2 meanRgb=0.00224103 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/large/opaque_bg maxRgb=1 maxA=0 meanRgb=0.00582899 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/large/transparent_bg maxRgb=1 maxA=0 meanRgb=0.00582899 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/edge/opaque_bg maxRgb=0 maxA=1 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/edge/transparent_bg maxRgb=0 maxA=2 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/fractional/opaque_bg maxRgb=16 maxA=48 meanRgb=0.0124005 pctRgb>8=0.00987413 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/fractional/transparent_bg maxRgb=47 maxA=112 meanRgb=0.0158131 pctRgb>8=0.0294054 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/ten_fragments/opaque_bg maxRgb=35 maxA=78 meanRgb=0.132832 pctRgb>8=0.0843099 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/ten_fragments/transparent_bg maxRgb=54 maxA=164 meanRgb=0.143516 pctRgb>8=0.156793 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF pixel_sorting/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/single/opaque_bg maxRgb=1 maxA=1 meanRgb=0.000166016 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/single/transparent_bg maxRgb=1 maxA=2 meanRgb=0.000133464 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/multiple/opaque_bg maxRgb=1 maxA=1 meanRgb=0.00196976 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/multiple/transparent_bg maxRgb=1 maxA=2 meanRgb=0.0018656 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/overlap/opaque_bg maxRgb=2 maxA=1 meanRgb=0.00486654 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/overlap/transparent_bg maxRgb=2 maxA=2 meanRgb=0.00475586 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/large/opaque_bg maxRgb=1 maxA=0 meanRgb=0.0170432 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/large/transparent_bg maxRgb=1 maxA=0 meanRgb=0.0170432 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/edge/opaque_bg maxRgb=1 maxA=1 meanRgb=2.78501e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/edge/transparent_bg maxRgb=1 maxA=2 meanRgb=2.78501e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/fractional/opaque_bg maxRgb=52 maxA=48 meanRgb=0.0369922 pctRgb>8=0.0798611 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/fractional/transparent_bg maxRgb=45 maxA=112 meanRgb=0.0311165 pctRgb>8=0.0505642 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/ten_fragments/opaque_bg maxRgb=81 maxA=78 meanRgb=0.42715 pctRgb>8=0.313911 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/ten_fragments/transparent_bg maxRgb=108 maxA=164 meanRgb=0.411808 pctRgb>8=0.232422 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF water_refraction/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/single/opaque_bg maxRgb=2 maxA=0 meanRgb=0.000273799 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/single/transparent_bg maxRgb=2 maxA=0 meanRgb=0.000274161 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/multiple/opaque_bg maxRgb=2 maxA=0 meanRgb=0.00488715 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/multiple/transparent_bg maxRgb=2 maxA=0 meanRgb=0.00489222 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/overlap/opaque_bg maxRgb=3 maxA=0 meanRgb=0.00855722 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/overlap/transparent_bg maxRgb=3 maxA=0 meanRgb=0.00856771 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/large/opaque_bg maxRgb=2 maxA=0 meanRgb=0.0288238 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/large/transparent_bg maxRgb=2 maxA=0 meanRgb=0.0288238 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/edge/opaque_bg maxRgb=1 maxA=0 meanRgb=3.43605e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/edge/transparent_bg maxRgb=1 maxA=0 meanRgb=3.43605e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/fractional/opaque_bg maxRgb=77 maxA=0 meanRgb=0.0398249 pctRgb>8=0.198785 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/fractional/transparent_bg maxRgb=77 maxA=0 meanRgb=0.0398134 pctRgb>8=0.198785 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/ten_fragments/opaque_bg maxRgb=83 maxA=0 meanRgb=0.450298 pctRgb>8=2.21571 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/ten_fragments/transparent_bg maxRgb=83 maxA=0 meanRgb=0.450332 pctRgb>8=2.21593 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/fading_overlap/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/fading_overlap/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/reduced_amount/opaque_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF heatmap_recolor/reduced_amount/transparent_bg maxRgb=0 maxA=0 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/single/opaque_bg maxRgb=1 maxA=1 meanRgb=3.25521e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/single/transparent_bg maxRgb=2 maxA=2 meanRgb=9.47627e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/multiple/opaque_bg maxRgb=1 maxA=1 meanRgb=0.000104167 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/multiple/transparent_bg maxRgb=1 maxA=2 meanRgb=0.000374349 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/overlap/opaque_bg maxRgb=1 maxA=1 meanRgb=0.000187355 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/overlap/transparent_bg maxRgb=2 maxA=2 meanRgb=0.000414135 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/large/opaque_bg maxRgb=1 maxA=0 meanRgb=6.79977e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/large/transparent_bg maxRgb=1 maxA=0 meanRgb=6.79977e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/edge/opaque_bg maxRgb=0 maxA=1 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/edge/transparent_bg maxRgb=0 maxA=2 meanRgb=0 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/fractional/opaque_bg maxRgb=47 maxA=48 meanRgb=0.0964117 pctRgb>8=0.191732 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/fractional/opaque_bg vs source_only maxRgb=0 meanRgb=0 pctRgb>8=0
+[notice ] BlobRenderPathAbHarness: DIFF original/fractional/transparent_bg maxRgb=98 maxA=112 meanRgb=0.102291 pctRgb>8=0.198459 pctA>8=0.0349392 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/ten_fragments/opaque_bg maxRgb=52 maxA=78 meanRgb=1.04432 pctRgb>8=2.36426 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/ten_fragments/opaque_bg vs source_only maxRgb=1 meanRgb=3.32755e-05 pctRgb>8=0
+[notice ] BlobRenderPathAbHarness: DIFF original/ten_fragments/transparent_bg maxRgb=130 maxA=164 meanRgb=1.06425 pctRgb>8=2.3648 pctA>8=0.155382 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/fading_overlap/opaque_bg maxRgb=1 maxA=1 meanRgb=1.66377e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/fading_overlap/transparent_bg maxRgb=1 maxA=1 meanRgb=0.00023112 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/reduced_amount/opaque_bg maxRgb=1 maxA=1 meanRgb=3.25521e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: DIFF original/reduced_amount/transparent_bg maxRgb=2 maxA=2 meanRgb=9.47627e-05 pctRgb>8=0 pctA>8=0 alphaLostByDirect=0
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY ascii_solarpunk: outside BLOB-002 tolerance in 1 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY bioluminescence: outside BLOB-002 tolerance in 10 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY channelshift: within BLOB-002 tolerance
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY chromatic_aberration: outside BLOB-002 tolerance in 4 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY desaturate: within BLOB-002 tolerance [production]
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY dither: within BLOB-002 tolerance
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY edge_glow: outside BLOB-002 tolerance in 12 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY heatmap_recolor: outside BLOB-002 tolerance in 6 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY hue_rotate: within BLOB-002 tolerance
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY ink_outlines: outside BLOB-002 tolerance in 14 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY invert: outside BLOB-002 tolerance in 2 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY original: within BLOB-002 tolerance [production]
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY pixel_drift: outside BLOB-002 tolerance in 2 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY pixel_sorting: outside BLOB-002 tolerance in 1 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY recolor: within BLOB-002 tolerance [production]
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY scanlines: outside BLOB-002 tolerance in 4 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY solarize: outside BLOB-002 tolerance in 10 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY threshold: outside BLOB-002 tolerance in 10 case(s)
+[notice ] BlobRenderPathAbHarness: ELIGIBILITY water_refraction: outside BLOB-002 tolerance in 2 case(s)
+[notice ] BlobRenderPathAbHarness: RESULT: 1514/1514 checks passed — PASS

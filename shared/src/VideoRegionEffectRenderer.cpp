@@ -107,6 +107,23 @@ void VideoRegionEffectRenderer::setEffectUniforms(ofShader & sh, const std::stri
 	sh.setUniform1f("time", ofGetElapsedTimef());
 }
 
+void VideoRegionEffectRenderer::countShaderBind(unsigned int program) {
+	stageTimings.shaderBinds++;
+	if (lastProgram != 0 && program != lastProgram) {
+		stageTimings.shaderSwitches++;
+	}
+	lastProgram = program;
+	for (int i = 0; i < seenProgramCount; i++) {
+		if (seenPrograms[i] == program) {
+			return;
+		}
+	}
+	if (seenProgramCount < kMaxSeenPrograms) {
+		seenPrograms[seenProgramCount++] = program;
+	}
+	stageTimings.distinctPrograms = seenProgramCount;
+}
+
 void VideoRegionEffectRenderer::render(const RenderRequest & req, ShaderLibrary & shaderLib) {
 	if (req.sourceTexture == nullptr || !req.sourceTexture->isAllocated()) {
 		return;
@@ -143,6 +160,7 @@ void VideoRegionEffectRenderer::render(const RenderRequest & req, ShaderLibrary 
 			req.sourceCropPixels.x, req.sourceCropPixels.y, req.sourceCropPixels.width, req.sourceCropPixels.height);
 		ofSetColor(255);
 		stageTimings.directDraws++;
+		stageTimings.unshadedDraws++;
 		stageTimings.shaderDirectMs += static_cast<double>(ofGetElapsedTimeMicros() - tStart) / 1000.0;
 		return;
 	}
@@ -171,6 +189,7 @@ void VideoRegionEffectRenderer::render(const RenderRequest & req, ShaderLibrary 
 			0, 0, w, h);
 		ofSetColor(255);
 		stageTimings.legacyDraws++;
+		stageTimings.unshadedDraws++;
 		stageTimings.compositeMs += static_cast<double>(ofGetElapsedTimeMicros() - tSourceDone) / 1000.0;
 		return;
 	}
@@ -179,6 +198,7 @@ void VideoRegionEffectRenderer::render(const RenderRequest & req, ShaderLibrary 
 	// ofGetWidth()/ofGetHeight() (the bug this class exists to avoid; see
 	// Quadrant.cpp:276 for the sketch-local example that gets it wrong).
 	ofShader & sh = shaderLib.get(req.effectName);
+	countShaderBind(sh.getProgram());
 
 	// 2a. Direct output: run the shader straight into the currently bound
 	// target at destinationBounds, skipping the scratch result FBO and the

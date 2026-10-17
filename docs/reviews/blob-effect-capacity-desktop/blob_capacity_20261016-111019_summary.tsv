@@ -1,0 +1,13 @@
+step	spec	plan	windows	fps	frame_ms	region_render_ms	background_render_ms	fragments	shader_fragments	distinct_used	shader_switches	stalls
+1	A	case=A mode=single set=curated shaderSlots=0 distinctTarget=1 effects=recolor load=synthetic:10@x1.00	2	30.0003	33.333	0.0493808	0.0844636	10	0	0	0	0
+2	B	case=B mode=single set=curated shaderSlots=10 distinctTarget=1 effects=recolor load=synthetic:10@x1.00	3	30.0003	33.333	0.254746	0.0725695	10	10	1	0	0
+3	C	case=C mode=single set=curated shaderSlots=5 distinctTarget=1 effects=recolor load=synthetic:10@x1.00	3	30.0003	33.333	0.165362	0.0740971	10	5	1	0	0
+4	D	case=D mode=round_robin set=pointwise shaderSlots=5 distinctTarget=2 effects=recolor+heatmap_recolor load=synthetic:10@x1.00	3	30.0003	33.333	0.172433	0.0744901	10	5	2	4	0
+5	E	case=E mode=round_robin set=pointwise shaderSlots=8 distinctTarget=4 effects=recolor+heatmap_recolor+solarize+threshold load=synthetic:10@x1.00	3	30.0003	33.333	0.227861	0.0728035	10	8	4	7	0
+6	F	case=F mode=round_robin set=curated shaderSlots=10 distinctTarget=2 effects=recolor+desaturate load=synthetic:10@x1.00	3	30.0003	33.333	0.253086	0.0728455	10	10	2	9	0
+7	G	case=G mode=round_robin set=all18 shaderSlots=10 distinctTarget=18 effects=desaturate+invert+recolor+threshold+dither+solarize+scanlines+channelshift+hue_rotate+ascii_solarpunk+bioluminescence+chromatic_aberration+edge_glow+ink_outlines+pixel_drift+pixel_sorting+water_refraction+heatmap_recolor load=synthetic:10@x1.00	3	30.0003	33.333	0.273466	0.0725077	10	10	10	9	0
+8	edge_glow@2	case=edge_glow@2 mode=single set=single:edge_glow shaderSlots=2 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00	3	30.0003	33.333	0.102364	0.0725364	10	2	1	0	0
+9	edge_glow@6	case=edge_glow@6 mode=single set=single:edge_glow shaderSlots=6 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00	3	30.0003	33.333	0.181104	0.071989	10	6	1	0	0
+10	edge_glow@10	case=edge_glow@10 mode=single set=single:edge_glow shaderSlots=10 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00	3	30.0003	33.333	0.2833	0.0726313	10	10	1	0	0
+11	w#1@10	case=w#1@10 mode=round_robin set=pointwise shaderSlots=10 distinctTarget=1 effects=recolor load=synthetic:10@x1.00	3	30.0003	33.333	0.255166	0.0730773	10	10	1	0	0
+12	w#6@10	case=w#6@10 mode=round_robin set=pointwise shaderSlots=10 distinctTarget=6 effects=recolor+heatmap_recolor+solarize+threshold+invert+desaturate load=synthetic:10@x1.00	3	30.0003	33.333	0.253124	0.0704393	10	10	6	9	0

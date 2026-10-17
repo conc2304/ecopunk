@@ -1,0 +1,253 @@
+[warning] ExperienceRuntime: verification dwell override: min 900 s, max 900 s
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-16 11:10:19.196 experience_runtime[71611:18741911] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] BlobCapacity: TSV: /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/data/captures/blob_capacity/blob_capacity_20261016-111019.tsv
+[notice ] BlobCapacity: EXPERIMENT ONLY — Blob multi-effect capacity bench enabled (EXPERIENCE_RUNTIME_BLOB_EFFECT_CAPACITY)
+[notice ] BlobCapacity: keys: F1-F7 presets A-G | , . shader slots -/+ | - = distinct -/+ | q w e r t y u effect sets | j l single-effect focus | m assignment mode | g tracked/synthetic load | z x synthetic count -/+ | b mark window + capture | i show config
+[notice ] BlobCapacity: SCRIPT 12 steps (warmup 10 s each): A:25,B:25,C:25,D:25,E:25,F:25,G:25,edge_glow@2:25,edge_glow@6:25,edge_glow@10:25,w#1@10:25,w#6@10:25
+[notice ] BlobCapacity: ---- configuration change (script step 1/12 A) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=A
+[notice ] BlobCapacity: shaderTarget=0/10 slots
+[notice ] BlobCapacity: originalTarget=10/10 slots
+[notice ] BlobCapacity: distinctShaders=1
+[notice ] BlobCapacity: effectSet=curated
+[notice ] BlobCapacity: effects=recolor[candidate]
+[notice ] BlobCapacity: assignment=single
+[notice ] BlobCapacity: pattern(id%10)=O,O,O,O,O,O,O,O,O,O
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] TFAmbientTextureLayer: loaded 19 background texture(s) from backgrounds
+[notice ] TFAmbientTextureLayer: residency=bounded pairs=19 tintTextures=19 maskTextures=0 cpuTintMiB=0.0 cpuMaskMiB=0.0 gpuEstMiB=28.2 (rgb-padded 37.6) tintPixelsKept=0 rssBeforeMiB=48 rssAfterMiB=89 glError=0x00000000
+[notice ] HudSkin: no HUD skin selected (EXPERIENCE_RUNTIME_HUD_SKIN unset): functional wireframe
+2026-10-16 11:10:19.824 experience_runtime[71611:18741909] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1280x720
+2026-10-16 11:10:20.387 experience_runtime[71611:18741868] video file loaded at 960 x 540 @ 30.000002 fps
+2026-10-16 11:10:20.433 experience_runtime[71611:18741869] video file loaded at 960 x 540 @ 30.000000 fps
+2026-10-16 11:10:20.487 experience_runtime[71611:18742177] video file loaded at 960 x 540 @ 24.000000 fps
+2026-10-16 11:10:20.533 experience_runtime[71611:18741911] video file loaded at 960 x 540 @ 30.000000 fps
+2026-10-16 11:10:20.567 experience_runtime[71611:18741911] video file loaded at 960 x 540 @ 29.970030 fps
+2026-10-16 11:10:20.609 experience_runtime[71611:18741868] video file loaded at 960 x 540 @ 24.000000 fps
+2026-10-16 11:10:20.655 experience_runtime[71611:18741868] video file loaded at 960 x 540 @ 29.970030 fps
+2026-10-16 11:10:20.702 experience_runtime[71611:18741889] video file loaded at 960 x 540 @ 24.000000 fps
+2026-10-16 11:10:20.746 experience_runtime[71611:18741889] video file loaded at 960 x 540 @ 24.000000 fps
+2026-10-16 11:10:20.796 experience_runtime[71611:18742161] video file loaded at 960 x 540 @ 29.970030 fps
+2026-10-16 11:10:20.843 experience_runtime[71611:18742168] video file loaded at 960 x 540 @ 24.000000 fps
+2026-10-16 11:10:20.887 experience_runtime[71611:18742175] video file loaded at 960 x 540 @ 23.976025 fps
+2026-10-16 11:10:20.929 experience_runtime[71611:18742168] video file loaded at 960 x 540 @ 29.970030 fps
+2026-10-16 11:10:20.966 experience_runtime[71611:18741909] video file loaded at 960 x 540 @ 30.000000 fps
+2026-10-16 11:10:21.003 experience_runtime[71611:18741889] video file loaded at 960 x 540 @ 29.970030 fps
+2026-10-16 11:10:21.039 experience_runtime[71611:18742168] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobCapacity: media pinned: media.auto.3838009d
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:10:34 step=1 case=A mode=single set=curated shaderSlots=0 distinctTarget=1 effects=recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=0.00 original=10.00 distinctUsed=0.00 effectsUsed=- frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.163 regionRenderMs=0.050 backgroundMs=0.086 detectorMs=1.431 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=10.00 shaderBinds=0.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:10:39 step=1 case=A mode=single set=curated shaderSlots=0 distinctTarget=1 effects=recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=0.00 original=10.00 distinctUsed=0.00 effectsUsed=- frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.158 regionRenderMs=0.048 backgroundMs=0.083 detectorMs=1.395 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=10.00 shaderBinds=0.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step1_A_{scene_only,hud}.png
+[notice ] BlobCapacity: ---- configuration change (script step 2/12 B) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=B
+[notice ] BlobCapacity: shaderTarget=10/10 slots
+[notice ] BlobCapacity: originalTarget=0/10 slots
+[notice ] BlobCapacity: distinctShaders=1
+[notice ] BlobCapacity: effectSet=curated
+[notice ] BlobCapacity: effects=recolor[candidate]
+[notice ] BlobCapacity: assignment=single
+[notice ] BlobCapacity: pattern(id%10)=recolor,recolor,recolor,recolor,recolor,recolor,recolor,recolor,recolor,recolor
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 230x173
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:10:59 step=2 case=B mode=single set=curated shaderSlots=10 distinctTarget=1 effects=recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=1.00 effectsUsed=recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.356 regionRenderMs=0.255 backgroundMs=0.073 detectorMs=1.402 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:11:04 step=2 case=B mode=single set=curated shaderSlots=10 distinctTarget=1 effects=recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=1.00 effectsUsed=recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.354 regionRenderMs=0.254 backgroundMs=0.072 detectorMs=1.421 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:11:09 step=2 case=B mode=single set=curated shaderSlots=10 distinctTarget=1 effects=recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=1.00 effectsUsed=recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.357 regionRenderMs=0.256 backgroundMs=0.073 detectorMs=1.419 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step2_B_{scene_only,hud}.png
+[notice ] BlobCapacity: ---- configuration change (script step 3/12 C) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=C
+[notice ] BlobCapacity: shaderTarget=5/10 slots
+[notice ] BlobCapacity: originalTarget=5/10 slots
+[notice ] BlobCapacity: distinctShaders=1
+[notice ] BlobCapacity: effectSet=curated
+[notice ] BlobCapacity: effects=recolor[candidate]
+[notice ] BlobCapacity: assignment=single
+[notice ] BlobCapacity: pattern(id%10)=O,recolor,O,recolor,O,recolor,O,recolor,O,recolor
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:11:25 step=3 case=C mode=single set=curated shaderSlots=5 distinctTarget=1 effects=recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=5.00 original=5.00 distinctUsed=1.00 effectsUsed=recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.263 regionRenderMs=0.162 backgroundMs=0.073 detectorMs=1.429 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=5.00 shaderBinds=5.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:11:30 step=3 case=C mode=single set=curated shaderSlots=5 distinctTarget=1 effects=recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=5.00 original=5.00 distinctUsed=1.00 effectsUsed=recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.270 regionRenderMs=0.167 backgroundMs=0.075 detectorMs=1.462 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=5.00 shaderBinds=5.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:11:35 step=3 case=C mode=single set=curated shaderSlots=5 distinctTarget=1 effects=recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=5.00 original=5.00 distinctUsed=1.00 effectsUsed=recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.270 regionRenderMs=0.167 backgroundMs=0.074 detectorMs=1.465 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=5.00 shaderBinds=5.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step3_C_{scene_only,hud}.png
+[notice ] BlobCapacity: ---- configuration change (script step 4/12 D) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=D
+[notice ] BlobCapacity: shaderTarget=5/10 slots
+[notice ] BlobCapacity: originalTarget=5/10 slots
+[notice ] BlobCapacity: distinctShaders=2
+[notice ] BlobCapacity: effectSet=pointwise
+[notice ] BlobCapacity: effects=recolor[candidate],heatmap_recolor[diagnostic:outside-tolerance]
+[notice ] BlobCapacity: assignment=round_robin
+[notice ] BlobCapacity: pattern(id%10)=O,recolor,O,heatmap_recolor,O,recolor,O,heatmap_recolor,O,recolor
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:11:51 step=4 case=D mode=round_robin set=pointwise shaderSlots=5 distinctTarget=2 effects=recolor+heatmap_recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=5.00 original=5.00 distinctUsed=2.00 effectsUsed=heatmap_recolor+recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.275 regionRenderMs=0.173 backgroundMs=0.074 detectorMs=1.446 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=5.00 shaderBinds=5.00 shaderSwitches=4.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:11:56 step=4 case=D mode=round_robin set=pointwise shaderSlots=5 distinctTarget=2 effects=recolor+heatmap_recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=5.00 original=5.00 distinctUsed=2.00 effectsUsed=heatmap_recolor+recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.274 regionRenderMs=0.172 backgroundMs=0.074 detectorMs=1.441 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=5.00 shaderBinds=5.00 shaderSwitches=4.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:12:01 step=4 case=D mode=round_robin set=pointwise shaderSlots=5 distinctTarget=2 effects=recolor+heatmap_recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=5.00 original=5.00 distinctUsed=2.00 effectsUsed=heatmap_recolor+recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.275 regionRenderMs=0.172 backgroundMs=0.075 detectorMs=1.440 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=5.00 shaderBinds=5.00 shaderSwitches=4.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step4_D_{scene_only,hud}.png
+[notice ] BlobCapacity: ---- configuration change (script step 5/12 E) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=E
+[notice ] BlobCapacity: shaderTarget=8/10 slots
+[notice ] BlobCapacity: originalTarget=2/10 slots
+[notice ] BlobCapacity: distinctShaders=4
+[notice ] BlobCapacity: effectSet=pointwise
+[notice ] BlobCapacity: effects=recolor[candidate],heatmap_recolor[diagnostic:outside-tolerance],solarize[diagnostic:outside-tolerance],threshold[diagnostic:outside-tolerance]
+[notice ] BlobCapacity: assignment=round_robin
+[notice ] BlobCapacity: pattern(id%10)=O,recolor,heatmap_recolor,solarize,threshold,O,recolor,heatmap_recolor,solarize,threshold
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:12:16 step=5 case=E mode=round_robin set=pointwise shaderSlots=8 distinctTarget=4 effects=recolor+heatmap_recolor+solarize+threshold load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=8.00 original=2.00 distinctUsed=4.00 effectsUsed=heatmap_recolor+recolor+solarize+threshold frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.328 regionRenderMs=0.227 backgroundMs=0.073 detectorMs=1.419 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=2.00 shaderBinds=8.00 shaderSwitches=7.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:12:21 step=5 case=E mode=round_robin set=pointwise shaderSlots=8 distinctTarget=4 effects=recolor+heatmap_recolor+solarize+threshold load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=8.00 original=2.00 distinctUsed=4.00 effectsUsed=heatmap_recolor+recolor+solarize+threshold frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.330 regionRenderMs=0.228 backgroundMs=0.073 detectorMs=1.461 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=2.00 shaderBinds=8.00 shaderSwitches=7.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:12:26 step=5 case=E mode=round_robin set=pointwise shaderSlots=8 distinctTarget=4 effects=recolor+heatmap_recolor+solarize+threshold load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=8.00 original=2.00 distinctUsed=4.00 effectsUsed=heatmap_recolor+recolor+solarize+threshold frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.329 regionRenderMs=0.228 backgroundMs=0.073 detectorMs=1.444 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=2.00 shaderBinds=8.00 shaderSwitches=7.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step5_E_{scene_only,hud}.png
+[notice ] BlobCapacity: ---- configuration change (script step 6/12 F) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=F
+[notice ] BlobCapacity: shaderTarget=10/10 slots
+[notice ] BlobCapacity: originalTarget=0/10 slots
+[notice ] BlobCapacity: distinctShaders=2
+[notice ] BlobCapacity: effectSet=curated
+[notice ] BlobCapacity: effects=recolor[candidate],desaturate[candidate]
+[notice ] BlobCapacity: assignment=round_robin
+[notice ] BlobCapacity: pattern(id%10)=recolor,desaturate,recolor,desaturate,recolor,desaturate,recolor,desaturate,recolor,desaturate
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:12:42 step=6 case=F mode=round_robin set=curated shaderSlots=10 distinctTarget=2 effects=recolor+desaturate load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=2.00 effectsUsed=desaturate+recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.357 regionRenderMs=0.255 backgroundMs=0.073 detectorMs=1.449 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=9.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:12:47 step=6 case=F mode=round_robin set=curated shaderSlots=10 distinctTarget=2 effects=recolor+desaturate load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=2.00 effectsUsed=desaturate+recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.354 regionRenderMs=0.253 backgroundMs=0.072 detectorMs=1.429 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=9.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:12:52 step=6 case=F mode=round_robin set=curated shaderSlots=10 distinctTarget=2 effects=recolor+desaturate load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=2.00 effectsUsed=desaturate+recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.352 regionRenderMs=0.251 backgroundMs=0.073 detectorMs=1.439 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=9.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step6_F_{scene_only,hud}.png
+[notice ] BlobCapacity: ---- configuration change (script step 7/12 G) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=G
+[notice ] BlobCapacity: shaderTarget=10/10 slots
+[notice ] BlobCapacity: originalTarget=0/10 slots
+[notice ] BlobCapacity: distinctShaders=18
+[notice ] BlobCapacity: effectSet=all18
+[notice ] BlobCapacity: effects=desaturate[candidate],invert[diagnostic:outside-tolerance],recolor[candidate],threshold[diagnostic:outside-tolerance],dither[diagnostic:no-op-at-defaults],solarize[diagnostic:outside-tolerance],scanlines[diagnostic:outside-tolerance],channelshift[diagnostic:uv-artifacts],hue_rotate[diagnostic:no-op-at-defaults],ascii_solarpunk[diagnostic:outside-tolerance],bioluminescence[diagnostic:outside-tolerance],chromatic_aberration[diagnostic:outside-tolerance],edge_glow[diagnostic:outside-tolerance],ink_outlines[diagnostic:outside-tolerance],pixel_drift[diagnostic:outside-tolerance],pixel_sorting[diagnostic:outside-tolerance],water_refraction[diagnostic:outside-tolerance],heatmap_recolor[diagnostic:outside-tolerance]
+[notice ] BlobCapacity: assignment=round_robin
+[notice ] BlobCapacity: pattern(id%10)=desaturate,invert,recolor,threshold,dither,solarize,scanlines,channelshift,hue_rotate,ascii_solarpunk
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:13:08 step=7 case=G mode=round_robin set=all18 shaderSlots=10 distinctTarget=18 effects=desaturate+invert+recolor+threshold+dither+solarize+scanlines+channelshift+hue_rotate+ascii_solarpunk+bioluminescence+chromatic_aberration+edge_glow+ink_outlines+pixel_drift+pixel_sorting+water_refraction+heatmap_recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=10.00 effectsUsed=ascii_solarpunk+channelshift+desaturate+dither+hue_rotate+invert+recolor+scanlines+solarize+threshold frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.372 regionRenderMs=0.272 backgroundMs=0.072 detectorMs=1.416 trackerMs=0.005 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=9.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:13:13 step=7 case=G mode=round_robin set=all18 shaderSlots=10 distinctTarget=18 effects=desaturate+invert+recolor+threshold+dither+solarize+scanlines+channelshift+hue_rotate+ascii_solarpunk+bioluminescence+chromatic_aberration+edge_glow+ink_outlines+pixel_drift+pixel_sorting+water_refraction+heatmap_recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=10.00 effectsUsed=ascii_solarpunk+channelshift+desaturate+dither+hue_rotate+invert+recolor+scanlines+solarize+threshold frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.376 regionRenderMs=0.275 backgroundMs=0.073 detectorMs=1.408 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=9.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:13:18 step=7 case=G mode=round_robin set=all18 shaderSlots=10 distinctTarget=18 effects=desaturate+invert+recolor+threshold+dither+solarize+scanlines+channelshift+hue_rotate+ascii_solarpunk+bioluminescence+chromatic_aberration+edge_glow+ink_outlines+pixel_drift+pixel_sorting+water_refraction+heatmap_recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=10.00 effectsUsed=ascii_solarpunk+channelshift+desaturate+dither+hue_rotate+invert+recolor+scanlines+solarize+threshold frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.374 regionRenderMs=0.274 backgroundMs=0.072 detectorMs=1.383 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=9.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step7_G_{scene_only,hud}.png
+[notice ] BlobCapacity: ---- configuration change (script step 8/12 edge_glow@2) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=edge_glow@2
+[notice ] BlobCapacity: shaderTarget=2/10 slots
+[notice ] BlobCapacity: originalTarget=8/10 slots
+[notice ] BlobCapacity: distinctShaders=1
+[notice ] BlobCapacity: effectSet=single:edge_glow
+[notice ] BlobCapacity: effects=edge_glow[diagnostic:outside-tolerance]
+[notice ] BlobCapacity: assignment=single
+[notice ] BlobCapacity: pattern(id%10)=O,O,O,O,edge_glow,O,O,O,O,edge_glow
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:13:33 step=8 case=edge_glow@2 mode=single set=single:edge_glow shaderSlots=2 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=2.00 original=8.00 distinctUsed=1.00 effectsUsed=edge_glow frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.202 regionRenderMs=0.103 backgroundMs=0.072 detectorMs=1.377 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=8.00 shaderBinds=2.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:13:38 step=8 case=edge_glow@2 mode=single set=single:edge_glow shaderSlots=2 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=2.00 original=8.00 distinctUsed=1.00 effectsUsed=edge_glow frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.200 regionRenderMs=0.101 backgroundMs=0.072 detectorMs=1.372 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=8.00 shaderBinds=2.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:13:43 step=8 case=edge_glow@2 mode=single set=single:edge_glow shaderSlots=2 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=2.00 original=8.00 distinctUsed=1.00 effectsUsed=edge_glow frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.203 regionRenderMs=0.103 backgroundMs=0.073 detectorMs=1.379 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=8.00 shaderBinds=2.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step8_edge_glow_2_{scene_only,hud}.png
+[notice ] BlobCapacity: ---- configuration change (script step 9/12 edge_glow@6) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=edge_glow@6
+[notice ] BlobCapacity: shaderTarget=6/10 slots
+[notice ] BlobCapacity: originalTarget=4/10 slots
+[notice ] BlobCapacity: distinctShaders=1
+[notice ] BlobCapacity: effectSet=single:edge_glow
+[notice ] BlobCapacity: effects=edge_glow[diagnostic:outside-tolerance]
+[notice ] BlobCapacity: assignment=single
+[notice ] BlobCapacity: pattern(id%10)=O,edge_glow,O,edge_glow,edge_glow,O,edge_glow,O,edge_glow,edge_glow
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:13:59 step=9 case=edge_glow@6 mode=single set=single:edge_glow shaderSlots=6 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=6.00 original=4.00 distinctUsed=1.00 effectsUsed=edge_glow frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.281 regionRenderMs=0.182 backgroundMs=0.071 detectorMs=1.350 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=4.00 shaderBinds=6.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:14:04 step=9 case=edge_glow@6 mode=single set=single:edge_glow shaderSlots=6 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=6.00 original=4.00 distinctUsed=1.00 effectsUsed=edge_glow frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.280 regionRenderMs=0.182 backgroundMs=0.071 detectorMs=1.343 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=4.00 shaderBinds=6.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:14:09 step=9 case=edge_glow@6 mode=single set=single:edge_glow shaderSlots=6 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=6.00 original=4.00 distinctUsed=1.00 effectsUsed=edge_glow frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.281 regionRenderMs=0.179 backgroundMs=0.074 detectorMs=1.329 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=4.00 shaderBinds=6.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step9_edge_glow_6_{scene_only,hud}.png
+[notice ] BlobCapacity: ---- configuration change (script step 10/12 edge_glow@10) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=edge_glow@10
+[notice ] BlobCapacity: shaderTarget=10/10 slots
+[notice ] BlobCapacity: originalTarget=0/10 slots
+[notice ] BlobCapacity: distinctShaders=1
+[notice ] BlobCapacity: effectSet=single:edge_glow
+[notice ] BlobCapacity: effects=edge_glow[diagnostic:outside-tolerance]
+[notice ] BlobCapacity: assignment=single
+[notice ] BlobCapacity: pattern(id%10)=edge_glow,edge_glow,edge_glow,edge_glow,edge_glow,edge_glow,edge_glow,edge_glow,edge_glow,edge_glow
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:14:25 step=10 case=edge_glow@10 mode=single set=single:edge_glow shaderSlots=10 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=1.00 effectsUsed=edge_glow frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.378 regionRenderMs=0.276 backgroundMs=0.072 detectorMs=1.378 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:14:30 step=10 case=edge_glow@10 mode=single set=single:edge_glow shaderSlots=10 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=1.00 effectsUsed=edge_glow frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.393 regionRenderMs=0.291 backgroundMs=0.073 detectorMs=1.388 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:14:35 step=10 case=edge_glow@10 mode=single set=single:edge_glow shaderSlots=10 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=1.00 effectsUsed=edge_glow frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.385 regionRenderMs=0.283 backgroundMs=0.073 detectorMs=1.367 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step10_edge_glow_10_{scene_only,hud}.png
+[notice ] BlobCapacity: ---- configuration change (script step 11/12 w#1@10) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=w#1@10
+[notice ] BlobCapacity: shaderTarget=10/10 slots
+[notice ] BlobCapacity: originalTarget=0/10 slots
+[notice ] BlobCapacity: distinctShaders=1
+[notice ] BlobCapacity: effectSet=pointwise
+[notice ] BlobCapacity: effects=recolor[candidate]
+[notice ] BlobCapacity: assignment=round_robin
+[notice ] BlobCapacity: pattern(id%10)=recolor,recolor,recolor,recolor,recolor,recolor,recolor,recolor,recolor,recolor
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:14:50 step=11 case=w#1@10 mode=round_robin set=pointwise shaderSlots=10 distinctTarget=1 effects=recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=1.00 effectsUsed=recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.357 regionRenderMs=0.255 backgroundMs=0.074 detectorMs=1.371 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:14:56 step=11 case=w#1@10 mode=round_robin set=pointwise shaderSlots=10 distinctTarget=1 effects=recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=1.00 effectsUsed=recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.355 regionRenderMs=0.254 backgroundMs=0.073 detectorMs=1.371 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:15:01 step=11 case=w#1@10 mode=round_robin set=pointwise shaderSlots=10 distinctTarget=1 effects=recolor load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=1.00 effectsUsed=recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.357 regionRenderMs=0.256 backgroundMs=0.073 detectorMs=1.372 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step11_w_1_10_{scene_only,hud}.png
+[notice ] BlobCapacity: ---- configuration change (script step 12/12 w#6@10) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=w#6@10
+[notice ] BlobCapacity: shaderTarget=10/10 slots
+[notice ] BlobCapacity: originalTarget=0/10 slots
+[notice ] BlobCapacity: distinctShaders=6
+[notice ] BlobCapacity: effectSet=pointwise
+[notice ] BlobCapacity: effects=recolor[candidate],heatmap_recolor[diagnostic:outside-tolerance],solarize[diagnostic:outside-tolerance],threshold[diagnostic:outside-tolerance],invert[diagnostic:outside-tolerance],desaturate[candidate]
+[notice ] BlobCapacity: assignment=round_robin
+[notice ] BlobCapacity: pattern(id%10)=recolor,heatmap_recolor,solarize,threshold,invert,desaturate,recolor,heatmap_recolor,solarize,threshold
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 10 s (fragments re-acquire), then 5 s windows
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:15:16 step=12 case=w#6@10 mode=round_robin set=pointwise shaderSlots=10 distinctTarget=6 effects=recolor+heatmap_recolor+solarize+threshold+invert+desaturate load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=6.00 effectsUsed=desaturate+heatmap_recolor+invert+recolor+solarize+threshold frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.354 regionRenderMs=0.256 backgroundMs=0.071 detectorMs=1.337 trackerMs=0.004 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=9.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:15:21 step=12 case=w#6@10 mode=round_robin set=pointwise shaderSlots=10 distinctTarget=6 effects=recolor+heatmap_recolor+solarize+threshold+invert+desaturate load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=6.00 effectsUsed=desaturate+heatmap_recolor+invert+recolor+solarize+threshold frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.353 regionRenderMs=0.255 backgroundMs=0.071 detectorMs=1.318 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=9.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: WINDOW ts=2026-10-16T11:15:26 step=12 case=w#6@10 mode=round_robin set=pointwise shaderSlots=10 distinctTarget=6 effects=recolor+heatmap_recolor+solarize+threshold+invert+desaturate load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=10.00 original=0.00 distinctUsed=6.00 effectsUsed=desaturate+heatmap_recolor+invert+recolor+solarize+threshold frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.345 regionRenderMs=0.248 backgroundMs=0.070 detectorMs=1.298 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=0.00 shaderBinds=10.00 shaderSwitches=9.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step12_w_6_10_{scene_only,hud}.png
+[notice ] BlobCapacity: ==================== SCRIPT SUMMARY (means of steady windows) ====================
+[notice ] BlobCapacity: SUMMARY step=1 spec=A windows=2 fps=30.00 frameMs=33.333 regionRenderMs=0.049 backgroundMs=0.084 fragments=10.00 shader=0.00 distinctUsed=0.00 shaderSwitches=0.00 stalls=0 | case=A mode=single set=curated shaderSlots=0 distinctTarget=1 effects=recolor load=synthetic:10@x1.00
+[notice ] BlobCapacity: SUMMARY step=2 spec=B windows=3 fps=30.00 frameMs=33.333 regionRenderMs=0.255 backgroundMs=0.073 fragments=10.00 shader=10.00 distinctUsed=1.00 shaderSwitches=0.00 stalls=0 | case=B mode=single set=curated shaderSlots=10 distinctTarget=1 effects=recolor load=synthetic:10@x1.00
+[notice ] BlobCapacity: SUMMARY step=3 spec=C windows=3 fps=30.00 frameMs=33.333 regionRenderMs=0.165 backgroundMs=0.074 fragments=10.00 shader=5.00 distinctUsed=1.00 shaderSwitches=0.00 stalls=0 | case=C mode=single set=curated shaderSlots=5 distinctTarget=1 effects=recolor load=synthetic:10@x1.00
+[notice ] BlobCapacity: SUMMARY step=4 spec=D windows=3 fps=30.00 frameMs=33.333 regionRenderMs=0.172 backgroundMs=0.074 fragments=10.00 shader=5.00 distinctUsed=2.00 shaderSwitches=4.00 stalls=0 | case=D mode=round_robin set=pointwise shaderSlots=5 distinctTarget=2 effects=recolor+heatmap_recolor load=synthetic:10@x1.00
+[notice ] BlobCapacity: SUMMARY step=5 spec=E windows=3 fps=30.00 frameMs=33.333 regionRenderMs=0.228 backgroundMs=0.073 fragments=10.00 shader=8.00 distinctUsed=4.00 shaderSwitches=7.00 stalls=0 | case=E mode=round_robin set=pointwise shaderSlots=8 distinctTarget=4 effects=recolor+heatmap_recolor+solarize+threshold load=synthetic:10@x1.00
+[notice ] BlobCapacity: SUMMARY step=6 spec=F windows=3 fps=30.00 frameMs=33.333 regionRenderMs=0.253 backgroundMs=0.073 fragments=10.00 shader=10.00 distinctUsed=2.00 shaderSwitches=9.00 stalls=0 | case=F mode=round_robin set=curated shaderSlots=10 distinctTarget=2 effects=recolor+desaturate load=synthetic:10@x1.00
+[notice ] BlobCapacity: SUMMARY step=7 spec=G windows=3 fps=30.00 frameMs=33.333 regionRenderMs=0.273 backgroundMs=0.073 fragments=10.00 shader=10.00 distinctUsed=10.00 shaderSwitches=9.00 stalls=0 | case=G mode=round_robin set=all18 shaderSlots=10 distinctTarget=18 effects=desaturate+invert+recolor+threshold+dither+solarize+scanlines+channelshift+hue_rotate+ascii_solarpunk+bioluminescence+chromatic_aberration+edge_glow+ink_outlines+pixel_drift+pixel_sorting+water_refraction+heatmap_recolor load=synthetic:10@x1.00
+[notice ] BlobCapacity: SUMMARY step=8 spec=edge_glow@2 windows=3 fps=30.00 frameMs=33.333 regionRenderMs=0.102 backgroundMs=0.073 fragments=10.00 shader=2.00 distinctUsed=1.00 shaderSwitches=0.00 stalls=0 | case=edge_glow@2 mode=single set=single:edge_glow shaderSlots=2 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00
+[notice ] BlobCapacity: SUMMARY step=9 spec=edge_glow@6 windows=3 fps=30.00 frameMs=33.333 regionRenderMs=0.181 backgroundMs=0.072 fragments=10.00 shader=6.00 distinctUsed=1.00 shaderSwitches=0.00 stalls=0 | case=edge_glow@6 mode=single set=single:edge_glow shaderSlots=6 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00
+[notice ] BlobCapacity: SUMMARY step=10 spec=edge_glow@10 windows=3 fps=30.00 frameMs=33.333 regionRenderMs=0.283 backgroundMs=0.073 fragments=10.00 shader=10.00 distinctUsed=1.00 shaderSwitches=0.00 stalls=0 | case=edge_glow@10 mode=single set=single:edge_glow shaderSlots=10 distinctTarget=1 effects=edge_glow load=synthetic:10@x1.00
+[notice ] BlobCapacity: SUMMARY step=11 spec=w#1@10 windows=3 fps=30.00 frameMs=33.333 regionRenderMs=0.255 backgroundMs=0.073 fragments=10.00 shader=10.00 distinctUsed=1.00 shaderSwitches=0.00 stalls=0 | case=w#1@10 mode=round_robin set=pointwise shaderSlots=10 distinctTarget=1 effects=recolor load=synthetic:10@x1.00
+[notice ] BlobCapacity: SUMMARY step=12 spec=w#6@10 windows=3 fps=30.00 frameMs=33.333 regionRenderMs=0.253 backgroundMs=0.070 fragments=10.00 shader=10.00 distinctUsed=6.00 shaderSwitches=9.00 stalls=0 | case=w#6@10 mode=round_robin set=pointwise shaderSlots=10 distinctTarget=6 effects=recolor+heatmap_recolor+solarize+threshold+invert+desaturate load=synthetic:10@x1.00
+[notice ] BlobCapacity: SCRIPT COMPLETE — windows: /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/data/captures/blob_capacity/blob_capacity_20261016-111019.tsv summary: /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/data/captures/blob_capacity/blob_capacity_20261016-111019_summary.tsv tempC=NA throttled=NA

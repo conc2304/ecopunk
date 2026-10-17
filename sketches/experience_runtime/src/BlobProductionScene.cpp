@@ -5,6 +5,7 @@
 #include "ofLog.h"
 #include "ofUtils.h"
 #include <algorithm>
+#include <cctype>
 #include <cstdlib>
 
 BlobProductionScene::BlobProductionScene(VideoPlaybackService & video)
@@ -39,6 +40,15 @@ void BlobProductionScene::setup(const SceneServices & services) {
 		ofLogNotice("BlobRenderProfile") << "EXPERIENCE_RUNTIME_BLOB_BACKGROUND_NORMAL set: background drawn unshaded (pre-desaturated-world model)";
 	}
 
+	// Blob Experiment 2 (opt-in only): per-track-id treatment assignment
+	// replaces the media-change policy while the capacity bench runs.
+	if (BlobEffectCapacityBench::isRequested()) {
+		capacityBench_ = std::make_unique<BlobEffectCapacityBench>();
+		capacityBench_->setup();
+		core_.regionController().effectAssigner = [this](int id) { return capacityBench_->plan().effectForId(id); };
+		mediaPinPending_ = !capacityBench_->wantedMedia().empty();
+	}
+
 	renderProfileEnabled_ = std::getenv("EXPERIENCE_RUNTIME_BLOB_RENDER_PROFILE") != nullptr;
 	if (std::getenv("EXPERIENCE_RUNTIME_BLOB_RENDER_LEGACY") != nullptr) {
 		core_.regionController().renderer().setDirectOutputEnabled(false);
@@ -66,7 +76,9 @@ void BlobProductionScene::update(float dt) {
 	// BlobEffectPolicy.h). Only new fragments pick up a changed effect —
 	// VideoRegionController captures effectName at fragment creation — so
 	// fragments already on screen keep theirs until they dissolve.
-	if (effectPolicy_.observeMedia(video_.status().mediaId)) {
+	if (capacityBench_) {
+		updateCapacityBench();
+	} else if (effectPolicy_.observeMedia(video_.status().mediaId)) {
 		core_.regionParams().effectName = effectPolicy_.currentTreatment().regionEffectName();
 		ofLogNotice("BlobProductionScene") << "fragment treatment -> " << effectPolicy_.currentTreatment().id();
 	}
@@ -85,7 +97,7 @@ void BlobProductionScene::drawToCurrentTarget() {
 	// migration-matrix.md's Blob row).
 	ofRectangle destRect(0, 0, static_cast<float>(kNativeWidth), static_cast<float>(kNativeHeight));
 	RT004_SCOPE("Blob.core.draw");
-	if (!renderProfileEnabled_) {
+	if (!renderProfileEnabled_ && !capacityBench_) {
 		core_.draw(destRect);
 		return;
 	}
@@ -93,7 +105,68 @@ void BlobProductionScene::drawToCurrentTarget() {
 	core_.backgroundEffectRenderer().resetStageTimings();
 	uint64_t t0 = ofGetElapsedTimeMicros();
 	core_.draw(destRect);
-	recordRenderProfileFrame(static_cast<float>(ofGetElapsedTimeMicros() - t0) / 1000.0f);
+	float drawMs = static_cast<float>(ofGetElapsedTimeMicros() - t0) / 1000.0f;
+	if (renderProfileEnabled_) {
+		recordRenderProfileFrame(drawMs);
+	}
+	if (capacityBench_) {
+		BlobEffectCapacityBench::FrameSample s;
+		s.frameSeconds = static_cast<float>(ofGetLastFrameTime());
+		s.detectorMs = lastUpdateTimings_.detectorMs;
+		s.trackerMs = lastUpdateTimings_.trackerMs;
+		s.regionUpdateMs = lastUpdateTimings_.regionUpdateMs;
+		s.sceneDrawMs = drawMs;
+		s.fragment = core_.regionController().renderer().getStageTimings();
+		s.background = core_.backgroundEffectRenderer().getStageTimings();
+		core_.regionController().collectActiveEffectNames(capacityEffectNames_);
+		s.fragmentEffects = &capacityEffectNames_;
+		s.mediaId = video_.status().mediaId.value_or("");
+		capacityBench_->recordFrame(s);
+	}
+}
+
+void BlobProductionScene::updateCapacityBench() {
+	if (capacityBench_->takeResetRequest()) {
+		// New configuration: drop every fragment so the next window
+		// measures only fragments assigned under it.
+		core_.reset();
+	}
+	core_.setRegionOverride(capacityBench_->syntheticLoad() ? &capacityBench_->syntheticRegions(activeSeconds_) : nullptr);
+	if (!mediaPinPending_) {
+		return;
+	}
+	// Step through the canonical catalog (one navigation per frame) until
+	// the active media matches EXPERIENCE_RUNTIME_BLOB_CAPACITY_MEDIA.
+	VideoPlaybackStatus st = video_.status();
+	auto lower = [](std::string v) {
+		std::transform(v.begin(), v.end(), v.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		return v;
+	};
+	std::string want = lower(capacityBench_->wantedMedia());
+	std::string id = lower(st.mediaId.value_or("") + " " + st.fallbackDisplayTitle.value_or(""));
+	if (id.find(want) != std::string::npos) {
+		mediaPinPending_ = false;
+		ofLogNotice("BlobCapacity") << "media pinned: " << st.mediaId.value_or("?");
+		core_.reset();
+		return;
+	}
+	bool moved = mediaPinForward_ ? video_.next() : video_.previous();
+	if (!moved) {
+		if (!mediaPinForward_) {
+			mediaPinPending_ = false;
+			ofLogError("BlobCapacity") << "no media matches '" << capacityBench_->wantedMedia() << "' — continuing on " << st.mediaId.value_or("?");
+			return;
+		}
+		mediaPinForward_ = false;
+	}
+}
+
+bool BlobProductionScene::handleCapacityKey(int key) {
+	return capacityBench_ && capacityBench_->handleKey(key);
+}
+
+bool BlobProductionScene::takeCapacityCaptureRequest(std::string & label) {
+	return capacityBench_ && capacityBench_->takeCaptureRequest(label);
 }
 
 void BlobProductionScene::recordRenderProfileFrame(float drawMs) {
@@ -211,7 +284,9 @@ SceneHudStatus BlobProductionScene::hudStatus() const {
 	// selected effect names rather than being left to imply "no effects
 	// running" when effects genuinely are.
 	// An Original treatment runs no effect, so it adds no region entry.
-	if (core_.regionParams().fragmentsEnabled && !core_.regionParams().effectName.empty()) {
+	if (capacityBench_) {
+		status.activeEffects.push_back("region: capacity-experiment " + capacityBench_->plan().caseId);
+	} else if (core_.regionParams().fragmentsEnabled && !core_.regionParams().effectName.empty()) {
 		status.activeEffects.push_back("region: " + core_.regionParams().effectName);
 	}
 	if (core_.backgroundConfig().mode == 2) {

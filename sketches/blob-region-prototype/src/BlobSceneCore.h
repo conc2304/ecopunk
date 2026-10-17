@@ -131,6 +131,13 @@ public:
 	// honest about what it is, not a new analysis pass.
 	float occupiedAreaFraction() const;
 
+	// Experiment-only region source override (Blob Experiment 2 capacity
+	// bench): when non-null, VideoRegionController is fed these regions
+	// instead of BlobTracker's. Detection/tracking still run unchanged, so
+	// their cost is still real. Not owned; null (the default) restores the
+	// tracked path.
+	void setRegionOverride(const std::vector<VideoRegion> * regions) { regionOverride_ = regions; }
+
 	// -- Debug/dev-only accessors — used by ofApp's standalone debug
 	// overlay only. The production scene adapter must never call these. --
 	BlobDetector & detector() { return detector_; }
@@ -159,6 +166,7 @@ private:
 	// FBO to full-frame size the first time the background effect is used).
 	VideoRegionEffectRenderer backgroundEffectRenderer_;
 	BackgroundConfig backgroundConfig_;
+	const std::vector<VideoRegion> * regionOverride_ = nullptr; // not owned, see setRegionOverride()
 
 	bool didSetup_ = false;
 	bool active_ = false;

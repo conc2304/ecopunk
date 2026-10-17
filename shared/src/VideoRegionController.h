@@ -5,6 +5,7 @@
 #include "VideoRegion.h"
 #include "VideoRegionEffectRenderer.h"
 #include "VideoRegionMathOf.h"
+#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -70,7 +71,17 @@ public:
 	int getScratchFboHeight() const { return effectRenderer.getScratchHeight(); }
 	VideoRegionEffectRenderer & renderer() { return effectRenderer; }
 
+	// Effect names of every live (non-dead) fragment, one entry per
+	// fragment ("" = unshaded), into out (cleared first). Diagnostic use.
+	void collectActiveEffectNames(std::vector<std::string> & out) const;
+
 	Params params;
+
+	// Optional per-region assignment (the assignEffectForId() seam). When
+	// set, a new fragment's effect is effectAssigner(region id) instead of
+	// params.effectName. Called once per fragment, at creation, so a
+	// fragment keeps its effect for its lifetime. Empty by default.
+	std::function<std::string(int)> effectAssigner;
 
 private:
 	struct ManagedRegion {

@@ -92,7 +92,8 @@ BlobSceneCore::UpdateTimings BlobSceneCore::update(float dt, const ofRectangle &
 		int srcH = static_cast<int>(srcTex->getHeight());
 
 		uint64_t t1 = ofGetElapsedTimeMicros();
-		regionController_.update(tracker_.getActiveRegions(), *srcTex, srcW, srcH, destRect, dt);
+		const std::vector<VideoRegion> & regions = regionOverride_ != nullptr ? *regionOverride_ : tracker_.getActiveRegions();
+		regionController_.update(regions, *srcTex, srcW, srcH, destRect, dt);
 		timings.regionUpdateMs = static_cast<float>(ofGetElapsedTimeMicros() - t1) / 1000.0f;
 	}
 

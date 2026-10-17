@@ -17,7 +17,10 @@ void VideoRegionController::setup(ShaderLibrary * shaderLibIn) {
 	shaderLib = shaderLibIn;
 }
 
-std::string VideoRegionController::assignEffectForId(int /*id*/) {
+std::string VideoRegionController::assignEffectForId(int id) {
+	if (effectAssigner) {
+		return effectAssigner(id);
+	}
 	// V1: every region uses the single configured effect. The per-id memo
 	// still matters — see ManagedRegion::effectName's capture-at-creation
 	// comment below — this is the seam a later per-blob effect-variety
@@ -178,6 +181,15 @@ void VideoRegionController::draw() {
 
 void VideoRegionController::reset() {
 	managed.clear();
+}
+
+void VideoRegionController::collectActiveEffectNames(std::vector<std::string> & out) const {
+	out.clear();
+	for (const auto & kv : managed) {
+		if (kv.second.fragment->getState() != Fragment::State::DEAD) {
+			out.push_back(kv.second.effectName);
+		}
+	}
 }
 
 int VideoRegionController::getActiveFragmentCount() const {

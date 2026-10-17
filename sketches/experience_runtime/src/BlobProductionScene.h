@@ -1,11 +1,13 @@
 #pragma once
 
+#include "BlobEffectCapacityBench.h"
 #include "BlobEffectPolicy.h"
 #include "BlobSceneCore.h"
 #include "SceneContract.h"
 #include "VideoPlaybackService.h"
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
 // BlobProductionScene — Blob First Complete Production Migration: the
@@ -109,8 +111,17 @@ public:
 	const BlobSceneCore::BackgroundConfig & backgroundConfigForTesting() const { return core_.backgroundConfig(); }
 	int fragmentEffectChangeCountForTesting() const { return effectPolicy_.selectionChangeCount(); }
 
+	// Blob Experiment 2 capacity bench (opt-in via
+	// EXPERIENCE_RUNTIME_BLOB_EFFECT_CAPACITY; inert otherwise). Keys are
+	// offered by the host before normal runtime routing; capture requests
+	// are served by the host, which owns the scene FBO and window.
+	bool capacityBenchEnabled() const { return capacityBench_ != nullptr; }
+	bool handleCapacityKey(int key);
+	bool takeCapacityCaptureRequest(std::string & label);
+
 private:
 	SceneSemanticData buildSemanticData() const;
+	void updateCapacityBench();
 	void recordRenderProfileFrame(float drawMs);
 
 	VideoPlaybackService & video_; // not owned, see constructor comment
@@ -120,6 +131,11 @@ private:
 	// survives activate()/reset(): the selection follows media identity,
 	// so returning to Blob on the same media keeps the same effect.
 	blobeffects::MediaEffectPolicy effectPolicy_;
+
+	std::unique_ptr<BlobEffectCapacityBench> capacityBench_;
+	std::vector<std::string> capacityEffectNames_;
+	bool mediaPinPending_ = false;
+	bool mediaPinForward_ = true;
 
 	// Opt-in Pi profiling of the fragment renderer
 	// (EXPERIENCE_RUNTIME_BLOB_RENDER_PROFILE): accumulates a window of
