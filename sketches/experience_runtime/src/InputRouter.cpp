@@ -16,6 +16,10 @@ std::optional<SceneCommand> InputRouter::translateToSceneCommand(int key) const 
 		case 'N': return SceneCommand::NextMedia;
 		case 'p':
 		case 'P': return SceneCommand::PreviousMedia;
+		// Scene & Pattern Navigation: device-neutral NEXT MODE (a physical
+		// button maps here the same way); the active scene decides.
+		case 'm':
+		case 'M': return SceneCommand::NextMode;
 		default:  return std::nullopt;
 	}
 }

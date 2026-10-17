@@ -48,6 +48,15 @@ enum class CanonicalSource : uint8_t {
 	RuntimeHealth,
 	RuntimeClockLocalSeconds,
 	RuntimeClockLocalLabel,
+	SceneIndex,
+	SceneCount,
+	ScenePosition,
+	SceneModeId,
+	SceneModeName,
+	SceneModeIndex,
+	SceneModeCount,
+	SceneModePosition,
+	ControlSceneNextModeAvailable,
 	ControlScenePreviousAvailable,
 	ControlSceneNextAvailable,
 	ControlMediaPreviousAvailable,
@@ -124,6 +133,19 @@ const std::vector<CanonicalEntry>& canonicalTable() {
 		// HUD Clock v0.1 (approved): runtime-owned HudFrameData::wallClock.
 		{"runtime.clock.local_seconds", CanonicalSource::RuntimeClockLocalSeconds, HudSourceValueType::DurationSeconds},
 		{"runtime.clock.local_label", CanonicalSource::RuntimeClockLocalLabel, HudSourceValueType::Text},
+		// Scene & Pattern Navigation (product-approved): SceneManager-owned
+		// scene position (scene.index/scene.count are HUD-Semantic-Slot-
+		// Model-v1 §12.1 slots; both one-based-for-display) and scene-owned
+		// mode position. *.position are the derived display strings ("2/5").
+		{"scene.index", CanonicalSource::SceneIndex, HudSourceValueType::Count},
+		{"scene.count", CanonicalSource::SceneCount, HudSourceValueType::Count},
+		{"scene.position", CanonicalSource::ScenePosition, HudSourceValueType::Text},
+		{"scene.mode.id", CanonicalSource::SceneModeId, HudSourceValueType::Identifier},
+		{"scene.mode.name", CanonicalSource::SceneModeName, HudSourceValueType::Text},
+		{"scene.mode.index", CanonicalSource::SceneModeIndex, HudSourceValueType::Count},
+		{"scene.mode.count", CanonicalSource::SceneModeCount, HudSourceValueType::Count},
+		{"scene.mode.position", CanonicalSource::SceneModePosition, HudSourceValueType::Text},
+		{"control.scene.next_mode.available", CanonicalSource::ControlSceneNextModeAvailable, HudSourceValueType::Boolean},
 		{"control.scene.previous.available", CanonicalSource::ControlScenePreviousAvailable, HudSourceValueType::Boolean},
 		{"control.scene.next.available", CanonicalSource::ControlSceneNextAvailable, HudSourceValueType::Boolean},
 		{"control.media.previous.available", CanonicalSource::ControlMediaPreviousAvailable, HudSourceValueType::Boolean},
@@ -400,8 +422,18 @@ std::optional<HudResolvedValue> HudSourceResolver::resolveCanonical(const std::s
 			return HudResolvedValue::identifier(*runtime.runtimeHealthId);
 		case CanonicalSource::RuntimeClockLocalSeconds:
 		case CanonicalSource::RuntimeClockLocalLabel:
-			// The fake frame carries no wall clock (deterministic Validation
-			// Studio scenarios); only HudRealFrameResolver backs these.
+		case CanonicalSource::SceneIndex:
+		case CanonicalSource::SceneCount:
+		case CanonicalSource::ScenePosition:
+		case CanonicalSource::SceneModeId:
+		case CanonicalSource::SceneModeName:
+		case CanonicalSource::SceneModeIndex:
+		case CanonicalSource::SceneModeCount:
+		case CanonicalSource::SceneModePosition:
+		case CanonicalSource::ControlSceneNextModeAvailable:
+			// The fake frame carries no wall clock, scene registry or mode
+			// status (deterministic Validation Studio scenarios); only
+			// HudRealFrameResolver backs these.
 			return HudResolvedValue::missing(it->second->valueType, HudDataClass::Literal);
 
 		case CanonicalSource::ControlScenePreviousAvailable:

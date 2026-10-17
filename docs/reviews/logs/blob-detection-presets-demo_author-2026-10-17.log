@@ -1,0 +1,76 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-17 12:07:34.219 blob-region-prototype[31303:21908704] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] ofApp: effect index choices: 0=desaturate 1=invert 2=recolor 3=threshold 4=dither 5=solarize 6=scanlines 7=channelshift 8=hue_rotate 9=ascii_solarpunk 10=bioluminescence 11=chromatic_aberration 12=edge_glow 13=ink_outlines 14=pixel_drift 15=pixel_sorting 16=water_refraction 17=heatmap_recolor
+[notice ] BlobDetectionProfile: profiles: no file yet (first save creates it) — /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-demo-120732.json
+[notice ] BlobDetectionProfile: no profile file at /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-demo-120732.json (all media use detector defaults)
+[notice ] BlobProfileDemo: scripted profile demo: author (file /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-demo-120732.json)
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 104x120
+[notice ] BlobProfileDemo: PASS — A before tuning media=media.auto.497121bc source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] BlobDetectionProfile: Saved Blob detection profile -> /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-demo-120732.json
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=28
+[notice ] BlobDetectionProfile: minArea=0.0005
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:07:35.151 blob-region-prototype[31303:21908673] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.5c8a1794
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 104x140
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 107x140
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 109x140
+[notice ] BlobProfileDemo: PASS — B before tuning (A's values must not leak) media=media.auto.5c8a1794 source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] BlobDetectionProfile: Saved Blob detection profile -> /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-demo-120732.json
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.5c8a1794
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=46
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.5
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+2026-10-17 12:07:35.537 blob-region-prototype[31303:21908691] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.40d022de
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — C (no profile) media=media.auto.40d022de source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] BlobProfileDemo: RESULT (author): 3/3 checks passed

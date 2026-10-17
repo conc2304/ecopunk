@@ -1,5 +1,7 @@
 #include "BlobRenderPathAbHarness.h"
 
+#include "BlobCapacityPlan.h"
+#include "BlobEffectBudget.h"
 #include "BlobEffectPolicy.h"
 #include "BlobSceneCore.h"
 #include "ShaderLibrary.h"
@@ -16,21 +18,29 @@ namespace {
 	constexpr int kW = 1280;
 	constexpr int kH = 720;
 	constexpr const char * kLog = "BlobRenderPathAbHarness";
-	// Production effects are the curated Blob shader treatments plus the
-	// background effect (BlobEffectPolicy.h): each must meet the same
-	// direct-vs-3-stage bound desaturate was accepted under for BLOB-002.
-	// Every other effect is still rendered and diffed and reported as
-	// within/outside that bound, but does not fail the run.
-	bool isProductionEffect(const std::string & effect) {
-		if (effect.empty() || effect == blobeffects::backgroundEffectId()) {
-			return true; // empty = the Original (unshaded) treatment
-		}
-		for (const auto & t : blobeffects::curatedFragmentTreatments()) {
-			if (!t.isOriginal() && t.effectId == effect) {
+	// Strict set: production treatments known to be BLOB-002 compatible
+	// (Original, the background effect, and budget-eligible effects whose
+	// status is "compatible" in BlobCapacityPlan's effect table). Each must
+	// meet the same direct-vs-3-stage bound desaturate was accepted under.
+	bool isBudgetEligible(const std::string & effect) {
+		for (const auto & t : blobbudget::defaultTable()) {
+			if (!t.isOriginal() && t.effectId == effect && t.eligible) {
 				return true;
 			}
 		}
 		return false;
+	}
+	bool isProductionEffect(const std::string & effect) {
+		if (effect.empty() || effect == blobeffects::backgroundEffectId()) {
+			return true; // empty = the Original (unshaded) treatment
+		}
+		const blobcapacity::EffectInfo * info = blobcapacity::findEffect(effect);
+		return isBudgetEligible(effect) && info != nullptr && info->blob002 == "compatible";
+	}
+	// Budget-eligible effects outside the BLOB-002 bound are still measured
+	// and imaged for review (fade-end transition), but not failed here.
+	bool isReviewEffect(const std::string & effect) {
+		return isBudgetEligible(effect) && !isProductionEffect(effect);
 	}
 	std::string effectLabel(const std::string & effect) { return effect.empty() ? std::string("original") : effect; }
 	// A controlled real Blob scene-only frame, relative to bin/data.
@@ -242,7 +252,7 @@ bool BlobRenderPathAbHarness::run() {
 				fboDirect.readToPixels(pa);
 				fboLegacy.readToPixels(pb);
 				bool production = isProductionEffect(effect);
-				bool saveImages = (production && opaque) || (effect == "ascii_solarpunk" && opaque && c.name == "ten_fragments");
+				bool saveImages = ((production || isReviewEffect(effect)) && opaque) || (effect == "ascii_solarpunk" && opaque && c.name == "ten_fragments");
 				ofPixels amplified;
 				if (saveImages) {
 					amplified.allocate(kW, kH, OF_PIXELS_RGB);
@@ -307,7 +317,8 @@ bool BlobRenderPathAbHarness::run() {
 		ofLogNotice(kLog) << "ELIGIBILITY " << kv.first << ": "
 						  << (kv.second == 0 ? std::string("within BLOB-002 tolerance")
 											 : "outside BLOB-002 tolerance in " + ofToString(kv.second) + " case(s)")
-						  << (isProductionEffect(kv.first == "original" ? std::string() : kv.first) ? " [production]" : "");
+						  << (isProductionEffect(kv.first == "original" ? std::string() : kv.first) ? " [production]"
+							  : isReviewEffect(kv.first) ? " [budget-eligible: review fade-end transition]" : "");
 	}
 
 	ofLogNotice(kLog) << "RESULT: " << (checks - failures) << "/" << checks << " checks passed — "

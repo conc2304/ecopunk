@@ -12,6 +12,7 @@
 #include "FocusMenuHarness.h"
 #include "BlueprintRosterHarness.h"
 #include "BlueprintHudHarness.h"
+#include "ModeNavigationHarness.h"
 #include "ParitySoakHarness.h"
 #include "ResumeWindowHarness.h"
 #include "CadenceHarness.h"
@@ -66,6 +67,7 @@ private:
 	std::unique_ptr<CadenceHarness> cadenceHarness; // Blueprint cycle-driven media cadence
 	std::unique_ptr<TemporalWarmHarness> temporalWarmHarness; // Temporal first-activation stall
 	std::unique_ptr<ThreeSceneCircuitHarness> threeSceneHarness; // RT-005 three-scene circuits
+	std::unique_ptr<ModeNavigationHarness> modeHarness; // Scene & Pattern Navigation, full roster
 	std::unique_ptr<Rt004StallDriver> stallDriver; // RT-004 diagnostic, normal path only
 	std::unique_ptr<Rt004FramePhaseProbe> framePhaseProbe; // RT-004 frame-phase diagnostic (EXPERIENCE_RUNTIME_FRAME_PHASE_PROBE)
 };

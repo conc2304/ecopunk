@@ -101,6 +101,13 @@ void ofApp::setup() {
 		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
 		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
 		&& !temporalWarmRequested && ThreeSceneCircuitHarness::isRequested();
+	// Scene & Pattern Navigation check: lowest priority; full five-scene
+	// roster (deliberately not in anyThreeSceneHarness below), startup Blob.
+	bool modeHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
+		&& !temporalWarmRequested && !threeSceneRequested && ModeNavigationHarness::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
 		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
@@ -190,6 +197,8 @@ void ofApp::setup() {
 		temporalWarmHarness = std::make_unique<TemporalWarmHarness>(runtime);
 	} else if (threeSceneRequested) {
 		threeSceneHarness = std::make_unique<ThreeSceneCircuitHarness>(runtime);
+	} else if (modeHarnessRequested) {
+		modeHarness = std::make_unique<ModeNavigationHarness>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
 		stallDriver = std::make_unique<Rt004StallDriver>(runtime);
 	}
@@ -248,6 +257,9 @@ void ofApp::update() {
 	if (threeSceneHarness) {
 		threeSceneHarness->step(ofGetLastFrameTime());
 	}
+	if (modeHarness) {
+		modeHarness->step(ofGetLastFrameTime());
+	}
 	if (blobHarness) {
 		blobHarness->step(ofGetLastFrameTime());
 	}
@@ -268,7 +280,7 @@ void ofApp::update() {
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
 	if (Rt004FramePhaseProbe::presentOnlyControl()) { ofClear(0, 0, 0, 255); return; }
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness && !modeHarness) {
 		runtime.draw();
 
 		// Blob Experiment 2: serve the bench's capture requests (scene-only

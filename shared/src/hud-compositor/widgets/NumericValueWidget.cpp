@@ -25,7 +25,11 @@ void NumericValueWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 	const auto* labelRole = input.findRole("label");
 	const bool dynamicLabel = labelRole && labelRole->shouldRender && !labelRole->useAmbientFallback
 		&& !labelRole->formattedText.empty();
-	const std::string& captionLine = dynamicLabel ? labelRole->formattedText : input.captionText;
+	// With both a static caption and a dynamic label, the line reads
+	// "CAPTION LABEL" (e.g. "MODE 3/9"); either alone is drawn as-is.
+	const std::string captionLine = !dynamicLabel ? input.captionText
+		: input.captionText.empty() ? labelRole->formattedText
+		: input.captionText + " " + labelRole->formattedText;
 	if (!captionLine.empty()) {
 		ofSetColor(scaledAlpha(colors.muted, opacity));
 		const auto& caption = textCache_.truncateToWidth(captionLine, localMaxWidth);

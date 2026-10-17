@@ -18,6 +18,9 @@ public:
 	HudWidgetType widgetType() const override { return HudWidgetType::Label; }
 	void draw(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const override;
 
+	// Native-pixel gap between the main text and an optional "suffix" role.
+	static constexpr float kSuffixGap = 16.0f;
+
 private:
 	// Owned per-widget-type instance, not per-binding — HudWidgetRegistry
 	// holds exactly one LabelWidget for the whole app lifetime (see that

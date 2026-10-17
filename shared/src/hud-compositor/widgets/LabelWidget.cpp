@@ -71,10 +71,25 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 	// work is a wider, "final skin typography"-adjacent change this
 	// wireframe-acceptance task is not scoped to make).
 	float localMaxWidth = std::max(0.0f, bounds.width - pad * 2.0f);
-	const auto& truncated = textCache_.truncateToWidth(text, localMaxWidth);
+	const float baseline = bounds.y + bounds.height * 0.65f;
+
+	// Optional dynamic suffix (scene title "  2/5"): reserved first so the
+	// main text truncates around it and the suffix itself is never cut.
+	const auto* suffixRole = input.findRole("suffix");
+	const bool hasSuffix = suffixRole && suffixRole->shouldRender && !suffixRole->formattedText.empty();
+	float suffixWidth = 0.0f;
+	if (hasSuffix) {
+		suffixWidth = textCache_.truncateToWidth(suffixRole->formattedText, localMaxWidth).widthLocal + kSuffixGap;
+	}
+	const auto& truncated = textCache_.truncateToWidth(text, std::max(0.0f, localMaxWidth - suffixWidth));
 
 	ofSetColor(scaledAlpha(colors.primary, opacity));
-	drawText(truncated.text, bounds.x + pad, bounds.y + bounds.height * 0.65f, scale);
+	drawText(truncated.text, bounds.x + pad, baseline, scale);
+	if (hasSuffix) {
+		const auto& suffix = textCache_.truncateToWidth(suffixRole->formattedText, localMaxWidth);
+		ofSetColor(scaledAlpha(colors.muted, opacity));
+		drawText(suffix.text, bounds.x + pad + truncated.widthLocal + kSuffixGap, baseline, scale);
+	}
 
 	ofPopStyle();
 }

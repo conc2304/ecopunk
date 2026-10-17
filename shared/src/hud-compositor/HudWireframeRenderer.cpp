@@ -78,6 +78,16 @@ const std::unordered_set<std::string>& clockRegions() {
 	return regions;
 }
 
+// Part 4: Scene & Pattern Navigation (17 regions in total) —
+// flexible.secondary_a (active scene's mode + the NEXT MODE focus target;
+// Hide when the scene has no mode model).
+const std::unordered_set<std::string>& navigationRegions() {
+	static const std::unordered_set<std::string> regions = {
+		"flexible.secondary_a",
+	};
+	return regions;
+}
+
 } // namespace
 
 HudWireframeRenderer::HudWireframeRenderer() : compiler_(regions_, vocabulary_) {
@@ -113,7 +123,7 @@ void HudWireframeRenderer::setScene(const std::string& sceneId) {
 
 bool HudWireframeRenderer::regionInMinimalSlice(const std::string& regionId) {
 	return originalSliceRegions().count(regionId) != 0 || livingHudRegions().count(regionId) != 0
-		|| clockRegions().count(regionId) != 0;
+		|| clockRegions().count(regionId) != 0 || navigationRegions().count(regionId) != 0;
 }
 
 bool HudWireframeRenderer::regionInOriginalMinimalSlice(const std::string& regionId) {

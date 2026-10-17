@@ -1,0 +1,686 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-17 12:10:42.226 blob-region-prototype[41855:21924080] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] ofApp: effect index choices: 0=desaturate 1=invert 2=recolor 3=threshold 4=dither 5=solarize 6=scanlines 7=channelshift 8=hue_rotate 9=ascii_solarpunk 10=bioluminescence 11=chromatic_aberration 12=edge_glow 13=ink_outlines 14=pixel_drift 15=pixel_sorting 16=water_refraction 17=heatmap_recolor
+[notice ] BlobDetectionProfile: profiles: loaded 2 profile(s) — /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-demo-120732.json
+[notice ] BlobProfileDemo: scripted profile demo: verify (file /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-demo-120732.json)
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.f26fab29
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:42.305 blob-region-prototype[41855:21924084] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.0b153878
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:42.753 blob-region-prototype[41855:21924084] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.46d6aa46
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:42.788 blob-region-prototype[41855:21924079] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.4a619257
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:42.826 blob-region-prototype[41855:21924202] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.ffe87a97
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:42.869 blob-region-prototype[41855:21924199] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:42.903 blob-region-prototype[41855:21924202] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=31
+[notice ] BlobDetectionProfile: minArea=0.0005
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 32x32
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 32x44
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 36x44
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 44x44
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 48x56
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 124x108
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 131x108
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 136x108
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 136x120
+[notice ] BlobProfileDemo: PASS — A after restart media=media.auto.497121bc source=per_media (want per_media) threshold=31 erode=0 dilate=2 minArea=0.0005 maxArea=0.35
+[notice ] BlobProfileDemo: captured captures/profile_demo_A.png
+2026-10-17 12:10:43.944 blob-region-prototype[41855:21924246] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.1ab5450d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:43.987 blob-region-prototype[41855:21924082] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.2c15ecd7
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.022 blob-region-prototype[41855:21924082] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.40d022de
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.054 blob-region-prototype[41855:21924079] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.379e4f0a
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.092 blob-region-prototype[41855:21924245] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b5b696ee
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.128 blob-region-prototype[41855:21924245] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.768dc974
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.161 blob-region-prototype[41855:21924246] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.3838009d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.200 blob-region-prototype[41855:21924199] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d9621168
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.236 blob-region-prototype[41855:21924084] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.29d9e437
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.274 blob-region-prototype[41855:21924200] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c15c43ce
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.309 blob-region-prototype[41855:21924200] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.61933905
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.345 blob-region-prototype[41855:21924200] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c7ba0540
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.384 blob-region-prototype[41855:21924203] video file loaded at 960 x 540 @ 30.000002 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b6b38c6d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.419 blob-region-prototype[41855:21924084] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.644595e0
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.452 blob-region-prototype[41855:21924203] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.7021ad87
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.488 blob-region-prototype[41855:21924079] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.52f569d8
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.525 blob-region-prototype[41855:21924136] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.823000cc
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.560 blob-region-prototype[41855:21924199] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d0a9a208
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:44.593 blob-region-prototype[41855:21924082] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.5c8a1794
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=46
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.5
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 180x120
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 180x208
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 308x248
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 376x416
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 700x556
+[notice ] PerfStats: fps=50.5 detectorMs=1.563 trackerMs=0.007 regionUpdateMs=0.008 drawMs=0.498 totalMs=9.876 trackedRegions=12 activeFragments=10 scratchFbo=700x556
+[notice ] BlobProfileDemo: PASS — B after restart media=media.auto.5c8a1794 source=per_media (want per_media) threshold=46 erode=1 dilate=1 minArea=0.0008 maxArea=0.5
+[notice ] BlobProfileDemo: captured captures/profile_demo_B.png
+2026-10-17 12:10:45.231 blob-region-prototype[41855:21924080] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.2c15ecd7
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — unprofiled media media=media.auto.2c15ecd7 source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] BlobProfileDemo: captured captures/profile_demo_unprofiled.png
+2026-10-17 12:10:46.016 blob-region-prototype[41855:21924246] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=31
+[notice ] BlobDetectionProfile: minArea=0.0005
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.052 blob-region-prototype[41855:21924199] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.823000cc
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.088 blob-region-prototype[41855:21924080] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.46d6aa46
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.124 blob-region-prototype[41855:21924080] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.61933905
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.155 blob-region-prototype[41855:21924082] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.5c8a1794
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=46
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.5
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — B again media=media.auto.5c8a1794 source=per_media (want per_media) threshold=46 erode=1 dilate=1 minArea=0.0008 maxArea=0.5
+2026-10-17 12:10:46.563 blob-region-prototype[41855:21924203] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.3838009d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.601 blob-region-prototype[41855:21924202] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.40d022de
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.635 blob-region-prototype[41855:21924080] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.29d9e437
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.672 blob-region-prototype[41855:21924200] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d0a9a208
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.703 blob-region-prototype[41855:21924080] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.739 blob-region-prototype[41855:21924292] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d9621168
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.773 blob-region-prototype[41855:21924292] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.1ab5450d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.809 blob-region-prototype[41855:21924199] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.0b153878
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.843 blob-region-prototype[41855:21924079] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b5b696ee
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.876 blob-region-prototype[41855:21924079] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.4a619257
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.909 blob-region-prototype[41855:21924246] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.ffe87a97
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.945 blob-region-prototype[41855:21924292] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.644595e0
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:46.976 blob-region-prototype[41855:21924199] video file loaded at 960 x 540 @ 30.000002 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b6b38c6d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.012 blob-region-prototype[41855:21924079] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] PerfStats: fps=61.9 detectorMs=1.555 trackerMs=0.006 regionUpdateMs=0.008 drawMs=0.282 totalMs=6.856 trackedRegions=0 activeFragments=0 scratchFbo=700x556
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.768dc974
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.044 blob-region-prototype[41855:21924084] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.f26fab29
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.081 blob-region-prototype[41855:21924084] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c7ba0540
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.112 blob-region-prototype[41855:21924084] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.7021ad87
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.147 blob-region-prototype[41855:21924079] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.379e4f0a
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.178 blob-region-prototype[41855:21924203] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.52f569d8
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.213 blob-region-prototype[41855:21924084] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c15c43ce
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.245 blob-region-prototype[41855:21924246] video file loaded at 960 x 540 @ 30.000002 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b6b38c6d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.282 blob-region-prototype[41855:21924202] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.61933905
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.313 blob-region-prototype[41855:21924202] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.ffe87a97
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.350 blob-region-prototype[41855:21924136] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.823000cc
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.387 blob-region-prototype[41855:21924084] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c7ba0540
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.420 blob-region-prototype[41855:21924136] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.2c15ecd7
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.453 blob-region-prototype[41855:21924246] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.1ab5450d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.492 blob-region-prototype[41855:21924079] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d9621168
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.525 blob-region-prototype[41855:21924246] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d0a9a208
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.570 blob-region-prototype[41855:21924199] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.768dc974
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.601 blob-region-prototype[41855:21924246] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.633 blob-region-prototype[41855:21924136] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.379e4f0a
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.667 blob-region-prototype[41855:21924200] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.40d022de
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.702 blob-region-prototype[41855:21924080] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.46d6aa46
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.734 blob-region-prototype[41855:21924080] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.52f569d8
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.765 blob-region-prototype[41855:21924203] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.f26fab29
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.798 blob-region-prototype[41855:21924084] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.0b153878
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.834 blob-region-prototype[41855:21924200] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b5b696ee
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:47.868 blob-region-prototype[41855:21924079] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=31
+[notice ] BlobDetectionProfile: minArea=0.0005
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — A again media=media.auto.497121bc source=per_media (want per_media) threshold=31 erode=0 dilate=2 minArea=0.0005 maxArea=0.35
+[notice ] BlobProfileDemo: RESULT (verify): 5/5 checks passed

@@ -21,7 +21,9 @@ namespace blobcapacity {
 
 constexpr int kSlots = 10;
 
-enum class AssignmentMode { Single, RoundRobin, Weighted };
+// Budget = the production effect budget (BlobEffectBudget.h) assigns,
+// under the bench's controlled load; the pattern is not used.
+enum class AssignmentMode { Single, RoundRobin, Weighted, Budget };
 const char * toString(AssignmentMode mode);
 
 // Known status of each Blob-selectable effect, from the BLOB-002 A/B harness
@@ -73,7 +75,8 @@ std::vector<std::string> splitList(const std::string & s, char sep);
 // "original:6,recolor:2,scanlines:2" -> pairs; invalid entries skipped.
 std::vector<std::pair<std::string, int>> parseWeights(const std::string & s);
 
-// Script step: "<preset>:<seconds>", "<effect>@<slots>:<seconds>" (single
+// Script step: "<preset>:<seconds>", "budget:<seconds>" (production budget),
+// "<effect>@<slots>:<seconds>" (single
 // effect), or "<setKey>#<distinct>@<slots>:<seconds>" (round robin over a set).
 struct ScriptStep {
 	Plan plan;

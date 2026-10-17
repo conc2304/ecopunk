@@ -96,6 +96,9 @@ void VideoRegionController::update(
 	// Drop fragments that finished dissolving.
 	for (auto it = managed.begin(); it != managed.end();) {
 		if (it->second.fragment->isDead()) {
+			if (effectReleaser) {
+				effectReleaser(it->first);
+			}
 			it = managed.erase(it);
 		} else {
 			++it;
@@ -180,6 +183,11 @@ void VideoRegionController::draw() {
 }
 
 void VideoRegionController::reset() {
+	if (effectReleaser) {
+		for (const auto & kv : managed) {
+			effectReleaser(kv.first);
+		}
+	}
 	managed.clear();
 }
 
@@ -188,6 +196,15 @@ void VideoRegionController::collectActiveEffectNames(std::vector<std::string> & 
 	for (const auto & kv : managed) {
 		if (kv.second.fragment->getState() != Fragment::State::DEAD) {
 			out.push_back(kv.second.effectName);
+		}
+	}
+}
+
+void VideoRegionController::collectActiveAssignments(std::vector<std::pair<int, std::string>> & out) const {
+	out.clear();
+	for (const auto & kv : managed) {
+		if (kv.second.fragment->getState() != Fragment::State::DEAD) {
+			out.emplace_back(kv.first, kv.second.effectName);
 		}
 	}
 }

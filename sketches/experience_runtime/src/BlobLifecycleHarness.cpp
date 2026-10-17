@@ -1,6 +1,8 @@
 #include "BlobLifecycleHarness.h"
 
 #include "AllocationCounter.h"
+#include "BlobDetectionProfileApply.h"
+#include "BlobEffectBudget.h"
 #include "BlobEffectPolicy.h"
 
 #include "ofAppRunner.h"
@@ -24,10 +26,14 @@ const SceneMetric * findMetric(const SceneSemanticData & data, const std::string
 	return nullptr;
 }
 
-bool isCuratedTreatmentId(const std::string & id) {
-	for (const auto & t : blobeffects::curatedFragmentTreatments()) {
-		if (t.id() == id) {
-			return true;
+// "" (Original) or an assignable entry of the budget table in use.
+bool isEligibleTreatment(const blobbudget::EffectBudget & budget, const std::string & effectId) {
+	if (effectId.empty()) {
+		return true;
+	}
+	for (const auto & t : budget.table()) {
+		if (t.effectId == effectId) {
+			return t.eligible && t.costCenti >= 0;
 		}
 	}
 	return false;
@@ -153,8 +159,7 @@ std::optional<std::string> BlobLifecycleHarness::currentMediaId() const {
 void BlobLifecycleHarness::beginEffectStep(const std::string & label) {
 	BlobProductionScene & blob = runtime_.blobSceneForTesting();
 	SceneManager & sceneManager = runtime_.sceneManagerForTesting();
-	effectStepChangesBefore_ = blob.fragmentEffectChangeCountForTesting();
-	effectStepEffectBefore_ = blob.fragmentTreatmentIdForTesting();
+	effectStepGenerationBefore_ = blob.paletteGenerationForTesting();
 	effectStepMediaBefore_ = currentMediaId();
 	effectStepFramesSinceMediaChange_ = -1;
 	framesInPhase_ = 0;
@@ -162,7 +167,7 @@ void BlobLifecycleHarness::beginEffectStep(const std::string & label) {
 	bool navigated = sceneManager.dispatchSceneCommand(SceneCommand::NextMedia)
 		|| sceneManager.dispatchSceneCommand(SceneCommand::PreviousMedia);
 	logResult("Effect policy " + label + ": media navigation accepted", navigated,
-		"effect before=" + effectStepEffectBefore_);
+		"palette generation before=" + ofToString(effectStepGenerationBefore_));
 }
 
 bool BlobLifecycleHarness::effectStepSettled(int framesSinceMediaChange) const {
@@ -176,24 +181,42 @@ bool BlobLifecycleHarness::effectStepSettled(int framesSinceMediaChange) const {
 }
 
 void BlobLifecycleHarness::trackEffectPerFrame() {
+	// Per-frame budget invariants against the renderer's real fragments:
+	// a live fragment never changes treatment, the budget is never
+	// exceeded, and its books hold exactly the live fragments.
 	BlobProductionScene & blob = runtime_.blobSceneForTesting();
-	std::optional<std::string> media = currentMediaId();
-	if (media != effectTrackLastMedia_) {
-		effectTrackFramesSinceMedia_ = 0;
-		effectTrackLastMedia_ = media;
-	} else {
-		effectTrackFramesSinceMedia_++;
-	}
-	// Allow one frame of lag between the shared status and the scene's own
-	// update() observing it; any later change is a reselection bug.
-	if (blob.fragmentTreatmentIdForTesting() != effectTrackLastEffect_) {
-		if (effectTrackFramesSinceMedia_ > 1) {
-			effectChangesWithoutMediaChange_++;
-			ofLogError("BlobLifecycleHarness") << "fragment effect changed without a media change: "
-				<< effectTrackLastEffect_ << " -> " << blob.fragmentTreatmentIdForTesting();
+	const blobbudget::EffectBudget & budget = blob.effectBudgetForTesting();
+	blob.collectFragmentAssignmentsForTesting(assignScratch_);
+
+	std::map<int, std::string> now;
+	int sumCost = 0;
+	bool booksMatch = budget.activeCount() == static_cast<int>(assignScratch_.size());
+	for (const auto & a : assignScratch_) {
+		now[a.first] = a.second;
+		auto prev = assignLast_.find(a.first);
+		if (prev != assignLast_.end() && prev->second != a.second) {
+			assignmentChanges_++;
+			ofLogError("BlobLifecycleHarness") << "fragment " << a.first << " changed treatment while alive: "
+				<< blobbudget::label(prev->second) << " -> " << blobbudget::label(a.second);
 		}
-		effectTrackLastEffect_ = blob.fragmentTreatmentIdForTesting();
+		std::string charged;
+		booksMatch = booksMatch && budget.activeEffectFor(a.first, charged) && charged == a.second;
+		sumCost += std::max(0, budget.costOf(a.second));
+		if (!isEligibleTreatment(budget, a.second)) {
+			ineligibleAssignments_++;
+		}
+		effectsSeen_.insert(blobbudget::label(a.second));
 	}
+	booksMatch = booksMatch && sumCost == budget.usedCostCenti();
+	if (!booksMatch) {
+		bookMismatches_++;
+	}
+	if (budget.usedCostCenti() > budget.maxCostCenti()) {
+		budgetOverruns_++;
+	}
+	peakBudgetUsedCenti_ = std::max(peakBudgetUsedCenti_, budget.usedCostCenti());
+	peakShaderFragments_ = std::max(peakShaderFragments_, budget.activeShaderCount());
+	assignLast_ = std::move(now);
 }
 
 void BlobLifecycleHarness::logSoakStatusLine() {
@@ -478,8 +501,6 @@ void BlobLifecycleHarness::step(float dt) {
 				logResult("Final activate + update/draw sequence (after all 20 cycles) succeeded", true, "");
 				captureScreenshot("final_active");
 				BlobProductionScene & blob = runtime_.blobSceneForTesting();
-				logResult("Fragment treatment is a curated Blob treatment before the effect-policy proof",
-					isCuratedTreatmentId(blob.fragmentTreatmentIdForTesting()), blob.fragmentTreatmentIdForTesting());
 				const BlobSceneCore::BackgroundConfig & bg = blob.backgroundConfigForTesting();
 				logResult("Production background is the desaturated world (mode 2, " + blobeffects::backgroundEffectId() + ")",
 					bg.mode == 2 && bg.effectName == blobeffects::backgroundEffectId() && bg.effectAmount >= 1.0f,
@@ -494,8 +515,7 @@ void BlobLifecycleHarness::step(float dt) {
 					"fragments=" + ofToString(fragmentsAfterReset));
 				captureScreenshot("background_only");
 
-				effectTrackLastMedia_ = currentMediaId();
-				effectTrackLastEffect_ = blob.fragmentTreatmentIdForTesting();
+				assignLast_.clear();
 				effectStep_ = 0;
 				beginEffectStep("step 0");
 				phase_ = Phase::EffectStep;
@@ -521,47 +541,83 @@ void BlobLifecycleHarness::step(float dt) {
 			}
 
 			BlobProductionScene & blob = runtime_.blobSceneForTesting();
-			const std::string effect = blob.fragmentTreatmentIdForTesting();
-			bool original = effect == "original";
+			const blobbudget::EffectBudget & budget = blob.effectBudgetForTesting();
 			std::string label = phase_ == Phase::EffectResume ? "resume" : "step " + ofToString(effectStep_);
-			int changes = blob.fragmentEffectChangeCountForTesting() - effectStepChangesBefore_;
+			uint64_t generations = blob.paletteGenerationForTesting() - effectStepGenerationBefore_;
 			int fragments = runtime_.currentHudFrameData().scene.activeItemCount.value_or(0);
+
+			// The live mix, as the renderer actually holds it.
+			blob.collectFragmentAssignmentsForTesting(assignScratch_);
+			std::set<std::string> liveShaders;
+			std::string mix;
+			for (const auto & a : assignScratch_) {
+				if (!a.second.empty()) {
+					liveShaders.insert(a.second);
+				}
+				mix += (mix.empty() ? "" : ",") + ofToString(a.first) + ":" + blobbudget::label(a.second);
+			}
 
 			logResult("Effect policy " + label + ": media changed and fragments settled before timeout", settled,
 				"frames=" + ofToString(framesInPhase_) + " fragments=" + ofToString(fragments));
-			logResult("Effect policy " + label + ": exactly one effect selection for one media change", changes == 1,
-				"changes=" + ofToString(changes) + " " + effectStepEffectBefore_ + " -> " + effect);
-			logResult("Effect policy " + label + ": selected effect is curated and differs from the previous one",
-				effect != effectStepEffectBefore_ && isCuratedTreatmentId(effect), effect);
-			logResult("Effect policy " + label + ": region effectName matches the treatment (empty = unshaded Original)",
-				blob.fragmentEffectForTesting() == (original ? std::string() : effect), "effectName='" + blob.fragmentEffectForTesting() + "'");
-			// Original runs no region effect, so it reports no region entry;
-			// the desaturated background is always reported.
-			bool anyRegion = false;
-			bool selectedRegion = false;
+			logResult("Effect policy " + label + ": exactly one palette generation per media change", generations == 1,
+				"generations=" + ofToString(generations) + " now=" + ofToString(blob.paletteGenerationForTesting()));
+			logResult("Effect policy " + label + ": budget within max, books match the live fragments",
+				budget.usedCostCenti() <= budget.maxCostCenti() && budget.activeCount() == static_cast<int>(assignScratch_.size()),
+				"used=" + ofToString(budget.usedCostCenti() / 100.0) + "/" + ofToString(budget.maxCostCenti() / 100.0)
+					+ " original=" + ofToString(budget.activeOriginalCount()) + " shader=" + ofToString(budget.activeShaderCount())
+					+ " fallbacks=" + ofToString(budget.fallbackCount()) + " mix=" + mix);
+			// One region entry per distinct live shader treatment (none for
+			// Original); the desaturated background is always reported.
+			std::set<std::string> reported;
 			bool backgroundReported = false;
 			for (const std::string & e : runtime_.currentHudFrameData().scene.activeEffects) {
-				anyRegion = anyRegion || e.rfind("region: ", 0) == 0;
-				selectedRegion = selectedRegion || e == "region: " + effect;
+				if (e.rfind("region: ", 0) == 0) {
+					reported.insert(e.substr(8));
+				}
 				backgroundReported = backgroundReported || e == "background: " + blobeffects::backgroundEffectId();
 			}
-			bool regionHonest = original ? !anyRegion : selectedRegion;
-			logResult("Effect policy " + label + ": SceneHudStatus.activeEffects reports the treatment and desaturated background",
-				regionHonest && backgroundReported, effect);
+			logResult("Effect policy " + label + ": SceneHudStatus.activeEffects lists exactly the live shader treatments plus the background",
+				reported == liveShaders && backgroundReported, "live=" + ofToString(liveShaders.size()) + " reported=" + ofToString(reported.size()));
 			logResult("Effect policy " + label + ": HudFrameData.effects stays std::nullopt (no Blob activity producer)",
 				!runtime_.currentHudFrameData().effects.has_value(), "");
-			captureScreenshot("effect_" + (phase_ == Phase::EffectResume ? std::string("resume") : ofToString(effectStep_)) + "_" + effect);
+
+			// Per-video detection preset: the live detector config is exactly
+			// this media's stored profile, or the canonical defaults if none.
+			{
+				std::string media = currentMediaId().value_or("");
+				const BlobDetectionProfile * stored = blob.detectionProfilesForTesting().find(media);
+				BlobDetectionProfile want = resolveProfile(blobdetectionprofile::canonicalDefaults(), stored);
+				BlobDetectionProfile have = blobdetectionprofile::fromConfig(blob.detectionConfigForTesting());
+				const auto & last = blob.lastDetectionProfileForTesting();
+				bool appliedForThisMedia = last && last->mediaId == media && last->source == (stored ? "per_media" : "defaults");
+				logResult("Detection profile " + label + ": detector config matches " + (stored ? "this media's profile" : "defaults"),
+					have == want && appliedForThisMedia,
+					"media=" + media + " source=" + (last ? last->source : std::string("-")) + " threshold=" + ofToString(*have.threshold)
+						+ " erode=" + ofToString(*have.erodeIterations) + " dilate=" + ofToString(*have.dilateIterations)
+						+ " maxArea=" + ofToString(*have.maxBlobAreaNormalized));
+			}
+			captureScreenshot("effect_" + (phase_ == Phase::EffectResume ? std::string("resume") : ofToString(effectStep_)));
 
 			if (phase_ == Phase::EffectResume) {
-				logResult("No fragment-effect change without a media change, across the whole effect-policy proof",
-					effectChangesWithoutMediaChange_ == 0, "violations=" + ofToString(effectChangesWithoutMediaChange_));
+				std::string seen;
+				for (const std::string & e : effectsSeen_) {
+					seen += (seen.empty() ? "" : ",") + e;
+				}
+				logResult("No live fragment ever changed treatment, across the whole effect-policy proof",
+					assignmentChanges_ == 0, "violations=" + ofToString(assignmentChanges_));
+				logResult("Effect budget never exceeded on any frame", budgetOverruns_ == 0,
+					"overruns=" + ofToString(budgetOverruns_) + " peakUsed=" + ofToString(peakBudgetUsedCenti_ / 100.0)
+						+ " peakShaderFragments=" + ofToString(peakShaderFragments_));
+				logResult("Budget books matched the renderer's live fragments on every frame (release on fragment death)",
+					bookMismatches_ == 0, "mismatches=" + ofToString(bookMismatches_));
+				logResult("Every assigned treatment was Original or budget-eligible", ineligibleAssignments_ == 0,
+					"ineligible=" + ofToString(ineligibleAssignments_) + " seen=" + seen);
 				phase_ = Phase::Shutdown;
 				break;
 			}
 
 			effectStep_++;
-			// One full lap plus one, so the wrap back to the first effect is exercised.
-			if (effectStep_ <= static_cast<int>(blobeffects::curatedFragmentTreatments().size())) {
+			if (effectStep_ <= kEffectSteps) {
 				beginEffectStep("step " + ofToString(effectStep_));
 			} else {
 				phase_ = Phase::EffectInactive;
@@ -572,21 +628,21 @@ void BlobLifecycleHarness::step(float dt) {
 		case Phase::EffectInactive: {
 			BlobProductionScene & blob = runtime_.blobSceneForTesting();
 			sceneManager.deactivateScene();
-			std::string effectBefore = blob.fragmentTreatmentIdForTesting();
-			int changesBefore = blob.fragmentEffectChangeCountForTesting();
+			uint64_t generationBefore = blob.paletteGenerationForTesting();
+			std::optional<std::string> mediaBefore = currentMediaId();
 			bool navigated = sceneManager.dispatchSceneCommand(SceneCommand::NextMedia)
 				|| sceneManager.dispatchSceneCommand(SceneCommand::PreviousMedia);
 			logResult("Effect policy inactive: media navigation accepted while deactivated", navigated, "");
-			logResult("Effect policy inactive: no effect selection while deactivated",
-				blob.fragmentTreatmentIdForTesting() == effectBefore && blob.fragmentEffectChangeCountForTesting() == changesBefore,
-				effectBefore + " -> " + blob.fragmentTreatmentIdForTesting());
+			logResult("Effect policy inactive: no palette generation while deactivated",
+				blob.paletteGenerationForTesting() == generationBefore, "generation=" + ofToString(blob.paletteGenerationForTesting()));
 
-			// Reactivate without another navigation: the catch-up change must
-			// happen exactly once, on the first active update that sees it.
+			// Reactivate without another navigation: the catch-up generation
+			// must happen exactly once, on the first active update that sees it.
+			// (activate() resets fragments, so live assignments start over.)
 			sceneManager.activateScene();
-			effectStepChangesBefore_ = changesBefore;
-			effectStepEffectBefore_ = effectBefore;
-			effectStepMediaBefore_ = effectTrackLastMedia_;
+			assignLast_.clear();
+			effectStepGenerationBefore_ = generationBefore;
+			effectStepMediaBefore_ = mediaBefore;
 			effectStepFramesSinceMediaChange_ = -1;
 			framesInPhase_ = 0;
 			phase_ = Phase::EffectResume;

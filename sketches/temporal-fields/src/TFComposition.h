@@ -65,6 +65,15 @@ class TFComposition {
 
 		CyclePhase getPhase() const { return phase; }
 		TFPatternType getActivePatternType() const { return activeType; }
+		// The registered cycle order, read-only: how many patterns it holds
+		// and where the active one sits (0-based; 0 if none registered).
+		size_t getPatternCount() const { return patterns.size(); }
+		size_t getActivePatternIndex() const {
+			for (size_t i = 0; i < patterns.size(); i++) {
+				if (patterns[i].first == activeType) return i;
+			}
+			return 0;
+		}
 		int getCycleSeed() const { return cycleSeed; }
 		// Increments once per new cycle (every switchToPattern(): startCycle,
 		// auto-advance, forcePattern) — lets per-cycle consumers (ambient

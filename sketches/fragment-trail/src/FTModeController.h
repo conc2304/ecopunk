@@ -31,6 +31,12 @@ public:
 	void setDwellDuration(float seconds) { dwellDuration = seconds; }
 
 	FTContentMode getCurrentMode() const { return currentMode; }
+	// Steps to the next mode in the same wrapping order TIMER rotation uses
+	// (TIME_SLICE -> EFFECT_VARIED -> EFFECT_PARAM_VARIANT -> TIME_SLICE),
+	// regardless of strategy — a host-driven step, like the '1'-'3' keys.
+	void nextMode();
+	static constexpr int kModeCount = 3; // FTContentMode values, all reachable
+	int currentModeIndex() const { return static_cast<int>(currentMode); }
 	const std::string& getModeCEffectName() const { return modeCEffectName; }
 
 private:

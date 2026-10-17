@@ -10,6 +10,7 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"slot.scene.activity.label", "ACTIVITY"},
 		{"slot.scene.timing.label", "ACTIVE TIME"},
 		{"slot.effects.health.label", "EFFECTS"},
+		{"slot.scene.mode.label", "MODE"},
 		{"overlay.transition.label", "TRANSITION"},
 
 		// -- Health (shared across scene.health/media.health/
@@ -92,6 +93,18 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"ecological_succession", "ECOLOGICAL SUCCESSION"},
 		{"network_growth", "NETWORK GROWTH"},
 		{"temporal_tides", "TEMPORAL TIDES"},
+
+		// -- Scene mode IDs (SceneModeStatus::modeId, Scene & Pattern
+		// Navigation) beyond Temporal's pattern IDs above — bare keys, the
+		// same IDs each scene already publishes as its mode metric.
+		{"time_slice", "TIME SLICE"},
+		{"effect_varied", "EFFECT VARIED"},
+		{"effect_param_variant", "EFFECT PARAM VARIANT"},
+		{"ghost_layers", "GHOST LAYERS"},
+		{"perpetual", "PERPETUAL"},
+		{"natural_background", "NATURAL BACKGROUND"},
+		{"desaturated_background", "DESATURATED BACKGROUND"},
+		{"no_background", "NO BACKGROUND"},
 
 		// -- Fragment state IDs (§18.4) -----------------------------------
 		{"scene.fragment.state.drifting", "DRIFTING"},

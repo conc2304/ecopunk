@@ -741,7 +741,121 @@ void test_real_clock_label_cache_through_resolver() {
 	HUD_CHECK_EQ_STR(resolver.resolve("runtime.clock.local_label", frame)->textValue, "WED 14 OCT 2026 IST");
 }
 
+// ---------------------------------------------------------------------
+// Scene & Pattern Navigation — scene position, mode position, NEXT MODE
+// availability, all derived from SceneManagerStatus / SceneModeStatus.
+// ---------------------------------------------------------------------
+namespace {
+
+SceneModeStatus modeOf(const std::string& id, const std::string& name, int index, int count) {
+	SceneModeStatus m;
+	m.modeId = id;
+	m.displayName = name;
+	m.index = index;
+	m.count = count;
+	return m;
+}
+
+void advertise(HudFrameData& f, SceneCommand c) {
+	SceneCommandDescriptor d;
+	d.command = c;
+	d.label = "x";
+	f.capabilities.commands.push_back(d);
+}
+
+} // namespace
+
+void test_real_scene_position() {
+	HudRealFrameResolver resolver;
+	HudFrameData frame = makeMinimalRealFrame();
+
+	// No registry information (FakeScene path / before activation): missing.
+	HUD_CHECK(!resolver.resolve("scene.index", frame)->present);
+	HUD_CHECK(!resolver.resolve("scene.count", frame)->present);
+	HUD_CHECK(!resolver.resolve("scene.position", frame)->present);
+
+	frame.sceneManager.activeSceneIndex = 1;
+	frame.sceneManager.availableSceneCount = 5;
+	HUD_CHECK(resolver.resolve("scene.index", frame)->numberValue == 2.0f); // one-based
+	HUD_CHECK(resolver.resolve("scene.count", frame)->numberValue == 5.0f);
+	HUD_CHECK_EQ_STR(resolver.resolve("scene.position", frame)->textValue, "2/5");
+
+	// Reduced harness rosters report their own real size.
+	frame.sceneManager.activeSceneIndex = 2;
+	frame.sceneManager.availableSceneCount = 3;
+	HUD_CHECK_EQ_STR(resolver.resolve("scene.position", frame)->textValue, "3/3");
+
+	// An index outside the registry is never displayed.
+	frame.sceneManager.activeSceneIndex = 5;
+	frame.sceneManager.availableSceneCount = 5;
+	HUD_CHECK(!resolver.resolve("scene.position", frame)->present);
+	frame.sceneManager.activeSceneIndex = -1;
+	HUD_CHECK(!resolver.resolve("scene.index", frame)->present);
+}
+
+void test_real_mode_sources() {
+	HudRealFrameResolver resolver;
+	HudVocabularyResolver vocabulary;
+	resolver.setVocabulary(&vocabulary);
+	HudFrameData frame = makeMinimalRealFrame();
+	frame.scene.sceneId = "temporal-fields";
+
+	// No mode model: every mode source missing, NEXT MODE unsupported (hidden).
+	HUD_CHECK(!resolver.resolve("scene.mode.name", frame)->present);
+	HUD_CHECK(!resolver.resolve("scene.mode.position", frame)->present);
+	HUD_CHECK(!resolver.resolve("control.scene.next_mode.available", frame)->present);
+
+	// Curated vocabulary text wins for a known stable ID.
+	frame.scene.mode = modeOf("particle_field", "PARTICLE_FIELD", 5, 9);
+	HUD_CHECK_EQ_STR(resolver.resolve("scene.mode.id", frame)->textValue, "particle_field");
+	HUD_CHECK_EQ_STR(resolver.resolve("scene.mode.name", frame)->textValue, "PARTICLE FIELD");
+	HUD_CHECK(resolver.resolve("scene.mode.index", frame)->numberValue == 6.0f);
+	HUD_CHECK(resolver.resolve("scene.mode.count", frame)->numberValue == 9.0f);
+	HUD_CHECK_EQ_STR(resolver.resolve("scene.mode.position", frame)->textValue, "6/9");
+
+	// Unknown to the vocabulary: the scene's own display name is used.
+	frame.scene.sceneId = "quadrant-crosshair";
+	frame.scene.mode = modeOf("motion_nervous", "NERVOUS", 3, 5);
+	HUD_CHECK_EQ_STR(resolver.resolve("scene.mode.name", frame)->textValue, "NERVOUS");
+	HUD_CHECK_EQ_STR(resolver.resolve("scene.mode.position", frame)->textValue, "4/5");
+
+	// Invalid mode status is never displayed.
+	frame.scene.mode = modeOf("bad", "BAD", 3, 3);   // index == count
+	HUD_CHECK(!resolver.resolve("scene.mode.name", frame)->present);
+	frame.scene.mode = modeOf("", "NO ID", 0, 2);    // empty ID
+	HUD_CHECK(!resolver.resolve("scene.mode.position", frame)->present);
+	frame.scene.mode = modeOf("zero", "ZERO", 0, 0); // empty mode list
+	HUD_CHECK(!resolver.resolve("control.scene.next_mode.available", frame)->present);
+}
+
+void test_real_next_mode_availability() {
+	HudRealFrameResolver resolver;
+	HudFrameData frame = makeMinimalRealFrame();
+
+	// Modes, NextMode advertised, somewhere to go -> ENABLED.
+	frame.scene.mode = modeOf("bsp", "BSP", 0, 9);
+	advertise(frame, SceneCommand::NextMode);
+	auto enabled = resolver.resolve("control.scene.next_mode.available", frame);
+	HUD_CHECK(enabled && enabled->present && enabled->boolValue);
+
+	// Modes shown but NextMode not advertised (Blueprint) -> DISABLED, visible.
+	frame.capabilities.commands.clear();
+	advertise(frame, SceneCommand::Regenerate); // Regenerate is never NEXT MODE
+	frame.scene.mode = modeOf("ghost_layers", "ghost_layers", 0, 2);
+	auto disabled = resolver.resolve("control.scene.next_mode.available", frame);
+	HUD_CHECK(disabled && disabled->present && !disabled->boolValue);
+
+	// Advertised but a single mode -> DISABLED (nowhere to step to).
+	advertise(frame, SceneCommand::NextMode);
+	frame.scene.mode = modeOf("only", "ONLY", 0, 1);
+	auto single = resolver.resolve("control.scene.next_mode.available", frame);
+	HUD_CHECK(single && single->present && !single->boolValue);
+}
+
 int main() {
+	test_real_scene_position();
+	test_real_mode_sources();
+	test_real_next_mode_availability();
 	test_real_clock_missing_and_invalid_snapshot();
 	test_real_clock_values_and_dst();
 	test_real_clock_scene_independent();

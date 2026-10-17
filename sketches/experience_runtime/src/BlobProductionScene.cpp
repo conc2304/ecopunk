@@ -1,12 +1,31 @@
 #include "BlobProductionScene.h"
 #include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 #include "BlobSemanticMapping.h"
+#include "BlobDetectionProfileApply.h"
 #include "ofAppRunner.h"
 #include "ofLog.h"
 #include "ofUtils.h"
 #include <algorithm>
+#include <sstream>
 #include <cctype>
 #include <cstdlib>
+
+namespace {
+// Scene & Pattern Navigation: Blob's three visual modes are its existing
+// BlobSceneCore background draw modes — no new renderer. Debug frame,
+// blob IDs and miss timing stay independent display toggles, not modes.
+struct BlobBackgroundMode {
+	const char * id;
+	const char * name;
+	int backgroundDrawMode; // BlobSceneCore::BackgroundConfig::mode
+};
+constexpr BlobBackgroundMode kBackgroundModes[] = {
+	{"natural_background", "Natural Background", 1},         // unshaded cover-fit video
+	{"desaturated_background", "Desaturated Background", 2}, // background effect (production model)
+	{"no_background", "No Background", 0},                   // canvas left cleared; regions only
+};
+constexpr int kBackgroundModeCount = static_cast<int>(sizeof(kBackgroundModes) / sizeof(kBackgroundModes[0]));
+} // namespace
 
 BlobProductionScene::BlobProductionScene(VideoPlaybackService & video)
 	: video_(video) {
@@ -22,12 +41,47 @@ void BlobProductionScene::setup(const SceneServices & services) {
 	// only this class's public surface").
 	(void)services;
 	core_.setup(video_);
-	core_.regionParams().effectName = effectPolicy_.currentTreatment().regionEffectName();
 	didSetup_ = true;
 
+	// Per-video detection presets: READ ONLY here — only developer tooling
+	// (the standalone blob-region-prototype) ever writes the file. A missing
+	// or invalid file just means every media item uses detector defaults.
+	{
+		std::string path = blobdetectionprofile::profilesPath();
+		BlobDetectionProfileStore::LoadStatus st = detectionProfiles_.load(path);
+		ofLogNotice("BlobDetectionProfile") << "profiles: "
+			<< (st == BlobDetectionProfileStore::LoadStatus::Loaded ? "loaded " + ofToString(detectionProfiles_.size()) + " from "
+				: st == BlobDetectionProfileStore::LoadStatus::Missing ? std::string("none at ") : std::string("REJECTED "))
+			<< path;
+		for (const std::string & m : detectionProfiles_.messages()) {
+			ofLogNotice("BlobDetectionProfile") << m;
+		}
+	}
+
+	// Per-fragment treatments come from the production effect budget
+	// (BlobEffectBudget.h): chosen once at fragment creation, cost held
+	// until the fragment is gone. The capacity bench, when enabled,
+	// substitutes its own assignment except in its "budget" mode.
+	if (const char * weights = std::getenv("EXPERIENCE_RUNTIME_BLOB_BUDGET_WEIGHTS")) {
+		// Art-direction tuning only; costs/eligibility are not overridable.
+		std::vector<std::string> ignored;
+		budget_.setTable(blobbudget::withWeights(blobbudget::defaultTable(), weights, &ignored));
+		ofLogNotice("BlobEffectBudget") << "weights override: " << weights;
+		for (const std::string & e : ignored) {
+			ofLogWarning("BlobEffectBudget") << "weights override entry ignored (not in the budget table): " << e;
+		}
+	}
+	core_.regionController().effectAssigner = [this](int id) {
+		if (capacityBench_ && capacityBench_->plan().mode != blobcapacity::AssignmentMode::Budget) {
+			return capacityBench_->plan().effectForId(id);
+		}
+		return budget_.assign(id);
+	};
+	core_.regionController().effectReleaser = [this](int id) { budget_.release(id); };
+
 	// Blob production visual model: desaturated full-frame world, tracked
-	// regions reveal original color or a curated treatment (see
-	// BlobEffectPolicy.h). Background mode 2 runs the full frame through
+	// regions reveal original color or a budgeted shader treatment (see
+	// BlobEffectPolicy.h / BlobEffectBudget.h). Background mode 2 runs the full frame through
 	// BlobSceneCore's existing background effect renderer — same cover-fit
 	// crop as mode 1, so geometry is unchanged.
 	BlobSceneCore::BackgroundConfig & background = core_.backgroundConfig();
@@ -37,6 +91,7 @@ void BlobProductionScene::setup(const SceneServices & services) {
 	if (std::getenv("EXPERIENCE_RUNTIME_BLOB_BACKGROUND_NORMAL") != nullptr) {
 		// Profiling A/B only: the previous unshaded background.
 		background.mode = 1;
+		backgroundModeIndex_ = 0; // = Natural Background, so mode status stays truthful
 		ofLogNotice("BlobRenderProfile") << "EXPERIENCE_RUNTIME_BLOB_BACKGROUND_NORMAL set: background drawn unshaded (pre-desaturated-world model)";
 	}
 
@@ -45,7 +100,6 @@ void BlobProductionScene::setup(const SceneServices & services) {
 	if (BlobEffectCapacityBench::isRequested()) {
 		capacityBench_ = std::make_unique<BlobEffectCapacityBench>();
 		capacityBench_->setup();
-		core_.regionController().effectAssigner = [this](int id) { return capacityBench_->plan().effectForId(id); };
 		mediaPinPending_ = !capacityBench_->wantedMedia().empty();
 	}
 
@@ -76,11 +130,29 @@ void BlobProductionScene::update(float dt) {
 	// BlobEffectPolicy.h). Only new fragments pick up a changed effect —
 	// VideoRegionController captures effectName at fragment creation — so
 	// fragments already on screen keep theirs until they dissolve.
+	// New media -> new palette generation: new fragments draw fresh
+	// treatments; fragments already on screen keep theirs until they
+	// dissolve (VideoRegionController captures the treatment at creation).
+	std::optional<std::string> mediaId = video_.status().mediaId;
+
+	// Detection preset for this media (once per media change, including the
+	// first media seen); no profile restores the canonical defaults so a
+	// previous media's preset never leaks.
+	if (auto applied = detectionProfileTracker_.observe(mediaId, detectionProfiles_, blobdetectionprofile::canonicalDefaults())) {
+		blobdetectionprofile::applyTo(core_.detectionConfig(), applied->effective);
+		std::istringstream lines(describeProfile(applied->mediaId, applied->source, applied->effective));
+		std::string line;
+		while (std::getline(lines, line)) {
+			ofLogNotice("BlobDetectionProfile") << line;
+		}
+	}
+
+	if (mediaGeneration_.observeMedia(mediaId)) {
+		budget_.setGeneration(mediaGeneration_.generation());
+		ofLogNotice("BlobProductionScene") << "palette generation -> " << mediaGeneration_.generation();
+	}
 	if (capacityBench_) {
 		updateCapacityBench();
-	} else if (effectPolicy_.observeMedia(video_.status().mediaId)) {
-		core_.regionParams().effectName = effectPolicy_.currentTreatment().regionEffectName();
-		ofLogNotice("BlobProductionScene") << "fragment treatment -> " << effectPolicy_.currentTreatment().id();
 	}
 
 	ofRectangle destRect(0, 0, static_cast<float>(kNativeWidth), static_cast<float>(kNativeHeight));
@@ -161,6 +233,14 @@ void BlobProductionScene::updateCapacityBench() {
 	}
 }
 
+std::string BlobProductionScene::costByEffectLabel() const {
+	std::string out;
+	for (const auto & kv : budget_.activeCostByEffect()) {
+		out += (out.empty() ? "" : "+") + kv.first + ":" + ofToString(kv.second / 100.0);
+	}
+	return out.empty() ? std::string("-") : out;
+}
+
 bool BlobProductionScene::handleCapacityKey(int key) {
 	return capacityBench_ && capacityBench_->handleKey(key);
 }
@@ -215,7 +295,13 @@ void BlobProductionScene::recordRenderProfileFrame(float drawMs) {
 		<< " detectorMs=" << perFrame(w.detectorMs)
 		<< " trackerMs=" << perFrame(w.trackerMs)
 		<< " regionUpdateMs=" << perFrame(w.regionUpdateMs)
-		<< " treatment=" << effectPolicy_.currentTreatment().id()
+		<< " effectBudgetMax=" << budget_.maxCostCenti() / 100.0
+		<< " effectBudgetUsed=" << budget_.usedCostCenti() / 100.0
+		<< " activeOriginal=" << budget_.activeOriginalCount()
+		<< " activeShader=" << budget_.activeShaderCount()
+		<< " activeCostByEffect=" << costByEffectLabel()
+		<< " budgetFallbacks=" << budget_.fallbackCount()
+		<< " paletteGeneration=" << budget_.generation()
 		<< " background=" << (core_.backgroundConfig().mode == 2 ? core_.backgroundConfig().effectName : std::string("normal"))
 		<< " sceneDrawMs=" << perFrame(w.drawMs)
 		<< " backgroundMs=" << perFrame(w.backgroundMs)
@@ -283,11 +369,20 @@ SceneHudStatus BlobProductionScene::hudStatus() const {
 	// class header comment), so this mirrors the two real, currently-
 	// selected effect names rather than being left to imply "no effects
 	// running" when effects genuinely are.
-	// An Original treatment runs no effect, so it adds no region entry.
+	// One entry per distinct shader treatment on a live fragment; Original
+	// runs no effect, so it adds none.
 	if (capacityBench_) {
 		status.activeEffects.push_back("region: capacity-experiment " + capacityBench_->plan().caseId);
-	} else if (core_.regionParams().fragmentsEnabled && !core_.regionParams().effectName.empty()) {
-		status.activeEffects.push_back("region: " + core_.regionParams().effectName);
+	} else if (core_.regionParams().fragmentsEnabled) {
+		std::vector<std::string> names;
+		core_.regionController().collectActiveEffectNames(names);
+		std::sort(names.begin(), names.end());
+		names.erase(std::unique(names.begin(), names.end()), names.end());
+		for (const std::string & e : names) {
+			if (!e.empty()) {
+				status.activeEffects.push_back("region: " + e);
+			}
+		}
 	}
 	if (core_.backgroundConfig().mode == 2) {
 		status.activeEffects.push_back("background: " + core_.backgroundConfig().effectName);
@@ -305,7 +400,25 @@ SceneHudStatus BlobProductionScene::hudStatus() const {
 		status.semantic = buildSemanticData();
 	}
 
+	if (core_.didSetup() && core_.isActive()) {
+		const BlobBackgroundMode & current = kBackgroundModes[backgroundModeIndex_];
+		SceneModeStatus mode;
+		mode.modeId = current.id;
+		mode.displayName = current.name;
+		mode.index = backgroundModeIndex_;
+		mode.count = kBackgroundModeCount;
+		status.modeName = mode.displayName;
+		status.mode = mode;
+	}
+
 	return status;
+}
+
+void BlobProductionScene::applyBackgroundMode() {
+	BlobSceneCore::BackgroundConfig & background = core_.backgroundConfig();
+	background.mode = kBackgroundModes[backgroundModeIndex_].backgroundDrawMode;
+	if (background.mode == 2) background.effectName = blobeffects::backgroundEffectId();
+	ofLogNotice("BlobProductionScene") << "mode -> " << kBackgroundModes[backgroundModeIndex_].name;
 }
 
 SceneSemanticData BlobProductionScene::buildSemanticData() const {
@@ -352,6 +465,15 @@ SceneCapabilities BlobProductionScene::capabilities() const {
 	prevCmd.prominent = false;
 	caps.commands.push_back(prevCmd);
 
+	// NextMode (Scene & Pattern Navigation): steps the three background
+	// modes (Natural -> Desaturated -> No Background, wrapping).
+	SceneCommandDescriptor modeCmd;
+	modeCmd.command = SceneCommand::NextMode;
+	modeCmd.label = "Next mode";
+	modeCmd.shortLabel = "NEXT MODE";
+	modeCmd.prominent = false;
+	caps.commands.push_back(modeCmd);
+
 	// Regenerate: not advertised — no curated/proven-safe visual-variant
 	// table exists yet (see migration report "Explicitly out of scope").
 	// Reset: not advertised — product direction forbids a visible
@@ -377,6 +499,11 @@ bool BlobProductionScene::executeCommand(SceneCommand command) {
 			return video_.previous();
 		case SceneCommand::Reset:
 			reset();
+			return true;
+		case SceneCommand::NextMode:
+			if (!core_.isActive()) return false;
+			backgroundModeIndex_ = (backgroundModeIndex_ + 1) % kBackgroundModeCount;
+			applyBackgroundMode();
 			return true;
 		case SceneCommand::Regenerate:
 		default:

@@ -41,6 +41,8 @@ public:
 
 	CrosshairState getState() const { return state; }
 	int getCurrentPreset() const { return presetIndex; }
+	int getPresetCount() const { return static_cast<int>(presets.size()); }
+	const std::string & getPresetName(int index) const { return presets[static_cast<size_t>(index)].name; }
 
 private:
 	std::vector<CrosshairPreset> presets;

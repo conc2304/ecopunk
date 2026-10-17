@@ -1,0 +1,28 @@
+./lifecycle_state_tests
+78/78 checks passed
+./session2_integration_tests
+42/42 checks passed
+./blob_semantic_mapping_tests
+68/68 checks passed
+./blob_effect_policy_tests
+blob_effect_policy_tests: 1192/1192 checks passed
+./blob_capacity_plan_tests
+blob_capacity_plan_tests: 939/939 checks passed
+./blob_effect_budget_tests
+blob_effect_budget_tests: 62593/62593 checks passed
+./temporal_semantic_mapping_tests
+PASS — 34 checks, 0 failures
+./blueprint_semantic_mapping_tests
+23/23 checks passed
+./fragment_semantic_mapping_tests
+68/68 checks passed
+./quadrant_semantic_mapping_tests
+46/46 checks passed
+./scene_switch_controller_tests
+PASS — 127 checks, 0 failures
+./hud_skin_loader_tests
+78/78 checks passed.
+./hud_focus_navigator_tests
+27/27 checks passed.
+./wall_clock_sampler_tests
+106/106 checks passed.

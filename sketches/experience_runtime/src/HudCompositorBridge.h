@@ -115,9 +115,11 @@ private:
 	void syncShellTexture();
 	void refreshFocus();
 
-	// Traversal order = the HUD-006 controls row, left to right.
+	// Traversal order = the HUD-006 controls row, left to right, then the
+	// mode panel (flexible.secondary_a: Enter -> NEXT MODE). Hidden stops
+	// (no "enabled" source this frame) are skipped like any other control.
 	HudFocusNavigator focus_{{"controls.scene_previous", "controls.scene_next", "controls.media_previous",
-		"controls.media_next", "controls.reseed"}};
+		"controls.media_next", "controls.reseed", "flexible.secondary_a"}};
 
 	hudpresent::HudWireframeRenderer renderer_;
 	bool visible_ = true;

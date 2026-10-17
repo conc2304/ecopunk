@@ -139,7 +139,10 @@ void FocusMenuHarness::step(float /*dt*/) {
 			check("existing key did not move focus", focused() == kPrev);
 			press(OF_KEY_RIGHT, "RIGHT");
 			press(OF_KEY_RIGHT, "RIGHT");
-			check("RIGHT, RIGHT wraps back to PREV MEDIA (two visible controls)", focused() == kPrev);
+			press(OF_KEY_RIGHT, "RIGHT");
+			// Three visible stops: PREV MEDIA, NEXT MEDIA, and the Scene &
+			// Pattern Navigation mode panel (flexible.secondary_a).
+			check("RIGHT x3 wraps back to PREV MEDIA (PREV, NEXT, mode panel)", focused() == kPrev);
 			press(OF_KEY_DOWN, "DOWN");
 			check("DOWN steps forward like RIGHT", focused() == kNext);
 			press(OF_KEY_UP, "UP");

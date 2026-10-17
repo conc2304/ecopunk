@@ -7,10 +7,14 @@
 #   scripts/deploy.sh --dry-run
 #   scripts/deploy.sh --clean
 #   scripts/deploy.sh --clean --dry-run
+#   scripts/deploy.sh --allow-missing-blob-presets
 #
 # Options:
 #   --clean    Remove stale remote files that no longer exist locally.
 #   --dry-run  Preview rsync changes without modifying the Pi or building.
+#   --allow-missing-blob-presets
+#              Deploy even if some videos have no Blob detection preset
+#              (they use detector defaults); skips the confirmation prompt.
 #
 # Notes:
 #   - Normal deployment does not delete remote files.
@@ -25,6 +29,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 DRY_RUN=0
 CLEAN=0
+ALLOW_MISSING_BLOB_PRESETS=0
 
 # ------------------------------------------------------------
 # Arguments
@@ -38,16 +43,21 @@ for arg in "$@"; do
         --clean)
             CLEAN=1
             ;;
+        --allow-missing-blob-presets)
+            ALLOW_MISSING_BLOB_PRESETS=1
+            ;;
         -h|--help)
-            echo "Usage: $0 [--dry-run] [--clean]"
+            echo "Usage: $0 [--dry-run] [--clean] [--allow-missing-blob-presets]"
             echo
             echo "  --dry-run  Preview file transfers and deletions."
             echo "  --clean    Remove stale remote files."
+            echo "  --allow-missing-blob-presets"
+            echo "             Deploy even if some videos lack a Blob detection preset."
             exit 0
             ;;
         *)
             echo "Unknown argument: $arg" >&2
-            echo "Usage: $0 [--dry-run] [--clean]" >&2
+            echo "Usage: $0 [--dry-run] [--clean] [--allow-missing-blob-presets]" >&2
             exit 1
             ;;
     esac
@@ -87,6 +97,25 @@ fi
 # Remove trailing slash for consistent path construction.
 REMOTE_PATH="${REMOTE_PATH%/}"
 BUILD_DIR="$REMOTE_PATH/sketches/experience_runtime"
+
+# ------------------------------------------------------------
+# Predeploy: Blob detection preset coverage
+# ------------------------------------------------------------
+# Missing presets warn and need explicit confirmation (or the override
+# flag); invalid preset data always stops. A dry run reports only.
+
+PRESET_CHECK_ARGS=()
+if [[ "$DRY_RUN" == "1" ]]; then
+    PRESET_CHECK_ARGS+=(--report-only)
+fi
+if [[ "$ALLOW_MISSING_BLOB_PRESETS" == "1" ]]; then
+    PRESET_CHECK_ARGS+=(--allow-missing-blob-presets)
+fi
+if ! "$SCRIPT_DIR/check-blob-detection-presets.sh" ${PRESET_CHECK_ARGS[@]+"${PRESET_CHECK_ARGS[@]}"}; then
+    echo "Deployment aborted before any file transfer." >&2
+    exit 1
+fi
+echo
 
 # ------------------------------------------------------------
 # Rsync

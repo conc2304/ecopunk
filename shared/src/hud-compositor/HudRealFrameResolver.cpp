@@ -336,6 +336,46 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 		return HudResolvedValue::boolean(true);
 	}
 
+	// -- Scene & Pattern Navigation. Scene position comes from SceneManager's
+	// own registry (SceneManagerStatus), mode position from the active
+	// scene's SceneModeStatus — never counted or named here.
+	if (sourceId == "scene.index" || sourceId == "scene.count" || sourceId == "scene.position") {
+		const auto staticType = HudSourceResolver::staticValueTypeOf(sourceId);
+		const bool valid = manager.activeSceneIndex && manager.availableSceneCount > 0
+			&& *manager.activeSceneIndex >= 0 && *manager.activeSceneIndex < manager.availableSceneCount;
+		if (!valid) return HudResolvedValue::missing(*staticType, HudDataClass::Literal);
+		const int position = *manager.activeSceneIndex + 1;
+		if (sourceId == "scene.index") return HudResolvedValue::number(HudSourceValueType::Count, static_cast<float>(position));
+		if (sourceId == "scene.count") return HudResolvedValue::number(HudSourceValueType::Count, static_cast<float>(manager.availableSceneCount));
+		return HudResolvedValue::text(std::to_string(position) + "/" + std::to_string(manager.availableSceneCount));
+	}
+	if (sourceId.rfind("scene.mode.", 0) == 0 || sourceId == "control.scene.next_mode.available") {
+		const auto staticType = HudSourceResolver::staticValueTypeOf(sourceId);
+		const SceneModeStatus* mode = scene.mode ? &(*scene.mode) : nullptr;
+		const bool valid = mode && !mode->modeId.empty() && mode->count >= 1 && mode->index >= 0 && mode->index < mode->count;
+		if (!valid) return HudResolvedValue::missing(*staticType, HudDataClass::Literal); // no mode model -> hidden
+		if (sourceId == "control.scene.next_mode.available") {
+			// Modes exist: ENABLED only when the scene advertises NextMode and
+			// has somewhere to go; otherwise DISABLED (visible, refuses).
+			const bool advertised = std::any_of(frame.capabilities.commands.begin(), frame.capabilities.commands.end(),
+				[](const SceneCommandDescriptor& d) { return d.command == SceneCommand::NextMode; });
+			return HudResolvedValue::boolean(advertised && mode->count >= 2);
+		}
+		if (sourceId == "scene.mode.id") return HudResolvedValue::identifier(mode->modeId);
+		if (sourceId == "scene.mode.index") return HudResolvedValue::number(HudSourceValueType::Count, static_cast<float>(mode->index + 1));
+		if (sourceId == "scene.mode.count") return HudResolvedValue::number(HudSourceValueType::Count, static_cast<float>(mode->count));
+		if (sourceId == "scene.mode.position") {
+			return HudResolvedValue::text(std::to_string(mode->index + 1) + "/" + std::to_string(mode->count));
+		}
+		// scene.mode.name: curated vocabulary text for the stable ID when the
+		// vocabulary knows it (same order as media.title), else the scene's
+		// own display name, else the ID itself.
+		if (vocabulary_ && vocabulary_->resolvedThroughVocabulary(scene.sceneId, mode->modeId)) {
+			return HudResolvedValue::text(vocabulary_->resolve(scene.sceneId, mode->modeId));
+		}
+		return HudResolvedValue::text(!mode->displayName.empty() ? mode->displayName : mode->modeId);
+	}
+
 	return std::nullopt;
 }
 

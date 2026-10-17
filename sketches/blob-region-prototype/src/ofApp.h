@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "ofxGui.h"
 
+#include "BlobDetectionProfileStore.h"
 #include "BlobSceneCore.h"
 #include "VideoPlaybackService.h"
 
@@ -31,6 +32,44 @@ public:
 private:
 	void syncParamsToSystems();
 	void drawDebugOverlay();
+
+	// -- Per-video detection presets (developer authoring surface) --------
+	// Keys: s = save current detector settings for the current media,
+	// r = reload the profile file, D (shift+d) = restore detector defaults.
+	void loadDetectionProfiles();
+	void applyDetectionProfileToGui(const BlobDetectionProfile & effective);
+	void saveDetectionProfileForCurrentMedia();
+	void restoreDetectionDefaults();
+	void stepProfileDemo();
+	std::optional<std::string> currentMediaId() const;
+
+	BlobDetectionProfileStore detectionProfiles;
+	BlobDetectionProfileTracker detectionProfileTracker;
+	std::string detectionProfilesPath;
+	std::string detectionProfileSource = "defaults";
+	std::string detectionProfileFileStatus;
+
+	// BLOB_PROFILE_DEMO=author|verify|update: scripted Mac validation that
+	// drives the same save/reload/navigation handlers as the keys above.
+	std::string profileDemoMode;
+	int profileDemoStep = 0;
+	int profileDemoFrames = 0;
+	std::optional<std::string> profileDemoMediaBefore;
+	std::vector<std::string> profileDemoMedia; // media ids visited, in order
+	int profileDemoChecks = 0;
+	int profileDemoFailures = 0;
+	std::string profileDemoCaptureLabel;
+	std::vector<std::string> profileDemoTargets; // verify: media to seek, "*" = any unprofiled
+	bool profileDemoSeekForward = true;
+	int profileDemoSeekMoves = 0;
+	// verify-all: one linear pass over the whole catalog, then A/B alternation.
+	int profileDemoPhase = 0; // 0 rewind, 1 sweep, 2 alternate
+	int profileDemoAlternations = 0;
+	int profileDemoStatFrames = 0;
+	double profileDemoTrackSum = 0.0;
+	int profileDemoTrackPeak = 0;
+	int profileDemoFragmentPeak = 0;
+	float profileDemoLargestArea = 0.0f;
 
 	VideoPlaybackService videoPlayback;
 	BlobSceneCore blobCore;

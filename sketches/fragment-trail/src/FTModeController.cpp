@@ -26,12 +26,14 @@ void FTModeController::update(float dt) {
 	if (strategy != FTModeSwitchStrategy::TIMER) return;
 
 	dwellTimer += dt;
-	if (dwellTimer >= dwellDuration) {
-		switch (currentMode) {
-			case FTContentMode::TIME_SLICE: switchTo(FTContentMode::EFFECT_VARIED); break;
-			case FTContentMode::EFFECT_VARIED: switchTo(FTContentMode::EFFECT_PARAM_VARIANT); break;
-			case FTContentMode::EFFECT_PARAM_VARIANT: switchTo(FTContentMode::TIME_SLICE); break;
-		}
+	if (dwellTimer >= dwellDuration) nextMode();
+}
+
+void FTModeController::nextMode() {
+	switch (currentMode) {
+		case FTContentMode::TIME_SLICE: switchTo(FTContentMode::EFFECT_VARIED); break;
+		case FTContentMode::EFFECT_VARIED: switchTo(FTContentMode::EFFECT_PARAM_VARIANT); break;
+		case FTContentMode::EFFECT_PARAM_VARIANT: switchTo(FTContentMode::TIME_SLICE); break;
 	}
 }
 

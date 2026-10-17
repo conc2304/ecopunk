@@ -1,0 +1,1725 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-17 15:25:24.471 blob-region-prototype[23481:22550381] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] ofApp: effect index choices: 0=desaturate 1=invert 2=recolor 3=threshold 4=dither 5=solarize 6=scanlines 7=channelshift 8=hue_rotate 9=ascii_solarpunk 10=bioluminescence 11=chromatic_aberration 12=edge_glow 13=ink_outlines 14=pixel_drift 15=pixel_sorting 16=water_refraction 17=heatmap_recolor
+[notice ] BlobDetectionProfile: profiles: loaded 23 profile(s) — /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/blob/blob-detection-profiles.json
+[notice ] BlobProfileDemo: scripted profile demo: verify-all (file /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/blob/blob-detection-profiles.json)
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.768dc974
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobDetectionProfile: Saved Blob detection profile -> /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/blob/blob-detection-profiles.json
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.768dc974
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.768dc974
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 28x84
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x456
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.768dc974 source=per_media (want per_media) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=81.6 detectorMs=1.633 trackerMs=0.005 regionUpdateMs=0.004 drawMs=0.112 totalMs=2.108 trackedRegions=0 activeFragments=0 scratchFbo=932x456
+[notice ] BlobProfileDemo: STATS media=media.auto.768dc974 title="Melting Flower" source=per_media tracksAvg=0.77 tracksPeak=2 fragmentsPeak=2 largestRegionArea=0.461
+2026-10-17 15:25:27.669 blob-region-prototype[23481:22550380] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.002391
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.96b64003 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.002391 maxArea=0.05
+[notice ] PerfStats: fps=114.3 detectorMs=1.875 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.352 totalMs=2.533 trackedRegions=23 activeFragments=10 scratchFbo=932x456
+[notice ] BlobProfileDemo: STATS media=media.auto.96b64003 title="Forest Path" source=per_media tracksAvg=23.03 tracksPeak=25 fragmentsPeak=10 largestRegionArea=0.128
+2026-10-17 15:25:30.064 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.574745
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.497121bc source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.0001 maxArea=0.574745
+[notice ] PerfStats: fps=118.7 detectorMs=1.844 trackerMs=0.012 regionUpdateMs=0.013 drawMs=0.426 totalMs=2.591 trackedRegions=24 activeFragments=10 scratchFbo=932x456
+[notice ] BlobProfileDemo: STATS media=media.auto.497121bc title="Forest Canopy" source=per_media tracksAvg=24.31 tracksPeak=34 fragmentsPeak=10 largestRegionArea=0.067
+2026-10-17 15:25:32.450 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.0b153878
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=118.5 detectorMs=1.743 trackerMs=0.010 regionUpdateMs=0.014 drawMs=0.440 totalMs=2.511 trackedRegions=26 activeFragments=10 scratchFbo=932x456
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.0b153878 source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=120.0 detectorMs=1.679 trackerMs=0.009 regionUpdateMs=0.011 drawMs=0.459 totalMs=2.270 trackedRegions=19 activeFragments=10 scratchFbo=932x456
+2026-10-17 15:25:34.697 blob-region-prototype[23481:22550380] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.574745
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobDetectionProfile: profiles: loaded 24 profile(s) — /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/blob/blob-detection-profiles.json
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.574745
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=118.6 detectorMs=1.800 trackerMs=0.012 regionUpdateMs=0.015 drawMs=0.430 totalMs=2.380 trackedRegions=24 activeFragments=10 scratchFbo=932x456
+2026-10-17 15:25:37.347 blob-region-prototype[23481:22550480] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.002391
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: STATS media=media.auto.96b64003 title="Forest Path" source=per_media tracksAvg=19.75 tracksPeak=33 fragmentsPeak=10 largestRegionArea=0.197
+2026-10-17 15:25:37.518 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.574745
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobDetectionProfile: profiles: loaded 24 profile(s) — /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/blob/blob-detection-profiles.json
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.574745
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.497121bc source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.0001 maxArea=0.574745
+[notice ] PerfStats: fps=116.2 detectorMs=1.796 trackerMs=0.012 regionUpdateMs=0.015 drawMs=0.462 totalMs=2.743 trackedRegions=22 activeFragments=10 scratchFbo=932x456
+2026-10-17 15:25:38.851 blob-region-prototype[23481:22550692] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.002391
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=116.6 detectorMs=1.945 trackerMs=0.013 regionUpdateMs=0.015 drawMs=0.434 totalMs=3.335 trackedRegions=25 activeFragments=10 scratchFbo=932x456
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x480
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x483
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x517
+[notice ] BlobDetectionProfile: Saved Blob detection profile -> /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/blob/blob-detection-profiles.json
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.002391
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.002391
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=120.2 detectorMs=1.939 trackerMs=0.013 regionUpdateMs=0.015 drawMs=0.430 totalMs=3.275 trackedRegions=25 activeFragments=10 scratchFbo=932x517
+[notice ] BlobDetectionProfile: profiles: loaded 24 profile(s) — /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/blob/blob-detection-profiles.json
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.002391
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+2026-10-17 15:25:43.819 blob-region-prototype[23481:22550394] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.768dc974
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=112.4 detectorMs=1.980 trackerMs=0.010 regionUpdateMs=0.013 drawMs=0.514 totalMs=3.925 trackedRegions=0 activeFragments=7 scratchFbo=932x517
+[notice ] BlobProfileDemo: STATS media=media.auto.768dc974 title="Melting Flower" source=per_media tracksAvg=17.23 tracksPeak=28 fragmentsPeak=10 largestRegionArea=0.210
+2026-10-17 15:25:44.906 blob-region-prototype[23481:22550682] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.002391
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.96b64003 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.002391 maxArea=0.05
+[notice ] PerfStats: fps=104.6 detectorMs=2.742 trackerMs=0.016 regionUpdateMs=0.016 drawMs=0.604 totalMs=6.001 trackedRegions=24 activeFragments=10 scratchFbo=932x517
+[notice ] BlobProfileDemo: STATS media=media.auto.96b64003 title="Forest Path" source=per_media tracksAvg=22.69 tracksPeak=24 fragmentsPeak=10 largestRegionArea=0.145
+2026-10-17 15:25:47.538 blob-region-prototype[23481:22550693] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.574745
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.497121bc source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.0001 maxArea=0.574745
+[notice ] PerfStats: fps=112.0 detectorMs=1.886 trackerMs=0.012 regionUpdateMs=0.015 drawMs=0.473 totalMs=3.700 trackedRegions=24 activeFragments=10 scratchFbo=932x517
+[notice ] BlobProfileDemo: STATS media=media.auto.497121bc title="Forest Canopy" source=per_media tracksAvg=24.22 tracksPeak=33 fragmentsPeak=10 largestRegionArea=0.057
+2026-10-17 15:25:50.021 blob-region-prototype[23481:22550694] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.0b153878
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.0b153878 source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=118.6 detectorMs=1.889 trackerMs=0.011 regionUpdateMs=0.015 drawMs=0.486 totalMs=3.560 trackedRegions=22 activeFragments=10 scratchFbo=932x517
+[notice ] PerfStats: fps=78.7 detectorMs=2.233 trackerMs=0.014 regionUpdateMs=0.015 drawMs=0.610 totalMs=4.409 trackedRegions=22 activeFragments=10 scratchFbo=932x517
+[notice ] BlobProfileDemo: STATS media=media.auto.0b153878 title="Crystal Bloom" source=defaults tracksAvg=17.74 tracksPeak=24 fragmentsPeak=10 largestRegionArea=0.162
+2026-10-17 15:25:54.234 blob-region-prototype[23481:22550381] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.7021ad87
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=19
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.370918
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=35.5 detectorMs=2.234 trackerMs=0.014 regionUpdateMs=0.013 drawMs=0.608 totalMs=4.552 trackedRegions=24 activeFragments=10 scratchFbo=932x517
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.7021ad87 source=per_media (want per_media) threshold=19 erode=0 dilate=1 minArea=0.0001 maxArea=0.370918
+[notice ] PerfStats: fps=41.6 detectorMs=2.453 trackerMs=0.018 regionUpdateMs=0.016 drawMs=0.502 totalMs=4.987 trackedRegions=30 activeFragments=10 scratchFbo=932x517
+[notice ] PerfStats: fps=42.6 detectorMs=2.561 trackerMs=0.023 regionUpdateMs=0.018 drawMs=0.498 totalMs=4.985 trackedRegions=34 activeFragments=10 scratchFbo=932x517
+[notice ] PerfStats: fps=43.8 detectorMs=2.337 trackerMs=0.021 regionUpdateMs=0.018 drawMs=0.468 totalMs=4.333 trackedRegions=30 activeFragments=10 scratchFbo=932x517
+[notice ] BlobProfileDemo: STATS media=media.auto.7021ad87 title="Rainfall" source=per_media tracksAvg=32.20 tracksPeak=36 fragmentsPeak=10 largestRegionArea=0.015
+2026-10-17 15:26:00.998 blob-region-prototype[23481:22550693] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.ffe87a97
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.158418
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.ffe87a97 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.0001 maxArea=0.158418
+[notice ] PerfStats: fps=43.9 detectorMs=2.547 trackerMs=0.020 regionUpdateMs=0.017 drawMs=0.484 totalMs=4.568 trackedRegions=29 activeFragments=10 scratchFbo=932x517
+[notice ] PerfStats: fps=44.4 detectorMs=2.736 trackerMs=0.022 regionUpdateMs=0.017 drawMs=0.494 totalMs=4.598 trackedRegions=28 activeFragments=10 scratchFbo=932x517
+[notice ] PerfStats: fps=48.3 detectorMs=2.841 trackerMs=0.022 regionUpdateMs=0.017 drawMs=0.507 totalMs=4.555 trackedRegions=26 activeFragments=10 scratchFbo=932x517
+[notice ] BlobProfileDemo: STATS media=media.auto.ffe87a97 title="Raindrops On Leaves" source=per_media tracksAvg=27.84 tracksPeak=30 fragmentsPeak=10 largestRegionArea=0.118
+2026-10-17 15:26:07.150 blob-region-prototype[23481:22550692] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d9621168
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=7
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x529
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x560
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x583
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x615
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x639
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x657
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x671
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.d9621168 source=per_media (want per_media) threshold=7 erode=1 dilate=1 minArea=0.0008 maxArea=0.35
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x681
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x689
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x695
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x699
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x702
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x705
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x707
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x708
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x709
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x710
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 932x711
+[notice ] PerfStats: fps=51.2 detectorMs=2.593 trackerMs=0.020 regionUpdateMs=0.017 drawMs=0.578 totalMs=4.721 trackedRegions=31 activeFragments=10 scratchFbo=932x711
+[notice ] PerfStats: fps=47.0 detectorMs=2.300 trackerMs=0.020 regionUpdateMs=0.017 drawMs=0.525 totalMs=4.610 trackedRegions=27 activeFragments=10 scratchFbo=932x711
+[notice ] PerfStats: fps=51.9 detectorMs=2.077 trackerMs=0.016 regionUpdateMs=0.015 drawMs=0.499 totalMs=4.108 trackedRegions=25 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.d9621168 title="Ladybug" source=per_media tracksAvg=25.85 tracksPeak=34 fragmentsPeak=10 largestRegionArea=0.502
+2026-10-17 15:26:12.851 blob-region-prototype[23481:22550683] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d0a9a208
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=94
+[notice ] BlobDetectionProfile: minArea=0.002901
+[notice ] BlobDetectionProfile: maxArea=0.245153
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.d0a9a208 source=per_media (want per_media) threshold=94 erode=0 dilate=2 minArea=0.002901 maxArea=0.245153
+[notice ] PerfStats: fps=51.4 detectorMs=1.919 trackerMs=0.012 regionUpdateMs=0.013 drawMs=0.472 totalMs=3.709 trackedRegions=12 activeFragments=10 scratchFbo=932x711
+[notice ] PerfStats: fps=54.4 detectorMs=1.893 trackerMs=0.011 regionUpdateMs=0.011 drawMs=0.474 totalMs=3.381 trackedRegions=9 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.d0a9a208 title="Neon Drip" source=per_media tracksAvg=9.53 tracksPeak=12 fragmentsPeak=10 largestRegionArea=0.066
+2026-10-17 15:26:18.149 blob-region-prototype[23481:22550694] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.52f569d8
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=17
+[notice ] BlobDetectionProfile: minArea=0.004937
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=55.0 detectorMs=2.085 trackerMs=0.010 regionUpdateMs=0.012 drawMs=0.503 totalMs=4.033 trackedRegions=11 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.52f569d8 source=per_media (want per_media) threshold=17 erode=0 dilate=1 minArea=0.004937 maxArea=0.05
+[notice ] PerfStats: fps=57.1 detectorMs=2.076 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.464 totalMs=3.331 trackedRegions=10 activeFragments=10 scratchFbo=932x711
+[notice ] PerfStats: fps=58.5 detectorMs=2.110 trackerMs=0.011 regionUpdateMs=0.011 drawMs=0.464 totalMs=3.319 trackedRegions=11 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.52f569d8 title="Bamboo Grove" source=per_media tracksAvg=10.24 tracksPeak=14 fragmentsPeak=10 largestRegionArea=0.131
+2026-10-17 15:26:23.103 blob-region-prototype[23481:22552147] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.379e4f0a
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=16
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.379e4f0a source=per_media (want per_media) threshold=16 erode=0 dilate=0 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=56.5 detectorMs=2.048 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.409 totalMs=3.467 trackedRegions=9 activeFragments=10 scratchFbo=932x711
+[notice ] PerfStats: fps=55.0 detectorMs=2.406 trackerMs=0.011 regionUpdateMs=0.011 drawMs=0.479 totalMs=4.219 trackedRegions=10 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.379e4f0a title="Glass Flower" source=per_media tracksAvg=7.67 tracksPeak=15 fragmentsPeak=10 largestRegionArea=0.126
+2026-10-17 15:26:28.174 blob-region-prototype[23481:22552147] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.4a619257
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=25
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] PerfStats: fps=57.1 detectorMs=2.253 trackerMs=0.010 regionUpdateMs=0.011 drawMs=0.451 totalMs=3.862 trackedRegions=20 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.4a619257 source=per_media (want per_media) threshold=25 erode=0 dilate=0 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=59.5 detectorMs=2.084 trackerMs=0.011 regionUpdateMs=0.010 drawMs=0.430 totalMs=3.293 trackedRegions=2 activeFragments=5 scratchFbo=932x711
+[notice ] PerfStats: fps=59.0 detectorMs=1.987 trackerMs=0.008 regionUpdateMs=0.008 drawMs=0.296 totalMs=2.865 trackedRegions=5 activeFragments=6 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.4a619257 title="Black Centipede" source=per_media tracksAvg=7.48 tracksPeak=21 fragmentsPeak=10 largestRegionArea=0.063
+2026-10-17 15:26:33.004 blob-region-prototype[23481:22550380] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.4a619257.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c15c43ce
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.008502
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.c15c43ce source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.008502 maxArea=0.05
+[notice ] PerfStats: fps=59.3 detectorMs=2.233 trackerMs=0.009 regionUpdateMs=0.008 drawMs=0.283 totalMs=3.503 trackedRegions=4 activeFragments=4 scratchFbo=932x711
+[notice ] PerfStats: fps=56.8 detectorMs=2.361 trackerMs=0.010 regionUpdateMs=0.009 drawMs=0.359 totalMs=3.551 trackedRegions=6 activeFragments=7 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.c15c43ce title="Turquoise Waves" source=per_media tracksAvg=4.81 tracksPeak=7 fragmentsPeak=8 largestRegionArea=0.146
+2026-10-17 15:26:39.020 blob-region-prototype[23481:22550692] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.61933905
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=24
+[notice ] BlobDetectionProfile: minArea=0.001373
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=51.9 detectorMs=2.358 trackerMs=0.011 regionUpdateMs=0.011 drawMs=0.475 totalMs=4.395 trackedRegions=11 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.61933905 source=per_media (want per_media) threshold=24 erode=0 dilate=1 minArea=0.001373 maxArea=0.05
+[notice ] PerfStats: fps=58.5 detectorMs=2.006 trackerMs=0.012 regionUpdateMs=0.010 drawMs=0.428 totalMs=3.384 trackedRegions=9 activeFragments=9 scratchFbo=932x711
+[notice ] PerfStats: fps=58.4 detectorMs=1.992 trackerMs=0.013 regionUpdateMs=0.011 drawMs=0.517 totalMs=3.509 trackedRegions=11 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.61933905 title="Vecteezy Closeup And Moving Slowly Over Lush Foliage Fern Near The 42675446 (1)" source=per_media tracksAvg=8.48 tracksPeak=11 fragmentsPeak=10 largestRegionArea=0.076
+2026-10-17 15:26:44.054 blob-region-prototype[23481:22552147] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.40d022de
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.005956
+[notice ] BlobDetectionProfile: maxArea=0.691837
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.40d022de source=per_media (want per_media) threshold=21 erode=0 dilate=0 minArea=0.005956 maxArea=0.691837
+[notice ] PerfStats: fps=58.5 detectorMs=3.126 trackerMs=0.008 regionUpdateMs=0.008 drawMs=0.323 totalMs=3.929 trackedRegions=4 activeFragments=4 scratchFbo=932x711
+[notice ] PerfStats: fps=60.0 detectorMs=3.222 trackerMs=0.008 regionUpdateMs=0.006 drawMs=0.210 totalMs=3.527 trackedRegions=1 activeFragments=1 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.40d022de title="Cliffside Surf" source=per_media tracksAvg=2.23 tracksPeak=4 fragmentsPeak=5 largestRegionArea=0.155
+2026-10-17 15:26:48.846 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.29d9e437
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.004683
+[notice ] BlobDetectionProfile: maxArea=0.466327
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.29d9e437 source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.004683 maxArea=0.466327
+[notice ] PerfStats: fps=58.5 detectorMs=2.632 trackerMs=0.008 regionUpdateMs=0.007 drawMs=0.216 totalMs=3.639 trackedRegions=2 activeFragments=3 scratchFbo=932x711
+[notice ] PerfStats: fps=58.9 detectorMs=2.180 trackerMs=0.008 regionUpdateMs=0.008 drawMs=0.284 totalMs=3.297 trackedRegions=2 activeFragments=3 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.29d9e437 title="Snail" source=per_media tracksAvg=3.08 tracksPeak=6 fragmentsPeak=6 largestRegionArea=0.072
+2026-10-17 15:26:53.756 blob-region-prototype[23481:22550480] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.f26fab29
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.001118
+[notice ] BlobDetectionProfile: maxArea=0.106378
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=56.0 detectorMs=2.042 trackerMs=0.009 regionUpdateMs=0.008 drawMs=0.282 totalMs=3.482 trackedRegions=9 activeFragments=9 scratchFbo=932x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.f26fab29 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.001118 maxArea=0.106378
+[notice ] PerfStats: fps=57.5 detectorMs=2.292 trackerMs=0.012 regionUpdateMs=0.013 drawMs=0.578 totalMs=4.450 trackedRegions=14 activeFragments=10 scratchFbo=932x711
+[notice ] PerfStats: fps=58.4 detectorMs=2.415 trackerMs=0.014 regionUpdateMs=0.014 drawMs=0.619 totalMs=4.277 trackedRegions=5 activeFragments=7 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.f26fab29 title="Autumn Leaves" source=per_media tracksAvg=11.88 tracksPeak=22 fragmentsPeak=10 largestRegionArea=0.029
+2026-10-17 15:26:58.760 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.46d6aa46
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.46d6aa46 source=per_media (want per_media) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=57.5 detectorMs=2.197 trackerMs=0.007 regionUpdateMs=0.006 drawMs=0.221 totalMs=3.584 trackedRegions=0 activeFragments=0 scratchFbo=932x711
+[notice ] PerfStats: fps=57.9 detectorMs=2.227 trackerMs=0.007 regionUpdateMs=0.005 drawMs=0.088 totalMs=2.975 trackedRegions=0 activeFragments=0 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.46d6aa46 title="Lightning Storm" source=per_media tracksAvg=0.38 tracksPeak=2 fragmentsPeak=2 largestRegionArea=0.023
+2026-10-17 15:27:03.708 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.1ab5450d
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=30
+[notice ] BlobDetectionProfile: minArea=0.003155
+[notice ] BlobDetectionProfile: maxArea=0.648469
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=56.5 detectorMs=2.219 trackerMs=0.008 regionUpdateMs=0.006 drawMs=0.146 totalMs=3.426 trackedRegions=11 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.1ab5450d source=per_media (want per_media) threshold=30 erode=0 dilate=1 minArea=0.003155 maxArea=0.648469
+[notice ] PerfStats: fps=56.9 detectorMs=2.572 trackerMs=0.015 regionUpdateMs=0.014 drawMs=0.579 totalMs=4.065 trackedRegions=15 activeFragments=10 scratchFbo=932x711
+[notice ] PerfStats: fps=58.4 detectorMs=2.539 trackerMs=0.015 regionUpdateMs=0.014 drawMs=0.576 totalMs=4.156 trackedRegions=15 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.1ab5450d title="Stormy Waves" source=per_media tracksAvg=14.26 tracksPeak=17 fragmentsPeak=10 largestRegionArea=0.112
+2026-10-17 15:27:08.657 blob-region-prototype[23481:22550691] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.2c15ecd7
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.014357
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.2c15ecd7 source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.014357 maxArea=0.05
+[notice ] PerfStats: fps=56.9 detectorMs=2.760 trackerMs=0.013 regionUpdateMs=0.013 drawMs=0.581 totalMs=4.771 trackedRegions=3 activeFragments=4 scratchFbo=932x711
+[notice ] PerfStats: fps=59.5 detectorMs=2.500 trackerMs=0.009 regionUpdateMs=0.008 drawMs=0.250 totalMs=3.491 trackedRegions=3 activeFragments=4 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.2c15ecd7 title="Hurricane Milton" source=per_media tracksAvg=2.35 tracksPeak=5 fragmentsPeak=6 largestRegionArea=0.150
+2026-10-17 15:27:13.505 blob-region-prototype[23481:22550480] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.823000cc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.002137
+[notice ] BlobDetectionProfile: maxArea=0.774235
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=59.1 detectorMs=2.379 trackerMs=0.011 regionUpdateMs=0.008 drawMs=0.262 totalMs=3.659 trackedRegions=17 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.823000cc source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.002137 maxArea=0.774235
+[notice ] PerfStats: fps=60.0 detectorMs=2.525 trackerMs=0.021 regionUpdateMs=0.016 drawMs=0.553 totalMs=4.338 trackedRegions=25 activeFragments=10 scratchFbo=932x711
+[notice ] PerfStats: fps=59.9 detectorMs=2.525 trackerMs=0.022 regionUpdateMs=0.016 drawMs=0.549 totalMs=4.379 trackedRegions=22 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.823000cc title="White Sand Beach" source=per_media tracksAvg=21.87 tracksPeak=25 fragmentsPeak=10 largestRegionArea=0.192
+2026-10-17 15:27:18.287 blob-region-prototype[23481:22550691] video file loaded at 960 x 540 @ 30.000002 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.823000cc.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b6b38c6d
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=38
+[notice ] BlobDetectionProfile: minArea=0.010284
+[notice ] BlobDetectionProfile: maxArea=0.496684
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.b6b38c6d source=per_media (want per_media) threshold=38 erode=1 dilate=0 minArea=0.010284 maxArea=0.496684
+[notice ] PerfStats: fps=59.5 detectorMs=2.707 trackerMs=0.012 regionUpdateMs=0.014 drawMs=0.634 totalMs=4.750 trackedRegions=4 activeFragments=4 scratchFbo=932x711
+[notice ] PerfStats: fps=58.0 detectorMs=2.759 trackerMs=0.011 regionUpdateMs=0.011 drawMs=0.422 totalMs=4.017 trackedRegions=6 activeFragments=6 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.b6b38c6d title="Bonfire" source=per_media tracksAvg=4.66 tracksPeak=7 fragmentsPeak=10 largestRegionArea=0.140
+2026-10-17 15:27:24.050 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b5b696ee
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.003155
+[notice ] BlobDetectionProfile: maxArea=0.435969
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.b5b696ee source=per_media (want per_media) threshold=1 erode=1 dilate=0 minArea=0.003155 maxArea=0.435969
+[notice ] PerfStats: fps=57.1 detectorMs=2.617 trackerMs=0.012 regionUpdateMs=0.012 drawMs=0.500 totalMs=4.373 trackedRegions=5 activeFragments=10 scratchFbo=932x711
+[notice ] PerfStats: fps=55.0 detectorMs=3.188 trackerMs=0.015 regionUpdateMs=0.014 drawMs=0.721 totalMs=5.140 trackedRegions=10 activeFragments=10 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.b5b696ee title="Calm Ocean" source=per_media tracksAvg=10.37 tracksPeak=13 fragmentsPeak=10 largestRegionArea=0.225
+2026-10-17 15:27:29.099 blob-region-prototype[23481:22550693] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] PerfStats: fps=57.2 detectorMs=3.133 trackerMs=0.015 regionUpdateMs=0.014 drawMs=0.677 totalMs=4.679 trackedRegions=12 activeFragments=10 scratchFbo=932x711
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.5c8a1794
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.00341
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.5c8a1794 source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.00341 maxArea=0.35
+[notice ] PerfStats: fps=59.9 detectorMs=2.462 trackerMs=0.008 regionUpdateMs=0.008 drawMs=0.354 totalMs=4.099 trackedRegions=0 activeFragments=0 scratchFbo=932x711
+[notice ] PerfStats: fps=53.4 detectorMs=2.804 trackerMs=0.008 regionUpdateMs=0.006 drawMs=0.111 totalMs=5.231 trackedRegions=0 activeFragments=0 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.5c8a1794 title="Lily Bloom" source=per_media tracksAvg=0.28 tracksPeak=1 fragmentsPeak=1 largestRegionArea=0.034
+2026-10-17 15:27:34.117 blob-region-prototype[23481:22558796] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.644595e0
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=37
+[notice ] BlobDetectionProfile: minArea=0.002646
+[notice ] BlobDetectionProfile: maxArea=0.201786
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.644595e0 source=per_media (want per_media) threshold=37 erode=0 dilate=1 minArea=0.002646 maxArea=0.201786
+[notice ] PerfStats: fps=58.0 detectorMs=2.580 trackerMs=0.009 regionUpdateMs=0.007 drawMs=0.202 totalMs=3.966 trackedRegions=7 activeFragments=7 scratchFbo=932x711
+[notice ] PerfStats: fps=54.9 detectorMs=2.723 trackerMs=0.015 regionUpdateMs=0.013 drawMs=0.557 totalMs=4.914 trackedRegions=9 activeFragments=9 scratchFbo=932x711
+[notice ] BlobProfileDemo: STATS media=media.auto.644595e0 title="Mountain Flight" source=per_media tracksAvg=7.33 tracksPeak=9 fragmentsPeak=9 largestRegionArea=0.173
+2026-10-17 15:27:39.149 blob-region-prototype[23481:22550480] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c7ba0540
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=50
+[notice ] BlobDetectionProfile: minArea=0.002137
+[notice ] BlobDetectionProfile: maxArea=0.509694
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=56.5 detectorMs=2.617 trackerMs=0.015 regionUpdateMs=0.013 drawMs=0.535 totalMs=4.648 trackedRegions=7 activeFragments=7 scratchFbo=932x711
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1075x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.c7ba0540 source=per_media (want per_media) threshold=50 erode=0 dilate=2 minArea=0.002137 maxArea=0.509694
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1091x711
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1103x711
+[notice ] PerfStats: fps=55.1 detectorMs=2.737 trackerMs=0.021 regionUpdateMs=0.019 drawMs=0.627 totalMs=5.194 trackedRegions=29 activeFragments=10 scratchFbo=1103x711
+[notice ] PerfStats: fps=58.4 detectorMs=2.734 trackerMs=0.023 regionUpdateMs=0.020 drawMs=0.635 totalMs=4.937 trackedRegions=22 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.c7ba0540 title="Tenerife Shore" source=per_media tracksAvg=25.68 tracksPeak=30 fragmentsPeak=10 largestRegionArea=0.645
+2026-10-17 15:27:44.135 blob-region-prototype[23481:22550711] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.c7ba0540.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.3838009d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.3838009d source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=57.9 detectorMs=2.687 trackerMs=0.015 regionUpdateMs=0.015 drawMs=0.595 totalMs=4.917 trackedRegions=0 activeFragments=0 scratchFbo=1103x711
+[notice ] PerfStats: fps=59.5 detectorMs=2.449 trackerMs=0.006 regionUpdateMs=0.004 drawMs=0.048 totalMs=3.234 trackedRegions=0 activeFragments=0 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.3838009d title="Fern Foliage" source=defaults tracksAvg=0.00 tracksPeak=0 fragmentsPeak=2 largestRegionArea=0.000
+2026-10-17 15:27:49.998 blob-region-prototype[23481:22550394] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.4a619257
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=25
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] PerfStats: fps=58.9 detectorMs=2.303 trackerMs=0.006 regionUpdateMs=0.005 drawMs=0.073 totalMs=3.370 trackedRegions=18 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.4a619257 source=per_media (want per_media) threshold=25 erode=0 dilate=0 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=60.1 detectorMs=2.814 trackerMs=0.015 regionUpdateMs=0.015 drawMs=0.614 totalMs=4.399 trackedRegions=5 activeFragments=7 scratchFbo=1103x711
+[notice ] PerfStats: fps=59.8 detectorMs=2.404 trackerMs=0.011 regionUpdateMs=0.010 drawMs=0.373 totalMs=3.545 trackedRegions=5 activeFragments=6 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.4a619257 title="Black Centipede" source=per_media tracksAvg=7.65 tracksPeak=22 fragmentsPeak=10 largestRegionArea=0.067
+2026-10-17 15:27:54.767 blob-region-prototype[23481:22550692] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.4a619257.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.61933905
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=24
+[notice ] BlobDetectionProfile: minArea=0.001373
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.61933905 source=per_media (want per_media) threshold=24 erode=0 dilate=1 minArea=0.001373 maxArea=0.05
+[notice ] PerfStats: fps=59.9 detectorMs=2.452 trackerMs=0.011 regionUpdateMs=0.012 drawMs=0.504 totalMs=4.083 trackedRegions=6 activeFragments=7 scratchFbo=1103x711
+[notice ] PerfStats: fps=60.0 detectorMs=2.395 trackerMs=0.014 regionUpdateMs=0.011 drawMs=0.488 totalMs=3.874 trackedRegions=10 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.61933905 title="Vecteezy Closeup And Moving Slowly Over Lush Foliage Fern Near The 42675446 (1)" source=per_media tracksAvg=7.81 tracksPeak=10 fragmentsPeak=10 largestRegionArea=0.076
+2026-10-17 15:28:00.749 blob-region-prototype[23481:22550682] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.ffe87a97
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.158418
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=56.0 detectorMs=2.782 trackerMs=0.018 regionUpdateMs=0.015 drawMs=0.655 totalMs=4.916 trackedRegions=26 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.ffe87a97 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.0001 maxArea=0.158418
+[notice ] PerfStats: fps=60.1 detectorMs=3.197 trackerMs=0.026 regionUpdateMs=0.019 drawMs=0.612 totalMs=5.137 trackedRegions=29 activeFragments=10 scratchFbo=1103x711
+[notice ] PerfStats: fps=59.8 detectorMs=3.197 trackerMs=0.025 regionUpdateMs=0.019 drawMs=0.598 totalMs=5.011 trackedRegions=26 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.ffe87a97 title="Raindrops On Leaves" source=per_media tracksAvg=27.35 tracksPeak=29 fragmentsPeak=10 largestRegionArea=0.040
+2026-10-17 15:28:05.612 blob-region-prototype[23481:22550380] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d9621168
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=7
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.d9621168 source=per_media (want per_media) threshold=7 erode=1 dilate=1 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=59.1 detectorMs=2.694 trackerMs=0.022 regionUpdateMs=0.021 drawMs=0.601 totalMs=5.060 trackedRegions=33 activeFragments=10 scratchFbo=1103x711
+[notice ] PerfStats: fps=60.0 detectorMs=2.451 trackerMs=0.021 regionUpdateMs=0.020 drawMs=0.601 totalMs=4.525 trackedRegions=17 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.d9621168 title="Ladybug" source=per_media tracksAvg=27.48 tracksPeak=35 fragmentsPeak=10 largestRegionArea=0.435
+2026-10-17 15:28:10.385 blob-region-prototype[23481:22550694] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c15c43ce
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.008502
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.c15c43ce source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.008502 maxArea=0.05
+[notice ] PerfStats: fps=57.4 detectorMs=2.813 trackerMs=0.016 regionUpdateMs=0.015 drawMs=0.597 totalMs=4.976 trackedRegions=4 activeFragments=4 scratchFbo=1103x711
+[notice ] PerfStats: fps=60.0 detectorMs=2.871 trackerMs=0.012 regionUpdateMs=0.010 drawMs=0.334 totalMs=3.926 trackedRegions=5 activeFragments=5 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.c15c43ce title="Turquoise Waves" source=per_media tracksAvg=4.38 tracksPeak=7 fragmentsPeak=7 largestRegionArea=0.146
+2026-10-17 15:28:15.211 blob-region-prototype[23481:22550693] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.5c8a1794
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.00341
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=58.5 detectorMs=2.721 trackerMs=0.012 regionUpdateMs=0.011 drawMs=0.419 totalMs=4.222 trackedRegions=8 activeFragments=8 scratchFbo=1103x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.5c8a1794 source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.00341 maxArea=0.35
+[notice ] PerfStats: fps=59.9 detectorMs=2.175 trackerMs=0.007 regionUpdateMs=0.005 drawMs=0.184 totalMs=3.195 trackedRegions=0 activeFragments=0 scratchFbo=1103x711
+[notice ] PerfStats: fps=59.9 detectorMs=2.218 trackerMs=0.006 regionUpdateMs=0.004 drawMs=0.045 totalMs=3.027 trackedRegions=0 activeFragments=0 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.5c8a1794 title="Lily Bloom" source=per_media tracksAvg=0.13 tracksPeak=1 fragmentsPeak=8 largestRegionArea=0.034
+2026-10-17 15:28:19.979 blob-region-prototype[23481:22558796] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.52f569d8
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=17
+[notice ] BlobDetectionProfile: minArea=0.004937
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.52f569d8 source=per_media (want per_media) threshold=17 erode=0 dilate=1 minArea=0.004937 maxArea=0.05
+[notice ] PerfStats: fps=59.0 detectorMs=2.476 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.426 totalMs=3.928 trackedRegions=8 activeFragments=9 scratchFbo=1103x711
+[notice ] PerfStats: fps=57.5 detectorMs=2.634 trackerMs=0.012 regionUpdateMs=0.013 drawMs=0.585 totalMs=4.045 trackedRegions=12 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.52f569d8 title="Bamboo Grove" source=per_media tracksAvg=10.27 tracksPeak=14 fragmentsPeak=10 largestRegionArea=0.131
+2026-10-17 15:28:24.832 blob-region-prototype[23481:22550394] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.379e4f0a
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=16
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.379e4f0a source=per_media (want per_media) threshold=16 erode=0 dilate=0 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=59.1 detectorMs=2.526 trackerMs=0.013 regionUpdateMs=0.014 drawMs=0.590 totalMs=4.338 trackedRegions=3 activeFragments=3 scratchFbo=1103x711
+[notice ] PerfStats: fps=60.1 detectorMs=2.487 trackerMs=0.011 regionUpdateMs=0.012 drawMs=0.469 totalMs=3.712 trackedRegions=8 activeFragments=9 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.379e4f0a title="Glass Flower" source=per_media tracksAvg=6.99 tracksPeak=11 fragmentsPeak=10 largestRegionArea=0.126
+2026-10-17 15:28:29.617 blob-region-prototype[23481:22550711] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b5b696ee
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.003155
+[notice ] BlobDetectionProfile: maxArea=0.435969
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] PerfStats: fps=58.4 detectorMs=2.712 trackerMs=0.012 regionUpdateMs=0.013 drawMs=0.596 totalMs=4.393 trackedRegions=5 activeFragments=7 scratchFbo=1103x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.b5b696ee source=per_media (want per_media) threshold=1 erode=1 dilate=0 minArea=0.003155 maxArea=0.435969
+[notice ] PerfStats: fps=60.1 detectorMs=2.734 trackerMs=0.012 regionUpdateMs=0.012 drawMs=0.513 totalMs=3.984 trackedRegions=10 activeFragments=10 scratchFbo=1103x711
+[notice ] PerfStats: fps=60.1 detectorMs=2.592 trackerMs=0.014 regionUpdateMs=0.013 drawMs=0.564 totalMs=3.938 trackedRegions=12 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.b5b696ee title="Calm Ocean" source=per_media tracksAvg=9.98 tracksPeak=13 fragmentsPeak=10 largestRegionArea=0.108
+2026-10-17 15:28:34.390 blob-region-prototype[23481:22550480] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.574745
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.497121bc source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.0001 maxArea=0.574745
+[notice ] PerfStats: fps=58.0 detectorMs=2.739 trackerMs=0.018 regionUpdateMs=0.018 drawMs=0.670 totalMs=5.035 trackedRegions=24 activeFragments=10 scratchFbo=1103x711
+[notice ] PerfStats: fps=59.8 detectorMs=2.403 trackerMs=0.019 regionUpdateMs=0.017 drawMs=0.610 totalMs=4.457 trackedRegions=22 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.497121bc title="Forest Canopy" source=per_media tracksAvg=22.31 tracksPeak=27 fragmentsPeak=10 largestRegionArea=0.036
+2026-10-17 15:28:39.184 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.644595e0
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=37
+[notice ] BlobDetectionProfile: minArea=0.002646
+[notice ] BlobDetectionProfile: maxArea=0.201786
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=58.8 detectorMs=2.356 trackerMs=0.016 regionUpdateMs=0.016 drawMs=0.583 totalMs=4.644 trackedRegions=6 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.644595e0 source=per_media (want per_media) threshold=37 erode=0 dilate=1 minArea=0.002646 maxArea=0.201786
+[notice ] PerfStats: fps=60.2 detectorMs=2.286 trackerMs=0.013 regionUpdateMs=0.011 drawMs=0.437 totalMs=3.640 trackedRegions=8 activeFragments=8 scratchFbo=1103x711
+[notice ] PerfStats: fps=55.0 detectorMs=2.502 trackerMs=0.014 regionUpdateMs=0.013 drawMs=0.551 totalMs=4.125 trackedRegions=6 activeFragments=8 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.644595e0 title="Mountain Flight" source=per_media tracksAvg=7.62 tracksPeak=10 fragmentsPeak=10 largestRegionArea=0.150
+2026-10-17 15:28:44.113 blob-region-prototype[23481:22550694] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.7021ad87
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=19
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.370918
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.7021ad87 source=per_media (want per_media) threshold=19 erode=0 dilate=1 minArea=0.0001 maxArea=0.370918
+[notice ] PerfStats: fps=57.4 detectorMs=2.887 trackerMs=0.021 regionUpdateMs=0.019 drawMs=0.581 totalMs=5.195 trackedRegions=34 activeFragments=10 scratchFbo=1103x711
+[notice ] PerfStats: fps=54.7 detectorMs=3.029 trackerMs=0.027 regionUpdateMs=0.026 drawMs=0.665 totalMs=6.330 trackedRegions=30 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.7021ad87 title="Rainfall" source=per_media tracksAvg=35.23 tracksPeak=44 fragmentsPeak=10 largestRegionArea=0.009
+2026-10-17 15:28:49.153 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.1ab5450d
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=30
+[notice ] BlobDetectionProfile: minArea=0.003155
+[notice ] BlobDetectionProfile: maxArea=0.648469
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=56.5 detectorMs=2.961 trackerMs=0.022 regionUpdateMs=0.023 drawMs=0.701 totalMs=5.704 trackedRegions=13 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.1ab5450d source=per_media (want per_media) threshold=30 erode=0 dilate=1 minArea=0.003155 maxArea=0.648469
+[notice ] PerfStats: fps=57.6 detectorMs=2.673 trackerMs=0.016 regionUpdateMs=0.016 drawMs=0.619 totalMs=4.349 trackedRegions=12 activeFragments=10 scratchFbo=1103x711
+[notice ] PerfStats: fps=59.0 detectorMs=2.729 trackerMs=0.016 regionUpdateMs=0.015 drawMs=0.626 totalMs=4.324 trackedRegions=14 activeFragments=10 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.1ab5450d title="Stormy Waves" source=per_media tracksAvg=14.06 tracksPeak=16 fragmentsPeak=10 largestRegionArea=0.124
+2026-10-17 15:28:54.084 blob-region-prototype[23481:22550692] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.3838009d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.3838009d source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=58.4 detectorMs=2.402 trackerMs=0.009 regionUpdateMs=0.009 drawMs=0.365 totalMs=4.009 trackedRegions=0 activeFragments=0 scratchFbo=1103x711
+[notice ] PerfStats: fps=59.8 detectorMs=2.360 trackerMs=0.007 regionUpdateMs=0.004 drawMs=0.048 totalMs=3.155 trackedRegions=0 activeFragments=0 scratchFbo=1103x711
+[notice ] BlobProfileDemo: STATS media=media.auto.3838009d title="Fern Foliage" source=defaults tracksAvg=0.00 tracksPeak=0 fragmentsPeak=0 largestRegionArea=0.000
+2026-10-17 15:28:58.915 blob-region-prototype[23481:22550691] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.768dc974
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1240x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.768dc974 source=per_media (want per_media) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=57.5 detectorMs=2.707 trackerMs=0.008 regionUpdateMs=0.008 drawMs=0.330 totalMs=4.639 trackedRegions=0 activeFragments=0 scratchFbo=1240x711
+[notice ] PerfStats: fps=59.4 detectorMs=2.574 trackerMs=0.006 regionUpdateMs=0.004 drawMs=0.051 totalMs=3.284 trackedRegions=0 activeFragments=0 scratchFbo=1240x711
+[notice ] BlobProfileDemo: STATS media=media.auto.768dc974 title="Melting Flower" source=per_media tracksAvg=0.08 tracksPeak=1 fragmentsPeak=10 largestRegionArea=0.001
+2026-10-17 15:29:03.716 blob-region-prototype[23481:22550380] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.2c15ecd7
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.014357
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=58.4 detectorMs=2.638 trackerMs=0.007 regionUpdateMs=0.005 drawMs=0.072 totalMs=3.590 trackedRegions=1 activeFragments=1 scratchFbo=1240x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.2c15ecd7 source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.014357 maxArea=0.05
+[notice ] PerfStats: fps=52.4 detectorMs=2.696 trackerMs=0.011 regionUpdateMs=0.009 drawMs=0.336 totalMs=4.350 trackedRegions=3 activeFragments=3 scratchFbo=1240x711
+[notice ] PerfStats: fps=55.8 detectorMs=3.317 trackerMs=0.014 regionUpdateMs=0.011 drawMs=0.427 totalMs=5.321 trackedRegions=1 activeFragments=1 scratchFbo=1240x711
+[notice ] BlobProfileDemo: STATS media=media.auto.2c15ecd7 title="Hurricane Milton" source=per_media tracksAvg=2.63 tracksPeak=5 fragmentsPeak=7 largestRegionArea=0.150
+2026-10-17 15:29:08.883 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.29d9e437
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.004683
+[notice ] BlobDetectionProfile: maxArea=0.466327
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.29d9e437 source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.004683 maxArea=0.466327
+[notice ] PerfStats: fps=58.5 detectorMs=2.575 trackerMs=0.011 regionUpdateMs=0.008 drawMs=0.261 totalMs=4.003 trackedRegions=2 activeFragments=3 scratchFbo=1240x711
+[notice ] PerfStats: fps=57.4 detectorMs=2.605 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.303 totalMs=3.871 trackedRegions=3 activeFragments=3 scratchFbo=1240x711
+[notice ] BlobProfileDemo: STATS media=media.auto.29d9e437 title="Snail" source=per_media tracksAvg=2.23 tracksPeak=5 fragmentsPeak=6 largestRegionArea=0.080
+2026-10-17 15:29:13.816 blob-region-prototype[23481:22550682] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.823000cc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.002137
+[notice ] BlobDetectionProfile: maxArea=0.774235
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=56.5 detectorMs=2.799 trackerMs=0.010 regionUpdateMs=0.009 drawMs=0.314 totalMs=4.295 trackedRegions=5 activeFragments=5 scratchFbo=1240x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.823000cc source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.002137 maxArea=0.774235
+[notice ] PerfStats: fps=57.6 detectorMs=2.878 trackerMs=0.022 regionUpdateMs=0.019 drawMs=0.695 totalMs=5.142 trackedRegions=28 activeFragments=10 scratchFbo=1240x711
+[notice ] PerfStats: fps=53.4 detectorMs=3.050 trackerMs=0.027 regionUpdateMs=0.021 drawMs=0.739 totalMs=6.557 trackedRegions=23 activeFragments=10 scratchFbo=1240x711
+[notice ] BlobProfileDemo: STATS media=media.auto.823000cc title="White Sand Beach" source=per_media tracksAvg=23.96 tracksPeak=28 fragmentsPeak=10 largestRegionArea=0.334
+2026-10-17 15:29:18.939 blob-region-prototype[23481:22550694] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.823000cc.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.40d022de
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.005956
+[notice ] BlobDetectionProfile: maxArea=0.691837
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.40d022de source=per_media (want per_media) threshold=21 erode=0 dilate=0 minArea=0.005956 maxArea=0.691837
+[notice ] PerfStats: fps=30.4 detectorMs=3.393 trackerMs=0.018 regionUpdateMs=0.017 drawMs=0.674 totalMs=5.468 trackedRegions=3 activeFragments=3 scratchFbo=1240x711
+[notice ] PerfStats: fps=55.5 detectorMs=4.299 trackerMs=0.011 regionUpdateMs=0.009 drawMs=0.317 totalMs=5.491 trackedRegions=3 activeFragments=3 scratchFbo=1240x711
+[notice ] BlobProfileDemo: STATS media=media.auto.40d022de title="Cliffside Surf" source=per_media tracksAvg=2.16 tracksPeak=4 fragmentsPeak=4 largestRegionArea=0.398
+2026-10-17 15:29:24.876 blob-region-prototype[23481:22550693] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.f26fab29
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.001118
+[notice ] BlobDetectionProfile: maxArea=0.106378
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=57.1 detectorMs=4.241 trackerMs=0.010 regionUpdateMs=0.007 drawMs=0.211 totalMs=4.796 trackedRegions=14 activeFragments=10 scratchFbo=1240x711
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.f26fab29 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.001118 maxArea=0.106378
+[notice ] PerfStats: fps=54.8 detectorMs=3.046 trackerMs=0.014 regionUpdateMs=0.015 drawMs=0.728 totalMs=5.516 trackedRegions=15 activeFragments=10 scratchFbo=1240x711
+[notice ] PerfStats: fps=55.5 detectorMs=3.151 trackerMs=0.019 regionUpdateMs=0.020 drawMs=0.823 totalMs=5.984 trackedRegions=11 activeFragments=10 scratchFbo=1240x711
+[notice ] BlobProfileDemo: STATS media=media.auto.f26fab29 title="Autumn Leaves" source=per_media tracksAvg=11.21 tracksPeak=22 fragmentsPeak=10 largestRegionArea=0.050
+2026-10-17 15:29:29.977 blob-region-prototype[23481:22550691] video file loaded at 960 x 540 @ 30.000002 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b6b38c6d
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=38
+[notice ] BlobDetectionProfile: minArea=0.010284
+[notice ] BlobDetectionProfile: maxArea=0.496684
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.b6b38c6d source=per_media (want per_media) threshold=38 erode=1 dilate=0 minArea=0.010284 maxArea=0.496684
+[notice ] PerfStats: fps=50.2 detectorMs=3.384 trackerMs=0.013 regionUpdateMs=0.013 drawMs=0.644 totalMs=5.631 trackedRegions=5 activeFragments=5 scratchFbo=1240x712
+[notice ] PerfStats: fps=30.4 detectorMs=3.610 trackerMs=0.015 regionUpdateMs=0.014 drawMs=0.545 totalMs=9.361 trackedRegions=2 activeFragments=5 scratchFbo=1240x712
+[notice ] PerfStats: fps=43.8 detectorMs=3.840 trackerMs=0.016 regionUpdateMs=0.017 drawMs=0.659 totalMs=9.517 trackedRegions=7 activeFragments=7 scratchFbo=1240x712
+[notice ] PerfStats: fps=36.6 detectorMs=3.747 trackerMs=0.016 regionUpdateMs=0.017 drawMs=0.751 totalMs=8.343 trackedRegions=4 activeFragments=5 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.b6b38c6d title="Bonfire" source=per_media tracksAvg=5.18 tracksPeak=8 fragmentsPeak=8 largestRegionArea=0.229
+2026-10-17 15:29:37.582 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.002391
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.96b64003 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.002391 maxArea=0.05
+[notice ] PerfStats: fps=47.9 detectorMs=3.771 trackerMs=0.022 regionUpdateMs=0.019 drawMs=0.767 totalMs=7.632 trackedRegions=21 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=54.1 detectorMs=4.136 trackerMs=0.029 regionUpdateMs=0.026 drawMs=0.892 totalMs=6.855 trackedRegions=22 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.96b64003 title="Forest Path" source=per_media tracksAvg=22.52 tracksPeak=26 fragmentsPeak=10 largestRegionArea=0.146
+2026-10-17 15:29:42.722 blob-region-prototype[23481:22550380] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c7ba0540
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=50
+[notice ] BlobDetectionProfile: minArea=0.002137
+[notice ] BlobDetectionProfile: maxArea=0.509694
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=57.9 detectorMs=3.554 trackerMs=0.025 regionUpdateMs=0.024 drawMs=0.831 totalMs=6.248 trackedRegions=24 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.c7ba0540 source=per_media (want per_media) threshold=50 erode=0 dilate=2 minArea=0.002137 maxArea=0.509694
+[notice ] PerfStats: fps=60.1 detectorMs=3.731 trackerMs=0.030 regionUpdateMs=0.026 drawMs=0.878 totalMs=6.378 trackedRegions=23 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=3.483 trackerMs=0.026 regionUpdateMs=0.025 drawMs=0.820 totalMs=6.035 trackedRegions=21 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.c7ba0540 title="Tenerife Shore" source=per_media tracksAvg=23.45 tracksPeak=28 fragmentsPeak=10 largestRegionArea=0.645
+2026-10-17 15:29:47.507 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.c7ba0540.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.0b153878
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.0b153878 source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=59.4 detectorMs=2.927 trackerMs=0.020 regionUpdateMs=0.022 drawMs=0.773 totalMs=5.655 trackedRegions=22 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.1 detectorMs=3.105 trackerMs=0.020 regionUpdateMs=0.022 drawMs=0.981 totalMs=5.647 trackedRegions=0 activeFragments=1 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.0b153878 title="Crystal Bloom" source=defaults tracksAvg=17.55 tracksPeak=26 fragmentsPeak=10 largestRegionArea=0.169
+2026-10-17 15:29:53.480 blob-region-prototype[23481:22550480] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.46d6aa46
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.46d6aa46 source=per_media (want per_media) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=58.5 detectorMs=2.824 trackerMs=0.015 regionUpdateMs=0.018 drawMs=0.721 totalMs=5.306 trackedRegions=0 activeFragments=5 scratchFbo=1240x712
+[notice ] PerfStats: fps=56.9 detectorMs=2.921 trackerMs=0.008 regionUpdateMs=0.006 drawMs=0.136 totalMs=3.769 trackedRegions=1 activeFragments=1 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.46d6aa46 title="Lightning Storm" source=per_media tracksAvg=0.33 tracksPeak=1 fragmentsPeak=7 largestRegionArea=0.023
+2026-10-17 15:29:58.359 blob-region-prototype[23481:22550692] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d0a9a208
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=94
+[notice ] BlobDetectionProfile: minArea=0.002901
+[notice ] BlobDetectionProfile: maxArea=0.245153
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=58.7 detectorMs=2.867 trackerMs=0.009 regionUpdateMs=0.006 drawMs=0.121 totalMs=4.050 trackedRegions=1 activeFragments=1 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.d0a9a208 source=per_media (want per_media) threshold=94 erode=0 dilate=2 minArea=0.002901 maxArea=0.245153
+[notice ] PerfStats: fps=60.1 detectorMs=3.021 trackerMs=0.015 regionUpdateMs=0.015 drawMs=0.652 totalMs=4.658 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.1 detectorMs=2.936 trackerMs=0.015 regionUpdateMs=0.015 drawMs=0.725 totalMs=4.667 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.d0a9a208 title="Neon Drip" source=per_media tracksAvg=9.34 tracksPeak=11 fragmentsPeak=10 largestRegionArea=0.054
+2026-10-17 15:30:03.143 blob-region-prototype[23481:22550394] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c7ba0540
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=50
+[notice ] BlobDetectionProfile: minArea=0.002137
+[notice ] BlobDetectionProfile: maxArea=0.509694
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.c7ba0540 source=per_media (want per_media) threshold=50 erode=0 dilate=2 minArea=0.002137 maxArea=0.509694
+[notice ] PerfStats: fps=56.4 detectorMs=3.289 trackerMs=0.021 regionUpdateMs=0.019 drawMs=0.796 totalMs=5.801 trackedRegions=26 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.1 detectorMs=3.187 trackerMs=0.025 regionUpdateMs=0.022 drawMs=0.765 totalMs=5.550 trackedRegions=26 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.c7ba0540 title="Tenerife Shore" source=per_media tracksAvg=23.86 tracksPeak=27 fragmentsPeak=10 largestRegionArea=0.677
+2026-10-17 15:30:08.105 blob-region-prototype[23481:22550711] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.c7ba0540.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.3838009d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=20.6 detectorMs=3.189 trackerMs=0.023 regionUpdateMs=0.022 drawMs=0.767 totalMs=6.873 trackedRegions=13 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.3838009d source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=60.2 detectorMs=2.516 trackerMs=0.007 regionUpdateMs=0.006 drawMs=0.213 totalMs=3.566 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.1 detectorMs=2.630 trackerMs=0.007 regionUpdateMs=0.005 drawMs=0.050 totalMs=3.412 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.3838009d title="Fern Foliage" source=defaults tracksAvg=0.00 tracksPeak=0 fragmentsPeak=2 largestRegionArea=0.000
+2026-10-17 15:30:14.022 blob-region-prototype[23481:22550691] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c15c43ce
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.008502
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.c15c43ce source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.008502 maxArea=0.05
+[notice ] PerfStats: fps=59.0 detectorMs=2.696 trackerMs=0.010 regionUpdateMs=0.008 drawMs=0.212 totalMs=3.973 trackedRegions=3 activeFragments=3 scratchFbo=1240x712
+[notice ] PerfStats: fps=58.6 detectorMs=2.972 trackerMs=0.012 regionUpdateMs=0.011 drawMs=0.406 totalMs=4.490 trackedRegions=7 activeFragments=7 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.c15c43ce title="Turquoise Waves" source=per_media tracksAvg=4.51 tracksPeak=7 fragmentsPeak=9 largestRegionArea=0.146
+2026-10-17 15:30:18.842 blob-region-prototype[23481:22550692] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.52f569d8
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=17
+[notice ] BlobDetectionProfile: minArea=0.004937
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.52f569d8 source=per_media (want per_media) threshold=17 erode=0 dilate=1 minArea=0.004937 maxArea=0.05
+[notice ] PerfStats: fps=58.5 detectorMs=2.822 trackerMs=0.013 regionUpdateMs=0.012 drawMs=0.499 totalMs=4.448 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.0 detectorMs=2.795 trackerMs=0.013 regionUpdateMs=0.013 drawMs=0.637 totalMs=4.479 trackedRegions=11 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.52f569d8 title="Bamboo Grove" source=per_media tracksAvg=10.20 tracksPeak=14 fragmentsPeak=10 largestRegionArea=0.131
+2026-10-17 15:30:23.657 blob-region-prototype[23481:22558796] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] PerfStats: fps=59.9 detectorMs=2.853 trackerMs=0.015 regionUpdateMs=0.014 drawMs=0.661 totalMs=4.403 trackedRegions=11 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.4a619257
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=25
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.4a619257 source=per_media (want per_media) threshold=25 erode=0 dilate=0 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=59.8 detectorMs=2.794 trackerMs=0.016 regionUpdateMs=0.015 drawMs=0.632 totalMs=4.725 trackedRegions=6 activeFragments=7 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.9 detectorMs=2.433 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.372 totalMs=3.487 trackedRegions=7 activeFragments=8 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.4a619257 title="Black Centipede" source=per_media tracksAvg=7.56 tracksPeak=21 fragmentsPeak=10 largestRegionArea=0.067
+2026-10-17 15:30:28.438 blob-region-prototype[23481:22550691] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.4a619257.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.ffe87a97
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.158418
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.ffe87a97 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.0001 maxArea=0.158418
+[notice ] PerfStats: fps=59.9 detectorMs=2.770 trackerMs=0.017 regionUpdateMs=0.014 drawMs=0.520 totalMs=4.595 trackedRegions=26 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.9 detectorMs=3.231 trackerMs=0.026 regionUpdateMs=0.020 drawMs=0.602 totalMs=5.109 trackedRegions=29 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.ffe87a97 title="Raindrops On Leaves" source=per_media tracksAvg=27.58 tracksPeak=30 fragmentsPeak=10 largestRegionArea=0.040
+2026-10-17 15:30:34.416 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.2c15ecd7
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.014357
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=58.8 detectorMs=3.338 trackerMs=0.024 regionUpdateMs=0.021 drawMs=0.675 totalMs=5.624 trackedRegions=14 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.2c15ecd7 source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.014357 maxArea=0.05
+[notice ] PerfStats: fps=60.0 detectorMs=2.724 trackerMs=0.010 regionUpdateMs=0.009 drawMs=0.397 totalMs=3.896 trackedRegions=2 activeFragments=2 scratchFbo=1240x712
+[notice ] PerfStats: fps=57.5 detectorMs=2.343 trackerMs=0.009 regionUpdateMs=0.007 drawMs=0.225 totalMs=3.353 trackedRegions=1 activeFragments=1 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.2c15ecd7 title="Hurricane Milton" source=per_media tracksAvg=2.26 tracksPeak=5 fragmentsPeak=7 largestRegionArea=0.150
+2026-10-17 15:30:39.268 blob-region-prototype[23481:22550691] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.7021ad87
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=19
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.370918
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.7021ad87 source=per_media (want per_media) threshold=19 erode=0 dilate=1 minArea=0.0001 maxArea=0.370918
+[notice ] PerfStats: fps=59.0 detectorMs=2.542 trackerMs=0.019 regionUpdateMs=0.017 drawMs=0.473 totalMs=4.654 trackedRegions=35 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.570 trackerMs=0.024 regionUpdateMs=0.021 drawMs=0.583 totalMs=4.842 trackedRegions=32 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.7021ad87 title="Rainfall" source=per_media tracksAvg=35.15 tracksPeak=41 fragmentsPeak=10 largestRegionArea=0.014
+2026-10-17 15:30:44.035 blob-region-prototype[23481:22550691] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.574745
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.497121bc source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.0001 maxArea=0.574745
+[notice ] PerfStats: fps=58.9 detectorMs=2.480 trackerMs=0.023 regionUpdateMs=0.021 drawMs=0.584 totalMs=5.043 trackedRegions=26 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.609 trackerMs=0.022 regionUpdateMs=0.021 drawMs=0.710 totalMs=4.966 trackedRegions=19 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.497121bc title="Forest Canopy" source=per_media tracksAvg=22.44 tracksPeak=27 fragmentsPeak=10 largestRegionArea=0.036
+2026-10-17 15:30:48.798 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d9621168
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=7
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=59.1 detectorMs=2.337 trackerMs=0.017 regionUpdateMs=0.016 drawMs=0.577 totalMs=4.522 trackedRegions=23 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.d9621168 source=per_media (want per_media) threshold=7 erode=1 dilate=1 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=60.0 detectorMs=2.415 trackerMs=0.021 regionUpdateMs=0.019 drawMs=0.556 totalMs=4.417 trackedRegions=32 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.9 detectorMs=2.364 trackerMs=0.020 regionUpdateMs=0.019 drawMs=0.601 totalMs=4.394 trackedRegions=19 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.d9621168 title="Ladybug" source=per_media tracksAvg=27.75 tracksPeak=35 fragmentsPeak=10 largestRegionArea=0.435
+2026-10-17 15:30:53.566 blob-region-prototype[23481:22550694] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.40d022de
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.005956
+[notice ] BlobDetectionProfile: maxArea=0.691837
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.40d022de source=per_media (want per_media) threshold=21 erode=0 dilate=0 minArea=0.005956 maxArea=0.691837
+[notice ] PerfStats: fps=58.4 detectorMs=3.036 trackerMs=0.011 regionUpdateMs=0.012 drawMs=0.463 totalMs=4.330 trackedRegions=2 activeFragments=2 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=3.556 trackerMs=0.009 regionUpdateMs=0.008 drawMs=0.266 totalMs=3.908 trackedRegions=1 activeFragments=1 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.40d022de title="Cliffside Surf" source=per_media tracksAvg=2.22 tracksPeak=4 fragmentsPeak=4 largestRegionArea=0.155
+2026-10-17 15:30:58.350 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.46d6aa46
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=59.1 detectorMs=3.106 trackerMs=0.007 regionUpdateMs=0.005 drawMs=0.129 totalMs=3.777 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.46d6aa46 source=per_media (want per_media) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=58.0 detectorMs=1.965 trackerMs=0.006 regionUpdateMs=0.004 drawMs=0.057 totalMs=2.652 trackedRegions=1 activeFragments=1 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.088 trackerMs=0.006 regionUpdateMs=0.004 drawMs=0.090 totalMs=2.810 trackedRegions=1 activeFragments=1 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.46d6aa46 title="Lightning Storm" source=per_media tracksAvg=0.34 tracksPeak=1 fragmentsPeak=1 largestRegionArea=0.023
+2026-10-17 15:31:03.181 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d0a9a208
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=94
+[notice ] BlobDetectionProfile: minArea=0.002901
+[notice ] BlobDetectionProfile: maxArea=0.245153
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.d0a9a208 source=per_media (want per_media) threshold=94 erode=0 dilate=2 minArea=0.002901 maxArea=0.245153
+[notice ] PerfStats: fps=58.9 detectorMs=2.058 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.407 totalMs=3.570 trackedRegions=9 activeFragments=9 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.297 trackerMs=0.013 regionUpdateMs=0.012 drawMs=0.592 totalMs=3.829 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.d0a9a208 title="Neon Drip" source=per_media tracksAvg=9.32 tracksPeak=11 fragmentsPeak=10 largestRegionArea=0.054
+2026-10-17 15:31:07.967 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.5c8a1794
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.00341
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.5c8a1794 source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.00341 maxArea=0.35
+[notice ] PerfStats: fps=58.5 detectorMs=2.249 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.501 totalMs=3.930 trackedRegions=1 activeFragments=1 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.925 trackerMs=0.006 regionUpdateMs=0.004 drawMs=0.073 totalMs=2.779 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.5c8a1794 title="Lily Bloom" source=per_media tracksAvg=0.13 tracksPeak=1 fragmentsPeak=1 largestRegionArea=0.034
+2026-10-17 15:31:12.734 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.644595e0
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=37
+[notice ] BlobDetectionProfile: minArea=0.002646
+[notice ] BlobDetectionProfile: maxArea=0.201786
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=58.9 detectorMs=2.118 trackerMs=0.006 regionUpdateMs=0.004 drawMs=0.054 totalMs=3.220 trackedRegions=3 activeFragments=3 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.644595e0 source=per_media (want per_media) threshold=37 erode=0 dilate=1 minArea=0.002646 maxArea=0.201786
+[notice ] PerfStats: fps=60.0 detectorMs=2.158 trackerMs=0.013 regionUpdateMs=0.010 drawMs=0.392 totalMs=3.469 trackedRegions=8 activeFragments=8 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.9 detectorMs=2.224 trackerMs=0.013 regionUpdateMs=0.011 drawMs=0.477 totalMs=3.635 trackedRegions=7 activeFragments=8 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.644595e0 title="Mountain Flight" source=per_media tracksAvg=7.58 tracksPeak=9 fragmentsPeak=9 largestRegionArea=0.067
+2026-10-17 15:31:17.500 blob-region-prototype[23481:22550682] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.61933905
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=24
+[notice ] BlobDetectionProfile: minArea=0.001373
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.61933905 source=per_media (want per_media) threshold=24 erode=0 dilate=1 minArea=0.001373 maxArea=0.05
+[notice ] PerfStats: fps=59.1 detectorMs=2.231 trackerMs=0.013 regionUpdateMs=0.010 drawMs=0.445 totalMs=3.910 trackedRegions=6 activeFragments=6 scratchFbo=1240x712
+[notice ] PerfStats: fps=57.4 detectorMs=2.170 trackerMs=0.013 regionUpdateMs=0.011 drawMs=0.466 totalMs=3.609 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.61933905 title="Vecteezy Closeup And Moving Slowly Over Lush Foliage Fern Near The 42675446 (1)" source=per_media tracksAvg=8.47 tracksPeak=13 fragmentsPeak=10 largestRegionArea=0.069
+2026-10-17 15:31:22.352 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.29d9e437
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.004683
+[notice ] BlobDetectionProfile: maxArea=0.466327
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=58.5 detectorMs=2.147 trackerMs=0.013 regionUpdateMs=0.012 drawMs=0.552 totalMs=4.026 trackedRegions=4 activeFragments=4 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.29d9e437 source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.004683 maxArea=0.466327
+[notice ] PerfStats: fps=59.9 detectorMs=2.044 trackerMs=0.007 regionUpdateMs=0.006 drawMs=0.226 totalMs=3.050 trackedRegions=3 activeFragments=3 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.9 detectorMs=2.115 trackerMs=0.009 regionUpdateMs=0.007 drawMs=0.235 totalMs=3.181 trackedRegions=3 activeFragments=4 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.29d9e437 title="Snail" source=per_media tracksAvg=1.98 tracksPeak=3 fragmentsPeak=6 largestRegionArea=0.067
+2026-10-17 15:31:27.134 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.002391
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.96b64003 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.002391 maxArea=0.05
+[notice ] PerfStats: fps=58.5 detectorMs=2.852 trackerMs=0.021 regionUpdateMs=0.016 drawMs=0.571 totalMs=4.903 trackedRegions=24 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.9 detectorMs=2.859 trackerMs=0.022 regionUpdateMs=0.017 drawMs=0.588 totalMs=4.668 trackedRegions=23 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.96b64003 title="Forest Path" source=per_media tracksAvg=23.67 tracksPeak=26 fragmentsPeak=10 largestRegionArea=0.145
+2026-10-17 15:31:31.984 blob-region-prototype[23481:22550394] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.0b153878
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.0b153878 source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=57.0 detectorMs=2.548 trackerMs=0.017 regionUpdateMs=0.017 drawMs=0.589 totalMs=5.239 trackedRegions=15 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.5 detectorMs=2.348 trackerMs=0.015 regionUpdateMs=0.016 drawMs=0.615 totalMs=4.334 trackedRegions=17 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.0b153878 title="Crystal Bloom" source=defaults tracksAvg=17.01 tracksPeak=26 fragmentsPeak=10 largestRegionArea=0.169
+2026-10-17 15:31:36.774 blob-region-prototype[23481:22550683] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.768dc974
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=58.9 detectorMs=2.278 trackerMs=0.013 regionUpdateMs=0.014 drawMs=0.589 totalMs=4.350 trackedRegions=11 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.768dc974 source=per_media (want per_media) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=60.0 detectorMs=2.071 trackerMs=0.006 regionUpdateMs=0.006 drawMs=0.182 totalMs=2.935 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] PerfStats: fps=57.1 detectorMs=2.128 trackerMs=0.006 regionUpdateMs=0.004 drawMs=0.043 totalMs=2.785 trackedRegions=6 activeFragments=6 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.768dc974 title="Melting Flower" source=per_media tracksAvg=0.77 tracksPeak=7 fragmentsPeak=7 largestRegionArea=0.009
+2026-10-17 15:31:41.641 blob-region-prototype[23481:22550683] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.f26fab29
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.001118
+[notice ] BlobDetectionProfile: maxArea=0.106378
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.f26fab29 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.001118 maxArea=0.106378
+[notice ] PerfStats: fps=59.1 detectorMs=2.260 trackerMs=0.009 regionUpdateMs=0.009 drawMs=0.405 totalMs=3.878 trackedRegions=12 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.1 detectorMs=2.361 trackerMs=0.015 regionUpdateMs=0.015 drawMs=0.635 totalMs=4.245 trackedRegions=16 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.f26fab29 title="Autumn Leaves" source=per_media tracksAvg=11.02 tracksPeak=21 fragmentsPeak=10 largestRegionArea=0.029
+2026-10-17 15:31:46.422 blob-region-prototype[23481:22550394] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.1ab5450d
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=30
+[notice ] BlobDetectionProfile: minArea=0.003155
+[notice ] BlobDetectionProfile: maxArea=0.648469
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=58.5 detectorMs=2.429 trackerMs=0.011 regionUpdateMs=0.012 drawMs=0.529 totalMs=4.177 trackedRegions=12 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.1ab5450d source=per_media (want per_media) threshold=30 erode=0 dilate=1 minArea=0.003155 maxArea=0.648469
+[notice ] PerfStats: fps=60.0 detectorMs=2.635 trackerMs=0.016 regionUpdateMs=0.014 drawMs=0.618 totalMs=4.194 trackedRegions=15 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.1ab5450d title="Stormy Waves" source=per_media tracksAvg=13.95 tracksPeak=16 fragmentsPeak=10 largestRegionArea=0.124
+2026-10-17 15:31:51.193 blob-region-prototype[23481:22558796] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b5b696ee
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.003155
+[notice ] BlobDetectionProfile: maxArea=0.435969
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] PerfStats: fps=58.7 detectorMs=2.614 trackerMs=0.015 regionUpdateMs=0.015 drawMs=0.596 totalMs=4.482 trackedRegions=14 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.b5b696ee source=per_media (want per_media) threshold=1 erode=1 dilate=0 minArea=0.003155 maxArea=0.435969
+[notice ] PerfStats: fps=60.2 detectorMs=2.627 trackerMs=0.011 regionUpdateMs=0.013 drawMs=0.595 totalMs=3.957 trackedRegions=9 activeFragments=9 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.629 trackerMs=0.014 regionUpdateMs=0.013 drawMs=0.584 totalMs=4.018 trackedRegions=12 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.b5b696ee title="Calm Ocean" source=per_media tracksAvg=10.07 tracksPeak=13 fragmentsPeak=10 largestRegionArea=0.108
+2026-10-17 15:31:55.974 blob-region-prototype[23481:22558796] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.379e4f0a
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=16
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.379e4f0a source=per_media (want per_media) threshold=16 erode=0 dilate=0 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=59.0 detectorMs=2.471 trackerMs=0.011 regionUpdateMs=0.012 drawMs=0.535 totalMs=4.147 trackedRegions=4 activeFragments=4 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.1 detectorMs=2.438 trackerMs=0.011 regionUpdateMs=0.011 drawMs=0.523 totalMs=3.719 trackedRegions=3 activeFragments=8 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.379e4f0a title="Glass Flower" source=per_media tracksAvg=6.98 tracksPeak=11 fragmentsPeak=10 largestRegionArea=0.126
+2026-10-17 15:32:00.736 blob-region-prototype[23481:22550394] video file loaded at 960 x 540 @ 30.000002 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b6b38c6d
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=38
+[notice ] BlobDetectionProfile: minArea=0.010284
+[notice ] BlobDetectionProfile: maxArea=0.496684
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] PerfStats: fps=59.0 detectorMs=2.449 trackerMs=0.011 regionUpdateMs=0.012 drawMs=0.533 totalMs=4.025 trackedRegions=7 activeFragments=7 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.b6b38c6d source=per_media (want per_media) threshold=38 erode=1 dilate=0 minArea=0.010284 maxArea=0.496684
+[notice ] PerfStats: fps=57.6 detectorMs=2.220 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.402 totalMs=3.481 trackedRegions=6 activeFragments=6 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.9 detectorMs=2.270 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.366 totalMs=3.468 trackedRegions=5 activeFragments=6 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.b6b38c6d title="Bonfire" source=per_media tracksAvg=4.70 tracksPeak=7 fragmentsPeak=9 largestRegionArea=0.138
+2026-10-17 15:32:05.588 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.823000cc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.002137
+[notice ] BlobDetectionProfile: maxArea=0.774235
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.823000cc source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.002137 maxArea=0.774235
+[notice ] PerfStats: fps=58.4 detectorMs=2.854 trackerMs=0.020 regionUpdateMs=0.017 drawMs=0.611 totalMs=4.963 trackedRegions=24 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.687 trackerMs=0.023 regionUpdateMs=0.017 drawMs=0.619 totalMs=4.651 trackedRegions=20 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.823000cc title="White Sand Beach" source=per_media tracksAvg=21.93 tracksPeak=25 fragmentsPeak=10 largestRegionArea=0.192
+2026-10-17 15:32:10.367 blob-region-prototype[23481:22550394] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.823000cc.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d9621168
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=7
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.d9621168 source=per_media (want per_media) threshold=7 erode=1 dilate=1 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=31.6 detectorMs=2.766 trackerMs=0.023 regionUpdateMs=0.019 drawMs=0.627 totalMs=4.983 trackedRegions=30 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.1 detectorMs=2.744 trackerMs=0.025 regionUpdateMs=0.021 drawMs=0.612 totalMs=4.859 trackedRegions=26 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.d9621168 title="Ladybug" source=per_media tracksAvg=27.21 tracksPeak=34 fragmentsPeak=10 largestRegionArea=0.435
+2026-10-17 15:32:16.052 blob-region-prototype[23481:22550682] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.29d9e437
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.004683
+[notice ] BlobDetectionProfile: maxArea=0.466327
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=59.0 detectorMs=2.281 trackerMs=0.017 regionUpdateMs=0.017 drawMs=0.593 totalMs=4.428 trackedRegions=16 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.29d9e437 source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.004683 maxArea=0.466327
+[notice ] PerfStats: fps=60.0 detectorMs=2.090 trackerMs=0.008 regionUpdateMs=0.008 drawMs=0.327 totalMs=3.240 trackedRegions=1 activeFragments=1 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.158 trackerMs=0.008 regionUpdateMs=0.007 drawMs=0.195 totalMs=3.106 trackedRegions=3 activeFragments=4 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.29d9e437 title="Snail" source=per_media tracksAvg=1.98 tracksPeak=4 fragmentsPeak=6 largestRegionArea=0.067
+2026-10-17 15:32:20.816 blob-region-prototype[23481:22550692] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.1ab5450d
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=30
+[notice ] BlobDetectionProfile: minArea=0.003155
+[notice ] BlobDetectionProfile: maxArea=0.648469
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.1ab5450d source=per_media (want per_media) threshold=30 erode=0 dilate=1 minArea=0.003155 maxArea=0.648469
+[notice ] PerfStats: fps=58.9 detectorMs=2.301 trackerMs=0.012 regionUpdateMs=0.011 drawMs=0.462 totalMs=3.821 trackedRegions=14 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=57.5 detectorMs=2.381 trackerMs=0.015 regionUpdateMs=0.014 drawMs=0.545 totalMs=3.914 trackedRegions=15 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.1ab5450d title="Stormy Waves" source=per_media tracksAvg=14.71 tracksPeak=18 fragmentsPeak=10 largestRegionArea=0.143
+2026-10-17 15:32:25.671 blob-region-prototype[23481:22550692] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.768dc974
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=58.9 detectorMs=2.302 trackerMs=0.012 regionUpdateMs=0.013 drawMs=0.567 totalMs=4.045 trackedRegions=0 activeFragments=6 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.768dc974 source=per_media (want per_media) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=60.0 detectorMs=1.976 trackerMs=0.005 regionUpdateMs=0.004 drawMs=0.044 totalMs=2.619 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.1 detectorMs=1.913 trackerMs=0.005 regionUpdateMs=0.004 drawMs=0.048 totalMs=2.533 trackedRegions=1 activeFragments=1 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.768dc974 title="Melting Flower" source=per_media tracksAvg=0.07 tracksPeak=1 fragmentsPeak=1 largestRegionArea=0.001
+2026-10-17 15:32:30.435 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.61933905
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=24
+[notice ] BlobDetectionProfile: minArea=0.001373
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.61933905 source=per_media (want per_media) threshold=24 erode=0 dilate=1 minArea=0.001373 maxArea=0.05
+[notice ] PerfStats: fps=59.0 detectorMs=1.989 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.425 totalMs=3.647 trackedRegions=6 activeFragments=6 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.019 trackerMs=0.013 regionUpdateMs=0.011 drawMs=0.457 totalMs=3.382 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.61933905 title="Vecteezy Closeup And Moving Slowly Over Lush Foliage Fern Near The 42675446 (1)" source=per_media tracksAvg=7.95 tracksPeak=10 fragmentsPeak=10 largestRegionArea=0.076
+2026-10-17 15:32:35.201 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.96b64003
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.002391
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.96b64003 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.002391 maxArea=0.05
+[notice ] PerfStats: fps=58.9 detectorMs=2.314 trackerMs=0.016 regionUpdateMs=0.013 drawMs=0.533 totalMs=4.156 trackedRegions=25 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.521 trackerMs=0.021 regionUpdateMs=0.015 drawMs=0.517 totalMs=4.130 trackedRegions=24 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.96b64003 title="Forest Path" source=per_media tracksAvg=23.86 tracksPeak=26 fragmentsPeak=10 largestRegionArea=0.145
+2026-10-17 15:32:39.964 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.644595e0
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=37
+[notice ] BlobDetectionProfile: minArea=0.002646
+[notice ] BlobDetectionProfile: maxArea=0.201786
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=59.0 detectorMs=2.442 trackerMs=0.017 regionUpdateMs=0.016 drawMs=0.535 totalMs=4.430 trackedRegions=13 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.644595e0 source=per_media (want per_media) threshold=37 erode=0 dilate=1 minArea=0.002646 maxArea=0.201786
+[notice ] PerfStats: fps=60.0 detectorMs=2.005 trackerMs=0.011 regionUpdateMs=0.010 drawMs=0.402 totalMs=3.265 trackedRegions=8 activeFragments=8 scratchFbo=1240x712
+[notice ] PerfStats: fps=57.4 detectorMs=1.976 trackerMs=0.012 regionUpdateMs=0.010 drawMs=0.421 totalMs=3.263 trackedRegions=8 activeFragments=8 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.644595e0 title="Mountain Flight" source=per_media tracksAvg=7.70 tracksPeak=9 fragmentsPeak=10 largestRegionArea=0.074
+2026-10-17 15:32:44.814 blob-region-prototype[23481:22550711] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d0a9a208
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=94
+[notice ] BlobDetectionProfile: minArea=0.002901
+[notice ] BlobDetectionProfile: maxArea=0.245153
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.d0a9a208 source=per_media (want per_media) threshold=94 erode=0 dilate=2 minArea=0.002901 maxArea=0.245153
+[notice ] PerfStats: fps=59.1 detectorMs=1.944 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.463 totalMs=3.469 trackedRegions=8 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=57.5 detectorMs=2.132 trackerMs=0.011 regionUpdateMs=0.011 drawMs=0.540 totalMs=4.239 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.d0a9a208 title="Neon Drip" source=per_media tracksAvg=9.44 tracksPeak=11 fragmentsPeak=10 largestRegionArea=0.054
+2026-10-17 15:32:49.665 blob-region-prototype[23481:22550480] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.3838009d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.3838009d source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=58.5 detectorMs=1.960 trackerMs=0.009 regionUpdateMs=0.012 drawMs=0.500 totalMs=3.578 trackedRegions=0 activeFragments=7 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.861 trackerMs=0.005 regionUpdateMs=0.003 drawMs=0.056 totalMs=2.603 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.3838009d title="Fern Foliage" source=defaults tracksAvg=0.00 tracksPeak=0 fragmentsPeak=7 largestRegionArea=0.000
+2026-10-17 15:32:54.445 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.379e4f0a
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=16
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] PerfStats: fps=59.5 detectorMs=1.805 trackerMs=0.005 regionUpdateMs=0.003 drawMs=0.036 totalMs=2.733 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.379e4f0a source=per_media (want per_media) threshold=16 erode=0 dilate=0 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=60.0 detectorMs=1.906 trackerMs=0.008 regionUpdateMs=0.007 drawMs=0.253 totalMs=2.784 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.9 detectorMs=2.018 trackerMs=0.009 regionUpdateMs=0.009 drawMs=0.423 totalMs=3.086 trackedRegions=9 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.379e4f0a title="Glass Flower" source=per_media tracksAvg=7.02 tracksPeak=11 fragmentsPeak=10 largestRegionArea=0.126
+2026-10-17 15:32:59.200 blob-region-prototype[23481:22550682] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.0b153878
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.0b153878 source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=59.0 detectorMs=2.034 trackerMs=0.011 regionUpdateMs=0.012 drawMs=0.490 totalMs=3.655 trackedRegions=23 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.858 trackerMs=0.011 regionUpdateMs=0.013 drawMs=0.500 totalMs=3.416 trackedRegions=12 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.0b153878 title="Crystal Bloom" source=defaults tracksAvg=17.62 tracksPeak=26 fragmentsPeak=10 largestRegionArea=0.169
+2026-10-17 15:33:03.960 blob-region-prototype[23481:22550693] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.52f569d8
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=17
+[notice ] BlobDetectionProfile: minArea=0.004937
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=59.5 detectorMs=1.884 trackerMs=0.011 regionUpdateMs=0.012 drawMs=0.459 totalMs=3.525 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.52f569d8 source=per_media (want per_media) threshold=17 erode=0 dilate=1 minArea=0.004937 maxArea=0.05
+[notice ] PerfStats: fps=59.0 detectorMs=2.110 trackerMs=0.009 regionUpdateMs=0.010 drawMs=0.461 totalMs=3.277 trackedRegions=11 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.058 trackerMs=0.011 regionUpdateMs=0.011 drawMs=0.453 totalMs=3.211 trackedRegions=11 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.52f569d8 title="Bamboo Grove" source=per_media tracksAvg=10.26 tracksPeak=14 fragmentsPeak=10 largestRegionArea=0.131
+2026-10-17 15:33:08.750 blob-region-prototype[23481:22550711] video file loaded at 960 x 540 @ 30.000002 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b6b38c6d
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=38
+[notice ] BlobDetectionProfile: minArea=0.010284
+[notice ] BlobDetectionProfile: maxArea=0.496684
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.b6b38c6d source=per_media (want per_media) threshold=38 erode=1 dilate=0 minArea=0.010284 maxArea=0.496684
+[notice ] PerfStats: fps=58.5 detectorMs=1.883 trackerMs=0.009 regionUpdateMs=0.010 drawMs=0.435 totalMs=3.549 trackedRegions=4 activeFragments=4 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.755 trackerMs=0.008 regionUpdateMs=0.007 drawMs=0.276 totalMs=2.788 trackedRegions=5 activeFragments=5 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.b6b38c6d title="Bonfire" source=per_media tracksAvg=4.66 tracksPeak=7 fragmentsPeak=10 largestRegionArea=0.151
+2026-10-17 15:33:13.529 blob-region-prototype[23481:22558796] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.46d6aa46
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.46d6aa46 source=per_media (want per_media) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=59.4 detectorMs=1.783 trackerMs=0.007 regionUpdateMs=0.008 drawMs=0.363 totalMs=3.167 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.780 trackerMs=0.005 regionUpdateMs=0.004 drawMs=0.066 totalMs=2.408 trackedRegions=0 activeFragments=1 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.46d6aa46 title="Lightning Storm" source=per_media tracksAvg=0.33 tracksPeak=1 fragmentsPeak=10 largestRegionArea=0.023
+2026-10-17 15:33:18.279 blob-region-prototype[23481:22558796] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.574745
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=59.0 detectorMs=1.700 trackerMs=0.006 regionUpdateMs=0.005 drawMs=0.097 totalMs=2.646 trackedRegions=18 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.497121bc source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.0001 maxArea=0.574745
+[notice ] PerfStats: fps=60.0 detectorMs=1.786 trackerMs=0.015 regionUpdateMs=0.013 drawMs=0.423 totalMs=3.363 trackedRegions=22 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.773 trackerMs=0.013 regionUpdateMs=0.012 drawMs=0.436 totalMs=3.302 trackedRegions=22 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.497121bc title="Forest Canopy" source=per_media tracksAvg=22.20 tracksPeak=28 fragmentsPeak=10 largestRegionArea=0.036
+2026-10-17 15:33:23.050 blob-region-prototype[23481:22550682] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c7ba0540
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=50
+[notice ] BlobDetectionProfile: minArea=0.002137
+[notice ] BlobDetectionProfile: maxArea=0.509694
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.c7ba0540 source=per_media (want per_media) threshold=50 erode=0 dilate=2 minArea=0.002137 maxArea=0.509694
+[notice ] PerfStats: fps=58.9 detectorMs=1.908 trackerMs=0.017 regionUpdateMs=0.015 drawMs=0.431 totalMs=3.805 trackedRegions=25 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=58.5 detectorMs=2.059 trackerMs=0.016 regionUpdateMs=0.014 drawMs=0.444 totalMs=3.655 trackedRegions=24 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.c7ba0540 title="Tenerife Shore" source=per_media tracksAvg=24.39 tracksPeak=28 fragmentsPeak=10 largestRegionArea=0.645
+2026-10-17 15:33:27.860 blob-region-prototype[23481:22550711] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.c7ba0540.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.40d022de
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.005956
+[notice ] BlobDetectionProfile: maxArea=0.691837
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.40d022de source=per_media (want per_media) threshold=21 erode=0 dilate=0 minArea=0.005956 maxArea=0.691837
+[notice ] PerfStats: fps=37.8 detectorMs=2.147 trackerMs=0.012 regionUpdateMs=0.012 drawMs=0.423 totalMs=3.680 trackedRegions=2 activeFragments=2 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.772 trackerMs=0.007 regionUpdateMs=0.006 drawMs=0.189 totalMs=3.120 trackedRegions=4 activeFragments=4 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.40d022de title="Cliffside Surf" source=per_media tracksAvg=2.22 tracksPeak=4 fragmentsPeak=4 largestRegionArea=0.155
+2026-10-17 15:33:33.335 blob-region-prototype[23481:22550380] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b5b696ee
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.003155
+[notice ] BlobDetectionProfile: maxArea=0.435969
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] PerfStats: fps=58.9 detectorMs=2.778 trackerMs=0.006 regionUpdateMs=0.005 drawMs=0.134 totalMs=3.287 trackedRegions=4 activeFragments=4 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.b5b696ee source=per_media (want per_media) threshold=1 erode=1 dilate=0 minArea=0.003155 maxArea=0.435969
+[notice ] PerfStats: fps=58.9 detectorMs=2.082 trackerMs=0.008 regionUpdateMs=0.008 drawMs=0.333 totalMs=3.650 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.995 trackerMs=0.011 regionUpdateMs=0.010 drawMs=0.433 totalMs=3.131 trackedRegions=11 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.b5b696ee title="Calm Ocean" source=per_media tracksAvg=10.08 tracksPeak=14 fragmentsPeak=10 largestRegionArea=0.171
+2026-10-17 15:33:38.135 blob-region-prototype[23481:22550695] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.2c15ecd7
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.014357
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.2c15ecd7 source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.014357 maxArea=0.05
+[notice ] PerfStats: fps=58.5 detectorMs=2.087 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.449 totalMs=3.548 trackedRegions=3 activeFragments=4 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.9 detectorMs=1.884 trackerMs=0.007 regionUpdateMs=0.006 drawMs=0.185 totalMs=2.739 trackedRegions=4 activeFragments=4 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.2c15ecd7 title="Hurricane Milton" source=per_media tracksAvg=2.24 tracksPeak=5 fragmentsPeak=7 largestRegionArea=0.150
+2026-10-17 15:33:42.912 blob-region-prototype[23481:22558796] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.7021ad87
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=19
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.370918
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=59.5 detectorMs=1.950 trackerMs=0.009 regionUpdateMs=0.007 drawMs=0.204 totalMs=3.067 trackedRegions=30 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.7021ad87 source=per_media (want per_media) threshold=19 erode=0 dilate=1 minArea=0.0001 maxArea=0.370918
+[notice ] PerfStats: fps=60.0 detectorMs=2.179 trackerMs=0.019 regionUpdateMs=0.017 drawMs=0.468 totalMs=4.060 trackedRegions=37 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=58.0 detectorMs=2.199 trackerMs=0.021 regionUpdateMs=0.018 drawMs=0.487 totalMs=4.138 trackedRegions=33 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.7021ad87 title="Rainfall" source=per_media tracksAvg=34.71 tracksPeak=41 fragmentsPeak=10 largestRegionArea=0.007
+2026-10-17 15:33:47.736 blob-region-prototype[23481:22550487] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.823000cc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.002137
+[notice ] BlobDetectionProfile: maxArea=0.774235
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.823000cc source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.002137 maxArea=0.774235
+[notice ] PerfStats: fps=59.0 detectorMs=2.065 trackerMs=0.018 regionUpdateMs=0.016 drawMs=0.478 totalMs=4.097 trackedRegions=25 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.028 trackerMs=0.019 regionUpdateMs=0.014 drawMs=0.455 totalMs=3.665 trackedRegions=20 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.823000cc title="White Sand Beach" source=per_media tracksAvg=22.63 tracksPeak=26 fragmentsPeak=10 largestRegionArea=0.192
+2026-10-17 15:33:52.502 blob-region-prototype[23481:22550480] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.823000cc.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.4a619257
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=25
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.4a619257 source=per_media (want per_media) threshold=25 erode=0 dilate=0 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=38.0 detectorMs=2.172 trackerMs=0.017 regionUpdateMs=0.015 drawMs=0.477 totalMs=3.994 trackedRegions=22 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.982 trackerMs=0.009 regionUpdateMs=0.010 drawMs=0.406 totalMs=3.121 trackedRegions=3 activeFragments=3 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.4a619257 title="Black Centipede" source=per_media tracksAvg=7.71 tracksPeak=22 fragmentsPeak=10 largestRegionArea=0.063
+2026-10-17 15:33:57.968 blob-region-prototype[23481:22550693] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobProfileDemo: captured captures/profile_demo_verifyall_media.auto.4a619257.png
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.ffe87a97
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.158418
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=29.7 detectorMs=2.015 trackerMs=0.009 regionUpdateMs=0.009 drawMs=0.334 totalMs=3.214 trackedRegions=18 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.ffe87a97 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.0001 maxArea=0.158418
+[notice ] PerfStats: fps=58.0 detectorMs=2.580 trackerMs=0.021 regionUpdateMs=0.016 drawMs=0.492 totalMs=4.759 trackedRegions=26 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.549 trackerMs=0.021 regionUpdateMs=0.016 drawMs=0.474 totalMs=4.117 trackedRegions=29 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.ffe87a97 title="Raindrops On Leaves" source=per_media tracksAvg=27.58 tracksPeak=29 fragmentsPeak=10 largestRegionArea=0.054
+2026-10-17 15:34:03.766 blob-region-prototype[23481:22550682] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c15c43ce
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.008502
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.c15c43ce source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.008502 maxArea=0.05
+[notice ] PerfStats: fps=59.0 detectorMs=2.187 trackerMs=0.013 regionUpdateMs=0.012 drawMs=0.398 totalMs=3.762 trackedRegions=3 activeFragments=3 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.142 trackerMs=0.009 regionUpdateMs=0.007 drawMs=0.243 totalMs=2.982 trackedRegions=5 activeFragments=5 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.c15c43ce title="Turquoise Waves" source=per_media tracksAvg=4.38 tracksPeak=7 fragmentsPeak=8 largestRegionArea=0.146
+2026-10-17 15:34:08.599 blob-region-prototype[23481:22550691] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.f26fab29
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.001118
+[notice ] BlobDetectionProfile: maxArea=0.106378
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=56.5 detectorMs=2.192 trackerMs=0.009 regionUpdateMs=0.010 drawMs=0.379 totalMs=3.616 trackedRegions=2 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.f26fab29 source=per_media (want per_media) threshold=1 erode=1 dilate=1 minArea=0.001118 maxArea=0.106378
+[notice ] PerfStats: fps=59.9 detectorMs=1.881 trackerMs=0.011 regionUpdateMs=0.011 drawMs=0.485 totalMs=3.301 trackedRegions=13 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.9 detectorMs=1.925 trackerMs=0.011 regionUpdateMs=0.012 drawMs=0.505 totalMs=3.436 trackedRegions=0 activeFragments=4 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.f26fab29 title="Autumn Leaves" source=per_media tracksAvg=11.03 tracksPeak=21 fragmentsPeak=10 largestRegionArea=0.029
+2026-10-17 15:34:13.380 blob-region-prototype[23481:22550693] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.5c8a1794
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.00341
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.5c8a1794 source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.00341 maxArea=0.35
+[notice ] PerfStats: fps=59.6 detectorMs=1.725 trackerMs=0.005 regionUpdateMs=0.004 drawMs=0.076 totalMs=2.714 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.716 trackerMs=0.005 regionUpdateMs=0.003 drawMs=0.036 totalMs=2.422 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.5c8a1794 title="Lily Bloom" source=per_media tracksAvg=0.13 tracksPeak=1 fragmentsPeak=1 largestRegionArea=0.034
+2026-10-17 15:34:18.135 blob-region-prototype[23481:22550692] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b5b696ee
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=1
+[notice ] BlobDetectionProfile: minArea=0.003155
+[notice ] BlobDetectionProfile: maxArea=0.435969
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.b5b696ee source=per_media (want per_media) threshold=1 erode=1 dilate=0 minArea=0.003155 maxArea=0.435969
+[notice ] PerfStats: fps=59.0 detectorMs=1.893 trackerMs=0.006 regionUpdateMs=0.005 drawMs=0.131 totalMs=2.893 trackedRegions=8 activeFragments=9 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=2.160 trackerMs=0.011 regionUpdateMs=0.010 drawMs=0.447 totalMs=3.253 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.b5b696ee title="Calm Ocean" source=per_media tracksAvg=9.97 tracksPeak=13 fragmentsPeak=10 largestRegionArea=0.108
+2026-10-17 15:34:22.906 blob-region-prototype[23481:22550711] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.61933905
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=24
+[notice ] BlobDetectionProfile: minArea=0.001373
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=59.0 detectorMs=2.083 trackerMs=0.011 regionUpdateMs=0.011 drawMs=0.469 totalMs=3.597 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.61933905 source=per_media (want per_media) threshold=24 erode=0 dilate=1 minArea=0.001373 maxArea=0.05
+[notice ] PerfStats: fps=60.0 detectorMs=1.798 trackerMs=0.010 regionUpdateMs=0.008 drawMs=0.342 totalMs=2.926 trackedRegions=8 activeFragments=8 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.827 trackerMs=0.012 regionUpdateMs=0.010 drawMs=0.444 totalMs=3.148 trackedRegions=9 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.61933905 title="Vecteezy Closeup And Moving Slowly Over Lush Foliage Fern Near The 42675446 (1)" source=per_media tracksAvg=7.95 tracksPeak=10 fragmentsPeak=10 largestRegionArea=0.076
+2026-10-17 15:34:27.672 blob-region-prototype[23481:22550380] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.2c15ecd7
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=2
+[notice ] BlobDetectionProfile: minArea=0.014357
+[notice ] BlobDetectionProfile: maxArea=0.05
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.2c15ecd7 source=per_media (want per_media) threshold=2 erode=1 dilate=2 minArea=0.014357 maxArea=0.05
+[notice ] PerfStats: fps=56.0 detectorMs=2.102 trackerMs=0.010 regionUpdateMs=0.010 drawMs=0.494 totalMs=3.904 trackedRegions=4 activeFragments=4 scratchFbo=1240x712
+[notice ] PerfStats: fps=59.9 detectorMs=1.930 trackerMs=0.007 regionUpdateMs=0.006 drawMs=0.219 totalMs=2.810 trackedRegions=2 activeFragments=4 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.2c15ecd7 title="Hurricane Milton" source=per_media tracksAvg=2.50 tracksPeak=5 fragmentsPeak=7 largestRegionArea=0.150
+2026-10-17 15:34:32.553 blob-region-prototype[23481:22550691] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.5c8a1794
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.00341
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=58.5 detectorMs=1.945 trackerMs=0.007 regionUpdateMs=0.006 drawMs=0.164 totalMs=3.233 trackedRegions=0 activeFragments=2 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.5c8a1794 source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.00341 maxArea=0.35
+[notice ] PerfStats: fps=60.0 detectorMs=1.844 trackerMs=0.005 regionUpdateMs=0.004 drawMs=0.080 totalMs=2.667 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.5c8a1794 title="Lily Bloom" source=per_media tracksAvg=0.13 tracksPeak=1 fragmentsPeak=2 largestRegionArea=0.034
+2026-10-17 15:34:37.314 blob-region-prototype[23481:22550682] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.3838009d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] PerfStats: fps=59.2 detectorMs=1.761 trackerMs=0.005 regionUpdateMs=0.003 drawMs=0.035 totalMs=2.717 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.3838009d source=defaults (want defaults) threshold=40 erode=1 dilate=2 minArea=0.0008 maxArea=0.35
+[notice ] PerfStats: fps=60.0 detectorMs=1.742 trackerMs=0.006 regionUpdateMs=0.005 drawMs=0.215 totalMs=2.746 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.736 trackerMs=0.005 regionUpdateMs=0.003 drawMs=0.038 totalMs=2.464 trackedRegions=0 activeFragments=0 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.3838009d title="Fern Foliage" source=defaults tracksAvg=0.00 tracksPeak=0 fragmentsPeak=10 largestRegionArea=0.000
+2026-10-17 15:34:42.061 blob-region-prototype[23481:22550394] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.d0a9a208
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=94
+[notice ] BlobDetectionProfile: minArea=0.002901
+[notice ] BlobDetectionProfile: maxArea=0.245153
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.d0a9a208 source=per_media (want per_media) threshold=94 erode=0 dilate=2 minArea=0.002901 maxArea=0.245153
+[notice ] PerfStats: fps=59.4 detectorMs=1.774 trackerMs=0.007 regionUpdateMs=0.007 drawMs=0.286 totalMs=2.971 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.849 trackerMs=0.009 regionUpdateMs=0.009 drawMs=0.460 totalMs=3.095 trackedRegions=10 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.d0a9a208 title="Neon Drip" source=per_media tracksAvg=9.31 tracksPeak=11 fragmentsPeak=10 largestRegionArea=0.054
+2026-10-17 15:34:46.812 blob-region-prototype[23481:22550394] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.7021ad87
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=19
+[notice ] BlobDetectionProfile: minArea=0.0001
+[notice ] BlobDetectionProfile: maxArea=0.370918
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] PerfStats: fps=59.5 detectorMs=1.872 trackerMs=0.011 regionUpdateMs=0.011 drawMs=0.462 totalMs=3.391 trackedRegions=32 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.7021ad87 source=per_media (want per_media) threshold=19 erode=0 dilate=1 minArea=0.0001 maxArea=0.370918
+[notice ] PerfStats: fps=60.1 detectorMs=2.106 trackerMs=0.019 regionUpdateMs=0.017 drawMs=0.467 totalMs=4.019 trackedRegions=37 activeFragments=10 scratchFbo=1240x712
+[notice ] PerfStats: fps=57.5 detectorMs=2.147 trackerMs=0.020 regionUpdateMs=0.018 drawMs=0.478 totalMs=4.062 trackedRegions=34 activeFragments=10 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.7021ad87 title="Rainfall" source=per_media tracksAvg=35.53 tracksPeak=41 fragmentsPeak=10 largestRegionArea=0.014
+2026-10-17 15:34:51.649 blob-region-prototype[23481:22550692] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.29d9e437
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=21
+[notice ] BlobDetectionProfile: minArea=0.004683
+[notice ] BlobDetectionProfile: maxArea=0.466327
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=1
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.29d9e437 source=per_media (want per_media) threshold=21 erode=0 dilate=1 minArea=0.004683 maxArea=0.466327
+[notice ] PerfStats: fps=58.9 detectorMs=1.828 trackerMs=0.009 regionUpdateMs=0.011 drawMs=0.382 totalMs=3.437 trackedRegions=2 activeFragments=3 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.1 detectorMs=1.779 trackerMs=0.006 regionUpdateMs=0.006 drawMs=0.168 totalMs=2.642 trackedRegions=2 activeFragments=2 scratchFbo=1240x712
+[notice ] BlobProfileDemo: STATS media=media.auto.29d9e437 title="Snail" source=per_media tracksAvg=1.99 tracksPeak=4 fragmentsPeak=6 largestRegionArea=0.067
+2026-10-17 15:34:56.513 blob-region-prototype[23481:22550711] video file loaded at 960 x 540 @ 30.000002 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.b6b38c6d
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=38
+[notice ] BlobDetectionProfile: minArea=0.010284
+[notice ] BlobDetectionProfile: maxArea=0.496684
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=0
+[notice ] BlobProfileDemo: PASS — sweep media=media.auto.b6b38c6d source=per_media (want per_media) threshold=38 erode=1 dilate=0 minArea=0.010284 maxArea=0.496684
+[notice ] PerfStats: fps=56.5 detectorMs=1.773 trackerMs=0.007 regionUpdateMs=0.007 drawMs=0.275 totalMs=3.780 trackedRegions=5 activeFragments=8 scratchFbo=1240x712
+[notice ] PerfStats: fps=60.0 detectorMs=1.740 trackerMs=0.008 regionUpdateMs=0.008 drawMs=0.313 totalMs=2.817 trackedRegions=3 activeFragments=5 scratchFbo=1240x712

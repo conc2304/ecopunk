@@ -65,6 +65,18 @@ enum class SceneHealth {
 	Failed
 };
 
+// Scene & Pattern Navigation increment (product-approved, 2026-10-17):
+// the active scene's current visual mode within its own ordered mode list.
+// Scene-owned; index is 0-based into that list, count is how many modes the
+// scene can actually reach right now. A scene with no mode model reports no
+// SceneModeStatus at all (never a fabricated 1-of-1).
+struct SceneModeStatus {
+	std::string modeId;      // stable ID, e.g. "particle_field"
+	std::string displayName; // scene-provided human-readable fallback name
+	int index = 0;           // 0-based position in the scene's mode order
+	int count = 0;           // total selectable modes
+};
+
 struct SceneHudStatus {
 	uint32_t schemaVersion = 1;
 
@@ -93,6 +105,10 @@ struct SceneHudStatus {
 	// scene reporting std::nullopt here behaves exactly as scenes did
 	// before this field existed.
 	std::optional<SceneSemanticData> semantic;
+
+	// Additive (Scene & Pattern Navigation): structured mode status. When
+	// present, modeName mirrors mode->displayName for compatibility.
+	std::optional<SceneModeStatus> mode;
 };
 
 // ---------------------------------------------------------------------------
@@ -104,7 +120,8 @@ enum class SceneCommand {
 	NextMedia,
 	PreviousMedia,
 	Regenerate,
-	Reset
+	Reset,
+	NextMode // advance to the scene's next mode, wrapping; only when advertised
 };
 
 enum class RuntimeCommand {
@@ -204,6 +221,12 @@ struct SceneManagerStatus {
 	SceneTransitionPhase transitionPhase = SceneTransitionPhase::Idle;
 	float transitionProgress = 0.0f;
 	std::optional<std::string> message;
+
+	// Additive (Scene & Pattern Navigation): activeSceneId's 0-based position
+	// in SceneManager's ordered registry, and that registry's size. nullopt /
+	// 0 when no production scene is registered or none has been activated.
+	std::optional<int> activeSceneIndex;
+	int availableSceneCount = 0;
 };
 
 // ---------------------------------------------------------------------------

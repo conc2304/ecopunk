@@ -142,6 +142,8 @@ public:
 	TFComposition::CyclePhase compositionPhase() const { return composition_.getPhase(); }
 	float compositionPhaseElapsed() const { return composition_.getPhaseElapsed(); }
 	TFPatternType activePatternType() const { return composition_.getActivePatternType(); }
+	size_t patternCount() const { return composition_.getPatternCount(); }
+	size_t activePatternIndex() const { return composition_.getActivePatternIndex(); }
 	bool hasMedia() const { return buffer_ != nullptr && buffer_->hasMedia(); }
 	int historyFrameCount() const { return buffer_ != nullptr ? buffer_->getHistoryFrameCount() : 0; }
 	int historyCapacityFrames() const { return buffer_ != nullptr ? buffer_->getHistoryCapacityFrames() : 0; }

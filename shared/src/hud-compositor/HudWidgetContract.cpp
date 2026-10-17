@@ -24,7 +24,10 @@ const std::unordered_map<HudWidgetType, HudWidgetContract>& contractTable() {
 			// small Label-specific rule instead of a blanket required=true
 			// here, which would wrongly reject the static-caption case.
 			{ {"text", false, {T::Identifier, T::Text}},
-			  {"enabled", false, {T::Boolean}} },
+			  {"enabled", false, {T::Boolean}},
+			  // Scene & Pattern Navigation: optional short dynamic suffix
+			  // drawn after the text (scene title "  2/5").
+			  {"suffix", false, {T::Text}} },
 			false
 		};
 
@@ -37,8 +40,12 @@ const std::unordered_map<HudWidgetType, HudWidgetContract>& contractTable() {
 
 		m[HudWidgetType::NumericValue] = {
 			HudWidgetType::NumericValue,
-			{ {"value", true, {T::Scalar, T::Count, T::Ratio, T::DurationSeconds}},
-			  {"label", false, {T::Identifier, T::Text}} },
+			// Text value: already-final display text (Scene & Pattern
+			// Navigation's mode name). "enabled": optional focusable-control
+			// availability, same tri-state meaning as Label's.
+			{ {"value", true, {T::Scalar, T::Count, T::Ratio, T::DurationSeconds, T::Text}},
+			  {"label", false, {T::Identifier, T::Text}},
+			  {"enabled", false, {T::Boolean}} },
 			false
 		};
 

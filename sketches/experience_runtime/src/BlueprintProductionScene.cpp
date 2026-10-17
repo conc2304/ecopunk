@@ -102,6 +102,21 @@ SceneHudStatus BlueprintProductionScene::hudStatus() const {
 	if (core_.didSetup() && core_.isActive() && core_.hasVideoFrame()) {
 		status.semantic = buildSemanticData();
 	}
+
+	// Scene & Pattern Navigation: BEComposition's two CycleModes, still
+	// chosen at random per cycle (selectNextMode()). Displayed read-only —
+	// NextMode is deliberately NOT advertised until manual selection is
+	// designed, so the HUD shows the mode panel as DISABLED.
+	if (core_.didSetup() && core_.isActive()) {
+		const CycleMode current = core_.composition().getCurrentMode();
+		SceneModeStatus mode;
+		mode.modeId = cycleModeSemanticId(current);
+		mode.displayName = mode.modeId;
+		mode.index = current == CycleMode::GHOST_LAYERS ? 0 : 1; // CycleMode declaration order
+		mode.count = 2;
+		status.modeName = mode.displayName;
+		status.mode = mode;
+	}
 	return status;
 }
 

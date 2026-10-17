@@ -392,6 +392,10 @@ SceneManagerStatus SceneManager::status() const {
 	}
 	const Entry* owner = ownerEntry();
 	s.activeSceneId = (hasBeenActivated_ && owner != nullptr) ? owner->scene->sceneId() : std::string();
+	// Registry order is the authoritative scene order (also the NextScene
+	// ring); the index always describes the same entry as activeSceneId.
+	s.availableSceneCount = static_cast<int>(entries_.size());
+	if (hasBeenActivated_ && owner != nullptr) s.activeSceneIndex = controller_.ownerIndex();
 	if (controller_.pendingIndex() >= 0) {
 		s.pendingSceneId = sceneIdAt(controller_.pendingIndex());
 	}

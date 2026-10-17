@@ -2,7 +2,11 @@
 
 #include "ExperienceRuntime.h"
 
+#include <map>
 #include <optional>
+#include <set>
+#include <utility>
+#include <vector>
 #include <string>
 
 // BlobLifecycleHarness — Blob First Production Acceptance narrow patch.
@@ -76,7 +80,7 @@ private:
 		CycleEnd,        // deactivateScene()
 		FinalActivate,   // one more activate() after the 20 cycles, before shutdown
 		FinalFrames,
-		EffectStep,      // curated fragment-effect policy: NextMedia -> exactly one effect change, captured
+		EffectStep,      // effect budget: NextMedia -> one palette generation, budget invariants, captured
 		EffectInactive,  // media change while deactivated -> no selection until reactivated
 		EffectResume,    // reactivated -> exactly one catch-up change
 		Shutdown,        // sceneManager.shutdown() + post-shutdown command-rejection checks
@@ -120,14 +124,20 @@ private:
 	void trackEffectPerFrame();
 	std::optional<std::string> currentMediaId() const;
 	int effectStep_ = 0;
-	int effectStepChangesBefore_ = 0;
-	std::string effectStepEffectBefore_;
+	uint64_t effectStepGenerationBefore_ = 0;
 	std::optional<std::string> effectStepMediaBefore_;
 	int effectStepFramesSinceMediaChange_ = -1;
-	std::optional<std::string> effectTrackLastMedia_;
-	std::string effectTrackLastEffect_;
-	int effectChangesWithoutMediaChange_ = 0;
-	int effectTrackFramesSinceMedia_ = 0;
+	// Per-frame budget/assignment invariants (trackEffectPerFrame()).
+	std::vector<std::pair<int, std::string>> assignScratch_;
+	std::map<int, std::string> assignLast_;
+	std::set<std::string> effectsSeen_;
+	int assignmentChanges_ = 0;
+	int budgetOverruns_ = 0;
+	int bookMismatches_ = 0;
+	int ineligibleAssignments_ = 0;
+	int peakBudgetUsedCenti_ = 0;
+	int peakShaderFragments_ = 0;
+	static constexpr int kEffectSteps = 3; // media changes exercised (plus the inactive/resume one)
 	static constexpr int kEffectSettleFrames = 60;
 	static constexpr int kEffectStepTimeoutFrames = 900;
 

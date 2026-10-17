@@ -240,6 +240,19 @@ SceneHudStatus TemporalProductionScene::hudStatus() const {
 		status.semantic = buildSemanticData();
 	}
 
+	// Scene & Pattern Navigation: the nine TFComposition patterns ARE this
+	// scene's modes, in their registered cycle order (TemporalSceneCore::
+	// setup()); the ID is the same one scene.temporal.metric.pattern uses.
+	if (core_.didSetup() && core_.isActive()) {
+		SceneModeStatus mode;
+		mode.modeId = patternSemanticId(core_.activePatternType());
+		mode.displayName = tfPatternTypeName(core_.activePatternType());
+		mode.index = static_cast<int>(core_.activePatternIndex());
+		mode.count = static_cast<int>(core_.patternCount());
+		status.modeName = mode.displayName;
+		status.mode = mode;
+	}
+
 	return status;
 }
 
@@ -285,6 +298,17 @@ SceneCapabilities TemporalProductionScene::capabilities() const {
 	// own instruction explicitly disqualifies ("a raw 'force next
 	// pattern'... does not automatically qualify"). See completion report,
 	// "Deviations from prompt."
+	// NextMode (Scene & Pattern Navigation, product-approved): advances to
+	// the next registered pattern via TFComposition::forceNextPattern() —
+	// the product decision that authorizes it as a MODE step, distinct from
+	// the Regenerate qualification above, which stays unadvertised.
+	SceneCommandDescriptor modeCmd;
+	modeCmd.command = SceneCommand::NextMode;
+	modeCmd.label = "Next mode";
+	modeCmd.shortLabel = "NEXT MODE";
+	modeCmd.prominent = false;
+	caps.commands.push_back(modeCmd);
+
 	// Reset: not advertised — product direction forbids a visible
 	// reset/restart control; still reachable via SceneCommand::Reset
 	// directly (executeCommand() below still honors it), for parity with
@@ -303,6 +327,14 @@ bool TemporalProductionScene::executeCommand(SceneCommand command) {
 			return video_.previous();
 		case SceneCommand::Reset:
 			reset();
+			return true;
+		case SceneCommand::NextMode:
+			// Wraps in registration order and restarts the 90 s auto-advance
+			// timer (automatic advancement continues from the new pattern).
+			// Refused while a pattern transition is still playing, so a step
+			// never captures a half-finished transition as its outgoing frame.
+			if (!core_.isActive() || core_.compositionPhase() != TFComposition::CyclePhase::RUNNING) return false;
+			core_.composition().forceNextPattern();
 			return true;
 		case SceneCommand::Regenerate:
 		default:

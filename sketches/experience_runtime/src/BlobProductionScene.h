@@ -1,5 +1,7 @@
 #pragma once
 
+#include "BlobDetectionProfileStore.h"
+#include "BlobEffectBudget.h"
 #include "BlobEffectCapacityBench.h"
 #include "BlobEffectPolicy.h"
 #include "BlobSceneCore.h"
@@ -24,9 +26,9 @@
 // Deliberately does NOT:
 //   - own a VideoPlaybackService instance — see video_'s own comment.
 //   - author a canonical videoeffects::EffectActivityStatus — no real
-//     effect-execution owner object currently exists for Blob (a curated
-//     fragment treatment chosen per media item by BlobEffectPolicy, plus
-//     the fixed desaturated background — not an owned activity-tracking object);
+//     effect-execution owner object currently exists for Blob (per-fragment
+//     treatments from the Blob-local effect budget, plus the fixed
+//     desaturated background — not an owned activity-tracking object);
 //     see the migration report's "Effects" section. HudFrameData.effects
 //     stays std::nullopt for this scene until that ownership gap is
 //     closed by an Architecture-reviewed decision.
@@ -103,13 +105,22 @@ public:
 	int configuredMaxBlobsForTesting() const { return core_.detectionConfig().maxBlobs; }
 	int configuredMaxActiveFragmentsForTesting() const { return core_.regionParams().maxActiveFragments; }
 
-	// The region effect name new fragments are currently assigned (empty
-	// for the Original treatment), the selected treatment's id, and how
-	// many times the media-change policy has changed it.
-	const std::string & fragmentEffectForTesting() const { return core_.regionParams().effectName; }
-	std::string fragmentTreatmentIdForTesting() const { return effectPolicy_.currentTreatment().id(); }
+	// Production effect budget and the live (region id, effect) assignments
+	// it is accounting for ("" = Original).
+	const blobbudget::EffectBudget & effectBudgetForTesting() const { return budget_; }
+	uint64_t paletteGenerationForTesting() const { return mediaGeneration_.generation(); }
+	void collectFragmentAssignmentsForTesting(std::vector<std::pair<int, std::string>> & out) const {
+		core_.regionController().collectActiveAssignments(out);
+	}
 	const BlobSceneCore::BackgroundConfig & backgroundConfigForTesting() const { return core_.backgroundConfig(); }
-	int fragmentEffectChangeCountForTesting() const { return effectPolicy_.selectionChangeCount(); }
+
+	// Per-video detection presets: live detector config, the loaded
+	// (read-only) store, and the last applied {media, source, values}.
+	const BlobDetector::Config & detectionConfigForTesting() const { return core_.detectionConfig(); }
+	const BlobDetectionProfileStore & detectionProfilesForTesting() const { return detectionProfiles_; }
+	const std::optional<BlobDetectionProfileTracker::Applied> & lastDetectionProfileForTesting() const {
+		return detectionProfileTracker_.last();
+	}
 
 	// Blob Experiment 2 capacity bench (opt-in via
 	// EXPERIENCE_RUNTIME_BLOB_EFFECT_CAPACITY; inert otherwise). Keys are
@@ -122,15 +133,23 @@ public:
 private:
 	SceneSemanticData buildSemanticData() const;
 	void updateCapacityBench();
+	std::string costByEffectLabel() const;
 	void recordRenderProfileFrame(float drawMs);
 
 	VideoPlaybackService & video_; // not owned, see constructor comment
 	BlobSceneCore core_;
 
-	// Curated fragment-effect selection (BlobEffectPolicy.h). Deliberately
-	// survives activate()/reset(): the selection follows media identity,
-	// so returning to Blob on the same media keeps the same effect.
-	blobeffects::MediaEffectPolicy effectPolicy_;
+	// Media-change palette generations (BlobEffectPolicy.h) and the
+	// per-fragment effect budget (BlobEffectBudget.h). Both deliberately
+	// survive activate()/reset(): the generation follows media identity,
+	// and the budget's books are emptied by the fragments' own release
+	// (VideoRegionController::reset() releases every fragment it drops).
+	blobeffects::MediaGeneration mediaGeneration_;
+
+	// Per-video detection presets (read-only in production).
+	BlobDetectionProfileStore detectionProfiles_;
+	BlobDetectionProfileTracker detectionProfileTracker_;
+	blobbudget::EffectBudget budget_;
 
 	std::unique_ptr<BlobEffectCapacityBench> capacityBench_;
 	std::vector<std::string> capacityEffectNames_;
@@ -167,6 +186,11 @@ private:
 	// on every activate()/reset(), never fabricated.
 	float activeSeconds_ = 0.0f;
 	uint64_t generation_ = 0;
+	// Scene & Pattern Navigation: index into the three background modes
+	// (BlobProductionScene.cpp kBackgroundModes); 1 = Desaturated, the
+	// production visual model. Persists across activations.
+	int backgroundModeIndex_ = 1;
+	void applyBackgroundMode();
 
 	// Blob First Production Acceptance narrow patch: closes the "hidden
 	// Reset" gap flagged by acceptance review — executeCommand() previously

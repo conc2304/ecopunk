@@ -1,0 +1,78 @@
+[warning] ExperienceRuntime: verification dwell override: min 900 s, max 900 s
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-17 11:50:32.587 experience_runtime[75064:21834127] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] BlobEffectBudget: weights override: original:0,recolor:0,heatmap_recolor:1
+[notice ] BlobCapacity: TSV: /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/data/captures/blob_capacity/blob_capacity_20261017-115032.tsv
+[notice ] BlobCapacity: EXPERIMENT ONLY — Blob multi-effect capacity bench enabled (EXPERIENCE_RUNTIME_BLOB_EFFECT_CAPACITY)
+[notice ] BlobCapacity: keys: F1-F7 presets A-G | , . shader slots -/+ | - = distinct -/+ | q w e r t y u effect sets | j l single-effect focus | m assignment mode (single/round_robin/weighted/budget) | g tracked/synthetic load | z x synthetic count -/+ | b mark window + capture | i show config
+[notice ] BlobCapacity: SCRIPT 1 steps (warmup 5 s each): budget:15
+[notice ] BlobCapacity: ---- configuration change (script step 1/1 budget) ----
+[notice ] BlobCapacity: [BLOB EFFECT CAPACITY]
+[notice ] BlobCapacity: case=budget
+[notice ] BlobCapacity: assignment=budget (production effect budget: weighted palette, cost <= 10, Original fallback)
+[notice ] BlobCapacity: load=synthetic:10@x1.00
+[notice ] BlobCapacity: warmup 5 s (fragments re-acquire), then 5 s windows
+[notice ] TFAmbientTextureLayer: loaded 19 background texture(s) from backgrounds
+[notice ] TFAmbientTextureLayer: residency=bounded pairs=19 tintTextures=19 maskTextures=0 cpuTintMiB=0.0 cpuMaskMiB=0.0 gpuEstMiB=28.2 (rgb-padded 37.6) tintPixelsKept=0 rssBeforeMiB=47 rssAfterMiB=88 glError=0x00000000
+[notice ] HudSkin: no HUD skin selected (EXPERIENCE_RUNTIME_HUD_SKIN unset): functional wireframe
+2026-10-17 11:50:33.148 experience_runtime[75064:21834127] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1280x720
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 230x173
+[notice ] BlobProductionScene: palette generation -> 1
+2026-10-17 11:50:33.678 experience_runtime[75064:21834229] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobProductionScene: palette generation -> 2
+2026-10-17 11:50:33.715 experience_runtime[75064:21834204] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobProductionScene: palette generation -> 3
+2026-10-17 11:50:33.758 experience_runtime[75064:21834411] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobProductionScene: palette generation -> 4
+2026-10-17 11:50:33.806 experience_runtime[75064:21834413] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobProductionScene: palette generation -> 5
+2026-10-17 11:50:33.844 experience_runtime[75064:21834414] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobProductionScene: palette generation -> 6
+2026-10-17 11:50:33.876 experience_runtime[75064:21834127] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobProductionScene: palette generation -> 7
+2026-10-17 11:50:33.912 experience_runtime[75064:21834413] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobProductionScene: palette generation -> 8
+2026-10-17 11:50:33.949 experience_runtime[75064:21834204] video file loaded at 960 x 540 @ 30.000002 fps
+[notice ] BlobProductionScene: palette generation -> 9
+2026-10-17 11:50:33.983 experience_runtime[75064:21834204] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobProductionScene: palette generation -> 10
+2026-10-17 11:50:34.026 experience_runtime[75064:21834229] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobProductionScene: palette generation -> 11
+2026-10-17 11:50:34.069 experience_runtime[75064:21834097] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobProductionScene: palette generation -> 12
+2026-10-17 11:50:34.106 experience_runtime[75064:21834204] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobProductionScene: palette generation -> 13
+2026-10-17 11:50:34.146 experience_runtime[75064:21834127] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobProductionScene: palette generation -> 14
+2026-10-17 11:50:34.184 experience_runtime[75064:21834204] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobProductionScene: palette generation -> 15
+2026-10-17 11:50:34.219 experience_runtime[75064:21834204] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobProductionScene: palette generation -> 16
+[notice ] BlobCapacity: media pinned: media.auto.3838009d
+[notice ] BlobRenderProfile: path=direct frames=191 fps=41.7952 frameMs=23.9262 detectorMs=1.46404 trackerMs=0.0040733 regionUpdateMs=0.00918325 effectBudgetMax=10 effectBudgetUsed=10 activeOriginal=2 activeShader=8 activeCostByEffect=heatmap_recolor:10 budgetFallbacks=4 paletteGeneration=16 background=desaturate sceneDrawMs=0.588429 backgroundMs=0.170749 fragments=10 directDraws=1910 legacyDraws=0 sourceMsPerDraw=0.0111859 shaderDirectMsPerDraw=0.0275351 shaderResultMsPerDraw=0 compositeMsPerDraw=0 regionRenderMsPerFrame=0.387209 scratch=230x173 stalls=1 maxStallMs=454.32
+[notice ] BlobRenderProfile: path=direct frames=151 fps=30.0002 frameMs=33.3331 detectorMs=1.44155 trackerMs=0.00310596 regionUpdateMs=0.00781457 effectBudgetMax=10 effectBudgetUsed=10 activeOriginal=2 activeShader=8 activeCostByEffect=heatmap_recolor:10 budgetFallbacks=4 paletteGeneration=16 background=desaturate sceneDrawMs=0.350709 backgroundMs=0.0765497 fragments=10 directDraws=1510 legacyDraws=0 sourceMsPerDraw=0.0105662 shaderDirectMsPerDraw=0.0138901 shaderResultMsPerDraw=0 compositeMsPerDraw=0 regionRenderMsPerFrame=0.244563 scratch=230x173 stalls=0 maxStallMs=0
+[notice ] BlobCapacity: WINDOW ts=2026-10-17T11:50:43 step=1 case=budget mode=budget set=production shaderSlots=0 distinctTarget=1 effects=production-budget load=synthetic:10@x1.00 media=media.auto.3838009d fragments=10.00 shader=8.00 original=2.00 distinctUsed=1.00 effectsUsed=heatmap_recolor frames=151 fps=30.00 frameMs=33.333 sceneDrawMs=0.351 regionRenderMs=0.245 backgroundMs=0.077 detectorMs=1.442 trackerMs=0.003 directDraws=10.00 legacyDraws=0.00 unshadedDraws=2.00 shaderBinds=8.00 shaderSwitches=0.00 stalls=0 maxStallMs=0 tempC=NA throttled=NA
+[notice ] BlobCapacity: captured captures/blob_capacity/step1_budget_{scene_only,hud}.png
+[notice ] BlobRenderProfile: path=direct frames=141 fps=30.0003 frameMs=33.333 detectorMs=1.42732 trackerMs=0.00308511 regionUpdateMs=0.00778723 effectBudgetMax=10 effectBudgetUsed=10 activeOriginal=2 activeShader=8 activeCostByEffect=heatmap_recolor:10 budgetFallbacks=4 paletteGeneration=16 background=desaturate sceneDrawMs=0.344965 backgroundMs=0.076156 fragments=10 directDraws=1410 legacyDraws=0 sourceMsPerDraw=0.0103794 shaderDirectMsPerDraw=0.013583 shaderResultMsPerDraw=0 compositeMsPerDraw=0 regionRenderMsPerFrame=0.239624 scratch=230x173 stalls=1 maxStallMs=928.771
+[notice ] BlobCapacity: ==================== SCRIPT SUMMARY (means of steady windows) ====================
+[notice ] BlobCapacity: SUMMARY step=1 spec=budget windows=1 fps=30.00 frameMs=33.333 regionRenderMs=0.245 backgroundMs=0.077 fragments=10.00 shader=8.00 distinctUsed=1.00 shaderSwitches=0.00 stalls=0 | case=budget mode=budget set=production shaderSlots=0 distinctTarget=1 effects=production-budget load=synthetic:10@x1.00
+[notice ] BlobCapacity: SCRIPT COMPLETE — windows: /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/data/captures/blob_capacity/blob_capacity_20261017-115032.tsv summary: /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/data/captures/blob_capacity/blob_capacity_20261017-115032_summary.tsv tempC=NA throttled=NA

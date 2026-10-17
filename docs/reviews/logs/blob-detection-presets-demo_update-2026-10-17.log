@@ -1,0 +1,144 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-17 12:10:40.029 blob-region-prototype[41747:21923835] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] ofApp: effect index choices: 0=desaturate 1=invert 2=recolor 3=threshold 4=dither 5=solarize 6=scanlines 7=channelshift 8=hue_rotate 9=ascii_solarpunk 10=bioluminescence 11=chromatic_aberration 12=edge_glow 13=ink_outlines 14=pixel_drift 15=pixel_sorting 16=water_refraction 17=heatmap_recolor
+[notice ] BlobDetectionProfile: profiles: loaded 2 profile(s) — /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-demo-120732.json
+[notice ] BlobProfileDemo: scripted profile demo: update (file /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-demo-120732.json)
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.f26fab29
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:40.107 blob-region-prototype[41747:21923835] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c15c43ce
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:40.559 blob-region-prototype[41747:21923835] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.379e4f0a
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:40.590 blob-region-prototype[41747:21923837] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.0b153878
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:40.639 blob-region-prototype[41747:21923833] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.3838009d
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:40.679 blob-region-prototype[41747:21923960] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.c7ba0540
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:40.711 blob-region-prototype[41747:21923833] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.46d6aa46
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:40.744 blob-region-prototype[41747:21923837] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.4a619257
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:40.787 blob-region-prototype[41747:21923833] video file loaded at 960 x 540 @ 29.970030 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.5c8a1794
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=46
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.5
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=1
+2026-10-17 12:10:40.829 blob-region-prototype[41747:21923835] video file loaded at 960 x 540 @ 30.000000 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.61933905
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+2026-10-17 12:10:40.865 blob-region-prototype[41747:21923835] video file loaded at 960 x 540 @ 29.970032 fps
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=28
+[notice ] BlobDetectionProfile: minArea=0.0005
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 32x24
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 32x32
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 36x32
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 44x36
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 44x52
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 48x52
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 92x108
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 128x108
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 139x108
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 147x108
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 153x115
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 158x120
+[notice ] BlobProfileDemo: PASS — A before update media=media.auto.497121bc source=per_media (want per_media) threshold=28 erode=0 dilate=2 minArea=0.0005 maxArea=0.35
+[notice ] BlobDetectionProfile: Saved Blob detection profile -> /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-demo-120732.json
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.497121bc
+[notice ] BlobDetectionProfile: source=per_media
+[notice ] BlobDetectionProfile: threshold=31
+[notice ] BlobDetectionProfile: minArea=0.0005
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=0
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] BlobProfileDemo: RESULT (update): 1/1 checks passed

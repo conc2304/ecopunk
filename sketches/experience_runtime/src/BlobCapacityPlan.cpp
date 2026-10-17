@@ -11,6 +11,7 @@ const char * toString(AssignmentMode mode) {
 		case AssignmentMode::Single: return "single";
 		case AssignmentMode::RoundRobin: return "round_robin";
 		case AssignmentMode::Weighted: return "weighted";
+		case AssignmentMode::Budget: return "budget";
 	}
 	return "unknown";
 }
@@ -80,6 +81,9 @@ std::vector<std::string> Plan::activeEffects() const {
 
 std::vector<std::string> Plan::pattern() const {
 	std::vector<std::string> slots(kSlots);
+	if (mode == AssignmentMode::Budget) {
+		return slots; // not used: BlobProductionScene routes to the budget
+	}
 	if (mode == AssignmentMode::Weighted) {
 		// Smooth weighted round robin: deterministic, interleaved.
 		std::vector<int> current(weights.size(), 0);
@@ -171,6 +175,12 @@ std::string Plan::banner() const {
 	}
 	int shaded = plannedShaderSlots();
 	std::ostringstream ss;
+	if (mode == AssignmentMode::Budget) {
+		ss << "[BLOB EFFECT CAPACITY]\n"
+		   << "case=" << caseId << "\n"
+		   << "assignment=budget (production effect budget: weighted palette, cost <= 10, Original fallback)";
+		return ss.str();
+	}
 	ss << "[BLOB EFFECT CAPACITY]\n"
 	   << "case=" << caseId << "\n"
 	   << "shaderTarget=" << shaded << "/" << kSlots << " slots\n"
@@ -185,7 +195,9 @@ std::string Plan::banner() const {
 
 std::string Plan::fields() const {
 	std::vector<std::string> effects;
-	if (mode == AssignmentMode::Weighted) {
+	if (mode == AssignmentMode::Budget) {
+		effects.push_back("production-budget");
+	} else if (mode == AssignmentMode::Weighted) {
 		for (const auto & w : weights) {
 			effects.push_back(w.first + ":" + std::to_string(w.second));
 		}
@@ -285,6 +297,22 @@ namespace {
 		if (spec.size() == 1 && preset(spec[0], step.plan)) {
 			return true;
 		}
+		if (spec == "mixed10") {
+			// Representative mixed-cost case near the budget: 2 x 2.5 + 2 x 1.25 + 2 x 1.0 = 9.5.
+			step.plan = Plan {};
+			step.plan.caseId = "mixed10";
+			step.plan.setName = "mixed-cost";
+			step.plan.mode = AssignmentMode::Weighted;
+			step.plan.weights = parseWeights("original:4,pixel_sorting:2,heatmap_recolor:2,recolor:2");
+			return true;
+		}
+		if (spec == "budget") {
+			step.plan = Plan {};
+			step.plan.caseId = "budget";
+			step.plan.setName = "production";
+			step.plan.mode = AssignmentMode::Budget;
+			return true;
+		}
 		size_t at = spec.find('@');
 		if (at == std::string::npos) {
 			error = "unknown step '" + spec + "'";
@@ -336,6 +364,12 @@ bool parseScript(const std::string & script, std::vector<ScriptStep> & out, std:
 				for (int n : { 2, 4, 6, 8, 10 }) {
 					tokens.push_back(std::string(fx) + "@" + std::to_string(n) + ":30");
 				}
+			}
+		} else if (t == "qualify") {
+			// Pi 3B+ spot-check of the effect-budget costs (design v0 §19).
+			for (const char * q : { "A:40", "recolor@10:40", "edge_glow@10:40", "water_refraction@10:40",
+					 "heatmap_recolor@8:40", "pixel_sorting@4:40", "mixed10:40", "budget:40" }) {
+				tokens.push_back(q);
 			}
 		} else if (t == "distinct") {
 			// Similar-cost pointwise shaders isolate switching from per-shader

@@ -1,0 +1,83 @@
+{
+  "profiles": {
+    "media.auto.0b153878": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 26
+    },
+    "media.auto.29d9e437": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 40
+    },
+    "media.auto.379e4f0a": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 30
+    },
+    "media.auto.497121bc": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 28
+    },
+    "media.auto.4a619257": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 22
+    },
+    "media.auto.5c8a1794": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 34
+    },
+    "media.auto.644595e0": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 36
+    },
+    "media.auto.823000cc": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 44
+    },
+    "media.auto.b5b696ee": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 24
+    },
+    "media.auto.c7ba0540": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 42
+    },
+    "media.auto.d9621168": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 32
+    },
+    "media.auto.f26fab29": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 20
+    },
+    "media.auto.ffe87a97": {
+      "dilateIterations": 3,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.6,
+      "threshold": 38
+    }
+  },
+  "schemaVersion": 1
+}

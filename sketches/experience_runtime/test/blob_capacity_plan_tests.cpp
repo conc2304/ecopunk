@@ -141,6 +141,11 @@ void test_script_parsing() {
 	CAP_CHECK(parseScript("matrix", steps, err) && steps.size() == 7);
 	CAP_CHECK(parseScript("scaling", steps, err) && steps.size() == 25);
 	CAP_CHECK(parseScript("distinct", steps, err) && steps.size() == 5);
+	CAP_CHECK(parseScript("qualify", steps, err) && steps.size() == 8);
+	CAP_CHECK(steps[6].plan.mode == AssignmentMode::Weighted && steps[6].plan.plannedShaderSlots() == 6);
+	CAP_CHECK(steps[7].plan.mode == AssignmentMode::Budget && steps[7].plan.plannedShaderSlots() == 0);
+	CAP_CHECK(parseScript("budget:30", steps, err) && steps[0].plan.mode == AssignmentMode::Budget);
+	CAP_CHECK(steps[0].plan.banner().find("assignment=budget") != std::string::npos);
 	CAP_CHECK(!parseScript("A", steps, err));
 	CAP_CHECK(!parseScript("nosuch@3:10", steps, err));
 	CAP_CHECK(!parseScript("recolor@11:10", steps, err));

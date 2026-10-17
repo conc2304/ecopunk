@@ -2,20 +2,12 @@
 
 namespace blobeffects {
 
-const std::vector<FragmentTreatment> & curatedFragmentTreatments() {
-	static const std::vector<FragmentTreatment> kTreatments = {
-		FragmentTreatment::original(),
-		FragmentTreatment::shader("recolor"),
-	};
-	return kTreatments;
-}
-
 const std::string & backgroundEffectId() {
 	static const std::string kBackground = "desaturate";
 	return kBackground;
 }
 
-bool MediaEffectPolicy::observeMedia(const std::optional<std::string> & mediaId) {
+bool MediaGeneration::observeMedia(const std::optional<std::string> & mediaId) {
 	if (!mediaId.has_value()) {
 		return false;
 	}
@@ -27,17 +19,8 @@ bool MediaEffectPolicy::observeMedia(const std::optional<std::string> & mediaId)
 		return false;
 	}
 	lastMediaId_ = mediaId;
-	size_t previous = index_;
-	index_ = (index_ + 1) % curatedFragmentTreatments().size();
-	if (index_ == previous) {
-		return false;
-	}
-	changeCount_++;
+	generation_++;
 	return true;
-}
-
-const FragmentTreatment & MediaEffectPolicy::currentTreatment() const {
-	return curatedFragmentTreatments()[index_];
 }
 
 } // namespace blobeffects

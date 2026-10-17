@@ -95,7 +95,7 @@ void BlobEffectCapacityBench::setup() {
 
 	ofLogNotice(kLog) << "EXPERIMENT ONLY — Blob multi-effect capacity bench enabled (EXPERIENCE_RUNTIME_BLOB_EFFECT_CAPACITY)";
 	ofLogNotice(kLog) << "keys: F1-F7 presets A-G | , . shader slots -/+ | - = distinct -/+ | q w e r t y u effect sets"
-					  << " | j l single-effect focus | m assignment mode | g tracked/synthetic load | z x synthetic count -/+"
+					  << " | j l single-effect focus | m assignment mode (single/round_robin/weighted/budget) | g tracked/synthetic load | z x synthetic count -/+"
 					  << " | b mark window + capture | i show config";
 
 	Plan initial;
@@ -271,6 +271,7 @@ bool BlobEffectCapacityBench::handleKey(int key) {
 			case 'm': {
 				p.mode = p.mode == AssignmentMode::Single ? AssignmentMode::RoundRobin
 					: p.mode == AssignmentMode::RoundRobin ? AssignmentMode::Weighted
+					: p.mode == AssignmentMode::Weighted ? AssignmentMode::Budget
 					: AssignmentMode::Single;
 				if (p.mode == AssignmentMode::Weighted) {
 					if (const char * w = env("EXPERIENCE_RUNTIME_BLOB_CAPACITY_WEIGHTS")) {

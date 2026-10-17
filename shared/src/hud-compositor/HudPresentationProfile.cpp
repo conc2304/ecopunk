@@ -44,6 +44,8 @@ ScenePresentationProfile buildUniversalProfile() {
 		auto b = makeBinding("universal.scene_title.label", "universal.scene_title",
 			HudWidgetType::Label, HudMissingPolicy::Placeholder, HudFormatKind::VocabularyValue);
 		b.addSource({"text", "scene.title", true});
+		// Scene & Pattern Navigation: "  2/5" from SceneManager's registry.
+		b.addSource({"suffix", "scene.position", false});
 		p.bindings.push_back(b);
 	}
 	{
@@ -113,6 +115,21 @@ ScenePresentationProfile buildUniversalProfile() {
 			HudWidgetType::NumericValue, HudMissingPolicy::Hide, HudFormatKind::ClockTime);
 		b.addSource({"value", "runtime.clock.local_seconds", true});
 		b.addSource({"label", "runtime.clock.local_label", false});
+		p.bindings.push_back(b);
+	}
+
+	// -- Scene & Pattern Navigation (product-approved): the active scene's
+	// mode in flexible.secondary_a, beside the clock. Top line "MODE 3/9",
+	// bottom line the mode name. Also the focusable NEXT MODE control:
+	// "enabled" puts it in the focus ring (Enter -> SceneCommand::NextMode);
+	// a scene with no mode model publishes nothing and the region recesses.
+	{
+		auto b = makeBinding("universal.mode.value", "flexible.secondary_a",
+			HudWidgetType::NumericValue, HudMissingPolicy::Hide, HudFormatKind::Automatic,
+			std::string("slot.scene.mode.label"));
+		b.addSource({"value", "scene.mode.name", true});
+		b.addSource({"label", "scene.mode.position", false});
+		b.addSource({"enabled", "control.scene.next_mode.available", false});
 		p.bindings.push_back(b);
 	}
 

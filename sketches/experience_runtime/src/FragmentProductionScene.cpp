@@ -167,6 +167,20 @@ SceneHudStatus FragmentProductionScene::hudStatus() const {
 	if (core_.didSetup() && core_.isActive() && videoAdapter_.buffer().hasMedia()) {
 		status.semantic = buildSemanticData();
 	}
+
+	// Scene & Pattern Navigation: FTContentMode's three content modes, in
+	// enum order (the controller's own rotation order); same IDs as
+	// scene.fragment.metric.content_mode.
+	if (core_.didSetup() && core_.isActive()) {
+		const fragmenttrail::FTModeController& modes = core_.modeController();
+		SceneModeStatus mode;
+		mode.modeId = contentModeSemanticId(modes.getCurrentMode());
+		mode.displayName = mode.modeId;
+		mode.index = modes.currentModeIndex();
+		mode.count = fragmenttrail::FTModeController::kModeCount;
+		status.modeName = mode.displayName;
+		status.mode = mode;
+	}
 	return status;
 }
 
@@ -205,6 +219,15 @@ SceneCapabilities FragmentProductionScene::capabilities() const {
 	prevCmd.prominent = false;
 	caps.commands.push_back(prevCmd);
 
+	// NextMode (Scene & Pattern Navigation): steps FTModeController's
+	// content mode — the modes' own rendering is unchanged.
+	SceneCommandDescriptor modeCmd;
+	modeCmd.command = SceneCommand::NextMode;
+	modeCmd.label = "Next mode";
+	modeCmd.shortLabel = "NEXT MODE";
+	modeCmd.prominent = false;
+	caps.commands.push_back(modeCmd);
+
 	// Regenerate: not advertised — Fragment Trail has no curated, bounded
 	// variation action (its standalone keys are raw mode/preset debug
 	// switches). Reset: not advertised (product direction); still honored
@@ -223,6 +246,10 @@ bool FragmentProductionScene::executeCommand(SceneCommand command) {
 			return video_.previous();
 		case SceneCommand::Reset:
 			reset();
+			return true;
+		case SceneCommand::NextMode:
+			if (!core_.isActive()) return false;
+			core_.modeController().nextMode();
 			return true;
 		case SceneCommand::Regenerate:
 		default:

@@ -272,7 +272,13 @@ void CrosshairSystem::setMotionAttractor(float x, float y, float energy) {
 }
 
 void CrosshairSystem::setPreset(int index) {
-	presetIndex = ofClamp(index, 0, (int)presets.size() - 1);
+	const int next = ofClamp(index, 0, (int)presets.size() - 1);
+	if (next == presetIndex) return;
+	presetIndex = next;
+	// A new preset's noise parameters map to a different position: glide
+	// into it over the existing 2 s resume blend instead of jumping.
+	resuming = true;
+	resumeLerp = 0.f;
 }
 
 void CrosshairSystem::nextPreset() {

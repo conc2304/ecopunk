@@ -1216,7 +1216,62 @@ void test_clock_binding_scene_independent() {
 	HUD_CHECK(label && !label->present);
 }
 
+// Scene & Pattern Navigation bindings compile valid for every scene: the
+// mode panel in flexible.secondary_a (Text value, position label, enabled
+// role) and the scene title's position suffix — no compile issues.
+void test_navigation_bindings_compile() {
+	HudRegionCatalog regions;
+	HudVocabularyResolver vocab;
+	HudProfileCompiler compiler(regions, vocab);
+	HudPresentationProfileRegistry registry;
+
+	std::vector<std::string> sceneIds = registry.knownSceneIds();
+	sceneIds.push_back("unknown-scene");
+	for (const auto& sceneId : sceneIds) {
+		auto compiled = compiler.compile(sceneId, registry);
+		int modeBindings = 0;
+		bool titleHasSuffix = false;
+		for (const auto& c : compiled.bindings) {
+			if (c.binding.bindingId == "universal.mode.value") {
+				modeBindings++;
+				HUD_CHECK(c.valid);
+				HUD_CHECK(c.binding.regionId == "flexible.secondary_a");
+				HUD_CHECK(c.binding.widgetType == HudWidgetType::NumericValue);
+				HUD_CHECK_EQ_STR(c.resolvedLabelText, "MODE");
+				const auto* value = c.binding.findSource("value");
+				const auto* enabled = c.binding.findSource("enabled");
+				HUD_CHECK(value != nullptr && value->sourceId == "scene.mode.name");
+				HUD_CHECK(enabled != nullptr && enabled->sourceId == "control.scene.next_mode.available");
+			}
+			if (c.binding.bindingId == "universal.scene_title.label") {
+				HUD_CHECK(c.valid);
+				const auto* suffix = c.binding.findSource("suffix");
+				titleHasSuffix = suffix != nullptr && suffix->sourceId == "scene.position";
+			}
+		}
+		HUD_CHECK(modeBindings == 1);
+		HUD_CHECK(titleHasSuffix);
+		for (const auto& issue : compiled.issues) {
+			HUD_CHECK(issue.bindingId != "universal.mode.value" && issue.bindingId != "universal.scene_title.label");
+		}
+	}
+
+	// Static typing of the new sources, and the fake path never invents
+	// registry or mode data.
+	HUD_CHECK(HudSourceResolver::staticValueTypeOf("scene.index") == HudSourceValueType::Count);
+	HUD_CHECK(HudSourceResolver::staticValueTypeOf("scene.mode.name") == HudSourceValueType::Text);
+	HUD_CHECK(HudSourceResolver::staticValueTypeOf("control.scene.next_mode.available") == HudSourceValueType::Boolean);
+	HudSourceResolver fakeResolver;
+	FakeHudFrameData fake;
+	for (const char* id : {"scene.index", "scene.count", "scene.position", "scene.mode.id", "scene.mode.name",
+			"scene.mode.index", "scene.mode.count", "scene.mode.position", "control.scene.next_mode.available"}) {
+		auto v = fakeResolver.resolve(id, fake);
+		HUD_CHECK(v && !v->present);
+	}
+}
+
 int main() {
+	test_navigation_bindings_compile();
 	test_clock_midnight_and_date_rollover();
 	test_clock_leap_day_and_year_rollover();
 	test_clock_offsets_positive_negative_fractional();

@@ -74,6 +74,8 @@ public:
 	// Effect names of every live (non-dead) fragment, one entry per
 	// fragment ("" = unshaded), into out (cleared first). Diagnostic use.
 	void collectActiveEffectNames(std::vector<std::string> & out) const;
+	// (region id, effect name) of every live fragment, into out (cleared first).
+	void collectActiveAssignments(std::vector<std::pair<int, std::string>> & out) const;
 
 	Params params;
 
@@ -82,6 +84,10 @@ public:
 	// params.effectName. Called once per fragment, at creation, so a
 	// fragment keeps its effect for its lifetime. Empty by default.
 	std::function<std::string(int)> effectAssigner;
+	// Optional counterpart: called with the region id once that fragment
+	// is gone (finished dissolving, or dropped by reset()), never while it
+	// can still be drawn. Lets an assigner keep exact per-fragment books.
+	std::function<void(int)> effectReleaser;
 
 private:
 	struct ManagedRegion {

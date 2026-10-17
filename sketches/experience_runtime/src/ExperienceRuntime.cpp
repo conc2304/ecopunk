@@ -424,6 +424,10 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 		rec.command = cmd == SceneCommand::PreviousMedia ? "SceneCommand::PreviousMedia"
 			: cmd == SceneCommand::NextMedia ? "SceneCommand::NextMedia" : "SceneCommand::Regenerate";
 		rec.accepted = sceneManager_.dispatchSceneCommand(cmd);
+	} else if (*target == "flexible.secondary_a") {
+		// Scene & Pattern Navigation: the mode panel's activation is NEXT MODE.
+		rec.command = "SceneCommand::NextMode";
+		rec.accepted = sceneManager_.dispatchSceneCommand(SceneCommand::NextMode);
 	} else if (*target == "controls.scene_previous" || *target == "controls.scene_next") {
 		const RuntimeCommand cmd = *target == "controls.scene_previous" ? RuntimeCommand::PreviousScene : RuntimeCommand::NextScene;
 		rec.command = cmd == RuntimeCommand::PreviousScene ? "RuntimeCommand::PreviousScene" : "RuntimeCommand::NextScene";

@@ -1,0 +1,173 @@
+{
+  "profiles": {
+    "media.auto.1ab5450d": {
+      "dilateIterations": 1,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.648469,
+      "minBlobAreaNormalized": 0.003155,
+      "threshold": 30
+    },
+    "media.auto.29d9e437": {
+      "dilateIterations": 1,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.466327,
+      "minBlobAreaNormalized": 0.004683,
+      "threshold": 21
+    },
+    "media.auto.2c15ecd7": {
+      "dilateIterations": 2,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.05,
+      "minBlobAreaNormalized": 0.014357,
+      "threshold": 2
+    },
+    "media.auto.379e4f0a": {
+      "dilateIterations": 0,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.35,
+      "minBlobAreaNormalized": 0.0008,
+      "threshold": 16
+    },
+    "media.auto.40d022de": {
+      "dilateIterations": 0,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.691837,
+      "minBlobAreaNormalized": 0.005956,
+      "threshold": 21
+    },
+    "media.auto.46d6aa46": {
+      "dilateIterations": 2,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.35,
+      "minBlobAreaNormalized": 0.0008,
+      "threshold": 40
+    },
+    "media.auto.497121bc": {
+      "dilateIterations": 2,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.574745,
+      "minBlobAreaNormalized": 0.0001,
+      "threshold": 2
+    },
+    "media.auto.4a619257": {
+      "dilateIterations": 0,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.35,
+      "minBlobAreaNormalized": 0.0008,
+      "threshold": 25
+    },
+    "media.auto.52f569d8": {
+      "dilateIterations": 1,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.05,
+      "minBlobAreaNormalized": 0.004937,
+      "threshold": 17
+    },
+    "media.auto.5c8a1794": {
+      "dilateIterations": 1,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.35,
+      "minBlobAreaNormalized": 0.00341,
+      "threshold": 21
+    },
+    "media.auto.61933905": {
+      "dilateIterations": 1,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.05,
+      "minBlobAreaNormalized": 0.001373,
+      "threshold": 24
+    },
+    "media.auto.644595e0": {
+      "dilateIterations": 1,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.201786,
+      "minBlobAreaNormalized": 0.002646,
+      "threshold": 37
+    },
+    "media.auto.7021ad87": {
+      "dilateIterations": 1,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.370918,
+      "minBlobAreaNormalized": 0.0001,
+      "threshold": 19
+    },
+    "media.auto.768dc974": {
+      "dilateIterations": 2,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.35,
+      "minBlobAreaNormalized": 0.0008,
+      "threshold": 40
+    },
+    "media.auto.823000cc": {
+      "dilateIterations": 2,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.774235,
+      "minBlobAreaNormalized": 0.002137,
+      "threshold": 2
+    },
+    "media.auto.96b64003": {
+      "dilateIterations": 1,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.05,
+      "minBlobAreaNormalized": 0.002391,
+      "threshold": 1
+    },
+    "media.auto.b5b696ee": {
+      "dilateIterations": 0,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.435969,
+      "minBlobAreaNormalized": 0.003155,
+      "threshold": 1
+    },
+    "media.auto.b6b38c6d": {
+      "dilateIterations": 0,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.496684,
+      "minBlobAreaNormalized": 0.010284,
+      "threshold": 38
+    },
+    "media.auto.c15c43ce": {
+      "dilateIterations": 1,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.05,
+      "minBlobAreaNormalized": 0.008502,
+      "threshold": 21
+    },
+    "media.auto.c7ba0540": {
+      "dilateIterations": 2,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.509694,
+      "minBlobAreaNormalized": 0.002137,
+      "threshold": 50
+    },
+    "media.auto.d0a9a208": {
+      "dilateIterations": 2,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.245153,
+      "minBlobAreaNormalized": 0.002901,
+      "threshold": 94
+    },
+    "media.auto.d9621168": {
+      "dilateIterations": 1,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.35,
+      "minBlobAreaNormalized": 0.0008,
+      "threshold": 7
+    },
+    "media.auto.f26fab29": {
+      "dilateIterations": 1,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.106378,
+      "minBlobAreaNormalized": 0.001118,
+      "threshold": 1
+    },
+    "media.auto.ffe87a97": {
+      "dilateIterations": 1,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.158418,
+      "minBlobAreaNormalized": 0.0001,
+      "threshold": 1
+    }
+  },
+  "schemaVersion": 1
+}

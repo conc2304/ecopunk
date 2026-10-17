@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include "BlobDetectionProfileApply.h"
 #include "VideoRegionMathOf.h"
 #include <sstream>
 
@@ -100,6 +101,251 @@ void ofApp::setup() {
 	gui.add(backgroundGroup);
 	gui.add(renderingGroup);
 	gui.add(perfGroup);
+
+	loadDetectionProfiles();
+	if (const char * demo = std::getenv("BLOB_PROFILE_DEMO")) {
+		profileDemoMode = demo;
+		ofLogNotice("BlobProfileDemo") << "scripted profile demo: " << profileDemoMode << " (file " << detectionProfilesPath << ")";
+	}
+}
+
+// -- Per-video detection presets ---------------------------------------------
+
+std::optional<std::string> ofApp::currentMediaId() const {
+	return videoPlayback.status().mediaId;
+}
+
+void ofApp::loadDetectionProfiles() {
+	detectionProfilesPath = blobdetectionprofile::profilesPath();
+	BlobDetectionProfileStore::LoadStatus st = detectionProfiles.load(detectionProfilesPath);
+	detectionProfileFileStatus = st == BlobDetectionProfileStore::LoadStatus::Loaded
+		? "loaded " + ofToString(detectionProfiles.size()) + " profile(s)"
+		: st == BlobDetectionProfileStore::LoadStatus::Missing ? "no file yet (first save creates it)" : "REJECTED (saving disabled)";
+	ofLogNotice("BlobDetectionProfile") << "profiles: " << detectionProfileFileStatus << " — " << detectionProfilesPath;
+	for (const std::string & m : detectionProfiles.messages()) {
+		ofLogNotice("BlobDetectionProfile") << m;
+	}
+	detectionProfileTracker.invalidate(); // reapply for the current media
+}
+
+void ofApp::applyDetectionProfileToGui(const BlobDetectionProfile & effective) {
+	// The GUI is the source of truth for this dev app (syncParamsToSystems()
+	// pushes it into the detector every frame), so presets land in the GUI.
+	BlobDetectionProfile p = resolveProfile(blobdetectionprofile::canonicalDefaults(), &effective);
+	pThreshold = *p.threshold;
+	pMinBlobArea = static_cast<float>(*p.minBlobAreaNormalized);
+	pMaxBlobArea = static_cast<float>(*p.maxBlobAreaNormalized);
+	pErodeIterations = *p.erodeIterations;
+	pDilateIterations = *p.dilateIterations;
+}
+
+void ofApp::saveDetectionProfileForCurrentMedia() {
+	syncParamsToSystems();
+	std::optional<std::string> mediaId = currentMediaId();
+	if (!mediaId || mediaId->empty()) {
+		ofLogError("BlobDetectionProfile") << "NOT SAVED: no canonical media id is active";
+		return;
+	}
+	BlobDetectionProfile p = blobdetectionprofile::fromConfig(blobCore.detectionConfig());
+	std::string error;
+	if (!detectionProfiles.set(*mediaId, p, error) || !detectionProfiles.save(detectionProfilesPath, error)) {
+		ofLogError("BlobDetectionProfile") << "NOT SAVED: " << error;
+		return;
+	}
+	ofLogNotice("BlobDetectionProfile") << "Saved Blob detection profile -> " << detectionProfilesPath;
+	std::istringstream lines(describeProfile(*mediaId, "per_media", p));
+	std::string line;
+	while (std::getline(lines, line)) {
+		ofLogNotice("BlobDetectionProfile") << line;
+	}
+	detectionProfileFileStatus = "loaded " + ofToString(detectionProfiles.size()) + " profile(s)";
+	detectionProfileSource = "per_media";
+	detectionProfileTracker.invalidate();
+}
+
+void ofApp::restoreDetectionDefaults() {
+	applyDetectionProfileToGui(blobdetectionprofile::canonicalDefaults());
+	detectionProfileSource = "defaults (manual; file unchanged)";
+	ofLogNotice("BlobDetectionProfile") << "detector restored to defaults for " << currentMediaId().value_or("-") << " (not saved)";
+}
+
+void ofApp::stepProfileDemo() {
+	if (profileDemoMode.empty()) {
+		return;
+	}
+	auto check = [&](bool ok, const std::string & what) {
+		profileDemoChecks++;
+		profileDemoFailures += ok ? 0 : 1;
+		ofLogNotice("BlobProfileDemo") << (ok ? "PASS — " : "FAIL — ") << what;
+	};
+	auto expectApplied = [&](const std::string & tag) {
+		std::string id = currentMediaId().value_or("");
+		const BlobDetectionProfile * stored = detectionProfiles.find(id);
+		BlobDetectionProfile want = resolveProfile(blobdetectionprofile::canonicalDefaults(), stored);
+		BlobDetectionProfile have = blobdetectionprofile::fromConfig(blobCore.detectionConfig());
+		std::string wantSource = stored != nullptr ? "per_media" : "defaults";
+		check(have == want && detectionProfileSource == wantSource,
+			tag + " media=" + id + " source=" + detectionProfileSource + " (want " + wantSource + ") threshold="
+				+ ofToString(*have.threshold) + " erode=" + ofToString(*have.erodeIterations) + " dilate=" + ofToString(*have.dilateIterations)
+				+ " minArea=" + ofToString(*have.minBlobAreaNormalized) + " maxArea=" + ofToString(*have.maxBlobAreaNormalized));
+	};
+	auto navigate = [&](bool forward) {
+		profileDemoMediaBefore = currentMediaId();
+		profileDemoFrames = 0;
+		profileDemoStep++;
+		if (!(forward ? videoPlayback.next() : videoPlayback.previous())) {
+			ofLogError("BlobProfileDemo") << "navigation rejected";
+		}
+	};
+	auto finish = [&]() {
+		ofLogNotice("BlobProfileDemo") << "RESULT (" << profileDemoMode << "): " << (profileDemoChecks - profileDemoFailures) << "/"
+									  << profileDemoChecks << " checks passed";
+		profileDemoMode.clear();
+		ofExit();
+	};
+
+	if (profileDemoMode == "verify-all") {
+		// Validation sweep of every authored preset (dev tool): rewind to
+		// the first catalog item, then visit each clip once — preset check
+		// plus ~4 s of tracking stats — then alternate the last two clips.
+		if (profileDemoPhase == 0) {
+			if (!videoPlayback.previous()) {
+				profileDemoPhase = 1;
+				profileDemoMediaBefore.reset();
+				profileDemoFrames = 0;
+			}
+			return;
+		}
+		std::optional<std::string> id = currentMediaId();
+		if (!id || id == profileDemoMediaBefore || !blobCore.hasVideoFrame() || ++profileDemoFrames < 45) {
+			return;
+		}
+		if (profileDemoStatFrames == 0) {
+			expectApplied(profileDemoPhase == 1 ? "sweep" : "alternate");
+		}
+		// Stats window: tracked regions, fragments, largest single region.
+		profileDemoStatFrames++;
+		profileDemoTrackSum += blobCore.trackCount();
+		profileDemoTrackPeak = std::max(profileDemoTrackPeak, blobCore.trackCount());
+		profileDemoFragmentPeak = std::max(profileDemoFragmentPeak, blobCore.activeFragmentCount());
+		for (const VideoRegion & r : blobCore.tracker().getActiveRegions()) {
+			profileDemoLargestArea = std::max(profileDemoLargestArea, r.smoothedNormalizedBounds.width * r.smoothedNormalizedBounds.height);
+		}
+		if (profileDemoStatFrames < 240) {
+			return;
+		}
+		VideoPlaybackStatus st = videoPlayback.status();
+		ofLogNotice("BlobProfileDemo") << "STATS media=" << id.value_or("") << " title=\"" << st.fallbackDisplayTitle.value_or("") << "\""
+									  << " source=" << detectionProfileSource
+									  << " tracksAvg=" << ofToString(profileDemoTrackSum / profileDemoStatFrames, 2)
+									  << " tracksPeak=" << profileDemoTrackPeak << " fragmentsPeak=" << profileDemoFragmentPeak
+									  << " largestRegionArea=" << ofToString(profileDemoLargestArea, 3);
+		if (const char * capture = std::getenv("BLOB_PROFILE_DEMO_CAPTURE")) {
+			std::string title = st.fallbackDisplayTitle.value_or("");
+			if (std::string(capture).find(title) != std::string::npos && !title.empty()) {
+				profileDemoCaptureLabel = "verifyall_" + id.value_or("") + (profileDemoPhase == 2 ? "_alt" + ofToString(profileDemoAlternations) : "");
+			}
+		}
+		profileDemoStatFrames = 0;
+		profileDemoTrackSum = 0.0;
+		profileDemoTrackPeak = 0;
+		profileDemoFragmentPeak = 0;
+		profileDemoLargestArea = 0.0f;
+		profileDemoMediaBefore = id;
+		profileDemoFrames = 0;
+		if (profileDemoPhase == 1) {
+			if (!videoPlayback.next()) {
+				profileDemoPhase = 2; // end of catalog: alternate the last two clips
+				profileDemoMediaBefore.reset();
+			}
+			return;
+		}
+		if (++profileDemoAlternations > 4) {
+			finish();
+			return;
+		}
+		if (!(profileDemoAlternations % 2 == 1 ? videoPlayback.previous() : videoPlayback.next())) {
+			ofLogError("BlobProfileDemo") << "alternation navigation rejected";
+		}
+		return;
+	}
+
+	if (profileDemoMode == "verify" || profileDemoMode == "update") {
+		// Seek each target media (as a user would navigate back to it), let
+		// its preset apply, then check: A, B, an unprofiled clip, B, A.
+		std::vector<std::string> ids = detectionProfiles.mediaIds();
+		if (profileDemoTargets.empty()) {
+			if (ids.size() < 2) {
+				check(false, "verify needs two authored profiles in the file");
+				finish();
+				return;
+			}
+			profileDemoTargets = profileDemoMode == "update" ? std::vector<std::string> { ids[0] }
+															   : std::vector<std::string> { ids[0], ids[1], "*", ids[1], ids[0] };
+		}
+		const std::string & target = profileDemoTargets[profileDemoStep];
+		std::string current = currentMediaId().value_or("");
+		bool onTarget = target == "*" ? (!current.empty() && detectionProfiles.find(current) == nullptr) : current == target;
+		if (!onTarget) {
+			if (++profileDemoSeekMoves > 120) {
+				check(false, "could not reach media " + target);
+				finish();
+				return;
+			}
+			profileDemoFrames = 0;
+			if (!(profileDemoSeekForward ? videoPlayback.next() : videoPlayback.previous())) {
+				profileDemoSeekForward = !profileDemoSeekForward;
+			}
+			return;
+		}
+		if (!blobCore.hasVideoFrame() || ++profileDemoFrames < 45) {
+			return;
+		}
+		if (profileDemoMode == "update") { // Test D: change A only
+			expectApplied("A before update");
+			pThreshold = 31;
+			saveDetectionProfileForCurrentMedia();
+			finish();
+			return;
+		}
+		static const char * kTags[] = { "A after restart", "B after restart", "unprofiled media", "B again", "A again" };
+		expectApplied(kTags[profileDemoStep]);
+		if (profileDemoStep == 0) profileDemoCaptureLabel = "A";
+		if (profileDemoStep == 1) profileDemoCaptureLabel = "B";
+		if (profileDemoStep == 2) profileDemoCaptureLabel = "unprofiled";
+		profileDemoSeekMoves = 0;
+		profileDemoFrames = 0;
+		if (++profileDemoStep >= static_cast<int>(profileDemoTargets.size())) {
+			finish();
+		}
+		return;
+	}
+
+	// Wait until the new media is active, decoding, and its preset applied.
+	std::optional<std::string> id = currentMediaId();
+	if (!id || id == profileDemoMediaBefore || !blobCore.hasVideoFrame()) {
+		return;
+	}
+	if (++profileDemoFrames < 45) {
+		return;
+	}
+
+	if (profileDemoMode == "author") {
+		if (profileDemoStep == 0) { // A: tune and save
+			expectApplied("A before tuning");
+			pThreshold = 28; pErodeIterations = 0; pMinBlobArea = 0.0005f;
+			saveDetectionProfileForCurrentMedia();
+			navigate(true);
+		} else if (profileDemoStep == 1) { // B: A must not leak; tune and save
+			expectApplied("B before tuning (A's values must not leak)");
+			pThreshold = 46; pDilateIterations = 1; pMaxBlobArea = 0.5f;
+			saveDetectionProfileForCurrentMedia();
+			navigate(true);
+		} else { // C: no profile -> defaults
+			expectApplied("C (no profile)");
+			finish();
+		}
+	}
 }
 
 void ofApp::syncParamsToSystems() {
@@ -150,6 +396,19 @@ void ofApp::update() {
 	}
 
 	videoPlayback.update(dt);
+
+	// Per-video preset, once per media change (no profile -> defaults).
+	if (auto applied = detectionProfileTracker.observe(currentMediaId(), detectionProfiles, blobdetectionprofile::canonicalDefaults())) {
+		applyDetectionProfileToGui(applied->effective);
+		detectionProfileSource = applied->source;
+		std::istringstream lines(describeProfile(applied->mediaId, applied->source, applied->effective));
+		std::string line;
+		while (std::getline(lines, line)) {
+			ofLogNotice("BlobDetectionProfile") << line;
+		}
+	}
+	stepProfileDemo();
+
 	syncParamsToSystems();
 
 	ofRectangle destRect(0, 0, static_cast<float>(ofGetWidth()), static_cast<float>(ofGetHeight()));
@@ -200,6 +459,14 @@ void ofApp::draw() {
 
 	if (guiVisible) {
 		gui.draw();
+	}
+
+	if (!profileDemoCaptureLabel.empty()) {
+		std::string path = "captures/profile_demo_" + profileDemoCaptureLabel + ".png";
+		ofFilePath::createEnclosingDirectory(path);
+		ofSaveScreen(path);
+		ofLogNotice("BlobProfileDemo") << "captured " << path;
+		profileDemoCaptureLabel.clear();
 	}
 }
 
@@ -269,7 +536,13 @@ void ofApp::drawDebugOverlay() {
 			ss << "\n";
 		}
 		ss << "CPU pixels path: VideoPlaybackService::currentPixels() (no GPU readback)\n";
-		ss << "[g] toggle GUI  [d] toggle debug overlay  [n/p] next/previous media";
+		ss << "media: " << currentMediaId().value_or("(none)") << "\n";
+		ss << "detection profile: " << detectionProfileSource << "  [" << detectionProfileFileStatus << "]\n";
+		ss << "  threshold=" << blobCore.detectionConfig().threshold << " minArea=" << blobCore.detectionConfig().minBlobAreaNormalized
+		   << " maxArea=" << blobCore.detectionConfig().maxBlobAreaNormalized << " erode=" << blobCore.detectionConfig().erodeIterations
+		   << " dilate=" << blobCore.detectionConfig().dilateIterations << "\n";
+		ss << "[g] toggle GUI  [d] toggle debug overlay  [n/p] next/previous media\n";
+		ss << "[s] save detection profile for this media  [r] reload profiles  [D] restore detector defaults";
 		ofDrawBitmapStringHighlight(ss.str(), 20, 30);
 	}
 }
@@ -279,6 +552,12 @@ void ofApp::keyPressed(int key) {
 		guiVisible = !guiVisible;
 	} else if (key == 'd') {
 		pDebugVisualization = !pDebugVisualization;
+	} else if (key == 's') {
+		saveDetectionProfileForCurrentMedia();
+	} else if (key == 'r') {
+		loadDetectionProfiles();
+	} else if (key == 'D') {
+		restoreDetectionDefaults();
 	} else if (key == 'n') {
 		// Blob Post-Acceptance Hardening: dev-only Next/Previous media
 		// navigation, mirroring the production InputRouter's own n/p

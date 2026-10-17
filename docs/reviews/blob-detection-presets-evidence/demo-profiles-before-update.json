@@ -1,0 +1,19 @@
+{
+  "profiles": {
+    "media.auto.497121bc": {
+      "dilateIterations": 2,
+      "erodeIterations": 0,
+      "maxBlobAreaNormalized": 0.35,
+      "minBlobAreaNormalized": 0.0005,
+      "threshold": 28
+    },
+    "media.auto.5c8a1794": {
+      "dilateIterations": 1,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.5,
+      "minBlobAreaNormalized": 0.0008,
+      "threshold": 46
+    }
+  },
+  "schemaVersion": 1
+}

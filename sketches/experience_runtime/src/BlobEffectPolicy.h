@@ -1,82 +1,44 @@
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <string>
-#include <vector>
 
-// BlobEffectPolicy.h — Blob production fragment-treatment selection policy.
+// BlobEffectPolicy.h — Blob production visual model, scene-level half.
 //
-// Pure, openFrameworks-free (same convention as BlobSemanticMapping.h), so
-// the selection rule is testable with a bare compiler
-// (test/blob_effect_policy_tests.cpp).
+// The full frame is drawn desaturated (backgroundEffectId()); tracked
+// regions reveal Original color or a shader treatment chosen per fragment
+// by the effect budget (BlobEffectBudget.h). This file owns only the
+// media-change signal: each new canonical Shared Video media item starts a
+// new palette generation, so new fragments draw fresh treatments while
+// fragments already on screen keep theirs (no flicker on media change).
 //
-// Visual model (Blob production): the full frame is drawn desaturated, and
-// tracked regions are windows that reveal either the source's original
-// color or one curated shader treatment. One treatment per canonical Shared
-// Video media item, advanced in a fixed order whenever the active mediaId
-// changes.
-//
-// Scene-local, domain-owned code — NOT a shared/frozen contract, not a
-// Shared Effects authority (no EffectActivityStatus is produced; Blob's
-// HudFrameData.effects stays std::nullopt). Shader treatments render with
-// their canonical catalog-default uniforms (DEC-007: no raw-parameter
-// randomization).
+// Pure, openFrameworks-free (test/blob_effect_policy_tests.cpp).
+// Scene-local, domain-owned — not a Shared Effects authority (Blob's
+// HudFrameData.effects stays std::nullopt).
 namespace blobeffects {
-
-// What a Blob fragment shows. Original is a first-class treatment, not a
-// shader: it maps to an empty VideoRegionController effectName, which
-// VideoRegionEffectRenderer draws as the unshaded source crop.
-struct FragmentTreatment {
-	enum class Kind { Original, Shader };
-	Kind kind = Kind::Original;
-	std::string effectId; // canonical effect id; empty for Original
-
-	static FragmentTreatment original() { return {}; }
-	static FragmentTreatment shader(const std::string & id) { return { Kind::Shader, id }; }
-
-	bool isOriginal() const { return kind == Kind::Original; }
-	// VideoRegionController::Params::effectName for this treatment.
-	const std::string & regionEffectName() const { return effectId; }
-	// Stable id for logs/tests: "original" or the effect id.
-	std::string id() const { return isOriginal() ? std::string("original") : effectId; }
-
-	bool operator==(const FragmentTreatment & o) const { return kind == o.kind && effectId == o.effectId; }
-	bool operator!=(const FragmentTreatment & o) const { return !(*this == o); }
-};
-
-// The curated production set, in selection order. The first media item gets
-// index 0 (Original).
-//
-// Shader eligibility (see docs/reviews/blob-production-effect-policy-report.md):
-// one of BlobSceneCore::effectChoices() that passes the unchanged BLOB-002
-// direct-vs-3-stage tolerance in BlobRenderPathAbHarness, so fragments don't
-// pop when they switch paths at the end of a fade. desaturate is eligible
-// but omitted here: on the desaturated background it would be invisible.
-const std::vector<FragmentTreatment> & curatedFragmentTreatments();
 
 // The full-frame background effect for this visual model.
 const std::string & backgroundEffectId();
 
-class MediaEffectPolicy {
+class MediaGeneration {
 public:
 	// Call once per active update with the canonical
-	// VideoPlaybackStatus::mediaId. Returns true only when the selected
-	// treatment changed on this call:
+	// VideoPlaybackStatus::mediaId. Returns true only when a new
+	// generation starts on this call:
 	//   - nullopt (no active media): no change.
-	//   - first media ever observed: keeps index 0, returns false.
+	//   - first media ever observed: generation stays 0, returns false.
 	//   - same mediaId as last time: no change.
-	//   - different mediaId: advances one step through the curated list.
+	//   - different mediaId: generation + 1.
 	// Never called while Blob is inactive, so media that came and went
 	// while another scene was showing counts as one change on return.
 	bool observeMedia(const std::optional<std::string> & mediaId);
 
-	const FragmentTreatment & currentTreatment() const;
-	int selectionChangeCount() const { return changeCount_; }
+	uint64_t generation() const { return generation_; }
 
 private:
 	std::optional<std::string> lastMediaId_;
-	size_t index_ = 0;
-	int changeCount_ = 0;
+	uint64_t generation_ = 0;
 };
 
 } // namespace blobeffects

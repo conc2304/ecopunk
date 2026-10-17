@@ -4,6 +4,9 @@
 
 #include "ofFileUtils.h"
 
+#include <algorithm>
+#include <cctype>
+
 namespace {
 
 quadrantsemantics::Expansion expansionOf(quadrantcrosshair::ExpansionState s) {
@@ -179,6 +182,25 @@ SceneHudStatus QuadrantProductionScene::hudStatus() const {
 	if (core_.didSetup() && core_.isActive() && video_.currentTexture() != nullptr) {
 		status.semantic = buildSemanticData();
 	}
+
+	// Scene & Pattern Navigation: the crosshair's five motion strategies
+	// (CrosshairSystem presets DRIFT/SCAN/HUNT/NERVOUS/ORBIT). The crosshair
+	// position drives the quadrant split, colour sampling and expansions,
+	// and its speed drives VELOCITY re-deals, so each strategy changes the
+	// composition's pacing — rendering itself is shared.
+	if (core_.didSetup() && core_.isActive()) {
+		const quadrantcrosshair::CrosshairSystem& crosshair = core_.crosshair();
+		const int index = crosshair.getCurrentPreset();
+		std::string id = crosshair.getPresetName(index);
+		std::transform(id.begin(), id.end(), id.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+		SceneModeStatus mode;
+		mode.modeId = "motion_" + id;
+		mode.displayName = crosshair.getPresetName(index);
+		mode.index = index;
+		mode.count = crosshair.getPresetCount();
+		status.modeName = mode.displayName;
+		status.mode = mode;
+	}
 	return status;
 }
 
@@ -201,6 +223,14 @@ SceneCapabilities QuadrantProductionScene::capabilities() const {
 	prevCmd.prominent = false;
 	caps.commands.push_back(prevCmd);
 
+	// NextMode (Scene & Pattern Navigation): next crosshair motion strategy.
+	SceneCommandDescriptor modeCmd;
+	modeCmd.command = SceneCommand::NextMode;
+	modeCmd.label = "Next mode";
+	modeCmd.shortLabel = "NEXT MODE";
+	modeCmd.prominent = false;
+	caps.commands.push_back(modeCmd);
+
 	// Regenerate: not advertised. The standalone's only candidates are the
 	// expansion trigger keys (E/F1-F4, commented "for testing") and raw preset
 	// / overlay / output-mode cycling — no curated reseed exists. Reset: not
@@ -219,6 +249,10 @@ bool QuadrantProductionScene::executeCommand(SceneCommand command) {
 			return video_.previous();
 		case SceneCommand::Reset:
 			reset();
+			return true;
+		case SceneCommand::NextMode:
+			if (!core_.isActive()) return false;
+			core_.crosshair().nextPreset();
 			return true;
 		case SceneCommand::Regenerate:
 		default:

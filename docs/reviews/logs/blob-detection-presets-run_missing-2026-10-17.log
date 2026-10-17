@@ -1,0 +1,51 @@
+[notice ] VideoPlaybackService: catalog built: 26 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-10-17 12:16:03.483 experience_runtime[59138:21947656] video file loaded at 960 x 540 @ 24.000000 fps
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] BlobDetectionProfile: profiles: none at /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-missing.json
+[notice ] BlobDetectionProfile: no profile file at /private/tmp/claude-501/-Users-joseconchello-openFrameworks/5074e824-c5c2-4c93-a903-aa1c52aca72b/scratchpad/profiles-missing.json (all media use detector defaults)
+[notice ] TFAmbientTextureLayer: loaded 19 background texture(s) from backgrounds
+[notice ] TFAmbientTextureLayer: residency=bounded pairs=19 tintTextures=19 maskTextures=0 cpuTintMiB=0.0 cpuMaskMiB=0.0 gpuEstMiB=28.2 (rgb-padded 37.6) tintPixelsKept=0 rssBeforeMiB=48 rssAfterMiB=89 glError=0x00000000
+[notice ] HudSkin: no HUD skin selected (EXPERIENCE_RUNTIME_HUD_SKIN unset): functional wireframe
+[notice ] BlobDetectionProfile: [BLOB DETECTION PROFILE]
+[notice ] BlobDetectionProfile: media=media.auto.0b153878
+[notice ] BlobDetectionProfile: source=defaults
+[notice ] BlobDetectionProfile: threshold=40
+[notice ] BlobDetectionProfile: minArea=0.0008
+[notice ] BlobDetectionProfile: maxArea=0.35
+[notice ] BlobDetectionProfile: erode=1
+[notice ] BlobDetectionProfile: dilate=2
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 1280x720
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 56x28
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 56x48
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 132x56
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 182x92
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 220x119
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 236x132
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 238x140
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 238x158
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 238x169
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 238x180
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 238x188
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 307x229
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 356x390
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 383x390
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 386x390
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 391x390
+[notice ] VideoRegionEffectRenderer: scratch FBOs (re)allocated to 394x390
