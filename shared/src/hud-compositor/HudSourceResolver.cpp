@@ -30,6 +30,7 @@ enum class CanonicalSource : uint8_t {
 	MediaId,
 	MediaTitle,
 	MediaPlaybackProgress,
+	MediaPlaybackTime,
 	MediaHoldProgress,
 	MediaHoldRemaining,
 	MediaSelectionManual,
@@ -57,6 +58,7 @@ enum class CanonicalSource : uint8_t {
 	SceneModeCount,
 	SceneModePosition,
 	ControlSceneNextModeAvailable,
+	ControlRuntimeImmersiveAvailable,
 	ControlScenePreviousAvailable,
 	ControlSceneNextAvailable,
 	ControlMediaPreviousAvailable,
@@ -114,6 +116,9 @@ const std::vector<CanonicalEntry>& canonicalTable() {
 		{"media.id", CanonicalSource::MediaId, HudSourceValueType::Identifier},
 		{"media.title", CanonicalSource::MediaTitle, HudSourceValueType::Identifier},
 		{"media.playback.progress", CanonicalSource::MediaPlaybackProgress, HudSourceValueType::Ratio},
+		// HUD & Scene Experience v0.3: derived "current / total" display text
+		// from the same canonical VideoPlaybackStatus position/duration.
+		{"media.playback.time", CanonicalSource::MediaPlaybackTime, HudSourceValueType::Text},
 		{"media.hold.progress", CanonicalSource::MediaHoldProgress, HudSourceValueType::Ratio},
 		{"media.hold.remaining", CanonicalSource::MediaHoldRemaining, HudSourceValueType::DurationSeconds},
 		{"media.selection.manual", CanonicalSource::MediaSelectionManual, HudSourceValueType::Boolean},
@@ -146,6 +151,8 @@ const std::vector<CanonicalEntry>& canonicalTable() {
 		{"scene.mode.count", CanonicalSource::SceneModeCount, HudSourceValueType::Count},
 		{"scene.mode.position", CanonicalSource::SceneModePosition, HudSourceValueType::Text},
 		{"control.scene.next_mode.available", CanonicalSource::ControlSceneNextModeAvailable, HudSourceValueType::Boolean},
+		// HUD & Scene Experience v0.3: the IMMERSIVE control (runtime-owned).
+		{"control.runtime.immersive.available", CanonicalSource::ControlRuntimeImmersiveAvailable, HudSourceValueType::Boolean},
 		{"control.scene.previous.available", CanonicalSource::ControlScenePreviousAvailable, HudSourceValueType::Boolean},
 		{"control.scene.next.available", CanonicalSource::ControlSceneNextAvailable, HudSourceValueType::Boolean},
 		{"control.media.previous.available", CanonicalSource::ControlMediaPreviousAvailable, HudSourceValueType::Boolean},
@@ -431,6 +438,8 @@ std::optional<HudResolvedValue> HudSourceResolver::resolveCanonical(const std::s
 		case CanonicalSource::SceneModeCount:
 		case CanonicalSource::SceneModePosition:
 		case CanonicalSource::ControlSceneNextModeAvailable:
+		case CanonicalSource::ControlRuntimeImmersiveAvailable:
+		case CanonicalSource::MediaPlaybackTime:
 			// The fake frame carries no wall clock, scene registry or mode
 			// status (deterministic Validation Studio scenarios); only
 			// HudRealFrameResolver backs these.

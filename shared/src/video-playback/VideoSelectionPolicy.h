@@ -162,6 +162,13 @@ public:
 	// time spent disabled never turns into an overdue immediate advance.
 	void setAutomaticAdvanceEnabled(bool enabled);
 	bool automaticAdvanceEnabled() const { return config_.automaticAdvanceEnabled; }
+	// Runtime minimum-dwell update (Installation Controls v0.1:
+	// mediaAutoCycle.durationSeconds). Applies to the current dwell window:
+	// time already elapsed counts, so lowering it advances at most once at
+	// the next hold check — never a burst. Medium/long clips keep the
+	// existing class rules (full clip / resume window, >= this minimum).
+	void setMinimumDwellSeconds(float seconds) { if (seconds > 0.0f) config_.holdDurationSeconds = seconds; }
+	float minimumDwellSeconds() const { return config_.holdDurationSeconds; }
 
 	// No-op if automatic advance is disabled or nothing is active yet.
 	void updateHold(float dt);

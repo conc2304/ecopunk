@@ -33,9 +33,24 @@ struct HudWidgetColors {
 	ofColor secondary = ofColor(103, 255, 142, 200);
 	ofColor accent = ofColor(244, 255, 106, 220);
 	ofColor muted = ofColor(124, 232, 230, 90);
+	// Informational caption TEXT (widget captions, "MODE i/n", clock date and
+	// zone, scene-position suffix). Alpha 165 measures >= 4.5:1 against the
+	// real composited Dark Moss panels (lowest: ~4.6:1 over moss texture;
+	// ~6:1 over plain fill) while staying clearly below `primary` values.
+	// `muted` stays the token for outlines, tracks, recessed/ambient
+	// placeholders and other non-caption marks.
+	ofColor caption = ofColor(124, 232, 230, 165);
 	ofColor background = ofColor(0, 20, 16, 40);
 	ofColor warning = ofColor(255, 120, 90, 230);
 };
+
+// Caption text colour: the informational `caption` token while the widget
+// is showing live data (`live` present, rendered, not an ambient stand-in);
+// the recessed `muted` treatment when its caption stands alone over no data
+// (Loading, or a scene that does not publish this value).
+inline const ofColor& captionColor(const HudWidgetColors& c, const HudWidgetRoleValue* live) {
+	return (live && live->shouldRender && !live->useAmbientFallback) ? c.caption : c.muted;
+}
 
 class IHudWidget {
 public:

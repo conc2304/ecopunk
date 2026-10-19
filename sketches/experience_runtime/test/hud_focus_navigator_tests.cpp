@@ -141,10 +141,12 @@ void test_hidden_focus_moves_then_clears() {
 	nav.refresh(w.fn());
 	HUD_CHECK(!nav.focused().has_value() && !nav.activationTarget().has_value());
 	HUD_CHECK(!nav.step(+1)); // nothing visible
-	// Controls return: first step re-engages.
+	// Controls return: the intended control (media_next, the user's last
+	// explicit choice) is restored without any input; a step then moves on.
 	w = coldStart();
 	nav.refresh(w.fn());
-	HUD_CHECK(nav.step(+1) && nav.focused() == std::string("controls.media_next"));
+	HUD_CHECK(nav.focused() == std::string("controls.media_next") && !nav.restorationPending());
+	HUD_CHECK(nav.step(+1) && nav.focused() == std::string("controls.media_previous"));
 }
 
 void test_hidden_focus_prefers_next_visible() {
@@ -159,6 +161,97 @@ void test_hidden_focus_prefers_next_visible() {
 	HUD_CHECK(nav.focused() == std::string("controls.media_next"));
 }
 
+// -- Focus continuity (intended target vs automatic fallback) ---------------
+const std::vector<std::string> kRing = {"controls.scene_previous", "controls.scene_next", "controls.media_previous",
+	"controls.media_next", "controls.reseed", "flexible.secondary_a"};
+const std::string kPanel = "flexible.secondary_a";
+
+World liveScene() {
+	World w = coldStart();
+	w.state[kPanel] = A::Enabled; // mode panel with NEXT MODE available
+	return w;
+}
+
+HudFocusNavigator focusedOnPanel(World& w) {
+	HudFocusNavigator nav(kRing);
+	nav.refresh(w.fn());
+	nav.step(+1); // engages media_next
+	nav.step(+1); // -> mode panel
+	return nav;
+}
+
+void test_restores_intended_focus_after_loading() {
+	World w = liveScene();
+	HudFocusNavigator nav = focusedOnPanel(w);
+	HUD_CHECK(nav.focused() == kPanel && nav.intended() == kPanel);
+	w.state.erase(kPanel); // scene Loading: panel hidden
+	nav.refresh(w.fn());
+	HUD_CHECK(nav.focused() == std::string("controls.media_next")); // automatic fallback (previous visible)
+	HUD_CHECK(nav.intended() == kPanel && nav.restorationPending());
+	nav.refresh(w.fn()); // still loading: fallback is stable
+	HUD_CHECK(nav.focused() == std::string("controls.media_next"));
+	w.state[kPanel] = A::Enabled; // incoming scene publishes its mode
+	nav.refresh(w.fn());
+	HUD_CHECK(nav.focused() == kPanel && !nav.restorationPending());
+	HUD_CHECK(nav.activationTarget() == kPanel);
+}
+
+void test_restores_to_disabled_but_focusable_control() {
+	World w = liveScene();
+	HudFocusNavigator nav = focusedOnPanel(w);
+	w.state.erase(kPanel);
+	nav.refresh(w.fn());
+	w.state[kPanel] = A::Disabled; // e.g. Blueprint: modes shown, NEXT MODE not advertised
+	nav.refresh(w.fn());
+	HUD_CHECK(nav.focused() == kPanel && nav.focusedAvailability() == A::Disabled);
+	HUD_CHECK(!nav.activationTarget().has_value()); // still refuses activation
+}
+
+void test_explicit_navigation_cancels_restoration() {
+	World w = liveScene();
+	HudFocusNavigator nav = focusedOnPanel(w);
+	w.state.erase(kPanel);
+	nav.refresh(w.fn()); // fallback media_next
+	nav.step(-1);        // user deliberately moves to media_previous
+	HUD_CHECK(nav.focused() == std::string("controls.media_previous") && !nav.restorationPending());
+	w.state[kPanel] = A::Enabled;
+	nav.refresh(w.fn());
+	HUD_CHECK(nav.focused() == std::string("controls.media_previous")); // no focus stealing
+}
+
+void test_activation_of_fallback_cancels_restoration() {
+	World w = liveScene();
+	HudFocusNavigator nav = focusedOnPanel(w);
+	w.state.erase(kPanel);
+	nav.refresh(w.fn());
+	nav.confirmFocus(); // user pressed Enter on the fallback (media_next)
+	HUD_CHECK(!nav.restorationPending());
+	w.state[kPanel] = A::Enabled;
+	nav.refresh(w.fn());
+	HUD_CHECK(nav.focused() == std::string("controls.media_next"));
+}
+
+void test_absent_target_keeps_predictable_fallback() {
+	World w = liveScene();
+	HudFocusNavigator nav = focusedOnPanel(w);
+	w.state.erase(kPanel); // a scene with no mode model: the panel never returns
+	for (int i = 0; i < 5; ++i) nav.refresh(w.fn());
+	HUD_CHECK(nav.focused() == std::string("controls.media_next") && nav.restorationPending());
+	HUD_CHECK(nav.step(+1) && nav.focused() == std::string("controls.media_previous")); // traversal unaffected
+	HUD_CHECK(!nav.restorationPending());
+}
+
+void test_whole_ring_hidden_then_restored() {
+	World w = liveScene();
+	HudFocusNavigator nav = focusedOnPanel(w);
+	w.state.clear(); // every control hidden
+	nav.refresh(w.fn());
+	HUD_CHECK(!nav.focused().has_value() && nav.intended() == kPanel);
+	w = liveScene();
+	nav.refresh(w.fn());
+	HUD_CHECK(nav.focused() == kPanel);
+}
+
 } // namespace
 
 int main() {
@@ -171,6 +264,12 @@ int main() {
 	test_focus_stable_across_refreshes();
 	test_hidden_focus_moves_then_clears();
 	test_hidden_focus_prefers_next_visible();
+	test_restores_intended_focus_after_loading();
+	test_restores_to_disabled_but_focusable_control();
+	test_explicit_navigation_cancels_restoration();
+	test_activation_of_fallback_cancels_restoration();
+	test_absent_target_keeps_predictable_fallback();
+	test_whole_ring_hidden_then_restored();
 
 	std::cout << (g_total - g_failures) << "/" << g_total << " checks passed.\n";
 	if (g_failures > 0) {

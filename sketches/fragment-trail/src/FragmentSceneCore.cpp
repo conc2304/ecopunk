@@ -73,6 +73,8 @@ void FragmentSceneCore::resetComposition() {
 	hudOverlay_.setup(static_cast<float>(config_.canvasW), static_cast<float>(config_.canvasH));
 	hudOverlay_.setSchedulerEnabled(false); // driven by real fragment events (FTOverlayDirector), not ambient random timing
 	hudOverlay_.setFaultCascadeHalftoneEnabled(false); // tear+flash only for the eviction gesture, per the design brief
+	hudOverlay_.setSafeArea(config_.safeArea);
+	hudOverlay_.setRadarContacts({}); // range rings on; contacts filled from the live pool each update
 	overlayDirector_ = FTOverlayDirector{};
 	overlayDirector_.setup(&pool_, &hudOverlay_);
 
@@ -138,7 +140,41 @@ void FragmentSceneCore::update(float dt) {
 	// ^ spawn/evict callbacks fire synchronously above, into overlayDirector's gates.
 
 	overlayDirector_.update(dt, dials_);
+	updateRadarContacts();
 	hudOverlay_.update(dt, dials_); // last, so anything triggered above gets its first tick correctly
+}
+
+// Radar = the hunter's view: every live fragment as a contact, placed by
+// its real offset from the crosshair (angle + distance), brightness = its
+// live opacity; the nearest is the primary (bracketed) contact; heading =
+// the crosshair's real velocity. No fragments -> no blips (ambient sweep).
+void FragmentSceneCore::updateRadarContacts() {
+	const CrosshairState cs = crosshair_.getState();
+	const glm::vec2 hunter(cs.cx, cs.cy);
+	const float maxRange = std::max(1.0f, std::min(canvasWidth(), canvasHeight()) * 0.6f);
+	std::vector<hud::RadarContact> contacts;
+	int nearest = -1;
+	float nearestDist = 0.0f;
+	for (const FTFragment& f : pool_.getFragments()) {
+		const float alpha = f.getAlpha();
+		if (alpha <= 0.02f) continue;
+		const glm::vec2 d = f.getPosition() - hunter;
+		const float dist = glm::length(d);
+		hud::RadarContact c;
+		c.angleDeg = ofRadToDeg(std::atan2(d.y, d.x));
+		if (c.angleDeg < 0.0f) c.angleDeg += 360.0f;
+		c.range01 = ofClamp(dist / maxRange, 0.0f, 1.0f);
+		c.strength = alpha;
+		if (nearest < 0 || dist < nearestDist) { nearest = static_cast<int>(contacts.size()); nearestDist = dist; }
+		contacts.push_back(c);
+	}
+	if (nearest >= 0) contacts[static_cast<size_t>(nearest)].primary = true;
+	hudOverlay_.setRadarContacts(std::move(contacts));
+
+	const float speed = std::sqrt(cs.vx * cs.vx + cs.vy * cs.vy);
+	float heading = ofRadToDeg(std::atan2(cs.vy, cs.vx));
+	if (heading < 0.0f) heading += 360.0f;
+	hudOverlay_.setRadarHeading(heading, speed > 0.05f ? ofLerp(0.35f, 1.0f, crosshairEnergy01()) : 0.0f);
 }
 
 void FragmentSceneCore::draw() {

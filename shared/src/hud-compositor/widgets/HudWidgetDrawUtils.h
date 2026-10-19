@@ -37,8 +37,55 @@
 
 #include <algorithm>
 #include <cmath>
+#include <string>
 
 namespace hudpresent {
+
+// Native 8x13 bitmap-font metrics (hud-typography-metrics-v1.md): glyph
+// cells render at native size whatever the region scale, with capitals and
+// digits rising ~9 px above the baseline and descenders dropping ~3 px.
+constexpr float kBitmapCapHeight = 9.0f;
+constexpr float kBitmapDescent = 3.0f;
+// Below this height a region/slot cannot stack two native text lines plus
+// clearance; widgets switch to a single-line caption+value layout.
+constexpr float kBitmapTwoLineMinHeight = 30.0f;
+
+// Baselines that keep native glyphs inside short regions: a top line's caps
+// start >= 2 px below the region top, a bottom line keeps descender room plus
+// a 3 px gap. Taller regions keep their scaled offsets (the max() wins).
+// Reserved icon slot (HUD & Scene Experience v0.3). Final artwork is
+// monochrome SVG supplied by HUD Art per icon ID; until then each slot draws
+// a neutral PLACEHOLDER so the layout and focus behaviour can be reviewed:
+//   "immersive"  corner brackets (the HUD's own focus-bracket language)
+//   anything else  outlined square with one diagonal (explicitly unfinished)
+inline void drawReservedIcon(const std::string& iconId, const ofRectangle& square, const ofColor& color) {
+	ofPushStyle();
+	ofNoFill();
+	ofSetLineWidth(1.5f);
+	ofSetColor(color);
+	if (iconId == "immersive") {
+		const float arm = square.width * 0.32f;
+		auto corner = [&](float x, float y, float dx, float dy) {
+			ofDrawLine(x, y, x + dx * arm, y);
+			ofDrawLine(x, y, x, y + dy * arm);
+		};
+		corner(square.x, square.y, 1, 1);
+		corner(square.getRight(), square.y, -1, 1);
+		corner(square.x, square.getBottom(), 1, -1);
+		corner(square.getRight(), square.getBottom(), -1, -1);
+	} else {
+		ofDrawRectangle(square);
+		ofDrawLine(square.x, square.getBottom(), square.getRight(), square.y);
+	}
+	ofPopStyle();
+}
+
+inline float captionBaselineY(const ofRectangle& b, float scaledOffset) {
+	return b.y + std::max(scaledOffset, kBitmapCapHeight + 2.0f);
+}
+inline float bottomBaselineY(const ofRectangle& b, float scaledInset) {
+	return b.getBottom() - std::max(scaledInset, kBitmapDescent + 3.0f);
+}
 
 inline float wx(const ofRectangle& b, float valueAtBaseWidth, float baseWidth = 200.0f) {
 	return valueAtBaseWidth * (b.width / baseWidth);

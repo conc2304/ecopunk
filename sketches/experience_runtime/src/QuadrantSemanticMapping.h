@@ -22,6 +22,7 @@ struct Inputs {
 		ChannelPhase::Standby, ChannelPhase::Standby};
 	std::array<std::string, 4> channelEffect; // active shader name per quadrant; empty = none
 	Expansion expansion = Expansion::Idle;
+	int expansionQuadrant = -1;    // ExpansionDirector::getTargetQuadrant() while not Idle; -1 otherwise
 	float expansionT = 0.0f;       // ExpansionDirector::getExpansionT() (eased travel-out, 1 while held)
 	int crosshairPreset = 0;       // CrosshairSystem::getCurrentPreset() (0 DRIFT .. 4 ORBIT)
 	float motionEnergy = 0.0f;     // MotionExtraction::getMotionEnergy()

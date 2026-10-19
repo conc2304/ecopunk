@@ -81,14 +81,20 @@ void FocusMenuHarness::step(float /*dt*/) {
 			check("baseline: PREV MEDIA disabled at start of media history, NEXT enabled",
 				renderer.controlEnabled(kPrev) == false && renderer.controlEnabled(kNext) == true,
 				"media=" + media0_);
-			check("baseline: scene/reseed controls hidden (unsupported in HudFrameData today)",
-				!renderer.controlEnabled("controls.scene_previous") && !renderer.controlEnabled("controls.scene_next") &&
-				!renderer.controlEnabled("controls.reseed"));
+			// v0.3: PREV/NEXT SCENE are live (three-scene ring) and the frozen
+			// controls.reseed region is the always-available IMMERSIVE control.
+			check("baseline: PREV SCENE, NEXT SCENE and IMMERSIVE enabled (v0.3 navigation row)",
+				renderer.controlEnabled("controls.scene_previous") == true && renderer.controlEnabled("controls.scene_next") == true &&
+				renderer.controlEnabled("controls.reseed") == true);
+			press(OF_KEY_RIGHT, "RIGHT");
+			check("first step engages on the first ENABLED control (PREV SCENE)", focused() == "controls.scene_previous", focused());
+			press(OF_KEY_RIGHT, "RIGHT");
+			press(OF_KEY_RIGHT, "RIGHT");
 			press(OF_KEY_RIGHT, "RIGHT");
 			break;
 		case 75:
 			capture("focus_01_next_media_focused");
-			check("first step engages on the first ENABLED control (NEXT MEDIA)", focused() == kNext);
+			check("RIGHT x3 more walks PREV SCENE -> NEXT SCENE -> PREV MEDIA -> NEXT MEDIA", focused() == kNext, focused());
 			check("focus brackets drawn around NEXT MEDIA", bracketsAt(kNext) && !bracketsAt(kPrev));
 			press(OF_KEY_LEFT, "LEFT");
 			break;
@@ -137,12 +143,11 @@ void FocusMenuHarness::step(float /*dt*/) {
 		case 420:
 			check("existing 'n' key still works alongside focus", mediaId() != media0_, mediaId());
 			check("existing key did not move focus", focused() == kPrev);
-			press(OF_KEY_RIGHT, "RIGHT");
-			press(OF_KEY_RIGHT, "RIGHT");
-			press(OF_KEY_RIGHT, "RIGHT");
-			// Three visible stops: PREV MEDIA, NEXT MEDIA, and the Scene &
-			// Pattern Navigation mode panel (flexible.secondary_a).
-			check("RIGHT x3 wraps back to PREV MEDIA (PREV, NEXT, mode panel)", focused() == kPrev);
+			for (int i = 0; i < 6; ++i) press(OF_KEY_RIGHT, "RIGHT");
+			// Six visible stops (v0.3): PREV SCENE, NEXT SCENE, PREV MEDIA,
+			// NEXT MEDIA, IMMERSIVE, and the mode panel (flexible.secondary_a).
+			check("RIGHT x6 wraps back to PREV MEDIA (PREV/NEXT SCENE, PREV/NEXT MEDIA, IMMERSIVE, mode panel)",
+				focused() == kPrev, focused());
 			press(OF_KEY_DOWN, "DOWN");
 			check("DOWN steps forward like RIGHT", focused() == kNext);
 			press(OF_KEY_UP, "UP");

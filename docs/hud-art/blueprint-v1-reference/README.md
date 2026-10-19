@@ -5,7 +5,7 @@ These are reference images for authoring skins against `ecopunk-hud-blueprint` /
 All geometry is taken from the **live production renderer** at export time:
 - `HudWireframeRenderer::regionCatalog()`
 - `pixelBoundsFor()`
-- `regionInMinimalSlice()` / `regionInOriginalMinimalSlice()` (one production allowlist, split by provenance)
+- `regionInMinimalSlice()` / `productionProvenance()` (one production allowlist, split by provenance: historical MinimalSlice, Living HUD v0.1, HUD Clock v0.1, Mode Navigation v0.1)
 - `mediaViewportMesh()`
 
 No layout is re-typed. `regions.json` is a **derived** export of that catalog, not an independent definition. If it ever disagrees with `shared/src/hud-compositor/HudRegionCatalog.cpp`, the source wins and these files must be regenerated.
@@ -15,11 +15,27 @@ No layout is re-typed. `regions.json` is a **derived** export of that catalog, n
 | File | Format | What it is |
 |---|---|---|
 | `hud_reference_wireframe_1280x720.png` | 1280×720 RGBA, transparent | Clean structural outlines: the 18 region rectangles plus the real `MediaViewportMesh` silhouette (green). No scene content, skin or text. Layer it over artwork. |
-| `hud_reference_schematic_1280x720.png` | 1280×720 RGB, opaque | All 19 regions with index, stable ID, exact px bounds, role and scope. Key: **teal** = original 13-region MinimalSlice, **green** = Living HUD v0.1 additions (`universal.effect_summary`, `universal.timing`; 15-region production presentation), **amber** = FullProfile only, **magenta** = Overlay. |
+| `hud_reference_schematic_1280x720.png` | 1280×720 RGB, opaque | All 19 regions with index, stable ID, exact px bounds and role. Key: **teal** = historical 13-region MinimalSlice, **magenta** = Overlay (part of the historical 13), **green** = Living HUD v0.1 (`universal.effect_summary`, `universal.timing`), **blue** = HUD Clock v0.1 (`flexible.secondary_b`), **yellow** = Mode Navigation v0.1 (`flexible.secondary_a`), **amber** = FullProfile only. |
+| `hud_reference_production_1280x720.png` | 1280×720 RGB, opaque | **Current production presentation**: the 17 regions production actually draws, filled by provenance, with the 2 FullProfile-only regions greyed and marked "not drawn". Notes what live text each new region carries. |
 | `hud_reference_constraints_1280x720.png` | 1280×720 RGBA, translucent | Artwork constraint map (key below). Layer it over artwork. |
-| `regions.json` | JSON | Derived catalog: id, role, normalized and px bounds, scope, viewport mesh facts, and `presentation` counts (19 canonical / 13 original MinimalSlice / 15 production) |
+| `regions.json` | JSON | Derived catalog: id, role, normalized and px bounds, scope, `production` flag, viewport mesh facts, and `presentation` counts (19 canonical / 13 historical MinimalSlice / 17 production = 13 + 2 Living HUD + 1 clock + 1 mode / 2 FullProfile only) |
 | `runtime_wireframe_reference_1280x720.png` | 1280×720 | A real ExperienceRuntime frame (no skin) captured during the export run, used for comparison |
 | `verification.txt` | text | The export run's PASS/FAIL log |
+
+## Current production presentation (17 of 19)
+
+The historical **13-region MinimalSlice** is the first vertical slice (12 binding regions + the always-drawn `media_viewport`). Production has since added:
+
+| Addition | Region | Live content |
+|---|---|---|
+| Living HUD v0.1 | `universal.effect_summary` | active effect chips + `EFFECTS <health>` badge |
+| Living HUD v0.1 | `universal.timing` | `ACTIVE TIME` / scene active time |
+| HUD Clock v0.1 | `flexible.secondary_b` | local date + zone (`THU 15 OCT 2026 MDT`) / `HH:MM` |
+| Mode Navigation v0.1 | `flexible.secondary_a` | `MODE i/n` / mode name (up to 23 glyphs, e.g. `EFFECT PARAM VARIANT`); also the NEXT MODE focus stop (focus brackets 3 px outside the rect) |
+
+`universal.scene_title` also carries a live `  i/n` scene position after the scene name. `universal.activity_trace` and `universal.secondary_trace` remain FullProfile only.
+
+**All of this text is drawn live by the runtime. Never bake any of it into skin art.** Keep the 25.6 px gap between `flexible.secondary_a` and `_b` free of ornament: focus brackets on the mode panel extend into it.
 
 ## Regenerate
 
@@ -39,7 +55,7 @@ env -u EXPERIENCE_RUNTIME_HUD_SKIN EXPERIENCE_RUNTIME_HUD_ART_EXPORT=1 \
 | Colour | Zone | Rule | Source |
 |---|---|---|---|
 | Red | Media silhouette (`MediaViewportMesh`: radius 18 at top-left, top-right and bottom-left; 42 px 45° bevel at bottom-right) | Keep fully transparent; no raster media mask | HUD-004 spec §1, §4; HUD-006 crosswalk §2 |
-| Orange | Live-content regions (16) | Runtime widgets draw here. A background panel is fine, because it sits under the widgets; no ornament or emission | Crosswalk §1 ("keep artwork/ornaments out of widget live content") |
+| Orange | Live-content regions (16: every region except the media viewport and the 2 overlays) | Runtime widgets draw here. A background panel is fine, because it sits under the widgets; no ornament or emission | Crosswalk §1 ("keep artwork/ornaments out of widget live content") |
 | Magenta | Overlay regions (`overlay.health`, `overlay.transition`) | Transparent over media; protect live text | Crosswalk §1 |
 | Yellow | Inside the viewport bounds but outside the mesh (bevel and corner wedges) | **No explicit rule exists**; see below | — |
 | Unmarked | Margins, gutters, the gap between the viewport and the right column | Only rule: preserve the region rectangles and the gaps between them | DEC-019 (v1 safe area = region rects + separation gaps) |

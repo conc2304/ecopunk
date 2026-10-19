@@ -1,5 +1,12 @@
 {
   "profiles": {
+    "media.auto.0b153878": {
+      "dilateIterations": 1,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.35,
+      "minBlobAreaNormalized": 0.002137,
+      "threshold": 20
+    },
     "media.auto.1ab5450d": {
       "dilateIterations": 1,
       "erodeIterations": 0,
@@ -27,6 +34,13 @@
       "maxBlobAreaNormalized": 0.35,
       "minBlobAreaNormalized": 0.0008,
       "threshold": 16
+    },
+    "media.auto.3838009d": {
+      "dilateIterations": 2,
+      "erodeIterations": 1,
+      "maxBlobAreaNormalized": 0.366582,
+      "minBlobAreaNormalized": 0.004173,
+      "threshold": 2
     },
     "media.auto.40d022de": {
       "dilateIterations": 0,

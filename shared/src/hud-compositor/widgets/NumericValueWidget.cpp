@@ -31,20 +31,23 @@ void NumericValueWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 		: input.captionText.empty() ? labelRole->formattedText
 		: input.captionText + " " + labelRole->formattedText;
 	if (!captionLine.empty()) {
-		ofSetColor(scaledAlpha(colors.muted, opacity));
+		ofSetColor(scaledAlpha(captionColor(colors, valueRole), opacity));
 		const auto& caption = textCache_.truncateToWidth(captionLine, localMaxWidth);
 		// Native bitmap glyphs rise ~9 px above their baseline regardless of
 		// region size; in short regions (universal.timing 36 px,
 		// flexible.secondary_b 43.2 px) the scaled baseline alone put the
 		// caption's tops above the region edge. Taller regions are unchanged.
-		const float captionBaseline = bounds.y + std::max(wu(bounds, 12.0f), kCaptionMinBaselineOffset);
+		const float captionBaseline = captionBaselineY(bounds, wu(bounds, 12.0f));
 		drawText(caption.text, bounds.x + pad, captionBaseline);
 	}
 
 	if (valueRole && valueRole->shouldRender) {
 		ofSetColor(scaledAlpha(valueRole->useAmbientFallback ? colors.muted : colors.primary, opacity));
 		const auto& value = textCache_.truncateToWidth(valueRole->formattedText, localMaxWidth);
-		drawText(value.text, bounds.x + pad, bounds.y + bounds.height - wu(bounds, 4.0f));
+		// Same native-metric rule at the bottom: the scaled inset alone
+		// (1.44 px at 43.2 px tall) sat the value on the region edge.
+		const float valueBaseline = bottomBaselineY(bounds, wu(bounds, 4.0f));
+		drawText(value.text, bounds.x + pad, valueBaseline);
 	}
 
 	ofPopStyle();

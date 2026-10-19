@@ -60,6 +60,13 @@ class BEComposition : public CompositionBase {
 		BECompositionState getState() const;
 		float getGridDimAmount() const { return gridDimCurrent; }
 		CycleMode getCurrentMode() const { return currentMode; }
+		// Manual NEXT MODE: GHOST_LAYERS <-> PERPETUAL through the same
+		// enterMode() the composition uses at its own mode transitions.
+		// Applies to the current cycle; the random selectNextMode() still
+		// decides at the next natural mode point. Refused (false) outside
+		// PLACEMENT/DENSITY — during DISSOLVE a mode change is already under
+		// way (onDissolveComplete() enters the next mode).
+		bool requestNextMode();
 		float getDividerX() const { return divider.pivot.x; }
 
 		// Canvas-edge endpoints of the divider at its current angle/pivot —

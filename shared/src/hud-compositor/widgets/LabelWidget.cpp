@@ -35,6 +35,68 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 		opacity = 0.35f; // supported but currently disabled
 	}
 
+	// Progress Label (HUD & Scene Experience v0.3, media slot): when a
+	// "progress" role is bound, draw the title ("text" role) plus a
+	// horizontal bar and the right-aligned suffix ("0:42 / 1:30"). Two lines
+	// when the region is tall enough (title above, bar + time below), else
+	// one line (title, bar, time). A missing progress value (unknown duration
+	// / nothing loaded) draws no bar at all, so the slot never shows a
+	// misleading 0%; the title still shows.
+	if (const auto* progressRole = input.findRole("progress")) {
+		const float pad = wu(bounds, 4.0f);
+		const float left = bounds.x + pad;
+		const float right = bounds.getRight() - pad;
+		const bool twoLines = bounds.height >= kBitmapTwoLineMinHeight;
+		const float titleBaseline = twoLines ? captionBaselineY(bounds, wu(bounds, 12.0f)) : bounds.y + bounds.height * 0.65f;
+		const float barBaseline = twoLines ? bottomBaselineY(bounds, wu(bounds, 6.0f)) : titleBaseline;
+		const float barMidY = barBaseline - kBitmapCapHeight * 0.5f;
+
+		float barLeft = left;
+		float barRight = right;
+		const auto* suffixRole = input.findRole("suffix");
+		if (suffixRole && suffixRole->shouldRender && !suffixRole->formattedText.empty()) {
+			const auto& t = textCache_.truncateToWidth(suffixRole->formattedText, bounds.width * 0.5f);
+			const float x = right - t.widthLocal;
+			ofSetColor(scaledAlpha(colors.caption, opacity));
+			drawText(t.text, x, barBaseline);
+			barRight = x - 12.0f;
+		}
+
+		const bool hasTitle = textRole && textRole->shouldRender && !textRole->formattedText.empty();
+		if (hasTitle) {
+			// One line: the title gets at most ~45% of the line, the bar the rest.
+			const float budget = twoLines ? (right - left) : std::max(0.0f, std::min((right - left) * 0.45f, barRight - left - 12.0f));
+			const auto& title = textCache_.truncateToWidth(textRole->formattedText, budget);
+			ofSetColor(scaledAlpha(colors.primary, opacity));
+			drawText(title.text, left, titleBaseline);
+			if (!twoLines) barLeft = left + title.widthLocal + 12.0f;
+		}
+
+		if (progressRole->shouldRender && !progressRole->useAmbientFallback && progressRole->value.present
+			&& barRight > barLeft + 8.0f) {
+			const float ratio = std::clamp(progressRole->value.numberValue, 0.0f, 1.0f);
+			const ofRectangle track(barLeft, barMidY - 2.0f, barRight - barLeft, 4.0f);
+			ofNoFill();
+			ofSetColor(scaledAlpha(colors.muted, opacity));
+			ofDrawRectangle(track);
+			ofFill();
+			ofSetColor(scaledAlpha(colors.accent, opacity));
+			ofDrawRectangle(track.x, track.y, track.width * ratio, track.height);
+		}
+		ofPopStyle();
+		return;
+	}
+
+	// Icon-only control ("icon:<id>" vocabulary value): a square reserved
+	// icon slot centred in the region, no text.
+	if (text.rfind("icon:", 0) == 0) {
+		const float side = std::max(8.0f, std::min(bounds.height - 12.0f, 28.0f));
+		const ofRectangle square(bounds.getCenter().x - side * 0.5f, bounds.getCenter().y - side * 0.5f, side, side);
+		drawReservedIcon(text.substr(5), square, scaledAlpha(colors.primary, opacity));
+		ofPopStyle();
+		return;
+	}
+
 	if (text.empty() && !input.regionAmbientFallback) {
 		ofPopStyle();
 		return;
@@ -87,7 +149,7 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 	drawText(truncated.text, bounds.x + pad, baseline, scale);
 	if (hasSuffix) {
 		const auto& suffix = textCache_.truncateToWidth(suffixRole->formattedText, localMaxWidth);
-		ofSetColor(scaledAlpha(colors.muted, opacity));
+		ofSetColor(scaledAlpha(colors.caption, opacity)); // navigation metadata = informational caption
 		drawText(suffix.text, bounds.x + pad + truncated.widthLocal + kSuffixGap, baseline, scale);
 	}
 

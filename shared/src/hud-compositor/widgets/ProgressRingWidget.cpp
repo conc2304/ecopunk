@@ -63,7 +63,7 @@ void ProgressRingWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 
 	if (!input.captionText.empty()) {
 		ofFill();
-		ofSetColor(scaledAlpha(colors.muted, opacity));
+		ofSetColor(scaledAlpha(captionColor(colors, valueRole), opacity));
 		const auto& caption = textCache_.truncateToWidth(input.captionText, localMaxWidth);
 		drawText(caption.text, bounds.x + wu(bounds, 2.0f), bounds.y + bounds.height - wu(bounds, 4.0f));
 	}

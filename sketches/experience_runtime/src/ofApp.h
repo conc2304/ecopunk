@@ -13,6 +13,8 @@
 #include "BlueprintRosterHarness.h"
 #include "BlueprintHudHarness.h"
 #include "ModeNavigationHarness.h"
+#include "InstallationHarness.h"
+#include "ExperienceV03Harness.h"
 #include "ParitySoakHarness.h"
 #include "ResumeWindowHarness.h"
 #include "CadenceHarness.h"
@@ -49,6 +51,7 @@ public:
 	void exit() override;
 
 	void keyPressed(int key) override;
+	void mousePressed(int x, int y, int button) override;
 
 private:
 	ExperienceRuntime runtime;
@@ -68,6 +71,8 @@ private:
 	std::unique_ptr<TemporalWarmHarness> temporalWarmHarness; // Temporal first-activation stall
 	std::unique_ptr<ThreeSceneCircuitHarness> threeSceneHarness; // RT-005 three-scene circuits
 	std::unique_ptr<ModeNavigationHarness> modeHarness; // Scene & Pattern Navigation, full roster
+	std::unique_ptr<InstallationHarness> installationHarness; // Installation Controls & ENERGY, full roster
+	std::unique_ptr<ExperienceV03Harness> v03Harness; // HUD & Scene Experience v0.3, full roster
 	std::unique_ptr<Rt004StallDriver> stallDriver; // RT-004 diagnostic, normal path only
 	std::unique_ptr<Rt004FramePhaseProbe> framePhaseProbe; // RT-004 frame-phase diagnostic (EXPERIENCE_RUNTIME_FRAME_PHASE_PROBE)
 };

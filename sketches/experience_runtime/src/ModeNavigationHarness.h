@@ -35,7 +35,12 @@ private:
 	int modeCount() const;
 	std::string modeId() const;
 	std::string focused() const;
+	std::string mediaId() const;
 	std::string position() const; // "i/n" from SceneManagerStatus, "" if absent
+	bool loading() const;
+	bool restorationPending() const;
+	struct TextSpill { int inside = 0; int outside = 0; };
+	TextSpill textSpill(const std::string& regionId, float bandWidth);
 	void buildScript();
 	void finish();
 
@@ -46,6 +51,8 @@ private:
 	float secondsInStep_ = 0.0f;
 	int indexBefore_ = -1;
 	bool transitioningAtPress_ = false;
+	std::string mediaBefore_;
+	int seedBefore_ = 0;
 	uint64_t serialBefore_ = 0;
 	float crosshairX_ = 0.0f;
 	float crosshairY_ = 0.0f;

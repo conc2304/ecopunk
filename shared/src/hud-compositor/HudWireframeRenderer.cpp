@@ -130,6 +130,14 @@ bool HudWireframeRenderer::regionInOriginalMinimalSlice(const std::string& regio
 	return originalSliceRegions().count(regionId) != 0;
 }
 
+const char* HudWireframeRenderer::productionProvenance(const std::string& regionId) {
+	if (originalSliceRegions().count(regionId) != 0) return "original";
+	if (livingHudRegions().count(regionId) != 0) return "living_hud";
+	if (clockRegions().count(regionId) != 0) return "clock";
+	if (navigationRegions().count(regionId) != 0) return "navigation";
+	return nullptr;
+}
+
 ofRectangle HudWireframeRenderer::pixelBoundsFor(const std::string& regionId) const {
 	const auto* region = regions_.find(regionId);
 	if (!region) return {};

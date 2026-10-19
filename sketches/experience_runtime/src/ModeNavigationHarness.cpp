@@ -83,10 +83,42 @@ std::string ModeNavigationHarness::focused() const {
 	return f ? *f : std::string("none");
 }
 
+std::string ModeNavigationHarness::mediaId() const {
+	const auto& v = runtime_.currentHudFrameData().video;
+	return (v && v->mediaId) ? *v->mediaId : std::string("(none)");
+}
+
 std::string ModeNavigationHarness::position() const {
 	const auto& s = runtime_.currentHudFrameData().sceneManager;
 	if (!s.activeSceneIndex) return std::string();
 	return ofToString(*s.activeSceneIndex + 1) + "/" + ofToString(s.availableSceneCount);
+}
+
+bool ModeNavigationHarness::loading() const {
+	return runtime_.currentHudFrameData().sceneManager.transitionPhase == SceneTransitionPhase::Loading;
+}
+
+bool ModeNavigationHarness::restorationPending() const {
+	return runtime_.hudCompositorBridgeForTesting().focus().restorationPending();
+}
+
+// Live-text pixels (the HUD's teal primary/muted text) inside a region vs in
+// the band just outside its right edge, read from the frame just drawn.
+ModeNavigationHarness::TextSpill ModeNavigationHarness::textSpill(const std::string& regionId, float bandWidth) {
+	const ofRectangle b = runtime_.hudCompositorBridgeForTesting().renderer().pixelBoundsFor(regionId);
+	ofImage img;
+	img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
+	const ofPixels& px = img.getPixels();
+	auto isText = [&](int x, int y) {
+		const ofColor c = px.getColor(x, y);
+		return c.g > 150 && c.b > 150 && c.r < 170;
+	};
+	TextSpill t;
+	for (int y = int(b.y); y < int(b.getBottom()); ++y) {
+		for (int x = int(b.x); x < int(b.getRight()); ++x) t.inside += isText(x, y);
+		for (int x = int(b.getRight()) + 1; x < int(b.getRight() + bandWidth) && x < int(px.getWidth()); ++x) t.outside += isText(x, y);
+	}
+	return t;
 }
 
 void ModeNavigationHarness::buildScript() {
@@ -174,39 +206,98 @@ void ModeNavigationHarness::buildScript() {
 				runtime_.temporalSceneForTesting().coreForTesting().compositionPhaseElapsed() < 5.0f);
 			capture("06_temporal_bands_focus_activation");
 		}},
+		// Long names: step with 'm' (only while no transition plays) to
+		// ECOLOGICAL SUCCESSION (7/9), then TEMPORAL TIDES (MODE 9/9).
+		{"temporal to ecological succession", [this, temporalRunning] {
+				if (modeIndex() == 6 && temporalRunning() && framesInStep_ >= 30) return true;
+				if (modeIndex() != 6 && temporalRunning() && framesInStep_ % 10 == 0) runtime_.keyPressed('m');
+				return false;
+			},
+			[this] {
+				const TextSpill t = textSpill(kModePanel, 24.0f);
+				check("Temporal: ECOLOGICAL SUCCESSION (7/9) drawn inside flexible.secondary_a, no spill toward the clock",
+					modeId() == "ecological_succession" && t.inside > 0 && t.outside == 0,
+					ofToString(t.inside) + " px inside, " + ofToString(t.outside) + " px in the 24 px gap");
+				capture("06b_temporal_ecological_succession");
+			}},
+		{"temporal to 9/9", [this, temporalRunning] {
+				if (modeIndex() == 8 && temporalRunning() && framesInStep_ >= 30) return true;
+				if (modeIndex() != 8 && temporalRunning() && framesInStep_ % 10 == 0) runtime_.keyPressed('m');
+				return false;
+			},
+			[this] {
+				check("Temporal: last pattern reads MODE 9/9 (TEMPORAL TIDES)", modeIndex() == 8 && modeCount() == 9, modeId());
+				const TextSpill title = textSpill("universal.scene_title", 20.0f);
+				check("scene title + '2/5' suffix stay inside universal.scene_title", title.inside > 0 && title.outside == 0,
+					ofToString(title.inside) + " px inside, " + ofToString(title.outside) + " px past the right edge");
+				capture("06c_temporal_mode_9_of_9");
+			}},
 		{"to blueprint", [this, temporalRunning] { return temporalRunning() && framesInStep_ >= 30; }, [this] {
+			check("mode panel focused before the switch", focused() == kModePanel, focused());
 			runtime_.keyPressed(']');
 		}},
+		{"temporal->blueprint loading", [this] { return loading(); }, [this] {
+			check("Loading: panel hidden, focus fell back automatically, restoration pending",
+				focused() != kModePanel && restorationPending(), focused());
+			capture("07a_loading_focus_fallback");
+		}},
 
-		// -- Blueprint (3/5): two random cycle modes, displayed read-only ----
+		// -- Blueprint (3/5): two cycle modes, manual NEXT MODE ----------------
 		{"blueprint live", [this] { return idleOn(kBlueprintId) && framesInStep_ >= kSettleFrames && modeIndex() >= 0; },
 			[this, panelEnabled, pressM] {
 				check("Blueprint: scene position 3/5", position() == "3/5", position());
 				check("Blueprint: 2 cycle modes shown", modeCount() == 2 && (modeId() == "ghost_layers" || modeId() == "perpetual"),
 					modeId());
 				const auto enabled = panelEnabled();
-				check("Blueprint: NEXT MODE visible but disabled (not advertised)", enabled.has_value() && !*enabled);
-				// The panel hides during the Loading transition (neutral status has
-				// no mode), so the existing focus rule moved focus to a visible
-				// control — same as a hidden RESEED.
-				check("Blueprint: focus left the panel while it was hidden mid-switch", focused() != kModePanel, focused());
-				capture("07_blueprint_mode_read_only");
+				check("Blueprint: NEXT MODE advertised and enabled", enabled.has_value() && *enabled);
+				check("Blueprint: focus restored to the mode panel after Loading", focused() == kModePanel && !restorationPending(),
+					focused());
+				capture("07_blueprint_mode_before_next");
+				mediaBefore_ = mediaId();
 				pressM();
 			}},
-		{"blueprint key refused", framesAtLeast(3), [this] {
-			check("Blueprint: 'm' rejected, cycle mode unchanged", modeIndex() == indexBefore_, modeId());
+		{"blueprint mode toggled", framesAtLeast(3), [this, pressM] {
+			check("Blueprint: 'm' switches to the other cycle mode", modeIndex() == 1 - indexBefore_, modeId());
+			check("Blueprint: manual mode change keeps the shared media", mediaId() == mediaBefore_, mediaBefore_ + " -> " + mediaId());
+		}},
+		{"blueprint mode held", framesAtLeast(60), [this, pressM] {
+			check("Blueprint: manual mode holds (no immediate revert)", modeIndex() == 1 - indexBefore_, modeId());
+			capture("07b_blueprint_mode_after_next");
+			pressM();
+		}},
+		{"blueprint mode wrapped", framesAtLeast(3), [this] {
+			check("Blueprint: second 'm' wraps back (GHOST_LAYERS <-> PERPETUAL)", modeIndex() == 1 - indexBefore_, modeId());
+			check("Blueprint: still the same shared media", mediaId() == mediaBefore_, mediaId());
 		}},
 		{"blueprint focus mode panel", focusModePanel, [this] {
-			check("Blueprint: disabled mode panel is still reachable in the focus ring", focused() == kModePanel, focused());
+			indexBefore_ = modeIndex();
 			serialBefore_ = runtime_.lastFocusActivationForTesting().serial;
 			runtime_.keyPressed(OF_KEY_RETURN);
 		}},
-		{"blueprint focus refused", framesAtLeast(1), [this] {
+		{"blueprint focus activation", framesAtLeast(2), [this] {
 			const auto& rec = runtime_.lastFocusActivationForTesting();
-			check("Blueprint: Enter on the disabled mode panel is refused, nothing dispatched",
-				rec.serial == serialBefore_ + 1 && rec.refused && rec.command.empty() && rec.region == kModePanel);
-			capture("08_blueprint_next_mode_refused_flash");
+			check("Blueprint: Enter on the mode panel dispatches SceneCommand::NextMode, accepted",
+				rec.serial == serialBefore_ + 1 && rec.region == kModePanel && rec.command == "SceneCommand::NextMode"
+					&& rec.accepted && !rec.refused, rec.command);
+			check("Blueprint: focus path switched the mode", modeIndex() == 1 - indexBefore_, modeId());
+			capture("08_blueprint_next_mode_focus_activation");
+		}},
+		{"blueprint regenerate", framesAtLeast(30), [this] {
+			seedBefore_ = runtime_.blueprintSceneForTesting().coreForTesting().composition().getCycleSeed();
+			runtime_.keyPressed('2'); // Regenerate: separate command, restarts the whole cycle
+			const auto& composition = runtime_.blueprintSceneForTesting().coreForTesting().composition();
+			check("Blueprint: Regenerate still restarts the cycle (new seed, clock reset), independent of NEXT MODE",
+				composition.getCycleSeed() != seedBefore_ && composition.getCycleElapsedSeconds() == 0.0f);
+		}},
+		{"blueprint after regenerate", framesAtLeast(3), [this] {
+			check("Blueprint: after Regenerate the HUD reports a valid (randomly re-rolled) mode",
+				modeCount() == 2 && (modeId() == "ghost_layers" || modeId() == "perpetual"), modeId());
 			runtime_.keyPressed(']');
+		}},
+		{"blueprint->fragment loading", [this] { return loading(); }, [this] {
+			runtime_.keyPressed(OF_KEY_LEFT); // deliberate navigation while the panel is hidden
+			check("explicit LEFT during Loading replaces the intended control (restoration cancelled)",
+				!restorationPending() && focused() != kModePanel, focused());
 		}},
 
 		// -- Fragment (4/5): three content modes, wraparound -----------------
@@ -215,6 +306,7 @@ void ModeNavigationHarness::buildScript() {
 				check("Fragment: scene position 4/5", position() == "4/5", position());
 				check("Fragment: 3 content modes, starts on EFFECT_VARIED", modeCount() == 3 && modeId() == "effect_varied",
 					modeId());
+				check("Fragment: no focus stealing — focus stayed where the user put it", focused() != kModePanel, focused());
 				capture("09_fragment_effect_varied");
 				pressM();
 			}},
@@ -222,6 +314,9 @@ void ModeNavigationHarness::buildScript() {
 			check("Fragment: 'm' -> EFFECT_PARAM_VARIANT", modeIndex() == 2 && modeId() == "effect_param_variant", modeId());
 		}},
 		{"fragment param variant settled", framesAtLeast(150), [this, pressM] {
+			const TextSpill t = textSpill(kModePanel, 24.0f);
+			check("Fragment: EFFECT PARAM VARIANT drawn inside flexible.secondary_a, no spill", t.inside > 0 && t.outside == 0,
+				ofToString(t.inside) + " px inside, " + ofToString(t.outside) + " px in the gap");
 			capture("10_fragment_effect_param_variant");
 			pressM();
 		}},
@@ -262,6 +357,34 @@ void ModeNavigationHarness::buildScript() {
 			check("Blob: background mode persisted across the visit (Natural Background)", modeId() == "natural_background",
 				modeId());
 			capture("14_blob_natural_background_persisted");
+		}},
+		{"blob focus mode panel", focusModePanel, [this] {
+			runtime_.keyPressed('['); // PreviousScene, the other direction, panel focused
+		}},
+		{"blob->quadrant loading", [this] { return loading(); }, [this] {
+			check("PreviousScene Loading: fallback with restoration pending", focused() != kModePanel && restorationPending(),
+				focused());
+		}},
+		{"quadrant again", [this] { return idleOn(kQuadrantId) && framesInStep_ >= kSettleFrames && modeIndex() >= 0; }, [this] {
+			check("PreviousScene ring wraps 1/5 -> 5/5", position() == "5/5", position());
+			check("Quadrant: revisit resets to DRIFT (activation reset policy)", modeId() == "motion_drift", modeId());
+			check("focus restored to the mode panel after PreviousScene Loading", focused() == kModePanel && !restorationPending(),
+				focused());
+			capture("15_quadrant_revisit_focus_restored");
+		}},
+		{"quadrant->fragment", framesAtLeast(30), [this] { runtime_.keyPressed('['); }},
+		{"fragment->blueprint", [this] { return idleOn(kFragmentId) && framesInStep_ >= 30; }, [this] { runtime_.keyPressed('['); }},
+		{"blueprint revisit", [this] { return idleOn(kBlueprintId) && framesInStep_ >= kSettleFrames && modeIndex() >= 0; },
+			[this, panelEnabled, pressM] {
+				const auto enabled = panelEnabled();
+				check("Blueprint revisit: fresh cycle reports a valid mode, NEXT MODE enabled",
+					modeCount() == 2 && (modeId() == "ghost_layers" || modeId() == "perpetual") && enabled.has_value() && *enabled,
+					modeId());
+				capture("16_blueprint_revisit");
+				pressM();
+			}},
+		{"blueprint revisit toggled", framesAtLeast(3), [this] {
+			check("Blueprint revisit: NEXT MODE works on the new cycle", modeIndex() == 1 - indexBefore_, modeId());
 		}},
 	};
 }

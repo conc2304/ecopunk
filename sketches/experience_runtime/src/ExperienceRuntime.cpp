@@ -54,12 +54,98 @@ void ExperienceRuntime::applyMediaCadence(bool liveThisFrame) {
 	const std::string& owner = sceneManager_.status().activeSceneId;
 	const bool boundaryDriven = liveThisFrame
 		&& std::find(boundaryDrivenMediaScenes_.begin(), boundaryDrivenMediaScenes_.end(), owner) != boundaryDrivenMediaScenes_.end();
+	// Installation mediaAutoCycle: the setting gates Shared Video's own
+	// automatic-advance timer (still the only media scheduler); boundary-
+	// driven scenes keep it off as before.
+	const installation::AutoCycle& media = installation_.settings().mediaAutoCycle;
+	const bool timerWanted = media.enabled && !boundaryDriven;
 	VideoPlaybackService& video = runtimeServices_.video();
-	if (video.automaticAdvanceEnabled() == boundaryDriven) {
-		video.setAutomaticAdvanceEnabled(!boundaryDriven);
+	if (video.minimumDwellSeconds() != media.durationSeconds) video.setMinimumDwellSeconds(media.durationSeconds);
+	if (video.automaticAdvanceEnabled() != timerWanted) {
+		video.setAutomaticAdvanceEnabled(timerWanted);
 		ofLogNotice("ExperienceRuntime") << "media cadence -> "
-			<< (boundaryDriven ? "scene-boundary-driven (" + owner + ")" : std::string("automatic"));
+			<< (boundaryDriven ? "scene-boundary-driven (" + owner + ")" : timerWanted ? std::string("automatic") : std::string("manual only (installation setting)"));
 	}
+}
+
+void ExperienceRuntime::loadInstallationSettings() {
+	installation::Settings s;
+	if (!installationSettingsPath_.empty() && ofFile::doesFileExist(installationSettingsPath_, false)) {
+		ofJson j = ofLoadJson(installationSettingsPath_);
+		auto num = [](const ofJson& o, const char* k, float d) { return o.contains(k) && o[k].is_number() ? o[k].get<float>() : d; };
+		auto flag = [](const ofJson& o, const char* k, bool d) { return o.contains(k) && o[k].is_boolean() ? o[k].get<bool>() : d; };
+		if (j.contains("sceneAutoCycle") && j["sceneAutoCycle"].is_object()) {
+			s.sceneAutoCycle.enabled = flag(j["sceneAutoCycle"], "enabled", s.sceneAutoCycle.enabled);
+			s.sceneAutoCycle.durationSeconds = num(j["sceneAutoCycle"], "durationSeconds", s.sceneAutoCycle.durationSeconds);
+		}
+		if (j.contains("mediaAutoCycle") && j["mediaAutoCycle"].is_object()) {
+			s.mediaAutoCycle.enabled = flag(j["mediaAutoCycle"], "enabled", s.mediaAutoCycle.enabled);
+			s.mediaAutoCycle.durationSeconds = num(j["mediaAutoCycle"], "durationSeconds", s.mediaAutoCycle.durationSeconds);
+		}
+		s.launchFullscreen = flag(j, "launchFullscreen", s.launchFullscreen);
+		if (j.contains("energy") && j["energy"].is_object()) s.energyTarget = num(j["energy"], "target", s.energyTarget);
+		ofLogNotice("Installation") << "settings loaded from " << installationSettingsPath_;
+	} else {
+		ofLogNotice("Installation") << "settings: defaults" << (installationSettingsPath_.empty() ? " (persistence off)" : " (no file yet)");
+	}
+	for (const auto& field : installation_.load(s)) ofLogWarning("Installation") << "invalid " << field << " in settings; default kept";
+	const installation::Settings& applied = installation_.settings();
+	ofLogNotice("Installation") << "applied: sceneAutoCycle " << (applied.sceneAutoCycle.enabled ? "on" : "off") << " "
+		<< applied.sceneAutoCycle.durationSeconds << " s, mediaAutoCycle " << (applied.mediaAutoCycle.enabled ? "on" : "off") << " "
+		<< applied.mediaAutoCycle.durationSeconds << " s, launchFullscreen " << (applied.launchFullscreen ? "on" : "off")
+		<< ", energy.target " << applied.energyTarget;
+	installationLoaded_ = true;
+}
+
+void ExperienceRuntime::saveInstallationSettings() const {
+	if (installationSettingsPath_.empty()) return;
+	const installation::Settings& s = installation_.settings();
+	ofJson j;
+	j["sceneAutoCycle"] = {{"enabled", s.sceneAutoCycle.enabled}, {"durationSeconds", s.sceneAutoCycle.durationSeconds}};
+	j["mediaAutoCycle"] = {{"enabled", s.mediaAutoCycle.enabled}, {"durationSeconds", s.mediaAutoCycle.durationSeconds}};
+	j["launchFullscreen"] = s.launchFullscreen;
+	j["energy"] = {{"target", s.energyTarget}};
+	ofSavePrettyJson(installationSettingsPath_, j);
+}
+
+// Start of every frame — the same point key events reach the runtime, so a
+// scheduled NextScene takes exactly the path a ']' press takes.
+void ExperienceRuntime::tickInstallation(float dt) {
+	for (const auto& result : installation_.drainQueue()) {
+		if (!result.accepted) ofLogWarning("Installation") << "queued request rejected: " << result.code;
+	}
+	if (installation_.takeFullscreenToggle()) {
+		ofToggleFullscreen();
+		ofLogNotice("Installation") << "fullscreen toggle requested";
+	}
+	// Any completed activation (manual or automatic) restarts the period.
+	if (sceneManager_.activationSucceededThisFrame()) installation_.noteSceneChanged();
+	const bool sceneIdle = sceneManager_.hasProductionScenes() && sceneManager_.status().transitionPhase == SceneTransitionPhase::Idle;
+	if (installation_.tickSceneCycle(dt, sceneIdle)) {
+		ofLogNotice("Installation") << "scene auto-cycle -> NextScene";
+		handleRuntimeCommand(RuntimeCommand::NextScene);
+	}
+	// ENERGY: smoothed once per frame; Quadrant is the one mapped scene in
+	// v0.1 (re-applied every frame, so it survives activation resets).
+	quadrantScene_.setEnergy(installation_.tickEnergy(dt));
+	if (installation_.takeSettingsChanged()) saveInstallationSettings();
+}
+
+InstallationStatus ExperienceRuntime::buildInstallationStatus() const {
+	const installation::Settings& s = installation_.settings();
+	InstallationStatus st;
+	st.sceneAutoCycleEnabled = s.sceneAutoCycle.enabled;
+	st.sceneAutoCycleSeconds = s.sceneAutoCycle.durationSeconds;
+	st.sceneAutoCycleElapsedSeconds = installation_.sceneCycleElapsed();
+	st.mediaAutoCycleEnabled = s.mediaAutoCycle.enabled;
+	st.mediaAutoAdvanceActive = runtimeServices_.video().automaticAdvanceEnabled();
+	st.mediaAutoCycleSeconds = s.mediaAutoCycle.durationSeconds;
+	st.fullscreen = ofGetWindowMode() == OF_FULLSCREEN;
+	st.launchFullscreen = s.launchFullscreen;
+	st.energyTarget = s.energyTarget;
+	st.energy = installation_.energySmoothed();
+	st.energyAdjusting = installation_.energyAdjusting();
+	return st;
 }
 
 void ExperienceRuntime::establishGlobalRenderingBaseline() {
@@ -198,11 +284,21 @@ void ExperienceRuntime::setup() {
 		}
 	}
 
+	// Installation Controls & ENERGY v0.1: settings (validated) and the
+	// persistent launch preference. applyMediaCadence() applies the media
+	// cadence every frame from here on.
+	loadInstallationSettings();
+	if (installation_.settings().launchFullscreen) {
+		ofSetFullscreen(true);
+		ofLogNotice("Installation") << "launchFullscreen: starting fullscreen";
+	}
+
 	didSetup_ = true;
 }
 
 void ExperienceRuntime::update(float dt) {
 	lastDt_ = dt; // reused by draw() (step 14) — see this member's own comment
+	tickInstallation(dt); // installation requests/automation, before the frame's scene work
 
 	// Step 1 (resolve raw input) and step 2 (dispatch accepted
 	// RuntimeCommand/SceneCommand values) already happened synchronously
@@ -355,6 +451,7 @@ void ExperienceRuntime::draw() {
 	// HUD Clock v0.1: runtime-owned OS wall clock — one coherent local-time
 	// conversion per distinct second (see WallClockSampler.h), never a scene's.
 	currentHudFrameData_.wallClock = wallClockSampler_.sample(std::chrono::system_clock::now());
+	if (installationLoaded_) currentHudFrameData_.installation = buildInstallationStatus();
 	presentationCounters_.hudFrameDataAssemblies++;
 
 	// Step 16: hand the ONE assembled HudFrameData to the compositor
@@ -376,8 +473,19 @@ void ExperienceRuntime::draw() {
 	long long hudDeallocBefore = alloccounter::deleteCount();
 	if (!diagHudOmit) {
 		{ RT004_SCOPE("Hud.update"); hudCompositorBridge_.update(lastDt_, currentHudFrameData_); }
-		{ RT004_SCOPE("Hud.draw"); hudCompositorBridge_.draw(); }
-		presentationCounters_.hudDraws++;
+		if (immersive_) {
+			// IMMERSIVE (HUD & Scene Experience v0.3): the HUD keeps updating
+			// (focus/status stay current) but is not drawn; the runtime-owned
+			// scene FBO fills the CURRENT window instead — aspect-preserving
+			// cover scale, centred crop. No window/fullscreen change, no
+			// per-scene rendering.
+			RT004_SCOPE("Immersive.draw");
+			drawImmersiveScene();
+		} else {
+			RT004_SCOPE("Hud.draw");
+			hudCompositorBridge_.draw();
+			presentationCounters_.hudDraws++;
+		}
 	}
 	lastHudOnlyNewCount_ = alloccounter::newCount() - hudAllocBefore;
 	lastHudOnlyDeleteCount_ = alloccounter::deleteCount() - hudDeallocBefore;
@@ -393,6 +501,21 @@ void ExperienceRuntime::exit() {
 }
 
 void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
+	// ENERGY adjustment borrows the same device-neutral encoder input: steps
+	// change ENERGY instead of focus, the click exits. Focus is untouched.
+	if (installation_.energyAdjusting()) {
+		installation::Request r;
+		if (input.kind == HudFocusInput::Kind::Step) {
+			r.kind = installation::Request::Kind::StepEnergy;
+			r.steps = input.delta;
+		} else {
+			r.kind = installation::Request::Kind::EndEnergyAdjust;
+		}
+		installation_.submit(r);
+		ofLogNotice("Installation") << "ENERGY target " << ofToString(installation_.settings().energyTarget, 2)
+			<< (installation_.energyAdjusting() ? " (adjusting)" : " (adjustment closed)");
+		return;
+	}
 	if (input.kind == HudFocusInput::Kind::Step) {
 		hudCompositorBridge_.stepFocus(input.delta);
 		const auto& f = hudCompositorBridge_.focus().focused();
@@ -406,6 +529,9 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 	rec.serial = lastFocusActivation_.serial + 1;
 	const auto& focused = hudCompositorBridge_.focus().focused();
 	rec.region = focused ? *focused : std::string();
+	// Activating whatever holds focus (even a fallback, even if refused) is
+	// deliberate: it becomes the intended control, ending any restoration.
+	if (focused) hudCompositorBridge_.confirmFocus();
 	const std::optional<std::string> target = hudCompositorBridge_.focusActivationTarget();
 	if (!target) {
 		rec.refused = focused.has_value(); // focused but disabled; no focus = nothing to do
@@ -418,11 +544,15 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 
 	// Control region -> existing command. Same meanings the HUD's availability
 	// sources use (HudRealFrameResolver control.* sources).
-	if (*target == "controls.media_previous" || *target == "controls.media_next" || *target == "controls.reseed") {
-		const SceneCommand cmd = *target == "controls.media_previous" ? SceneCommand::PreviousMedia
-			: *target == "controls.media_next" ? SceneCommand::NextMedia : SceneCommand::Regenerate;
-		rec.command = cmd == SceneCommand::PreviousMedia ? "SceneCommand::PreviousMedia"
-			: cmd == SceneCommand::NextMedia ? "SceneCommand::NextMedia" : "SceneCommand::Regenerate";
+	if (*target == "controls.reseed") {
+		// The frozen controls.reseed region hosts the IMMERSIVE control
+		// (v0.3); Regenerate stays reachable through key '2'.
+		rec.command = "Runtime::EnterImmersive";
+		rec.accepted = true;
+		enterImmersive();
+	} else if (*target == "controls.media_previous" || *target == "controls.media_next") {
+		const SceneCommand cmd = *target == "controls.media_previous" ? SceneCommand::PreviousMedia : SceneCommand::NextMedia;
+		rec.command = cmd == SceneCommand::PreviousMedia ? "SceneCommand::PreviousMedia" : "SceneCommand::NextMedia";
 		rec.accepted = sceneManager_.dispatchSceneCommand(cmd);
 	} else if (*target == "flexible.secondary_a") {
 		// Scene & Pattern Navigation: the mode panel's activation is NEXT MODE.
@@ -442,10 +572,53 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 	lastFocusActivation_ = rec;
 }
 
+void ExperienceRuntime::enterImmersive() {
+	immersive_ = true;
+	ofLogNotice("ExperienceRuntime") << "immersive: on (any key/press exits)";
+}
+
+bool ExperienceRuntime::exitImmersiveOnInput() {
+	if (!immersive_) return false;
+	immersive_ = false; // the exit input is consumed — it navigates nothing
+	ofLogNotice("ExperienceRuntime") << "immersive: off";
+	return true;
+}
+
+void ExperienceRuntime::pointerPressed() {
+	exitImmersiveOnInput();
+}
+
+void ExperienceRuntime::drawImmersiveScene() const {
+	ofBackground(0);
+	const ofTexture& tex = sceneFbo_.getTexture();
+	if (!tex.isAllocated()) return;
+	const float winW = static_cast<float>(ofGetWidth());
+	const float winH = static_cast<float>(ofGetHeight());
+	const float scale = std::max(winW / tex.getWidth(), winH / tex.getHeight()); // cover
+	const float drawW = tex.getWidth() * scale;
+	const float drawH = tex.getHeight() * scale;
+	ofPushStyle();
+	ofSetColor(255);
+	tex.draw((winW - drawW) * 0.5f, (winH - drawH) * 0.5f, drawW, drawH);
+	ofPopStyle();
+}
+
 void ExperienceRuntime::keyPressed(int key) {
+	// IMMERSIVE: any key only exits (and is consumed).
+	if (exitImmersiveOnInput()) return;
+
 	// -- Playable HUD Menu v0.1: focus navigation (arrows / Enter) -------
 	if (auto focusInput = inputRouter_.translateToFocusInput(key)) {
 		handleFocusInput(*focusInput);
+		return;
+	}
+	if (inputRouter_.isEnergyAdjustToggle(key)) {
+		installation::Request r;
+		r.kind = installation_.energyAdjusting() ? installation::Request::Kind::EndEnergyAdjust
+		                                         : installation::Request::Kind::BeginEnergyAdjust;
+		installation_.submit(r);
+		ofLogNotice("Installation") << (installation_.energyAdjusting() ? "ENERGY adjustment open" : "ENERGY adjustment closed")
+			<< " (target " << ofToString(installation_.settings().energyTarget, 2) << ")";
 		return;
 	}
 
@@ -550,10 +723,15 @@ void ExperienceRuntime::handleRuntimeCommand(RuntimeCommand command) {
 		case RuntimeCommand::ToggleHud:
 			hudCompositorBridge_.setVisible(!hudCompositorBridge_.isVisible());
 			break;
-		case RuntimeCommand::ToggleFullscreen:
-			// ExperienceRuntime's own unambiguous host ownership.
-			ofToggleFullscreen();
+		case RuntimeCommand::ToggleFullscreen: {
+			// Through the one installation-control authority (applied at the
+			// start of the next frame); the persistent launch preference is
+			// separate and unchanged.
+			installation::Request r;
+			r.kind = installation::Request::Kind::ToggleFullscreen;
+			installation_.submit(r);
 			break;
+		}
 		case RuntimeCommand::Exit:
 			// Development-only binding (ESC).
 			ofExit();

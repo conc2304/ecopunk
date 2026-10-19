@@ -1,6 +1,7 @@
 #include "HudRealFrameResolver.h"
 
 #include <algorithm>
+#include <cstdio>
 
 namespace hudpresent {
 
@@ -215,6 +216,22 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 		if (!frame.video || !frame.video->playbackProgress) return HudResolvedValue::missing(HudSourceValueType::Ratio, HudDataClass::Normalized);
 		return HudResolvedValue::number(HudSourceValueType::Ratio, *frame.video->playbackProgress, HudDataClass::Normalized);
 	}
+	if (sourceId == "media.playback.time") {
+		// "0:42 / 1:30" from canonical Shared Video position/duration (no
+		// clock of its own). Unknown duration -> "0:42 / --:--"; no position
+		// (nothing loaded) -> missing.
+		if (!frame.video || !frame.video->positionSeconds) return HudResolvedValue::missing(HudSourceValueType::Text, HudDataClass::Literal);
+		auto clock = [](float seconds) {
+			const int s = std::max(0, static_cast<int>(seconds));
+			char buf[16];
+			if (s >= 3600) std::snprintf(buf, sizeof(buf), "%d:%02d:%02d", s / 3600, (s / 60) % 60, s % 60);
+			else std::snprintf(buf, sizeof(buf), "%d:%02d", s / 60, s % 60);
+			return std::string(buf);
+		};
+		const auto& d = frame.video->durationSeconds;
+		const bool knownDuration = d && *d > 0.0f;
+		return HudResolvedValue::text(clock(*frame.video->positionSeconds) + " / " + (knownDuration ? clock(*d) : std::string("--:--")));
+	}
 	if (sourceId == "media.hold.progress") {
 		if (!frame.video || !frame.video->holdProgress) return HudResolvedValue::missing(HudSourceValueType::Ratio, HudDataClass::Normalized);
 		return HudResolvedValue::number(HudSourceValueType::Ratio, *frame.video->holdProgress, HudDataClass::Normalized);
@@ -304,14 +321,17 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 	//   - ENABLED: PRESENT + true. LabelWidget shows it at full opacity.
 	// -----------------------------------------------------------------
 	if (sourceId == "control.scene.previous.available" || sourceId == "control.scene.next.available") {
-		// No real signal exists for "is more than one scene available to
-		// switch to" (SceneManagerStatus has no scene count/list; this
-		// increment's SceneManager has exactly one resident scene and
-		// handleSceneSwitchCommand() is a documented no-op) — genuinely
-		// UNSUPPORTED today, not merely disabled, so this resolves
-		// missing rather than present-false. Revisit once SceneManager
-		// exposes a real multi-scene signal.
-		return HudResolvedValue::missing(HudSourceValueType::Boolean, HudDataClass::Literal);
+		// SceneManager now publishes its registry size (Scene & Pattern
+		// Navigation). One scene (or none): unsupported -> hidden. Two or
+		// more: ENABLED while Idle; DISABLED during a transition, when
+		// SceneManager rejects switch commands anyway.
+		if (manager.availableSceneCount < 2) return HudResolvedValue::missing(HudSourceValueType::Boolean, HudDataClass::Literal);
+		return HudResolvedValue::boolean(manager.transitionPhase == SceneTransitionPhase::Idle);
+	}
+	if (sourceId == "control.runtime.immersive.available") {
+		// IMMERSIVE is runtime-owned presentation, available whenever a
+		// scene owns the frame and no transition is running.
+		return HudResolvedValue::boolean(!manager.activeSceneId.empty() && manager.transitionPhase == SceneTransitionPhase::Idle);
 	}
 	if (sourceId == "control.media.previous.available") {
 		// No video service configured at all -> UNSUPPORTED (missing).
@@ -347,7 +367,7 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 		const int position = *manager.activeSceneIndex + 1;
 		if (sourceId == "scene.index") return HudResolvedValue::number(HudSourceValueType::Count, static_cast<float>(position));
 		if (sourceId == "scene.count") return HudResolvedValue::number(HudSourceValueType::Count, static_cast<float>(manager.availableSceneCount));
-		return HudResolvedValue::text(std::to_string(position) + "/" + std::to_string(manager.availableSceneCount));
+		return HudResolvedValue::text("[Scene " + std::to_string(position) + "/" + std::to_string(manager.availableSceneCount) + "]");
 	}
 	if (sourceId.rfind("scene.mode.", 0) == 0 || sourceId == "control.scene.next_mode.available") {
 		const auto staticType = HudSourceResolver::staticValueTypeOf(sourceId);

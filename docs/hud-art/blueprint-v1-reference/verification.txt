@@ -1,8 +1,9 @@
 HudArtReferenceExporter: output /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/docs/hud-art/blueprint-v1-reference
 PASS no skin active (comparison frame is the plain wireframe)
 PASS catalog has 19 regions — 19
-PASS original MinimalSlice presentation has 13 regions — 13
-PASS current production presentation has 15 regions — 15
+PASS historical MinimalSlice presentation has 13 regions — 13
+PASS current production presentation has 17 regions (13 + 2 Living HUD + clock + mode) — 17
+PASS flexible.secondary_a = Mode Navigation, flexible.secondary_b = Clock
 PASS runtime capture is 1280x720 — 1280x720
 PASS viewport mesh present (drawn by the runtime this run) — 54 vertices
 PASS mesh outline has lower-right bevel endpoint (right edge, y = bottom - 42) — 25.6,115.2 768.0x504.0
@@ -16,7 +17,8 @@ PASS runtime frame: just inside the bevel line shows scene content — 91/91 sam
 PASS hud_reference_wireframe_1280x720.png written as 1280x720 RGBA (overlay) — 1280x720x4
 PASS hud_reference_schematic_1280x720.png written as 1280x720 RGB (opaque sheet) — 1280x720x3
 PASS hud_reference_constraints_1280x720.png written as 1280x720 RGBA (overlay) — 1280x720x4
+PASS hud_reference_production_1280x720.png written as 1280x720 RGB (opaque sheet) — 1280x720x3
 PASS wireframe viewport outline lies on the real mesh boundary (±1 px) — 2471/2471 outline px
 PASS wireframe orientation: scene_title top edge present at top, absent at mirror — line rasterized on row 21 (y=21.6)
 wrote regions.json (19 regions)
-RESULT: 18 passed, 0 failed
+RESULT: 20 passed, 0 failed

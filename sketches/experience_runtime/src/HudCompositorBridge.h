@@ -99,6 +99,9 @@ public:
 	// Focus is HUD presentation state only; it never dispatches anything.
 	// Moves focus (first call engages it). Returns false if no control is visible.
 	bool stepFocus(int delta);
+	// The user activated the current focus: it becomes the intended control
+	// (cancels restoration of an earlier one — see HudFocusNavigator).
+	void confirmFocus() { focus_.confirmFocus(); }
 	// The focused control's region ID if it is enabled right now, else nullopt.
 	std::optional<std::string> focusActivationTarget() const { return focus_.activationTarget(); }
 	const HudFocusNavigator& focus() const { return focus_; }

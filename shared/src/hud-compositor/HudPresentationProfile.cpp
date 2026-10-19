@@ -49,15 +49,25 @@ ScenePresentationProfile buildUniversalProfile() {
 		p.bindings.push_back(b);
 	}
 	{
+		// HUD & Scene Experience v0.3: the media slot shows the media title
+		// plus playback progress (bar + "current / total") from canonical
+		// Shared Video status. Automatic formatting resolves the title exactly
+		// as VocabularyValue did (Identifier -> vocabulary, Text -> as-is).
 		auto b = makeBinding("universal.media_title.label", "universal.media_title",
-			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::VocabularyValue);
+			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic);
 		b.addSource({"text", "media.title", false});
+		b.addSource({"progress", "media.playback.progress", false});
+		b.addSource({"suffix", "media.playback.time", false});
 		p.bindings.push_back(b);
 	}
 	{
 		auto b = makeBinding("universal.primary_state.badge", "universal.primary_state",
 			HudWidgetType::StatusBadge, HudMissingPolicy::Placeholder);
 		b.addSource({"value", "scene.state.primary", true});
+		// v0.3: the scene's secondary state (e.g. Quadrant's active
+		// strategy/effect) and a phase icon keyed by the primary state ID.
+		b.addSource({"detail", "scene.state.secondary", false});
+		b.addSource({"icon", "scene.state.primary", false});
 		p.bindings.push_back(b);
 	}
 
@@ -166,8 +176,12 @@ ScenePresentationProfile buildUniversalProfile() {
 		"control.media.previous.label", "control.media.previous.available");
 	addControl("controls.media_next.label", "controls.media_next",
 		"control.media.next.label", "control.media.next.available");
-	addControl("controls.reseed.label", "controls.reseed",
-		"control.scene.reseed.label", "control.scene.reseed.available");
+	// HUD & Scene Experience v0.3: the frozen controls.reseed region now
+	// hosts the icon-only IMMERSIVE control. The visible RESEED button is
+	// retired; SceneCommand::Regenerate itself is untouched (key '2', scene
+	// capabilities, control.scene.reseed.* sources and vocabulary remain).
+	addControl("controls.immersive.icon", "controls.reseed",
+		"control.runtime.immersive.label", "control.runtime.immersive.available");
 
 	return p;
 }

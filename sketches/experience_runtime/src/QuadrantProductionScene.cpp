@@ -139,6 +139,7 @@ quadrantsemantics::Inputs QuadrantProductionScene::semanticInputs() const {
 		in.channelEffect[static_cast<size_t>(q)] = telemetry.activeShader;
 	}
 	in.expansion = expansionOf(core_.expansionDirector().getState());
+	if (core_.expansionDirector().isActive()) in.expansionQuadrant = core_.expansionDirector().getTargetQuadrant();
 	in.expansionT = core_.expansionDirector().getExpansionT();
 	in.crosshairPreset = core_.crosshair().getCurrentPreset();
 	in.motionEnergy = core_.motionExtraction().getMotionEnergy();

@@ -58,6 +58,10 @@ public:
 	void shutdown() override;
 
 	quadrantcrosshair::QuadrantSceneCore& coreForTesting() { return core_; }
+	// Installation ENERGY v0.1 — ExperienceRuntime pushes the smoothed
+	// runtime ENERGY each frame (concrete seam; IEcopunkScene has no
+	// parameter API). Re-applied after activation's composition reset.
+	void setEnergy(float energy01) { core_.crosshair().setEnergy(energy01); }
 	int mediaChangesSeenForTesting() const { return mediaChangesSeen_; }
 	const std::string& observedMediaIdForTesting() const { return observedMediaId_; }
 

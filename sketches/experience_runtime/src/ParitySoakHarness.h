@@ -4,6 +4,7 @@
 
 #include <functional>
 #include <set>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -54,6 +55,22 @@ private:
 	float maxFrameSeconds_ = 0.0f; // since the last switch request
 	std::string mediaBefore_;
 	int seedBefore_ = 0;
+	// Fresh-time evidence (A): wall clock at the switch request, and each
+	// scene's semantic active time / generation when it was last left.
+	float switchRequestWall_ = 0.0f;
+	std::map<std::string, float> exitActiveSeconds_;
+	std::map<std::string, uint64_t> exitGeneration_;
+	// Timer-bounded phase observation (B).
+	int boundedAttempts_ = 0;
+	float boundedFirstProgress_ = -1.0f;
+	float boundedLastProgress_ = -1.0f;
+	float boundedSampleSeconds_ = 0.0f;
+	float unboundedCycleSeconds_ = 0.0f;
+	bool boundedProgressMonotonic_ = true;
+	int boundedMetricMismatches_ = 0;
+	// Regenerate (C).
+	float cycleElapsedBeforeReseed_ = 0.0f;
+	int seedAfterReseed_ = 0;
 	int blueprintExitSeed_ = 0;
 	int patternBeforeForce_ = -1;
 	std::set<int> visitedPatterns_;

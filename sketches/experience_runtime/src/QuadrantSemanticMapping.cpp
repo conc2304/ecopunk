@@ -6,6 +6,10 @@
 //   state.primaryStateId     | expansion TRAVEL_OUT/HOLD -> expanding; TRAVEL_BACK -> reconfiguring
 //                            |   (quadrants contracting back); otherwise the liveliest channel:
 //                            |   any ONLINE -> online, else any QUIET PHASE -> quiet, else standby
+//   state.secondaryStateId   | v0.3 -> HUD state badge detail: while an expansion is active, the
+//                            |   expanding quadrant's active shader (bare name, as channel_N_effect);
+//                            |   otherwise the crosshair's active strategy (CrosshairSystem preset) as
+//                            |   the shared movement_preset vocabulary ID
 //   activity.overall/density | ONLINE channels / 4 (§18.5: active quadrants)
 //   activity.motion          | MotionExtraction energy / 0.3 — the same 0..0.3 range the sketch
 //                            |   maps its extraction sensitivity over — clamped to [0,1]
@@ -78,6 +82,13 @@ SceneSemanticData compute(const Inputs& in) {
 	SceneSemanticData data;
 	data.schemaVersion = 1;
 	data.state.primaryStateId = primaryStateId(in);
+	const bool expansionEffect = in.expansion != Expansion::Idle && in.expansionQuadrant >= 0 && in.expansionQuadrant < 4
+		&& !in.channelEffect[static_cast<size_t>(in.expansionQuadrant)].empty();
+	if (expansionEffect) {
+		data.state.secondaryStateId = in.channelEffect[static_cast<size_t>(in.expansionQuadrant)];
+	} else if (in.crosshairPreset >= 0 && in.crosshairPreset < 5) {
+		data.state.secondaryStateId = std::string("scene.fragment.metric.movement_preset.") + kPresetKeys[in.crosshairPreset];
+	}
 
 	const int online = static_cast<int>(std::count(in.channelPhase.begin(), in.channelPhase.end(), ChannelPhase::Online));
 	const float density = static_cast<float>(online) / 4.0f;

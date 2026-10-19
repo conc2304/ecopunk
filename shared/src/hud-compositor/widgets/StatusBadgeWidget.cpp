@@ -33,7 +33,7 @@ void StatusBadgeWidget::draw(const ofRectangle& bounds, const HudWidgetColors& c
 
 	if (singleLine) {
 		const float baseline = bounds.y + bounds.height * 0.5f + 4.0f;
-		ofSetColor(scaledAlpha(colors.muted, opacity));
+		ofSetColor(scaledAlpha(captionColor(colors, valueRole), opacity));
 		const auto& caption = textCache_.truncateToWidth(input.captionText, localMaxWidth * 0.5f);
 		drawText(caption.text, bounds.x + pad, baseline);
 		const float valueX = bounds.x + pad + caption.widthLocal + 8.0f;
@@ -45,15 +45,47 @@ void StatusBadgeWidget::draw(const ofRectangle& bounds, const HudWidgetColors& c
 	}
 
 	if (!input.captionText.empty()) {
-		ofSetColor(scaledAlpha(colors.muted, opacity));
+		ofSetColor(scaledAlpha(captionColor(colors, valueRole), opacity));
 		const auto& truncatedCaption = textCache_.truncateToWidth(input.captionText, localMaxWidth);
-		drawText(truncatedCaption.text, bounds.x + pad, bounds.y + wu(bounds, 12.0f));
+		drawText(truncatedCaption.text, bounds.x + pad, captionBaselineY(bounds, wu(bounds, 12.0f)));
 	}
 
 	if (valueRole && valueRole->shouldRender) {
+		// Native-metric bottom clearance: the scaled inset alone (2.16 px in a
+		// 43.2 px region) put the value against the region edge, touching the
+		// next region's caption (universal.primary_state over activity).
+		const float baseline = bottomBaselineY(bounds, wu(bounds, 6.0f));
+		float valueX = bounds.x + pad;
+		float valueRight = bounds.getRight() - pad;
+
+		// v0.3 reserved phase-icon slot: a cap-height+ square left of the
+		// value, keyed by the icon role's raw identifier.
+		const auto* iconRole = input.findRole("icon");
+		if (iconRole && iconRole->shouldRender && iconRole->value.present && iconRole->value.dataClass != HudDataClass::Ambient
+			&& !iconRole->useAmbientFallback && !valueRole->useAmbientFallback) {
+			const float side = kBitmapCapHeight + 4.0f;
+			ofRectangle square(valueX, baseline - kBitmapCapHeight - 2.0f, side, side);
+			drawReservedIcon(iconRole->value.textValue, square, scaledAlpha(colors.accent, opacity));
+			valueX += side + 6.0f;
+		}
+
+		// v0.3 detail (e.g. strategy/effect name), right-aligned, caption
+		// colour, given at most ~45% of the line.
+		const auto* detailRole = input.findRole("detail");
+		// Optional roles draw only real values — never the binding's missing-data
+		// placeholder ("-", tagged HudDataClass::Ambient by HudMissingDataController).
+		if (detailRole && detailRole->shouldRender && detailRole->value.present && detailRole->value.dataClass != HudDataClass::Ambient
+			&& !detailRole->useAmbientFallback
+			&& !detailRole->formattedText.empty()) {
+			const auto& detail = textCache_.truncateToWidth(detailRole->formattedText, localMaxWidth * 0.45f);
+			ofSetColor(scaledAlpha(captionColor(colors, detailRole), opacity));
+			drawText(detail.text, valueRight - detail.widthLocal, baseline);
+			valueRight -= detail.widthLocal + 10.0f;
+		}
+
 		ofSetColor(scaledAlpha(valueRole->useAmbientFallback ? colors.muted : colors.accent, opacity));
-		const auto& truncatedValue = textCache_.truncateToWidth(valueRole->formattedText, localMaxWidth);
-		drawText(truncatedValue.text, bounds.x + pad, bounds.y + bounds.height - wu(bounds, 6.0f));
+		const auto& truncatedValue = textCache_.truncateToWidth(valueRole->formattedText, std::max(0.0f, valueRight - valueX));
+		drawText(truncatedValue.text, valueX, baseline);
 	}
 
 	ofPopStyle();

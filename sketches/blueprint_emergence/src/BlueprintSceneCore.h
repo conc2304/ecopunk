@@ -68,6 +68,10 @@ public:
 
 	// Same path the composition itself takes at every cycle end.
 	void restartCycle();
+	// Manual NEXT MODE (BEComposition::requestNextMode()). Entering
+	// GHOST_LAYERS fires the composition's cycle-start callback; the shared
+	// media is NOT advanced for a manual mode change.
+	bool requestNextMode();
 	void forceAxisFlip() { composition_.forceAxisFlip(); }
 
 	// TEMP DIAGNOSTIC carried over from the standalone sketch (default true:

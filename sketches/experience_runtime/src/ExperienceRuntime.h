@@ -7,6 +7,7 @@
 #include "QuadrantProductionScene.h"
 #include "HudCompositorBridge.h"
 #include "HudFrameData.h"
+#include "InstallationControl.h"
 #include "InputRouter.h"
 #include "RuntimeServices.h"
 #include "SceneContract.h"
@@ -146,8 +147,23 @@ public:
 	void exit();
 
 	void keyPressed(int key);
+	// Any pointer/device press (ofApp mouse events) — exits IMMERSIVE.
+	void pointerPressed();
+	bool immersiveForTesting() const { return immersive_; }
 
 	const HudFrameData& currentHudFrameData() const { return currentHudFrameData_; }
+
+	// -- Installation Controls & ENERGY v0.1 -----------------------------
+	// The one validated request interface (keyboard/HUD today, a future
+	// local REST server tomorrow). submit: runtime thread only, applied
+	// immediately (fullscreen/scene work still happens at the next frame's
+	// start). enqueue: thread-safe, drained by the runtime thread at the
+	// start of update() — no other thread touches scenes, decoders or GL.
+	installation::Result submitInstallationRequest(const installation::Request& r) { return installation_.submit(r); }
+	void enqueueInstallationRequest(const installation::Request& r) { installation_.enqueue(r); }
+	const installation::Controller& installationForTesting() const { return installation_; }
+	// Settings file. Call before setup(); "" = no load/save (harness runs).
+	void setInstallationSettingsPath(std::string path) { installationSettingsPath_ = std::move(path); }
 	uint64_t frameNumber() const { return frameNumber_; }
 
 	// Development/test-only access — see SceneManager::devScene().
@@ -272,6 +288,13 @@ private:
 	// activation, shutdown) gets normal automatic advance back — with a fresh
 	// dwell window (VideoPlaybackService::setAutomaticAdvanceEnabled()).
 	void applyMediaCadence(bool liveThisFrame);
+	void enterImmersive();
+	bool exitImmersiveOnInput();
+	void drawImmersiveScene() const;
+	void loadInstallationSettings();
+	void saveInstallationSettings() const;
+	void tickInstallation(float dt);
+	InstallationStatus buildInstallationStatus() const;
 	std::vector<std::string> boundaryDrivenMediaScenes_;
 
 	// RT-003: on the frame an incoming scene's activation succeeds, reallocate
@@ -336,6 +359,15 @@ private:
 
 	// HUD Clock v0.1: sole producer of HudFrameData::wallClock.
 	wallclock::WallClockSampler wallClockSampler_;
+
+	// Installation Controls & ENERGY v0.1: sole owner of installation
+	// settings, the scene auto-cycle schedule and ENERGY.
+	installation::Controller installation_;
+	std::string installationSettingsPath_;
+	bool installationLoaded_ = false;
+	// IMMERSIVE scene presentation (HUD hidden, scene cover-scaled to the
+	// current window). Runtime presentation state only.
+	bool immersive_ = false;
 
 	// Captured during update() (step 6) and reused, unchanged, when
 	// assembling HudFrameData during draw() (step 13) — avoids a second,

@@ -76,7 +76,9 @@ void TriggerBus::checkVelocity(const CrosshairState& s) {
 }
 
 void TriggerBus::checkDwell(const CrosshairState& s, float dt) {
-    dwellTotalMove += s.speed;
+    // speed is in 60 Hz-frame units; scale by elapsed 60 Hz frames so the
+    // accumulated movement is frame-rate independent (identical at 60 fps).
+    dwellTotalMove += s.speed * dt * 60.f;
     dwellAccum     += dt;
     if (dwellAccum >= DWELL_SECS) {
         bool still = dwellTotalMove < DWELL_MOVE;

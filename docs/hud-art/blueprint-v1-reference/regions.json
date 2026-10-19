@@ -16,9 +16,15 @@
     },
     "presentation": {
         "canonicalRegions": 19,
-        "originalMinimalSlice": 13,
-        "production": 15,
-        "productionAdditions": "Living HUD v0.1"
+        "fullProfileOnly": 2,
+        "historicalMinimalSlice": 13,
+        "production": 17,
+        "productionParts": {
+            "clock": 1,
+            "historicalMinimalSlice": 13,
+            "livingHud": 2,
+            "modeNavigation": 1
+        }
     },
     "regions": [
         {
@@ -30,6 +36,7 @@
                 0.3199999928474426,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 844.800048828125,
                 21.600000381469727,
@@ -37,7 +44,7 @@
                 43.20000076293945
             ],
             "role": "Universal",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         },
         {
             "id": "universal.media_title",
@@ -48,6 +55,7 @@
                 0.3199999928474426,
                 0.05000000074505806
             ],
+            "production": true,
             "px": [
                 844.800048828125,
                 72.0,
@@ -55,7 +63,7 @@
                 36.0
             ],
             "role": "Universal",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         },
         {
             "id": "universal.primary_state",
@@ -66,6 +74,7 @@
                 0.3199999928474426,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 844.800048828125,
                 115.19999694824219,
@@ -73,7 +82,7 @@
                 43.20000076293945
             ],
             "role": "Universal",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         },
         {
             "id": "universal.activity",
@@ -84,6 +93,7 @@
                 0.3199999928474426,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 844.800048828125,
                 165.60000610351563,
@@ -91,7 +101,7 @@
                 43.20000076293945
             ],
             "role": "Universal",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         },
         {
             "id": "universal.effect_summary",
@@ -102,6 +112,7 @@
                 0.3199999928474426,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 844.800048828125,
                 216.00001525878906,
@@ -109,7 +120,7 @@
                 43.20000076293945
             ],
             "role": "Universal",
-            "scope": "LivingHUD-v0.1+FullProfile"
+            "scope": "production (Living HUD v0.1)"
         },
         {
             "id": "universal.timing",
@@ -120,6 +131,7 @@
                 0.3199999928474426,
                 0.05000000074505806
             ],
+            "production": true,
             "px": [
                 844.800048828125,
                 266.3999938964844,
@@ -127,7 +139,7 @@
                 36.0
             ],
             "role": "Universal",
-            "scope": "LivingHUD-v0.1+FullProfile"
+            "scope": "production (Living HUD v0.1)"
         },
         {
             "id": "universal.activity_trace",
@@ -138,6 +150,7 @@
                 0.3199999928474426,
                 0.10000000149011612
             ],
+            "production": false,
             "px": [
                 844.800048828125,
                 309.6000061035156,
@@ -145,7 +158,7 @@
                 72.0
             ],
             "role": "Universal",
-            "scope": "FullProfile only"
+            "scope": "FullProfile only (not drawn in production)"
         },
         {
             "id": "universal.secondary_trace",
@@ -156,6 +169,7 @@
                 0.3199999928474426,
                 0.10000000149011612
             ],
+            "production": false,
             "px": [
                 844.800048828125,
                 388.8000183105469,
@@ -163,7 +177,7 @@
                 72.0
             ],
             "role": "Universal",
-            "scope": "FullProfile only"
+            "scope": "FullProfile only (not drawn in production)"
         },
         {
             "id": "controls.scene_previous",
@@ -174,6 +188,7 @@
                 0.07999999821186066,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 25.599998474121094,
                 648.0,
@@ -181,7 +196,7 @@
                 43.20000076293945
             ],
             "role": "Controls",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         },
         {
             "id": "controls.scene_next",
@@ -192,6 +207,7 @@
                 0.07999999821186066,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 153.59999084472656,
                 648.0,
@@ -199,7 +215,7 @@
                 43.20000076293945
             ],
             "role": "Controls",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         },
         {
             "id": "controls.media_previous",
@@ -210,6 +226,7 @@
                 0.07999999821186066,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 307.1999816894531,
                 648.0,
@@ -217,7 +234,7 @@
                 43.20000076293945
             ],
             "role": "Controls",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         },
         {
             "id": "controls.media_next",
@@ -228,6 +245,7 @@
                 0.07999999821186066,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 435.20001220703125,
                 648.0,
@@ -235,7 +253,7 @@
                 43.20000076293945
             ],
             "role": "Controls",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         },
         {
             "id": "controls.reseed",
@@ -246,6 +264,7 @@
                 0.10000000149011612,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 588.7999877929688,
                 648.0,
@@ -253,7 +272,7 @@
                 43.20000076293945
             ],
             "role": "Controls",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         },
         {
             "id": "flexible.primary",
@@ -264,6 +283,7 @@
                 0.3199999928474426,
                 0.1599999964237213
             ],
+            "production": true,
             "px": [
                 844.800048828125,
                 460.79998779296875,
@@ -271,7 +291,7 @@
                 115.19999694824219
             ],
             "role": "Flexible",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         },
         {
             "id": "flexible.secondary_a",
@@ -282,6 +302,7 @@
                 0.15000000596046448,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 844.800048828125,
                 583.2000122070313,
@@ -289,7 +310,7 @@
                 43.20000076293945
             ],
             "role": "Flexible",
-            "scope": "FullProfile only"
+            "scope": "production (Mode Navigation v0.1)"
         },
         {
             "id": "flexible.secondary_b",
@@ -300,6 +321,7 @@
                 0.15000000596046448,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 1062.4000244140625,
                 583.2000122070313,
@@ -307,7 +329,7 @@
                 43.20000076293945
             ],
             "role": "Flexible",
-            "scope": "FullProfile only"
+            "scope": "production (HUD Clock v0.1)"
         },
         {
             "id": "media_viewport",
@@ -318,6 +340,7 @@
                 0.6000000238418579,
                 0.699999988079071
             ],
+            "production": true,
             "px": [
                 25.599998474121094,
                 115.19999694824219,
@@ -325,7 +348,7 @@
                 504.0
             ],
             "role": "Universal",
-            "scope": "both (mesh, always drawn)"
+            "scope": "production (mesh, always drawn; historical MinimalSlice-13)"
         },
         {
             "id": "overlay.health",
@@ -336,6 +359,7 @@
                 0.20000000298023224,
                 0.05999999865889549
             ],
+            "production": true,
             "px": [
                 25.599998474121094,
                 21.600000381469727,
@@ -343,7 +367,7 @@
                 43.20000076293945
             ],
             "role": "Overlay",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         },
         {
             "id": "overlay.transition",
@@ -354,6 +378,7 @@
                 0.20000000298023224,
                 0.07999999821186066
             ],
+            "production": true,
             "px": [
                 25.599998474121094,
                 72.0,
@@ -361,7 +386,7 @@
                 57.599998474121094
             ],
             "role": "Overlay",
-            "scope": "MinimalSlice-13+FullProfile"
+            "scope": "production (historical MinimalSlice-13)"
         }
     ],
     "source": "derived from live HudWireframeRenderer/HudRegionCatalog at export time; HUD-006 ecopunk-hud-blueprint / 1"

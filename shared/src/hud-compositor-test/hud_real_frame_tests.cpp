@@ -778,12 +778,12 @@ void test_real_scene_position() {
 	frame.sceneManager.availableSceneCount = 5;
 	HUD_CHECK(resolver.resolve("scene.index", frame)->numberValue == 2.0f); // one-based
 	HUD_CHECK(resolver.resolve("scene.count", frame)->numberValue == 5.0f);
-	HUD_CHECK_EQ_STR(resolver.resolve("scene.position", frame)->textValue, "2/5");
+	HUD_CHECK_EQ_STR(resolver.resolve("scene.position", frame)->textValue, "[Scene 2/5]");
 
 	// Reduced harness rosters report their own real size.
 	frame.sceneManager.activeSceneIndex = 2;
 	frame.sceneManager.availableSceneCount = 3;
-	HUD_CHECK_EQ_STR(resolver.resolve("scene.position", frame)->textValue, "3/3");
+	HUD_CHECK_EQ_STR(resolver.resolve("scene.position", frame)->textValue, "[Scene 3/3]");
 
 	// An index outside the registry is never displayed.
 	frame.sceneManager.activeSceneIndex = 5;
@@ -852,7 +852,46 @@ void test_real_next_mode_availability() {
 	HUD_CHECK(single && single->present && !single->boolValue);
 }
 
+// HUD & Scene Experience v0.3 — scene controls, IMMERSIVE, playback time.
+void test_real_v03_controls_and_playback_time() {
+	HudRealFrameResolver resolver;
+	HudFrameData frame = makeMinimalRealFrame();
+
+	// One scene (or FakeScene path): scene controls unsupported -> hidden.
+	frame.sceneManager.availableSceneCount = 1;
+	HUD_CHECK(!resolver.resolve("control.scene.next.available", frame)->present);
+	// Five scenes, Idle: enabled; mid-transition: disabled (still visible).
+	frame.sceneManager.availableSceneCount = 5;
+	auto next = resolver.resolve("control.scene.next.available", frame);
+	auto prev = resolver.resolve("control.scene.previous.available", frame);
+	HUD_CHECK(next->present && next->boolValue && prev->present && prev->boolValue);
+	frame.sceneManager.transitionPhase = SceneTransitionPhase::Loading;
+	auto loading = resolver.resolve("control.scene.next.available", frame);
+	HUD_CHECK(loading->present && !loading->boolValue);
+	HUD_CHECK(!resolver.resolve("control.runtime.immersive.available", frame)->boolValue); // not during transitions
+	frame.sceneManager.transitionPhase = SceneTransitionPhase::Idle;
+	HUD_CHECK(resolver.resolve("control.runtime.immersive.available", frame)->boolValue);
+	frame.sceneManager.activeSceneId.clear();
+	HUD_CHECK(!resolver.resolve("control.runtime.immersive.available", frame)->boolValue);
+
+	// Playback time from canonical Shared Video position/duration.
+	HUD_CHECK(!resolver.resolve("media.playback.time", frame)->present); // no video status
+	VideoPlaybackStatus v;
+	frame.video = v;
+	HUD_CHECK(!resolver.resolve("media.playback.time", frame)->present); // nothing loaded
+	frame.video->positionSeconds = 42.4f;
+	HUD_CHECK_EQ_STR(resolver.resolve("media.playback.time", frame)->textValue, "0:42 / --:--"); // unknown duration
+	frame.video->durationSeconds = 90.0f;
+	HUD_CHECK_EQ_STR(resolver.resolve("media.playback.time", frame)->textValue, "0:42 / 1:30");
+	frame.video->positionSeconds = 3725.0f;
+	frame.video->durationSeconds = 7200.0f;
+	HUD_CHECK_EQ_STR(resolver.resolve("media.playback.time", frame)->textValue, "1:02:05 / 2:00:00");
+	frame.video->durationSeconds = 0.0f;
+	HUD_CHECK_EQ_STR(resolver.resolve("media.playback.time", frame)->textValue, "1:02:05 / --:--"); // zero duration is unknown
+}
+
 int main() {
+	test_real_v03_controls_and_playback_time();
 	test_real_scene_position();
 	test_real_mode_sources();
 	test_real_next_mode_availability();

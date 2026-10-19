@@ -7,6 +7,7 @@
 #include "ofUtils.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -18,6 +19,17 @@ const std::string kTemporalId = TemporalProductionScene::kSceneId;
 const std::string kBlueprintId = BlueprintProductionScene::kSceneId;
 constexpr const char* kCaptureDir = "captures/parity-soak";
 constexpr float kStepTimeoutSeconds = 45.0f;
+// (A) Bound on the incoming scene publishing semantic data (needs real media)
+// after a switch request. Observed latency is logged per leg; Temporal's
+// worst observed reactivation includes a ~2.3 s frame. Kept well inside the
+// 45 s step timeout so a readiness failure is reported as itself.
+constexpr float kMediaReadyTimeoutSeconds = 20.0f;
+// (B) Attempts at a timer-bounded Blueprint cycle (each Regenerate draws a new
+// random CycleMode, 50/50): exhausting 10 is a 1-in-1024 legitimate outcome,
+// reported as such rather than passed.
+constexpr int kBoundedCycleAttempts = 10;
+constexpr float kBoundedSampleSeconds = 1.0f;   // advancing progress required for this long
+constexpr float kUnboundedCycleSeconds = 1.0f;  // a cycle showing no progress this long is not timer-bounded
 
 bool hasCommand(const SceneCapabilities& caps, SceneCommand command) {
 	return std::any_of(caps.commands.begin(), caps.commands.end(),
@@ -132,17 +144,58 @@ void ParitySoakHarness::addSwitchLeg(const std::string& sceneId, const std::stri
 	const bool pressSwitch = !script_.empty();
 	if (pressSwitch) {
 		script_.push_back({label + " switch", [this] { return framesInStep_ >= 2; }, [this] {
+			// Remember what the outgoing scene's clock read, to tell a fresh
+			// start from carry-over when it is visited again.
+			const HudFrameData& out = runtime_.currentHudFrameData();
+			if (out.scene.semantic) {
+				exitActiveSeconds_[out.scene.sceneId] = out.scene.semantic->timing.activeSeconds;
+				exitGeneration_[out.scene.sceneId] = out.scene.semantic->timing.generation;
+			}
 			maxFrameSeconds_ = 0.0f;
+			switchRequestWall_ = ofGetElapsedTimef();
 			runtime_.keyPressed(']'); // real InputRouter -> RuntimeCommand::NextScene
 		}});
 	}
+	// Bounded wait for media readiness (semantic data needs a real frame):
+	// a timeout is reported as its own failure, never skipped.
 	script_.push_back({label + " live", [this, sceneId] {
-			return idleOn(sceneId) && runtime_.currentHudFrameData().scene.semantic.has_value() && framesInStep_ >= 2;
+			const bool ready = idleOn(sceneId) && framesInStep_ >= 2 && runtime_.currentHudFrameData().scene.semantic.has_value();
+			// The bound runs from the switch request whatever the phase, so a
+			// scene stuck in Loading (e.g. a blocked media open) is reported as
+			// a readiness failure, not a generic step timeout.
+			return ready || ofGetElapsedTimef() - switchRequestWall_ > kMediaReadyTimeoutSeconds;
 		},
 		[this, sceneId, label, pressSwitch] {
 			const HudFrameData& f = runtime_.currentHudFrameData();
-			check("[" + label + "] semantic time is activation-relative (fresh)",
-				f.scene.semantic->timing.activeSeconds < 4.0f, ofToString(f.scene.semantic->timing.activeSeconds, 2) + " s");
+			const float sinceRequest = ofGetElapsedTimef() - switchRequestWall_;
+			if (!idleOn(sceneId)) {
+				const SceneTransitionPhase phase = f.sceneManager.transitionPhase;
+				check("[" + label + "] scene active (transition complete) within " + ofToString(kMediaReadyTimeoutSeconds, 0) + " s",
+					false, "still " + std::string(phase == SceneTransitionPhase::Loading ? "Loading" : phase == SceneTransitionPhase::FadingOut
+						? "FadingOut" : phase == SceneTransitionPhase::FadingIn ? "FadingIn" : phase == SceneTransitionPhase::Failed
+						? "Failed" : "Idle (other scene)") + " after " + ofToString(sinceRequest, 1) + " s; max frame "
+						+ ofToString(maxFrameSeconds_ * 1000.0f, 0) + " ms");
+			} else if (!f.scene.semantic) {
+				check("[" + label + "] media ready (semantic data published) within " + ofToString(kMediaReadyTimeoutSeconds, 0) + " s",
+					false, "not ready after " + ofToString(sinceRequest, 1) + " s");
+			} else {
+				// Fresh = the clock started at THIS activation: it cannot exceed the
+				// wall time since the switch request (plus the one frame whose dt
+				// may begin before the request), and the activation generation
+				// advanced. Carry-over would add the previous visit's time.
+				const float active = f.scene.semantic->timing.activeSeconds;
+				const float bound = sinceRequest + maxFrameSeconds_ + 0.05f;
+				const auto exitIt = exitActiveSeconds_.find(sceneId);
+				const auto genIt = exitGeneration_.find(sceneId);
+				const bool newEpoch = genIt == exitGeneration_.end() || f.scene.semantic->timing.generation > genIt->second;
+				std::string detail = ofToString(active, 2) + " s <= " + ofToString(bound, 2) + " s since request; media ready after "
+					+ ofToString(sinceRequest, 2) + " s";
+				if (exitIt != exitActiveSeconds_.end()) {
+					detail += "; previous visit left at " + ofToString(exitIt->second, 2) + " s, generation "
+						+ ofToString(genIt->second) + " -> " + ofToString(f.scene.semantic->timing.generation);
+				}
+				check("[" + label + "] semantic time is activation-relative (fresh)", active >= 0.0f && active <= bound && newEpoch, detail);
+			}
 			check("[" + label + "] capabilities/effects belong to " + sceneId,
 				f.effects.has_value() == (sceneId == kTemporalId)
 				&& hasCommand(f.capabilities, SceneCommand::Regenerate) == (sceneId == kBlueprintId));
@@ -232,20 +285,71 @@ void ParitySoakHarness::buildScript() {
 
 	// -- Leg 3: Blueprint ---------------------------------------------------------
 	addSwitchLeg(kBlueprintId, "3_blueprint");
-	script_.push_back({"blueprint progress", [this] { return secondsInStep_ >= 3.0f; }, [this, blueprint] {
-		const HudFrameData& f = runtime_.currentHudFrameData();
-		const auto progress = blueprint().getPhaseProgress();
-		const SceneMetric* metric = f.scene.semantic ? findMetric(*f.scene.semantic, "scene.blueprint.metric.phase_progress") : nullptr;
-		check("Blueprint phase_progress published iff the phase is timer-bounded",
-			progress.has_value() == (metric != nullptr) && (!metric || (metric->value.value_or(-1) >= 0.0f && metric->value.value_or(2) <= 1.0f)),
-			progress ? "progress " + ofToString(*progress, 2) : "not timer-bounded");
-		capture("p05_blueprint_progress");
+	// (B) Each cycle draws its CycleMode at random: GHOST_LAYERS times its
+	// PLACEMENT phase (progress published), PERPETUAL does not (progress
+	// absent — also correct). Observe the cycle actually running; if it is
+	// not timer-bounded, start a fresh random cycle with the product's own
+	// Regenerate, up to kBoundedCycleAttempts. Require >= 1 s of strictly
+	// advancing in-range progress that the HUD metric mirrors.
+	script_.push_back({"blueprint timer-bounded phase", [this, blueprint] {
+			const auto progress = blueprint().getPhaseProgress();
+			const float dt = static_cast<float>(ofGetLastFrameTime());
+			if (progress) {
+				const HudFrameData& f = runtime_.currentHudFrameData();
+				const SceneMetric* metric = f.scene.semantic ? findMetric(*f.scene.semantic, "scene.blueprint.metric.phase_progress") : nullptr;
+				// The status was captured before this read; allow one frame of lag.
+				if (!metric || !metric->value || std::abs(*metric->value - *progress) > 0.05f) boundedMetricMismatches_++;
+				if (boundedFirstProgress_ < 0.0f) boundedFirstProgress_ = *progress;
+				else if (*progress < boundedLastProgress_) boundedProgressMonotonic_ = false;
+				boundedLastProgress_ = *progress;
+				boundedSampleSeconds_ += dt;
+				return boundedSampleSeconds_ >= kBoundedSampleSeconds && boundedLastProgress_ > boundedFirstProgress_;
+			}
+			boundedFirstProgress_ = boundedLastProgress_ = -1.0f;
+			boundedSampleSeconds_ = 0.0f;
+			unboundedCycleSeconds_ += dt;
+			if (unboundedCycleSeconds_ >= kUnboundedCycleSeconds) {
+				if (boundedAttempts_ >= kBoundedCycleAttempts) return true; // reported in act
+				boundedAttempts_++;
+				unboundedCycleSeconds_ = 0.0f;
+				note("Blueprint cycle not timer-bounded (mode " + std::string(blueprint().getCurrentMode() == CycleMode::PERPETUAL
+					? "PERPETUAL" : "GHOST_LAYERS") + "); Regenerate for a new random cycle, attempt " + ofToString(boundedAttempts_));
+				runtime_.keyPressed('2');
+			}
+			return false;
+		},
+		[this, blueprint] {
+			const bool observed = boundedSampleSeconds_ >= kBoundedSampleSeconds;
+			if (!observed) {
+				check("Blueprint timer-bounded phase observed", false,
+					"legitimate randomized outcome: no GHOST_LAYERS cycle in " + ofToString(kBoundedCycleAttempts) + " Regenerates");
+			} else {
+				check("Blueprint phase_progress advances in [0,1] under the selected phase duration, mirrored by the HUD metric",
+					boundedProgressMonotonic_ && boundedFirstProgress_ >= 0.0f && boundedLastProgress_ <= 1.0f
+						&& boundedLastProgress_ > boundedFirstProgress_ && boundedMetricMismatches_ <= 1,
+					ofToString(boundedFirstProgress_, 3) + " -> " + ofToString(boundedLastProgress_, 3) + " over "
+						+ ofToString(boundedSampleSeconds_, 2) + " s; " + ofToString(boundedAttempts_) + " Regenerate(s); "
+						+ ofToString(boundedMetricMismatches_) + " metric mismatches");
+			}
+			capture("p05_blueprint_progress");
+		}});
+	// (C) Regenerate runs synchronously inside the key path
+	// (SceneManager::dispatchSceneCommand -> BlueprintSceneCore::restartCycle
+	// -> CompositionBase::startCycle), so the reset is checked immediately,
+	// before any update could advance it or end a cycle naturally.
+	script_.push_back({"blueprint reseed", [this] { return framesInStep_ >= 2; }, [this, blueprint] {
 		seedBefore_ = blueprint().getCycleSeed();
+		cycleElapsedBeforeReseed_ = blueprint().getCycleElapsedSeconds();
 		runtime_.keyPressed('2'); // real InputRouter -> SceneCommand::Regenerate
+		seedAfterReseed_ = blueprint().getCycleSeed();
+		check("Blueprint RESEED starts a new composition cycle (new seed, cycle clock reset)",
+			seedAfterReseed_ != seedBefore_ && blueprint().getCycleElapsedSeconds() == 0.0f && cycleElapsedBeforeReseed_ > 0.0f,
+			"cycle clock " + ofToString(cycleElapsedBeforeReseed_, 2) + " s -> " + ofToString(blueprint().getCycleElapsedSeconds(), 2) + " s");
 	}});
 	script_.push_back({"blueprint reseeded", [this] { return framesInStep_ >= 3; }, [this, blueprint] {
-		check("Blueprint RESEED starts a new composition cycle", blueprint().getCycleSeed() != seedBefore_
-			&& blueprint().getCycleElapsedSeconds() < 1.0f);
+		check("Blueprint cycle runs on from the reset (same seed, clock advancing)",
+			blueprint().getCycleSeed() == seedAfterReseed_ && blueprint().getCycleElapsedSeconds() > 0.0f,
+			ofToString(blueprint().getCycleElapsedSeconds(), 3) + " s");
 		runtime_.keyPressed(OF_KEY_RIGHT); // HUD focus engages
 	}});
 	script_.push_back({"blueprint artwork", [this, blueprint] { return blueprint().getFragments().size() >= 2 || secondsInStep_ > 25.0f; },
@@ -270,8 +374,12 @@ void ParitySoakHarness::buildScript() {
 	}});
 	addSwitchLeg(kBlueprintId, "6_blueprint_again");
 	script_.push_back({"blueprint again", [this] { return framesInStep_ >= 2; }, [this, blueprint] {
+		// Same media-latency-independent bound as (A): the cycle started at
+		// this activation, so its clock cannot exceed the time since the request.
+		const float bound = ofGetElapsedTimef() - switchRequestWall_ + maxFrameSeconds_ + 0.05f;
 		check("Blueprint reactivation starts a fresh cycle (no stale imagery)",
-			blueprint().getCycleSeed() != blueprintExitSeed_ && blueprint().getCycleElapsedSeconds() < 4.0f);
+			blueprint().getCycleSeed() != blueprintExitSeed_ && blueprint().getCycleElapsedSeconds() <= bound,
+			ofToString(blueprint().getCycleElapsedSeconds(), 2) + " s <= " + ofToString(bound, 2) + " s since request");
 	}});
 	script_.push_back({"blueprint again settled", [this] { return secondsInStep_ >= 12.0f; }, [this] {
 		check("Blueprint renders after reactivation", sceneFrameNotBlack());

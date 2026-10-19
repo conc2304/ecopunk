@@ -33,6 +33,9 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"control.media.previous.label", "PREV MEDIA"},
 		{"control.media.next.label", "NEXT MEDIA"},
 		{"control.scene.reseed.label", "RESEED"},
+		// "icon:<id>" = an icon-only control: LabelWidget draws the reserved
+		// icon slot for <id> instead of text (placeholder until final SVG).
+		{"control.runtime.immersive.label", "icon:immersive"},
 
 		// -- Scene titles (displayTitleId values) ------------------------
 		{"scene.blob-region-prototype.title", "REGION FIELD STUDY"},
@@ -116,6 +119,10 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"scene.fragment.metric.movement_preset.drift", "DRIFT"},
 		{"scene.fragment.metric.movement_preset.scan", "SCAN"},
 		{"scene.fragment.metric.movement_preset.hunt", "HUNT"},
+		// v0.3: completes the five crosshair strategies (Quadrant's state
+		// badge detail shows all five).
+		{"scene.fragment.metric.movement_preset.nervous", "NERVOUS"},
+		{"scene.fragment.metric.movement_preset.orbit", "ORBIT"},
 
 		// -- Quadrant state IDs (§18.5) — already visitor-shaped per the
 		// probe's own finding (Observability Profile Part 5) ------------

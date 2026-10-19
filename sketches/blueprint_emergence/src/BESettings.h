@@ -305,16 +305,22 @@ constexpr float DESATURATE_RAMP_DURATION = BE_VALUES.DESATURATE_RAMP_DURATION; /
 
 // Slot lifecycle (quadrant-style): each of the up to MAX_FRAGMENTS slots
 // independently cycles READY -> arrive -> HOLD -> dissolve -> SILENCE -> READY.
-constexpr float SLOT_HOLD_MIN = 22.0f; // seconds a fragment is guaranteed to stay visible before it's eligible to dissolve
-constexpr float SLOT_HOLD_MAX = 45.0f;
-constexpr float SLOT_SILENCE_MIN = 10.0f; // seconds a slot waits, empty, before respawning
-constexpr float SLOT_SILENCE_MAX = 22.0f;
+// v0.3 density pass: hold 22-45 -> 26-50 s, silence 10-22 -> 5-12 s, so each
+// slot is filled ~75% of the time instead of ~60%, targeting 30-75% visible
+// occupancy (measurement method + results: ExperienceV03Harness.cpp and the
+// v0.3 report; 3-8 s silence overshot to ~78%).
+constexpr float SLOT_HOLD_MIN = 26.0f; // seconds a fragment is guaranteed to stay visible before it's eligible to dissolve
+constexpr float SLOT_HOLD_MAX = 50.0f;
+constexpr float SLOT_SILENCE_MIN = 5.0f; // seconds a slot waits, empty, before respawning
+constexpr float SLOT_SILENCE_MAX = 12.0f;
 constexpr float SLOT_DISSOLVE_FADE_MIN = 3.0f; // per-slot turnover fade, shorter than the cycle-ending DISSOLVE_FADE_*
 constexpr float SLOT_DISSOLVE_FADE_MAX = 7.0f;
 // Per-slot stagger applied once at cycle start so slots don't all attempt
 // their first spawn simultaneously when PLACEMENT phase opens.
-constexpr float SLOT_INITIAL_STAGGER_MIN = 10.0f;
-constexpr float SLOT_INITIAL_STAGGER_MAX = 20.0f;
+// v0.3: 10-20 -> 3-6 s per slot index, so the composition fills within
+// ~20 s of a cycle starting rather than up to a minute.
+constexpr float SLOT_INITIAL_STAGGER_MIN = 3.0f;
+constexpr float SLOT_INITIAL_STAGGER_MAX = 6.0f;
 
 // HUD widget — occasionally fills unoccupied grid space instead of a video
 // fragment. Independent of the 4 video slots; reserves its own occupancy

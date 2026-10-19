@@ -61,6 +61,7 @@
 #include "VideoPlaybackStatus.h"
 #include "EffectActivityStatus.h"
 #include "WallClockStatus.h"
+#include "InstallationStatus.h"
 
 #include <optional>
 
@@ -93,4 +94,9 @@ struct HudFrameData {
 	// (nullopt) when no valid OS sample/conversion exists this frame —
 	// never a fabricated or fixed-offset time.
 	std::optional<WallClockStatus> wallClock;
+
+	// Installation Controls & ENERGY v0.1: runtime-owned installation settings
+	// and observed state (auto-cycle cadence, fullscreen, ENERGY). Absent only
+	// before ExperienceRuntime has loaded its settings.
+	std::optional<InstallationStatus> installation;
 };

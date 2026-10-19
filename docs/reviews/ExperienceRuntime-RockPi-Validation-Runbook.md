@@ -2,6 +2,96 @@
 
 **Date:** 2026-10-13 · **Basis:** current working tree (HEAD `44044c1` + uncommitted RT-004 diagnostics/Temporal release correction + Rock Pi port fixes in `config.make`, `GridSystem.cpp`, `MediaCatalog.cpp`, `TFImageCycler.h`, `TFParameterPanel.cpp`, `scripts/sync-shared-shader-runtime-assets.py`). Investigation only — nothing was run on the Rock Pi, no code changed.
 
+## Quick start — run the full production experience
+
+_Added 2026-10-19 (HUD & Scene Experience v0.3)._ A plain run with no harness env vars is the production experience. It has the full five-scene roster: Blob → Temporal → Blueprint → Fragment → Quadrant, starting on Blob. It includes every mode, the HUD shell and the bottom navigation row, and saves installation settings to `bin/data/installation-settings.json`. Sections 1–5 below were written for the earlier three-scene build, so read their scene counts and keys with that in mind.
+
+### Mac (desktop)
+
+```bash
+cd ~/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime
+make Release -j8
+EXPERIENCE_RUNTIME_HUD_SKIN=dark-moss-experimental make RunRelease
+```
+
+To launch the app directly instead: `cd bin && EXPERIENCE_RUNTIME_HUD_SKIN=dark-moss-experimental ./experience_runtime.app/Contents/MacOS/experience_runtime`. Leave out `EXPERIENCE_RUNTIME_HUD_SKIN=…` to get the plain wireframe HUD.
+
+### Rock Pi 4B (manual run over SSH)
+
+The values below match `scripts/deploy.local.env` and the FireplaceWaterfall Rock Pi setup on the same board: user `conc`, host `rockpi-4b`, X display `:0` on `vt7`, HDMI output `HDMI-1`. Check `HDMI-1` with `xrandr` on the device. The app needs a real X11 display, and it has no keyboard unless one is plugged into the Rock Pi.
+
+**1. Connect and build.** Build on the device. `scripts/deploy.sh` can also sync the tree and build it remotely.
+
+```bash
+ssh conc@rockpi-4b
+cd ~/of_v0.12.1_linuxaarch64_release/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime
+make Release -j4
+```
+
+**2. Free the display.** Only one GL app can own the screen. If the FireplaceWaterfall kiosk service is running, it owns X on `:0`. Stopping it also stops its X server. This is an operator decision:
+
+```bash
+systemctl is-active fireplace-waterfall.service      # "active" means it owns the display
+sudo systemctl stop fireplace-waterfall.service      # operator only; `start` puts the kiosk back afterwards
+pgrep -a Xorg                                        # should print nothing before step 3a
+pgrep -af bin/experience_runtime                     # stop any older instance first (Esc on its keyboard, or pkill)
+```
+
+**3a. No X running: start X with the experience as its only client.** This is the same pattern as FireplaceWaterfall's `deploy/x11/xinitrc.template`. First create the session script once:
+
+```bash
+cat > ~/.xinitrc-ecopunk <<'EOF'
+#!/bin/bash
+command -v openbox >/dev/null && openbox &
+xset s off; xset -dpms; xset s noblank           # no screen blanking
+xrandr --output HDMI-1 --mode 1920x1080 --rate 60 || true
+cd ~/of_v0.12.1_linuxaarch64_release/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime
+exec env EXPERIENCE_RUNTIME_HUD_SKIN=dark-moss-experimental ./bin/experience_runtime >> ~/ecopunk-run.log 2>&1
+EOF
+chmod +x ~/.xinitrc-ecopunk
+```
+
+Then start X on the console VT. `nohup` keeps it running after SSH disconnects:
+
+```bash
+nohup startx ~/.xinitrc-ecopunk -- :0 vt7 -keeptty -nolisten tcp > ~/ecopunk-startx.log 2>&1 &
+tail -f ~/ecopunk-run.log                        # app log; Ctrl-C stops tailing, not the app
+```
+
+Starting X from an SSH session (not a console) may fail with _"Only console users are allowed to run the X server"_. That is the Xorg wrapper policy. Two ways around it:
+
+- Start from the Rock Pi's own console/keyboard: the same `startx ~/.xinitrc-ecopunk -- :0 vt7` without `nohup`.
+- Have the operator allow it once, in `/etc/X11/Xwrapper.config`: `allowed_users=anybody` and `needs_root_rights=yes`. That is a system change; don't make it without the device owner's approval.
+
+**3b. X already running (desktop session or a kept-alive X):** attach to that display and run the binary directly:
+
+```bash
+export DISPLAY=:0
+export XAUTHORITY=$(ps -ef | grep '[X]org' | grep -o -- '-auth [^ ]*' | cut -d' ' -f2)   # only if X was started by startx/another session
+cd ~/of_v0.12.1_linuxaarch64_release/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime
+nohup env EXPERIENCE_RUNTIME_HUD_SKIN=dark-moss-experimental ./bin/experience_runtime > ~/ecopunk-run.log 2>&1 &
+```
+
+**4. Fullscreen, stop, restore.**
+
+- The window opens at 1280×720. Press `f` on the Rock Pi keyboard for fullscreen. Or turn on _launch fullscreen_ in the installation settings, which persists in `bin/data/installation-settings.json`.
+- To stop: `Esc` on the Rock Pi keyboard, or over SSH `pkill -f bin/experience_runtime`. In 3a, X exits with the app.
+- To put the kiosk back: `sudo systemctl start fireplace-waterfall.service` (operator).
+- With no keyboard attached, keys can be sent with `xdotool`; see §1 _Sending keys to a running instance_.
+
+### Keys (v0.3)
+
+| Key | Action |
+| --- | --- |
+| `[` / `]` | previous / next scene |
+| `p` / `n` | previous / next media |
+| `m` | NEXT MODE (pattern / mode / strategy of the current scene) |
+| `2` | Regenerate (Blueprint; the RESEED button is gone) · `1` reset the current scene |
+| `e` | ENERGY adjustment: arrows adjust, Enter closes |
+| `f` / `h` / `Esc` | fullscreen / HUD on-off / quit |
+| arrows + `Enter` | HUD focus row: PREV SCENE · NEXT SCENE · PREV MEDIA · NEXT MEDIA · IMMERSIVE, then the mode panel (NEXT MODE) |
+| IMMERSIVE (focus it + `Enter`) | scene over the whole window, HUD hidden, no OS fullscreen. Any key or click exits, and that first input does nothing else |
+
 ## Summary
 
 - The binary registers **three production scenes**: `blob-region-prototype` (Blob), `temporal-fields` (Temporal), `blueprint_emergence` (Blueprint) — ring order Blob → Temporal → Blueprint (`ExperienceRuntime.cpp:27-38`). Fragment Trail (RT-006) is **not** in this tree.

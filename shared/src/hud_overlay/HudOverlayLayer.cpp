@@ -8,7 +8,7 @@ void HudOverlayLayer::setup(float width, float height) {
 	canvasW = width;
 	canvasH = height;
 
-	radarStation.setBounds(canvasW - 200.0f, 20.0f, 180.0f, 180.0f);
+	layoutRadar();
 	breathingTicks.setup();
 	breathingTicks.setBounds(0.0f, 0.0f, canvasW, canvasH);
 	accentBurst.setBounds(0.0f, 0.0f, canvasW, canvasH);
@@ -49,8 +49,8 @@ void HudOverlayLayer::setup(float width, float height) {
 		// Near the radar ring's edge — see RadarPingOrganism.h's comment on
 		// why this doesn't read the wedge's live angle in this phase.
 		float angle = ofRandom(TWO_PI);
-		ofVec2f ringCenterPx = { canvasW - 110.0f, 110.0f };
-		float ringRadiusPx = 180.0f * 0.42f;
+		ofVec2f ringCenterPx = radarStation.getBounds().center();
+		float ringRadiusPx = radarStation.getBounds().minDim() * 0.42f;
 		ofVec2f p = { (ringCenterPx.x + std::cos(angle) * ringRadiusPx) / canvasW,
 			(ringCenterPx.y + std::sin(angle) * ringRadiusPx) / canvasH };
 		radarPing.trigger(ofClamp(p.x, 0.02f, 0.98f), ofClamp(p.y, 0.02f, 0.98f));
@@ -71,7 +71,7 @@ void HudOverlayLayer::setup(float width, float height) {
 void HudOverlayLayer::windowResized(float width, float height) {
 	canvasW = width;
 	canvasH = height;
-	radarStation.setBounds(canvasW - 200.0f, 20.0f, 180.0f, 180.0f);
+	layoutRadar();
 	breathingTicks.setBounds(0.0f, 0.0f, canvasW, canvasH);
 	accentBurst.setBounds(0.0f, 0.0f, canvasW, canvasH);
 	frameCounter.setBounds(0.0f, 0.0f, canvasW, canvasH);
@@ -80,6 +80,21 @@ void HudOverlayLayer::windowResized(float width, float height) {
 	faultCascade.setBounds(0.0f, 0.0f, canvasW, canvasH);
 	radarPing.setBounds(0.0f, 0.0f, canvasW, canvasH);
 	handshake.setBounds(0.0f, 0.0f, canvasW, canvasH);
+}
+
+void HudOverlayLayer::setSafeArea(const ofRectangle& area) {
+	safeArea = area;
+	layoutRadar();
+}
+
+void HudOverlayLayer::layoutRadar() {
+	// Top-right corner of the visible area: the whole canvas unless a
+	// consumer set a safe area (e.g. the part of the canvas a cover-cropped
+	// viewport actually shows).
+	const bool hasSafe = safeArea.getWidth() > 0.0f && safeArea.getHeight() > 0.0f;
+	const float right = hasSafe ? safeArea.getRight() : canvasW;
+	const float top = hasSafe ? safeArea.getTop() : 0.0f;
+	radarStation.setBounds(right - 200.0f, top + 20.0f, 180.0f, 180.0f);
 }
 
 void HudOverlayLayer::applyThemeIfChanged(Palette palette) {
@@ -123,6 +138,7 @@ void HudOverlayLayer::update(float dt, const HudOverlayDialState& dials) {
 
 	hud::RadarStationOptions rso;
 	rso.rotationPeriod = ofLerp(9.0f, 2.5f, ofClamp(dials.intensity, 0.0f, 1.0f));
+	rso.rangeRings = radarRangeRings;
 	radarStation.setOptions(rso);
 	radarStation.update(dt);
 	breathingTicks.update(dt);

@@ -91,6 +91,9 @@ public:
 	// Blueprint's composition-cycle start. Works whether or not the timer is on.
 	bool advanceAtBoundary();
 	bool automaticAdvanceEnabled() const { return policy_.automaticAdvanceEnabled(); }
+	// Installation Controls v0.1 — see VideoSelectionPolicy::setMinimumDwellSeconds().
+	void setMinimumDwellSeconds(float seconds) { policy_.setMinimumDwellSeconds(seconds); }
+	float minimumDwellSeconds() const { return policy_.minimumDwellSeconds(); }
 
 	const ofTexture* currentTexture() const;
 	const ofPixels* currentPixels() const;

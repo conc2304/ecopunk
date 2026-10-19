@@ -20,7 +20,7 @@ void ChannelStripWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 	ofEnableAlphaBlending();
 
 	if (!input.captionText.empty()) {
-		ofSetColor(colors.muted);
+		ofSetColor(captionColor(colors, input.findRole("channel0")));
 		drawText(input.captionText, bounds.x, bounds.y + wu(bounds, 10.0f), wu(bounds, 0.5f, 120.0f));
 	}
 

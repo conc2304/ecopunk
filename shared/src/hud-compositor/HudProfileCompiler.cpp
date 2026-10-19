@@ -95,7 +95,9 @@ void HudProfileCompiler::validateAndAppend(const std::string& sceneId, const Hud
 	if (binding.widgetType == HudWidgetType::Label) {
 		const HudSourceRef* text = binding.findSource("text");
 		bool hasTextSource = text && !text->sourceId.empty();
-		if (!hasTextSource && !binding.labelVocabularyId) {
+		const HudSourceRef* progress = binding.findSource("progress"); // progress-bar Label (v0.3)
+		const bool hasProgressSource = progress && !progress->sourceId.empty();
+		if (!hasTextSource && !binding.labelVocabularyId && !hasProgressSource) {
 			addIssue(out, HudProfileIssueSeverity::Error, HudProfileIssueKind::LabelMissingTextSource,
 				binding.bindingId, "Label binding needs a 'text' role source or labelVocabularyId");
 			compiled.valid = false;

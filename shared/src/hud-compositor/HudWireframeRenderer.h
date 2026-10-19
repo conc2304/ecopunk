@@ -201,6 +201,11 @@ public:
 	// first part alone — tooling provenance only, never a draw-time gate.
 	static bool regionInMinimalSlice(const std::string& regionId);
 	static bool regionInOriginalMinimalSlice(const std::string& regionId);
+	// Which production allowlist part a binding region belongs to, for
+	// tooling (HudArtReferenceExporter): "original" (historical §13 slice),
+	// "living_hud", "clock", "navigation"; nullptr = FullProfile only.
+	// media_viewport is not a binding region (always drawn) -> nullptr.
+	static const char* productionProvenance(const std::string& regionId);
 
 private:
 	void resolveBinding(const HudCompiledBinding& compiled, const FakeHudFrameData& frame);

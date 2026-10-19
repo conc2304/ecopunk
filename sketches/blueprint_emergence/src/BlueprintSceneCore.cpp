@@ -110,6 +110,15 @@ void BlueprintSceneCore::restartCycle() {
 	composition_.startCycle();
 }
 
+bool BlueprintSceneCore::requestNextMode() {
+	const bool previousSkip = skipNextCycleMediaAdvance_;
+	const int cycleStartsBefore = cycleStartCount_;
+	skipNextCycleMediaAdvance_ = true; // a manual mode change keeps the current media
+	const bool changed = composition_.requestNextMode();
+	if (cycleStartCount_ == cycleStartsBefore) skipNextCycleMediaAdvance_ = previousSkip; // callback not fired (PERPETUAL entry / refused)
+	return changed;
+}
+
 void BlueprintSceneCore::wireTriggerResponses() {
 	triggerBus_.addListener(static_cast<int>(BETrigger::LONG_SILENCE), [this](int) {
 		annotations_.triggerCodeTextSpawn();

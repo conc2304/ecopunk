@@ -103,10 +103,11 @@ SceneHudStatus BlueprintProductionScene::hudStatus() const {
 		status.semantic = buildSemanticData();
 	}
 
-	// Scene & Pattern Navigation: BEComposition's two CycleModes, still
-	// chosen at random per cycle (selectNextMode()). Displayed read-only —
-	// NextMode is deliberately NOT advertised until manual selection is
-	// designed, so the HUD shows the mode panel as DISABLED.
+	// Scene & Pattern Navigation: BEComposition's two CycleModes. Each cycle
+	// still draws its mode at random (selectNextMode()); NEXT MODE
+	// (BEComposition::requestNextMode()) switches the running cycle's mode
+	// until the next natural mode point. Read live, so the status changes
+	// exactly when the composition's mode does.
 	if (core_.didSetup() && core_.isActive()) {
 		const CycleMode current = core_.composition().getCurrentMode();
 		SceneModeStatus mode;
@@ -168,6 +169,15 @@ SceneCapabilities BlueprintProductionScene::capabilities() const {
 	regenCmd.prominent = false;
 	caps.commands.push_back(regenCmd);
 
+	// NextMode: manual GHOST_LAYERS <-> PERPETUAL (separate from Regenerate,
+	// which restarts the whole cycle and re-rolls the mode at random).
+	SceneCommandDescriptor modeCmd;
+	modeCmd.command = SceneCommand::NextMode;
+	modeCmd.label = "Next mode";
+	modeCmd.shortLabel = "NEXT MODE";
+	modeCmd.prominent = false;
+	caps.commands.push_back(modeCmd);
+
 	// Reset: not advertised (product direction forbids a visible reset
 	// control); still honored via executeCommand(), same split as Blob.
 	return caps;
@@ -186,6 +196,11 @@ bool BlueprintProductionScene::executeCommand(SceneCommand command) {
 			if (!core_.isActive()) return false;
 			core_.restartCycle();
 			return true;
+		case SceneCommand::NextMode:
+			// GHOST_LAYERS <-> PERPETUAL; refused during DISSOLVE (the
+			// composition's own mode change). Never advances shared media.
+			if (!core_.isActive()) return false;
+			return core_.requestNextMode();
 		case SceneCommand::Reset:
 			reset();
 			return true;

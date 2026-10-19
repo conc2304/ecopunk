@@ -25,7 +25,7 @@ void MetadataCardWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 	float localMaxWidth = std::max(0.0f, bounds.width - pad * 2.0f);
 
 	if (!input.captionText.empty()) {
-		ofSetColor(scaledAlpha(colors.muted, opacity * 0.9f));
+		ofSetColor(scaledAlpha(captionColor(colors, titleRole), opacity * 0.9f));
 		const auto& t = textCache_.truncateToWidth(input.captionText, localMaxWidth);
 		drawText(t.text, bounds.x + pad, y);
 		y += wu(bounds, 14.0f);

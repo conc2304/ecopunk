@@ -41,6 +41,11 @@ public:
 
 	CrosshairState getState() const { return state; }
 	int getCurrentPreset() const { return presetIndex; }
+	// Installation ENERGY v0.1: scales how fast the crosshair's noise path
+	// advances (0.35x at 0, 1x at the default 0.5, 2.2x at 1). Continuous —
+	// the position follows the accumulated noise time, so changes never jump.
+	void setEnergy(float energy01);
+	float getEnergySpeedScale() const { return energySpeedScale; }
 	int getPresetCount() const { return static_cast<int>(presets.size()); }
 	const std::string & getPresetName(int index) const { return presets[static_cast<size_t>(index)].name; }
 
@@ -48,6 +53,7 @@ private:
 	std::vector<CrosshairPreset> presets;
 	int presetIndex = 0;
 	float noiseT = 0.0f;
+	float energySpeedScale = 1.0f;
 	float seedXA = 0.0f, seedXB = 100.0f;
 	float seedYA = 200.0f, seedYB = 300.0f;
 
@@ -63,6 +69,18 @@ private:
 	float attractY = 360.f;
 	float attractForce = 0.f;
 	static constexpr float ATTRACT_LERP = 0.02f;
+	// v0.3 smoothing (frame-rate independent). Time constants in seconds.
+	static constexpr float ATTRACT_SMOOTH_SECONDS = 0.6f;
+	static constexpr float SPEED_SMOOTH_SECONDS = 0.15f;
+	static constexpr float DASH_HYSTERESIS = 0.8f; // dashed arms drop out below 0.8x HIGH_THRESH
+	glm::vec2 smoothedAttract = { 640.f, 360.f };
+	float smoothedAttractForce = 0.f;
+	bool attractInitialised = false;
+	float smoothedSpeed = 0.f;
+	bool dashArms = false;
+	void smoothAttractor(float dt);
+	static float smoothTowards(float current, float target, float seconds, float dt);
+	static float perFrameRate(float rateAt60, float dt);
 
 	// Line metrics
 	float lineWidth = 10.f;

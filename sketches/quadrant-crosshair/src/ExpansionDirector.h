@@ -26,7 +26,7 @@ struct ExpansionSequence {
 class ExpansionDirector {
 public:
     void setup();
-    // crosshairSpeed: px/frame from CrosshairState::speed, used to pace travel naturally
+    // crosshairSpeed: CrosshairState::speed (px per 60 Hz frame, smoothed — v0.3), used to pace travel naturally
     void update(float dt, glm::vec2 currentCrosshairPos, float crosshairSpeed);
 
     void trigger(glm::vec2 currentCrosshairPos);

@@ -108,6 +108,19 @@ void ofApp::setup() {
 		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
 		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
 		&& !temporalWarmRequested && !threeSceneRequested && ModeNavigationHarness::isRequested();
+	// Installation Controls & ENERGY check: lowest priority; full roster.
+	bool installationHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
+		&& !temporalWarmRequested && !threeSceneRequested && !modeHarnessRequested && InstallationHarness::isRequested();
+	// HUD & Scene Experience v0.3 check: lowest priority; full roster.
+	bool v03HarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
+		&& !temporalWarmRequested && !threeSceneRequested && !modeHarnessRequested && !installationHarnessRequested
+		&& ExperienceV03Harness::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
 		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
@@ -154,6 +167,19 @@ void ofApp::setup() {
 		}
 	}
 	if (Rt004FramePhaseProbe::isRequested()) framePhaseProbe = std::make_unique<Rt004FramePhaseProbe>(runtime);
+	// Installation settings persist only for normal runs: harnesses never
+	// read or overwrite the installation's file. An explicit
+	// EXPERIENCE_RUNTIME_INSTALLATION_SETTINGS path always wins.
+	{
+		const bool anyHarness = glHarnessRequested || blobLifecycleRequested || blobSoakRequested || temporalLifecycleRequested
+			|| switchHarnessRequested || acceptanceRequested || skinHarnessRequested || artExportRequested || focusHarnessRequested
+			|| blueprintHarnessRequested || blueprintHudHarnessRequested || paritySoakRequested || resumeWindowRequested
+			|| cadenceRequested || temporalWarmRequested || threeSceneRequested || modeHarnessRequested || installationHarnessRequested || v03HarnessRequested
+			|| Rt004StallDriver::isRequested() || BlobRenderPathAbHarness::isRequested() || BlobEffectCapacityBench::isRequested();
+		const char* settingsPath = std::getenv("EXPERIENCE_RUNTIME_INSTALLATION_SETTINGS");
+		runtime.setInstallationSettingsPath(settingsPath ? std::string(settingsPath)
+			: anyHarness ? std::string() : ofToDataPath("installation-settings.json", true));
+	}
 	runtime.setup();
 	if (framePhaseProbe) framePhaseProbe->afterRuntimeSetup(); // limiter/vsync controls apply after the runtime's own baseline
 
@@ -199,6 +225,10 @@ void ofApp::setup() {
 		threeSceneHarness = std::make_unique<ThreeSceneCircuitHarness>(runtime);
 	} else if (modeHarnessRequested) {
 		modeHarness = std::make_unique<ModeNavigationHarness>(runtime);
+	} else if (installationHarnessRequested) {
+		installationHarness = std::make_unique<InstallationHarness>(runtime);
+	} else if (v03HarnessRequested) {
+		v03Harness = std::make_unique<ExperienceV03Harness>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
 		stallDriver = std::make_unique<Rt004StallDriver>(runtime);
 	}
@@ -260,6 +290,12 @@ void ofApp::update() {
 	if (modeHarness) {
 		modeHarness->step(ofGetLastFrameTime());
 	}
+	if (installationHarness) {
+		installationHarness->step(ofGetLastFrameTime());
+	}
+	if (v03Harness) {
+		v03Harness->step(ofGetLastFrameTime());
+	}
 	if (blobHarness) {
 		blobHarness->step(ofGetLastFrameTime());
 	}
@@ -280,7 +316,7 @@ void ofApp::update() {
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
 	if (Rt004FramePhaseProbe::presentOnlyControl()) { ofClear(0, 0, 0, 255); return; }
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness && !modeHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness && !modeHarness && !installationHarness && !v03Harness) {
 		runtime.draw();
 
 		// Blob Experiment 2: serve the bench's capture requests (scene-only
@@ -304,6 +340,10 @@ void ofApp::draw() {
 void ofApp::exit() {
 	runtime.exit();
 	rt004::Probe::get().writeSummary();
+}
+
+void ofApp::mousePressed(int, int, int) {
+	runtime.pointerPressed(); // device input: exits IMMERSIVE (only effect today)
 }
 
 void ofApp::keyPressed(int key) {

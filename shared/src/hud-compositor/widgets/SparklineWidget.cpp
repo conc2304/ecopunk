@@ -15,7 +15,7 @@ void SparklineWidget::draw(const ofRectangle& bounds, const HudWidgetColors& col
 
 	if (!input.captionText.empty()) {
 		ofFill();
-		ofSetColor(scaledAlpha(colors.muted, 1.0f));
+		ofSetColor(scaledAlpha(captionColor(colors, input.findRole("value")), 1.0f));
 		// Fixed native pixel-space budget (see HudWidgetDrawUtils.h's v1
 		// typography strategy comment) — not scale-adjusted.
 		const auto& caption = textCache_.truncateToWidth(input.captionText, bounds.width);

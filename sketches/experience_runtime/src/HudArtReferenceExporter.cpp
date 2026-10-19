@@ -36,17 +36,31 @@ const char* roleName(HudRegionRole r) {
 // Production presentation membership, from the renderer's own rules:
 // media_viewport is drawn unconditionally (HudWireframeRenderer::draw(), mesh
 // block runs before and independent of RenderScope); binding regions follow
-// regionInMinimalSlice(), whose original-13 part regionInOriginalMinimalSlice()
-// separates from the Living HUD v0.1 activations.
-const char* const kScopeMesh = "both (mesh, always drawn)";
-const char* const kScopeOriginal = "MinimalSlice-13+FullProfile";
-const char* const kScopeLivingHud = "LivingHUD-v0.1+FullProfile";
-const char* const kScopeFullOnly = "FullProfile only";
+// the one production allowlist, split by provenance
+// (HudWireframeRenderer::productionProvenance()): the historical 13-region
+// MinimalSlice, then Living HUD v0.1, HUD Clock v0.1 and Mode Navigation v0.1.
+const char* const kScopeMesh = "production (mesh, always drawn; historical MinimalSlice-13)";
+const char* const kScopeOriginal = "production (historical MinimalSlice-13)";
+const char* const kScopeLivingHud = "production (Living HUD v0.1)";
+const char* const kScopeClock = "production (HUD Clock v0.1)";
+const char* const kScopeNavigation = "production (Mode Navigation v0.1)";
+const char* const kScopeFullOnly = "FullProfile only (not drawn in production)";
 
 std::string scopeOf(const std::string& id) {
 	if (id == "media_viewport") return kScopeMesh;
-	if (HudWireframeRenderer::regionInOriginalMinimalSlice(id)) return kScopeOriginal;
-	return HudWireframeRenderer::regionInMinimalSlice(id) ? kScopeLivingHud : kScopeFullOnly;
+	const char* part = HudWireframeRenderer::productionProvenance(id);
+	if (part == nullptr) return kScopeFullOnly;
+	const std::string p(part);
+	return p == "original" ? kScopeOriginal : p == "living_hud" ? kScopeLivingHud : p == "clock" ? kScopeClock : kScopeNavigation;
+}
+
+ofColor scopeColor(const std::string& scope, HudRegionRole role, int alpha) {
+	if (scope == kScopeFullOnly) return ofColor(230, 150, 40, alpha);
+	if (scope == kScopeLivingHud) return ofColor(150, 200, 60, alpha);
+	if (scope == kScopeClock) return ofColor(80, 150, 240, alpha);
+	if (scope == kScopeNavigation) return ofColor(235, 215, 70, alpha);
+	if (role == HudRegionRole::Overlay) return ofColor(200, 90, 200, alpha);
+	return ofColor(40, 170, 160, alpha);
 }
 
 std::string rectText(const ofRectangle& r) {
@@ -127,14 +141,21 @@ void HudArtReferenceExporter::exportAll() {
 
 	check("no skin active (comparison frame is the plain wireframe)", !bridge.skinLoader().active().has_value());
 	check("catalog has 19 regions", regions.size() == 19, ofToString(regions.size()));
-	int originalCount = 0, productionCount = 0;
+	int originalCount = 0, productionCount = 0, livingCount = 0, clockCount = 0, navCount = 0;
 	for (const auto& reg : regions) {
 		const std::string scope = scopeOf(reg.regionId);
 		originalCount += scope == kScopeMesh || scope == kScopeOriginal;
 		productionCount += scope != kScopeFullOnly;
+		livingCount += scope == kScopeLivingHud;
+		clockCount += scope == kScopeClock;
+		navCount += scope == kScopeNavigation;
 	}
-	check("original MinimalSlice presentation has 13 regions", originalCount == 13, ofToString(originalCount));
-	check("current production presentation has 15 regions", productionCount == 15, ofToString(productionCount));
+	const int fullOnlyCount = int(regions.size()) - productionCount;
+	check("historical MinimalSlice presentation has 13 regions", originalCount == 13, ofToString(originalCount));
+	check("current production presentation has 17 regions (13 + 2 Living HUD + clock + mode)",
+		productionCount == 17 && livingCount == 2 && clockCount == 1 && navCount == 1, ofToString(productionCount));
+	check("flexible.secondary_a = Mode Navigation, flexible.secondary_b = Clock",
+		scopeOf("flexible.secondary_a") == kScopeNavigation && scopeOf("flexible.secondary_b") == kScopeClock);
 
 	// -- Real runtime frame (the frame just drawn by runtime_.draw()) ----------
 	ofImage runtimeFrame;
@@ -255,10 +276,7 @@ void HudArtReferenceExporter::exportAll() {
 	for (const auto& reg : regions) {
 		const ofRectangle b = r.pixelBoundsFor(reg.regionId);
 		const std::string scope = scopeOf(reg.regionId);
-		ofColor fill = scope == kScopeFullOnly ? ofColor(230, 150, 40, 110)
-			: scope == kScopeLivingHud ? ofColor(150, 200, 60, 110)
-			: reg.role == HudRegionRole::Overlay ? ofColor(200, 90, 200, 120)
-			: ofColor(40, 170, 160, 100);
+		ofColor fill = scopeColor(scope, reg.role, 110);
 		beginOverBlend(); // ofDrawBitmapString() (previous label) changes GL blend state
 		ofFill();
 		if (reg.regionId == "media_viewport") { ofSetColor(70, 80, 95, 255); mesh.draw(); }
@@ -270,7 +288,7 @@ void HudArtReferenceExporter::exportAll() {
 		const std::string label = (b.width >= 8 * (reg.regionId.size() + tag.size() + 2)) ? tag + " " + reg.regionId : tag;
 		if (reg.regionId != "media_viewport") ofDrawBitmapString(label, b.x + 3, b.y + 13);
 		legend.push_back(ofToString(index) + (index < 10 ? "  " : " ") + reg.regionId +
-			std::string(std::max<size_t>(1, 26 - reg.regionId.size()), ' ') + rectText(b) + "  " + roleName(reg.role) + ", " + scope);
+			std::string(std::max<size_t>(1, 26 - reg.regionId.size()), ' ') + rectText(b) + "  " + roleName(reg.role));
 		index++;
 	}
 	ofSetColor(235, 240, 235, 255);
@@ -279,11 +297,19 @@ void HudArtReferenceExporter::exportAll() {
 	ly += 18;
 	for (const auto& l : legend) { ofDrawBitmapString(l, vp.x + 10, ly); ly += 15; }
 	ly += 6;
-	ofSetColor(40, 170, 160, 255); ofDrawBitmapString("teal = original MinimalSlice (13)", vp.x + 10, ly);
-	ofSetColor(150, 200, 60, 255); ofDrawBitmapString("green = Living HUD v0.1 (production 15)", vp.x + 290, ly);
+	ofSetColor(40, 170, 160, 255);
+	ofDrawBitmapString("teal = historical MinimalSlice (" + ofToString(originalCount) + ")", vp.x + 10, ly);
+	ofSetColor(200, 90, 200, 255); ofDrawBitmapString("magenta = Overlay (in historical 13)", vp.x + 340, ly);
 	ly += 15;
-	ofSetColor(230, 150, 40, 255); ofDrawBitmapString("amber = FullProfile only", vp.x + 10, ly);
-	ofSetColor(200, 90, 200, 255); ofDrawBitmapString("magenta = Overlay (both scopes)", vp.x + 290, ly);
+	ofSetColor(150, 200, 60, 255); ofDrawBitmapString("green = Living HUD v0.1 (+" + ofToString(livingCount) + ")", vp.x + 10, ly);
+	ofSetColor(80, 150, 240, 255); ofDrawBitmapString("blue = HUD Clock v0.1 (+" + ofToString(clockCount) + ")", vp.x + 340, ly);
+	ly += 15;
+	ofSetColor(235, 215, 70, 255); ofDrawBitmapString("yellow = Mode Navigation v0.1 (+" + ofToString(navCount) + ")", vp.x + 10, ly);
+	ofSetColor(230, 150, 40, 255);
+	ofDrawBitmapString("amber = FullProfile only (" + ofToString(fullOnlyCount) + ")", vp.x + 340, ly);
+	ly += 15;
+	ofSetColor(235, 240, 235, 255);
+	ofDrawBitmapString("current production presentation = " + ofToString(productionCount) + " regions", vp.x + 10, ly);
 	ofPopStyle();
 	fbo.end();
 	ofPixels schematic = readFbo(fbo); fix(schematic);
@@ -330,6 +356,47 @@ void HudArtReferenceExporter::exportAll() {
 	fbo.end();
 	ofPixels constraints = readFbo(fbo); fix(constraints);
 
+	// -- 4. Current production presentation ------------------------------------------------
+	// Only what production draws: the 17 production regions filled by
+	// provenance; the FullProfile-only regions outlined grey and marked as
+	// not drawn. Distinguishes current production from the historical 13.
+	fbo.begin();
+	ofClear(16, 18, 20, 255);
+	ofPushStyle();
+	for (const auto& reg : regions) {
+		const ofRectangle b = r.pixelBoundsFor(reg.regionId);
+		const std::string scope = scopeOf(reg.regionId);
+		beginOverBlend();
+		if (reg.regionId == "media_viewport") {
+			ofFill(); ofSetColor(70, 80, 95, 255); mesh.draw();
+			ofNoFill(); ofSetColor(235, 240, 235, 255); drawOutline(outline);
+			continue;
+		}
+		const bool production = scope != kScopeFullOnly;
+		ofFill();
+		ofSetColor(production ? scopeColor(scope, reg.role, 120) : ofColor(60, 60, 60, 90));
+		ofDrawRectangle(b);
+		ofNoFill();
+		ofSetColor(production ? ofColor(235, 240, 235, 255) : ofColor(130, 130, 130, 255));
+		ofDrawRectangle(b);
+		const std::string label = production ? reg.regionId : reg.regionId + " (not drawn)";
+		if (b.width >= 8.0f * label.size() + 6.0f) ofDrawBitmapString(label, b.x + 3, b.y + 13);
+	}
+	ofSetColor(235, 240, 235, 255);
+	float py = vp.y + 22;
+	ofDrawBitmapString("CURRENT PRODUCTION PRESENTATION — " + ofToString(productionCount) + " of " + ofToString(regions.size())
+		+ " regions (from the live allowlist)", vp.x + 10, py); py += 18;
+	ofDrawBitmapString("= historical MinimalSlice " + ofToString(originalCount) + " + Living HUD " + ofToString(livingCount)
+		+ " + Clock " + ofToString(clockCount) + " + Mode " + ofToString(navCount), vp.x + 10, py); py += 18;
+	ofDrawBitmapString("grey = FullProfile only, NOT drawn in production (" + ofToString(fullOnlyCount) + ")", vp.x + 10, py); py += 24;
+	ofDrawBitmapString("flexible.secondary_a: mode panel  'MODE i/n' + mode name; NEXT MODE focus stop", vp.x + 10, py); py += 15;
+	ofDrawBitmapString("flexible.secondary_b: clock       local date + zone / HH:MM", vp.x + 10, py); py += 15;
+	ofDrawBitmapString("universal.scene_title: scene name + '  i/n' (SceneManager registry)", vp.x + 10, py); py += 15;
+	ofDrawBitmapString("All text is live runtime output: never bake it into skin art.", vp.x + 10, py);
+	ofPopStyle();
+	fbo.end();
+	ofPixels production = readFbo(fbo); fix(production);
+
 	// -- Write + verify --------------------------------------------------------------------------
 	// Overlay references (wireframe, constraints) must keep alpha so they can be
 	// layered over artwork. The schematic is opaque by design; FreeImage writes
@@ -339,6 +406,7 @@ void HudArtReferenceExporter::exportAll() {
 		{"hud_reference_wireframe_1280x720.png", &wire, 4},
 		{"hud_reference_schematic_1280x720.png", &schematic, 3},
 		{"hud_reference_constraints_1280x720.png", &constraints, 4},
+		{"hud_reference_production_1280x720.png", &production, 3},
 	};
 	for (const auto& o : outs) {
 		const fs::path p = fs::path(outDir_) / o.name;
@@ -375,8 +443,11 @@ void HudArtReferenceExporter::exportAll() {
 	ofJson j;
 	j["source"] = "derived from live HudWireframeRenderer/HudRegionCatalog at export time; HUD-006 ecopunk-hud-blueprint / 1";
 	j["canvas"] = {{"width", kW}, {"height", kH}};
-	j["presentation"] = {{"canonicalRegions", regions.size()}, {"originalMinimalSlice", originalCount},
-		{"production", productionCount}, {"productionAdditions", "Living HUD v0.1"}};
+	j["presentation"] = {{"canonicalRegions", regions.size()}, {"historicalMinimalSlice", originalCount},
+		{"production", productionCount},
+		{"productionParts", {{"historicalMinimalSlice", originalCount}, {"livingHud", livingCount}, {"clock", clockCount},
+			{"modeNavigation", navCount}}},
+		{"fullProfileOnly", fullOnlyCount}};
 	j["mediaViewportMesh"] = {{"cornerRadius", 18}, {"bevel", 42}, {"roundedCorners", {"top-left", "top-right", "bottom-left"}},
 		{"bevelCorner", "bottom-right"}, {"outlineVertexCount", outline.size()}};
 	int n = 1;
@@ -384,7 +455,8 @@ void HudArtReferenceExporter::exportAll() {
 		const ofRectangle b = r.pixelBoundsFor(reg.regionId);
 		j["regions"].push_back({{"index", n++}, {"id", reg.regionId}, {"role", roleName(reg.role)},
 			{"normalized", {reg.bounds.x, reg.bounds.y, reg.bounds.width, reg.bounds.height}},
-			{"px", {b.x, b.y, b.width, b.height}}, {"scope", scopeOf(reg.regionId)}});
+			{"px", {b.x, b.y, b.width, b.height}}, {"scope", scopeOf(reg.regionId)},
+			{"production", scopeOf(reg.regionId) != kScopeFullOnly}});
 	}
 	ofSavePrettyJson(fs::path(outDir_) / "regions.json", j);
 	note("wrote regions.json (" + ofToString(regions.size()) + " regions)");

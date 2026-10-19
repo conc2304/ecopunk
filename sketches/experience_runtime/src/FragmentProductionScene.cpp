@@ -60,6 +60,18 @@ void FragmentProductionScene::setup(const SceneServices& services) {
 	config.canvasW = kNativeWidth;
 	config.canvasH = kNativeHeight;
 	config.numPlayheads = kNumPlayheads;
+	// v0.3: the HUD shows this canvas cover-fit inside media_viewport
+	// (HUD-006 frozen geometry: 0.60 x 0.70 of a 16:9 window = 768x504), so
+	// the canvas's left/right edges (~91 px each) are cropped away. Keep the
+	// overlay's corner radar inside the part the viewer actually sees.
+	// No runtime service exposes the viewport's visible rect to scenes yet
+	// (reported as a contract gap), hence derived from the frozen aspect.
+	{
+		constexpr float kViewportAspect = (0.60f * 16.0f) / (0.70f * 9.0f);
+		const float visibleW = std::min(static_cast<float>(kNativeWidth), kNativeHeight * kViewportAspect);
+		const float visibleH = std::min(static_cast<float>(kNativeHeight), kNativeWidth / kViewportAspect);
+		config.safeArea.set((kNativeWidth - visibleW) * 0.5f, (kNativeHeight - visibleH) * 0.5f, visibleW, visibleH);
+	}
 	// No still images: the standalone's bin/data/backgrounds/ is empty, so its
 	// backdrop never alternates with an image. The runtime's backgrounds/ is
 	// Temporal's set; pointing Fragment at it would change the artwork.

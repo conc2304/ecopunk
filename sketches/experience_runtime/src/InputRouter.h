@@ -38,4 +38,7 @@ public:
 	// HudFocusInput (detent = Step ±1, click = Activate) without any change
 	// to the focus or command logic.
 	std::optional<HudFocusInput> translateToFocusInput(int key) const;
+	// Installation ENERGY v0.1: enter/exit ENERGY adjustment ('e'); while it
+	// is open, the encoder-style focus steps adjust ENERGY.
+	bool isEnergyAdjustToggle(int key) const { return key == 'e' || key == 'E'; }
 };

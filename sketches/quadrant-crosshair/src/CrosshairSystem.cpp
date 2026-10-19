@@ -25,7 +25,7 @@ void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 	const CrosshairPreset & p = presets[presetIndex];
 
 	// Noise always advances to maintain continuity even when not driving position
-	noiseT += dt;
+	noiseT += dt * energySpeedScale;
 
 	float nx = ofNoise(noiseT * p.freqA + seedXA) * p.ampA
 		+ ofNoise(noiseT * p.freqB + seedXB) * p.ampB;
@@ -39,6 +39,7 @@ void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 	};
 
 	prevState = state;
+	smoothAttractor(dt);
 
 	if (expansionActive) {
 		state.cx = expansionPos.x;
@@ -54,28 +55,58 @@ void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 	} else {
 		state.cx = noisePos.x;
 		state.cy = noisePos.y;
-		// Motion attractor: only bias when noise drives position
-		if (attractForce > 0.001f) {
-			state.cx = ofLerp(state.cx, attractX, attractForce * ATTRACT_LERP);
-			state.cy = ofLerp(state.cy, attractY, attractForce * ATTRACT_LERP);
+		// Motion attractor: only bias when noise drives position. Target and
+		// force are the time-smoothed values (see smoothTowards below) — the raw
+		// per-frame motion centroid is noisy and made the reticle shake.
+		if (smoothedAttractForce > 0.001f) {
+			state.cx = ofLerp(state.cx, smoothedAttract.x, smoothedAttractForce * ATTRACT_LERP);
+			state.cy = ofLerp(state.cy, smoothedAttract.y, smoothedAttractForce * ATTRACT_LERP);
 		}
 	}
 
-	state.vx = state.cx - prevState.cx;
-	state.vy = state.cy - prevState.cy;
-	state.speed = sqrtf(state.vx * state.vx + state.vy * state.vy);
-	state.chWidth = lineWidth;
+	// Velocity in 60 Hz-frame units, so thresholds (HIGH_THRESH, TriggerBus)
+	// mean the same thing at any frame rate; then time-smoothed so frame-time
+	// jitter no longer flickers line width and the dashed/solid arm switch.
+	const float frames60 = std::max(dt * 60.f, 1e-3f);
+	state.vx = (state.cx - prevState.cx) / frames60;
+	state.vy = (state.cy - prevState.cy) / frames60;
+	const float rawSpeed = sqrtf(state.vx * state.vx + state.vy * state.vy);
+	smoothedSpeed = smoothTowards(smoothedSpeed, rawSpeed, SPEED_SMOOTH_SECONDS, dt);
+	state.speed = smoothedSpeed;
+	if (dashArms) dashArms = state.speed > HIGH_THRESH * DASH_HYSTERESIS;
+	else          dashArms = state.speed > HIGH_THRESH;
 
-	// Halo lags behind crosshair
-	haloPos = haloPos + (glm::vec2(state.cx, state.cy) - haloPos) * 0.04f;
+	// Halo lags behind crosshair (was 0.04 per frame at 60 Hz)
+	haloPos = haloPos + (glm::vec2(state.cx, state.cy) - haloPos) * perFrameRate(0.04f, dt);
 
 	// Line width: speed + LFO pulse
 	float speedNorm = ofMap(state.speed, 0, HIGH_THRESH, 0.f, 1.f, true);
 	float pulse = ofMap(lfo.get(LFO_CROSSHAIR_PULSE), -1, 1, 0.f, 1.f);
 	lineWidth = ofLerp(4.0f, 12.0f, speedNorm * 0.7f + pulse * 0.3f);
+	state.chWidth = lineWidth;
 
-	// Bloom animation
-	bloomRadius = ofLerp(bloomRadius, bloomTarget, 0.15f);
+	// Bloom animation (was 0.15 per frame at 60 Hz)
+	bloomRadius = ofLerp(bloomRadius, bloomTarget, perFrameRate(0.15f, dt));
+}
+
+void CrosshairSystem::smoothAttractor(float dt) {
+	if (!attractInitialised) {
+		smoothedAttract = { attractX, attractY };
+		attractInitialised = true;
+	}
+	smoothedAttract.x = smoothTowards(smoothedAttract.x, attractX, ATTRACT_SMOOTH_SECONDS, dt);
+	smoothedAttract.y = smoothTowards(smoothedAttract.y, attractY, ATTRACT_SMOOTH_SECONDS, dt);
+	smoothedAttractForce = smoothTowards(smoothedAttractForce, attractForce, ATTRACT_SMOOTH_SECONDS, dt);
+}
+
+float CrosshairSystem::smoothTowards(float current, float target, float seconds, float dt) {
+	if (dt <= 0.f) return current;
+	return current + (target - current) * (1.f - std::exp(-dt / seconds));
+}
+
+float CrosshairSystem::perFrameRate(float rateAt60, float dt) {
+	if (dt <= 0.f) return 0.f;
+	return 1.f - std::pow(1.f - rateAt60, dt * 60.f);
 }
 
 void CrosshairSystem::setExpansionControl(bool active, glm::vec2 pos) {
@@ -226,7 +257,7 @@ void CrosshairSystem::draw(float uiFadeAlpha) {
 	float cx = state.cx, cy = state.cy;
 
 	// 1. Arms — full opacity, no alpha blending needed
-	if (state.speed > HIGH_THRESH) {
+	if (dashArms) {
 		drawDashArms(cx, cy, state.speed, uiFadeAlpha);
 	} else {
 		float opacH = ofMap(1.f, -1.f, 1.f, 0.35f, 1.0f);
@@ -279,6 +310,11 @@ void CrosshairSystem::setPreset(int index) {
 	// into it over the existing 2 s resume blend instead of jumping.
 	resuming = true;
 	resumeLerp = 0.f;
+}
+
+void CrosshairSystem::setEnergy(float energy01) {
+	const float e = ofClamp(energy01, 0.f, 1.f);
+	energySpeedScale = e <= 0.5f ? ofLerp(0.35f, 1.0f, e / 0.5f) : ofLerp(1.0f, 2.2f, (e - 0.5f) / 0.5f);
 }
 
 void CrosshairSystem::nextPreset() {

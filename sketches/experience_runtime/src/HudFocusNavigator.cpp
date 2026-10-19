@@ -20,7 +20,15 @@ void HudFocusNavigator::setFocus(int index) {
 void HudFocusNavigator::refresh(const AvailabilityFn& availability) {
 	availability_.assign(slots_.size(), HudControlAvailability::Hidden);
 	for (size_t i = 0; i < slots_.size(); ++i) availability_[i] = availability(slots_[i]);
-	if (!engaged_ || !focused_) return;
+	if (!engaged_) return;
+
+	// Restoration: the user's intended control is back (visible, enabled or
+	// disabled) while a fallback — or nothing — holds focus.
+	if (restorationPending()) {
+		const int wanted = indexOf(*intended_);
+		if (wanted >= 0 && visible(size_t(wanted))) { setFocus(wanted); return; }
+	}
+	if (!focused_) return;
 
 	const int current = indexOf(*focused_);
 	if (current >= 0 && visible(size_t(current))) {
@@ -41,10 +49,12 @@ bool HudFocusNavigator::step(int delta) {
 
 	if (!engaged_ || !focused_) {
 		engaged_ = true;
+		int first = visibleIdx.front();
 		for (int i : visibleIdx) {
-			if (availability_[size_t(i)] == HudControlAvailability::Enabled) { setFocus(i); return true; }
+			if (availability_[size_t(i)] == HudControlAvailability::Enabled) { first = i; break; }
 		}
-		setFocus(visibleIdx.front());
+		setFocus(first);
+		intended_ = focused_; // explicit navigation: the user's choice
 		return true;
 	}
 
@@ -54,6 +64,7 @@ bool HudFocusNavigator::step(int delta) {
 	const int count = int(visibleIdx.size());
 	const int next = ((pos + delta) % count + count) % count;
 	setFocus(visibleIdx[size_t(next)]);
+	intended_ = focused_; // explicit navigation replaces any pending restoration
 	return true;
 }
 

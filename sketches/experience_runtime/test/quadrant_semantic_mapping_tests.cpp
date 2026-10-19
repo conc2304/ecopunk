@@ -133,6 +133,26 @@ int main() {
 		SEM_CHECK(near(*d.activity.motion, 1.0f));
 		SEM_CHECK(near(*findMetric(d, "scene.quadrant.metric.expansion_progress")->value, 1.0f));
 		SEM_CHECK(findMetric(d, "scene.quadrant.metric.crosshair_preset") == nullptr);
+		SEM_CHECK(!d.state.secondaryStateId.has_value()); // no preset, no expansion effect -> no detail
+	}
+
+	// v0.3 secondary state (HUD state badge detail): the strategy when idle,
+	// the expanding quadrant's effect during an expansion, the strategy again
+	// when that quadrant has no effect.
+	{
+		Inputs in;
+		in.crosshairPreset = 3; // NERVOUS
+		in.channelEffect = {"recolor", "", "dither", ""};
+		SceneSemanticData d = compute(in);
+		SEM_CHECK(d.state.secondaryStateId == std::string("scene.fragment.metric.movement_preset.nervous"));
+		in.expansion = Expansion::Hold;
+		in.expansionQuadrant = 2;
+		d = compute(in);
+		SEM_CHECK(d.state.secondaryStateId == std::string("dither"));
+		in.expansion = Expansion::TravelBack;
+		in.expansionQuadrant = 1;
+		d = compute(in);
+		SEM_CHECK(d.state.secondaryStateId == std::string("scene.fragment.metric.movement_preset.nervous"));
 	}
 
 	if (g_failures == 0) {

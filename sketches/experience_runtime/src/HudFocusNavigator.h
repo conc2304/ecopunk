@@ -37,7 +37,10 @@ public:
 	// Call once per frame with the current availability. Focus is stable: an
 	// unchanged, still-visible focused control keeps focus. If it becomes
 	// hidden, focus moves to the next visible control (then previous), or
-	// clears if none is visible. Never auto-focuses before the first input.
+	// clears if none is visible — an AUTOMATIC FALLBACK that keeps the
+	// user's intended control. When that intended control is visible again
+	// (enabled or disabled), focus returns to it. Never auto-focuses before
+	// the first input.
 	void refresh(const AvailabilityFn& availability);
 
 	// Moves focus by `delta` visible controls, wrapping. The FIRST step only
@@ -45,6 +48,10 @@ public:
 	// visible one) rather than moving. Returns false if nothing is visible.
 	bool step(int delta);
 
+	// Deliberate use of the CURRENT focus (e.g. activating a fallback
+	// control): it becomes the intended control, cancelling any pending
+	// restoration. Explicit step() does the same implicitly.
+	void confirmFocus() { intended_ = focused_; }
 	// The focused control's region ID if it may be activated right now
 	// (focused AND enabled); nullopt for no focus or a disabled control.
 	std::optional<std::string> activationTarget() const;
@@ -52,11 +59,16 @@ public:
 	const std::optional<std::string>& focused() const { return focused_; }
 	bool engaged() const { return engaged_; }
 	HudControlAvailability focusedAvailability() const { return focusedAvailability_; }
+	// The control the user last chose (explicit step / confirmFocus); differs
+	// from focused() only while an automatic fallback is standing in for it.
+	const std::optional<std::string>& intended() const { return intended_; }
+	bool restorationPending() const { return intended_.has_value() && intended_ != focused_; }
 
 private:
 	std::vector<std::string> slots_;
 	std::vector<HudControlAvailability> availability_;
 	std::optional<std::string> focused_;
+	std::optional<std::string> intended_; // changed only by explicit navigation / confirmFocus()
 	HudControlAvailability focusedAvailability_ = HudControlAvailability::Hidden;
 	bool engaged_ = false;
 

@@ -60,10 +60,53 @@ void RadarStationWidget::draw() {
 		ofDrawLine(inner, outer);
 	}
 
+	// Range rings + cross axes (opt-in).
+	if (options.rangeRings) {
+		ofNoFill();
+		ofSetColor(scaledAlpha(theme.colors.muted, motion.opacity * 0.28f));
+		ofDrawCircle(center, radius * 0.33f);
+		ofDrawCircle(center, radius * 0.66f);
+		ofDrawLine(center.x - radius, center.y, center.x + radius, center.y);
+		ofDrawLine(center.x, center.y - radius, center.x, center.y + radius);
+	}
+
 	// Wedge.
 	ofFill();
 	ofSetColor(scaledAlpha(theme.colors.accent, motion.opacity * 0.32f));
 	drawWedge(center, radius, rotationDeg, rotationDeg + options.wedgeArcDeg);
+
+	// Heading — a short own-ship vector from the centre.
+	if (headingStrength > 0.01f) {
+		float a = ofDegToRad(headingDeg);
+		ofVec2f dir(std::cos(a), std::sin(a));
+		ofSetColor(scaledAlpha(theme.colors.primary, motion.opacity * ofClamp(headingStrength, 0.0f, 1.0f)));
+		ofDrawLine(center, center + dir * radius * 0.30f);
+		ofDrawCircle(center, std::max(1.5f, su(bounds, 2.0f)));
+	}
+
+	// Contacts — same phase-locked flash as the ticks: brightest just after
+	// the wedge's leading edge passes, then an afterglow decay.
+	const float blipR = std::max(2.0f, su(bounds, 3.0f));
+	for (const RadarContact& c : contacts) {
+		float delta = std::fmod(rotationDeg - c.angleDeg + 720.0f, 360.0f);
+		float flash = std::exp(-delta / 70.0f);
+		float alpha = ofClamp(c.strength, 0.0f, 1.0f) * ofLerp(0.30f, 1.0f, flash) * motion.opacity;
+		float a = ofDegToRad(c.angleDeg);
+		ofVec2f p = center + ofVec2f(std::cos(a), std::sin(a)) * radius * ofClamp(c.range01, 0.0f, 1.0f);
+		ofFill();
+		ofSetColor(scaledAlpha(c.primary ? theme.colors.primary : theme.colors.accent, alpha));
+		ofDrawCircle(p, c.primary ? blipR * 1.3f : blipR);
+		if (c.primary) {
+			// Lock brackets around the primary contact.
+			ofNoFill();
+			float b = blipR * 3.0f, l = blipR * 1.4f;
+			ofSetColor(scaledAlpha(theme.colors.primary, ofClamp(c.strength, 0.0f, 1.0f) * motion.opacity));
+			ofDrawLine(p.x - b, p.y - b, p.x - b + l, p.y - b); ofDrawLine(p.x - b, p.y - b, p.x - b, p.y - b + l);
+			ofDrawLine(p.x + b, p.y - b, p.x + b - l, p.y - b); ofDrawLine(p.x + b, p.y - b, p.x + b, p.y - b + l);
+			ofDrawLine(p.x - b, p.y + b, p.x - b + l, p.y + b); ofDrawLine(p.x - b, p.y + b, p.x - b, p.y + b - l);
+			ofDrawLine(p.x + b, p.y + b, p.x + b - l, p.y + b); ofDrawLine(p.x + b, p.y + b, p.x + b, p.y + b - l);
+		}
+	}
 
 	ofDisableBlendMode();
 	ofPopStyle();

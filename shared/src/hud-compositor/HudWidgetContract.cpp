@@ -27,14 +27,22 @@ const std::unordered_map<HudWidgetType, HudWidgetContract>& contractTable() {
 			  {"enabled", false, {T::Boolean}},
 			  // Scene & Pattern Navigation: optional short dynamic suffix
 			  // drawn after the text (scene title "  2/5").
-			  {"suffix", false, {T::Text}} },
+			  {"suffix", false, {T::Text}},
+			  // HUD & Scene Experience v0.3: optional progress bar; when bound,
+			  // the Label draws bar + right-aligned suffix instead of text.
+			  {"progress", false, {T::Ratio}} },
 			false
 		};
 
 		m[HudWidgetType::StatusBadge] = {
 			HudWidgetType::StatusBadge,
 			{ {"value", true, {T::Identifier}},
-			  {"progress", false, {T::Ratio}} },
+			  {"progress", false, {T::Ratio}},
+			  // v0.3 (additive, optional): a secondary detail drawn
+			  // right-aligned on the value line, and a reserved phase-icon
+			  // slot keyed by an identifier (placeholder art until SVGs land).
+			  {"detail", false, {T::Identifier, T::Text}},
+			  {"icon", false, {T::Identifier}} },
 			false
 		};
 

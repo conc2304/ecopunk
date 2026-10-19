@@ -16,7 +16,7 @@ void TimelineWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colo
 	float localMaxWidth = std::max(0.0f, bounds.width);
 
 	if (!input.captionText.empty()) {
-		ofSetColor(colors.muted);
+		ofSetColor(captionColor(colors, phaseRole));
 		const auto& caption = textCache_.truncateToWidth(input.captionText, localMaxWidth);
 		drawText(caption.text, bounds.x, bounds.y + wu(bounds, 10.0f));
 	}

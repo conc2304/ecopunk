@@ -43,6 +43,10 @@ public:
 		// ofGetHeight(), exactly as before the core existed). Production: fixed
 		// at canvasW x canvasH, the scene FBO's native size.
 		bool trackWindow = false;
+		// Canvas-pixel area the viewer actually sees (production: the part
+		// of the canvas the cover-cropped HUD media viewport shows). Empty =
+		// whole canvas. Keeps the overlay's corner radar on screen.
+		ofRectangle safeArea;
 	};
 
 	// Same initial overlay dials the standalone sketch has always started
@@ -86,6 +90,7 @@ public:
 private:
 	void resetComposition();
 	void applyCanvasSize();
+	void updateRadarContacts();
 
 	Config config_;
 	TimeOffsetVideoBuffer* video_ = nullptr;

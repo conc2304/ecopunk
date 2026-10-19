@@ -1063,6 +1063,12 @@ void BEComposition::enterMode(CycleMode mode) {
 	}
 }
 
+bool BEComposition::requestNextMode() {
+	if (getPhase() != CyclePhase::PLACEMENT && getPhase() != CyclePhase::DENSITY) return false;
+	enterMode(currentMode == CycleMode::GHOST_LAYERS ? CycleMode::PERPETUAL : CycleMode::GHOST_LAYERS);
+	return true;
+}
+
 bool BEComposition::onDissolveComplete() {
 	// Called by CompositionBase when the DISSOLVE phase finishes.
 	// We take over and enter the next mode instead of RESET_HOLD.
