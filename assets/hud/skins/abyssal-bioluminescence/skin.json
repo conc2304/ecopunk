@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "skinId": "abyssal-bioluminescence",
+  "displayName": "Abyssal Bioluminescence",
+  "skinVersion": "1.0.0",
+  "blueprintId": "ecopunk-hud-blueprint",
+  "blueprintVersion": 2,
+  "assets": {
+    "shell": {
+      "path": "shell.png",
+      "required": true,
+      "coordinateSpace": "canvas",
+      "expectedWidth": 1280,
+      "expectedHeight": 720
+    }
+  }
+}

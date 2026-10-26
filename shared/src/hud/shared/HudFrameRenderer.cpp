@@ -120,6 +120,8 @@ void HudFrameRenderer::drawRegistrationMarks(const HudBounds & b, const ofColor 
 }
 
 void HudFrameRenderer::drawTicks(const HudBounds & b, const ofColor & c, const FrameOptions & o) const {
+	// Measurement ticks read at half the frame stroke.
+	ofSetLineWidth(std::max(0.5f, su(b, o.thickness) * 0.5f));
 	ofSetColor(c);
 	float p = o.padding;
 	float tickH = std::max(2.0f, su(b, 4.0f));

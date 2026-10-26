@@ -56,6 +56,15 @@ struct HudWidgetInput {
 	std::string regionId;
 	HudWidgetType widgetType = HudWidgetType::Label;
 
+	// HudSlotBinding::variantId, passed through unchanged: a profile-authored
+	// layout variant of the widget type ("clock", "inline"); empty = default.
+	std::string variantId;
+
+	// Development-only Live Typography Playground (HudLabelTypography.h):
+	// non-owning, null in production. When set, LabelWidget offers plain text
+	// labels to it before drawing its own bitmap text.
+	const class IHudLabelTypography* labelTypography = nullptr;
+
 	// Already resolved via HudVocabularyResolver at compile time
 	// (HudCompiledBinding::resolvedLabelText) — a static caption, not a
 	// live value.

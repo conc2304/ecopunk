@@ -927,6 +927,46 @@ void test_region_bounds_within_canvas_and_no_same_role_overlap() {
 	}
 }
 
+// HUD content relocation (2026-10-23): which binding lives in which region,
+// that every placement is legal for the region's accepted widget set, and
+// that the retired message binding is gone.
+void test_content_relocation_bindings() {
+	HudRegionCatalog regions;
+	HudVocabularyResolver vocab;
+	HudProfileCompiler compiler(regions, vocab);
+	HudPresentationProfileRegistry registry;
+	auto compiled = compiler.compile("blob-region-prototype", registry);
+	auto regionOf = [&](const std::string& bindingId) -> std::string {
+		for (const auto& c : compiled.bindings) if (c.binding.bindingId == bindingId) return c.binding.regionId;
+		return "(absent)";
+	};
+	HUD_CHECK(regionOf("universal.scene_title.label") == "universal.scene_title");
+	HUD_CHECK(regionOf("universal.mode.line") == "universal.media_title");
+	HUD_CHECK(regionOf("universal.media_title.label") == "universal.primary_state");
+	HUD_CHECK(regionOf("universal.primary_state.badge") == "universal.activity");
+	HUD_CHECK(regionOf("universal.activity.bar") == "universal.effect_summary");
+	HUD_CHECK(regionOf("universal.effect_summary.chips") == "universal.timing");
+	HUD_CHECK(regionOf("universal.timing.value") == "flexible.secondary_a");
+	HUD_CHECK(regionOf("universal.clock.value") == "flexible.secondary_b");
+	HUD_CHECK(regionOf("overlay.transition.bar") == "overlay.health");
+	HUD_CHECK(regionOf("overlay.transition.phase_label") == "overlay.health");
+	HUD_CHECK(regionOf("overlay.activity_log") == "overlay.transition");
+	// Merged / retired: no separate health badge, effects-health badge or message.
+	HUD_CHECK(regionOf("overlay.health.badge") == "(absent)");
+	HUD_CHECK(regionOf("universal.effect_summary.health") == "(absent)");
+	HUD_CHECK(regionOf("overlay.transition.message_label") == "(absent)");
+	for (const auto& c : compiled.bindings) {
+		HUD_CHECK(c.valid);
+		if (c.binding.bindingId == "overlay.transition.bar") HUD_CHECK(c.binding.findSource("status") != nullptr);
+		if (c.binding.bindingId == "universal.effect_summary.chips") HUD_CHECK(c.binding.findSource("status") != nullptr);
+		if (c.binding.bindingId == "overlay.activity_log") {
+			const auto* t = c.binding.findSource("text");
+			HUD_CHECK(t != nullptr && t->sourceId == "runtime.log.recent");
+		}
+	}
+	for (const auto& issue : compiled.issues) HUD_CHECK(issue.severity != HudProfileIssueSeverity::Error);
+}
+
 // Final Narrow Closure Patch, Task 5 — flexible.secondary_a/b's own exact
 // bounds/adjacency, tested by name (not just swept generically by the
 // same-role check above): confirms their documented pixel bounds
@@ -1232,16 +1272,35 @@ void test_navigation_bindings_compile() {
 		int modeBindings = 0;
 		bool titleHasSuffix = false;
 		for (const auto& c : compiled.bindings) {
-			if (c.binding.bindingId == "universal.mode.value") {
+			if (c.binding.bindingId == "universal.mode.line") {
 				modeBindings++;
 				HUD_CHECK(c.valid);
-				HUD_CHECK(c.binding.regionId == "flexible.secondary_a");
-				HUD_CHECK(c.binding.widgetType == HudWidgetType::NumericValue);
-				HUD_CHECK_EQ_STR(c.resolvedLabelText, "MODE");
-				const auto* value = c.binding.findSource("value");
-				const auto* enabled = c.binding.findSource("enabled");
+				// Content relocation: the mode line lives in universal.media_title
+				// as ONE Label line "Mode: <name>   x/y" (informational).
+				HUD_CHECK(c.binding.regionId == "universal.media_title");
+				HUD_CHECK(c.binding.widgetType == HudWidgetType::Label);
+				HUD_CHECK(c.binding.variantId == "modeline");
+				HUD_CHECK_EQ_STR(c.resolvedLabelText, "Mode:");
+				const auto* value = c.binding.findSource("text");
+				const auto* position = c.binding.findSource("suffix");
 				HUD_CHECK(value != nullptr && value->sourceId == "scene.mode.name");
+				HUD_CHECK(position != nullptr && position->sourceId == "scene.mode.position");
+				HUD_CHECK(c.binding.findSource("enabled") == nullptr); // no focus role
+			}
+			if (c.binding.bindingId == "controls.mode.label") {
+				const auto* enabled = c.binding.findSource("enabled");
+				HUD_CHECK(c.valid && c.binding.regionId == "controls.mode");
 				HUD_CHECK(enabled != nullptr && enabled->sourceId == "control.scene.next_mode.available");
+			}
+			if (c.binding.bindingId == "controls.fullscreen.label") {
+				const auto* text = c.binding.findSource("text");
+				const auto* enabled = c.binding.findSource("enabled");
+				HUD_CHECK(c.valid && c.binding.regionId == "controls.fullscreen");
+				// FULLSCREEN = IMMERSIVE (scene fills the window), not host
+				// fullscreen: static "FULL SCREEN" caption, immersive availability.
+				HUD_CHECK(text == nullptr);
+				HUD_CHECK_EQ_STR(c.resolvedLabelText, "FULL SCREEN");
+				HUD_CHECK(enabled != nullptr && enabled->sourceId == "control.runtime.immersive.available");
 			}
 			if (c.binding.bindingId == "universal.scene_title.label") {
 				HUD_CHECK(c.valid);
@@ -1252,7 +1311,7 @@ void test_navigation_bindings_compile() {
 		HUD_CHECK(modeBindings == 1);
 		HUD_CHECK(titleHasSuffix);
 		for (const auto& issue : compiled.issues) {
-			HUD_CHECK(issue.bindingId != "universal.mode.value" && issue.bindingId != "universal.scene_title.label");
+			HUD_CHECK(issue.bindingId != "universal.mode.line" && issue.bindingId != "universal.scene_title.label");
 		}
 	}
 
@@ -1302,6 +1361,7 @@ int main() {
 	test_no_scene_id_leaks_into_compiled_bindings();
 	test_region_bounds_within_canvas_and_no_same_role_overlap();
 	test_flexible_secondary_regions_exact_bounds_and_no_overlap();
+	test_content_relocation_bindings();
 	test_truncation_never_exceeds_budget();
 	test_formatting_spot_checks();
 

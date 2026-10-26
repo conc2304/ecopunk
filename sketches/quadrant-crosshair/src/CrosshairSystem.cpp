@@ -82,7 +82,7 @@ void CrosshairSystem::update(float dt, const LFOBank & lfo) {
 	// Line width: speed + LFO pulse
 	float speedNorm = ofMap(state.speed, 0, HIGH_THRESH, 0.f, 1.f, true);
 	float pulse = ofMap(lfo.get(LFO_CROSSHAIR_PULSE), -1, 1, 0.f, 1.f);
-	lineWidth = ofLerp(4.0f, 12.0f, speedNorm * 0.7f + pulse * 0.3f);
+	lineWidth = ofLerp(3.0f, 8.0f, speedNorm * 0.7f + pulse * 0.3f);
 	state.chWidth = lineWidth;
 
 	// Bloom animation (was 0.15 per frame at 60 Hz)

@@ -13,6 +13,19 @@ void EffectChipsWidget::draw(const ofRectangle& bounds, const HudWidgetColors& c
 
 	float opacity = (valueRole && valueRole->dimmed) ? 0.5f : 1.0f;
 
+	// Optional trailing status (effects health), right-aligned in accent on
+	// the first row; the chips wrap before it.
+	const auto* statusRole = input.findRole("status");
+	const bool hasStatus = statusRole && statusRole->shouldRender && !statusRole->useAmbientFallback && !statusRole->formattedText.empty();
+	float rowRight = bounds.getRight();
+	if (hasStatus) {
+		const auto& st = textCache_.truncateToWidth(statusRole->formattedText, bounds.width * 0.4f);
+		const float w = hudTextWidth(st.text, st.widthLocal);
+		ofSetColor(scaledAlpha(colors.accent, opacity));
+		drawText(st.text, bounds.getRight() - w - 2.0f, bounds.y + std::min(bounds.height, kMinChipHeight + 2.0f) * 0.5f + 4.0f);
+		rowRight = bounds.getRight() - w - wu(bounds, 8.0f);
+	}
+
 	if (valueRole && valueRole->shouldRender && valueRole->formattedItems.empty()) {
 		// Present-but-empty list — a legitimate "no active effects" state,
 		// distinct from missing (which would already have returned above
@@ -53,7 +66,7 @@ void EffectChipsWidget::draw(const ofRectangle& bounds, const HudWidgetColors& c
 		// estimate, which could under-size the chip box relative to the
 		// text's actual (always-native-size) rendered width.
 		float chipWidth = truncated.widthLocal + chipPad * 2.0f;
-		if (x + chipWidth > bounds.x + bounds.width) {
+		if (x + chipWidth > rowRight && x > bounds.x) {
 			x = bounds.x;
 			y += chipHeight + wu(bounds, 3.0f);
 		}

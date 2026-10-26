@@ -1,0 +1,28 @@
+HudArtReferenceExporter: output /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/docs/hud-art/blueprint-v2-reference
+PASS no skin active (comparison frame is the plain wireframe)
+PASS catalog has 20 regions (HUD-006 v2) — 20
+PASS historical MinimalSlice part has 12 regions (v1 13 minus retired controls.reseed) — 12
+PASS production presentation has 18 regions (12 + 2 Living HUD + clock + mode panel/MODE/FULLSCREEN) — 18
+PASS controls.reseed retired; controls.mode and controls.fullscreen present
+PASS flexible.secondary_a = navigation-scope region (active time), flexible.secondary_b = Clock
+PASS runtime capture is 1280x720 — 1280x720
+PASS viewport mesh present (drawn by the runtime this run) — 54 vertices
+PASS mesh outline has lower-right bevel endpoint (right edge, y = bottom - 42) — 25.6,115.2 768.0x504.0
+PASS mesh outline has lower-right bevel endpoint (bottom edge, x = right - 42)
+PASS no mesh vertex at the square lower-right corner (bevel, not rounded/square)
+PASS silhouette orientation resolved — not flipped
+PASS runtime frame: bevel wedge (outside mesh, inside bounds) is plain background — 780/780 px
+PASS runtime frame: all non-overlay corner wedges are plain background — 856/856 px
+antialiased silhouette-edge pixels excluded from the wedge checks (<=1 px from edge): 130
+PASS runtime frame: just inside the bevel line shows scene content — 91/91 samples
+PASS hud_reference_wireframe_1280x720.png written as 1280x720 RGBA (overlay) — 1280x720x4
+PASS hud_reference_schematic_1280x720.png written as 1280x720 RGB (opaque sheet) — 1280x720x3
+PASS hud_reference_constraints_1280x720.png written as 1280x720 RGBA (overlay) — 1280x720x4
+PASS hud_reference_production_1280x720.png written as 1280x720 RGB (opaque sheet) — 1280x720x3
+PASS wireframe viewport outline lies on the real mesh boundary (±1 px) — 2471/2471 outline px
+PASS wireframe orientation: scene_title top edge present at top, absent at mirror — line rasterized on row 21 (y=21.6)
+wrote regions.json (20 regions)
+wrote production_membership.md
+PASS crosswalk computed against the v1 export — 19 v1 regions
+wrote crosswalk-v1-v2.json
+RESULT: 22 passed, 0 failed

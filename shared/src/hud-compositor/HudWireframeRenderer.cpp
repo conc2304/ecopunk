@@ -1,4 +1,6 @@
 #include "HudWireframeRenderer.h"
+#include "HudReactiveControlArt.h"
+#include "widgets/HudWidgetDrawUtils.h" // hudTextShadowColor()
 
 #include "HudFormattingService.h"
 
@@ -6,6 +8,7 @@
 #include "ofUtils.h"
 
 #include <algorithm>
+#include <cmath>
 #include <unordered_set>
 
 namespace hudpresent {
@@ -51,7 +54,8 @@ const std::string& effectDisplayLabel(const HudFrameData& frame, const std::stri
 const std::unordered_set<std::string>& originalSliceRegions() {
 	static const std::unordered_set<std::string> regions = {
 		"universal.scene_title", "universal.media_title", "universal.primary_state", "universal.activity",
-		"controls.scene_previous", "controls.scene_next", "controls.media_previous", "controls.media_next", "controls.reseed",
+		"controls.scene_previous", "controls.scene_next", "controls.media_previous", "controls.media_next",
+		// controls.reseed retired in HUD-006 v2 (this historical part is now 12).
 		"flexible.primary",
 		"overlay.health", "overlay.transition",
 	};
@@ -81,9 +85,11 @@ const std::unordered_set<std::string>& clockRegions() {
 // Part 4: Scene & Pattern Navigation (17 regions in total) —
 // flexible.secondary_a (active scene's mode + the NEXT MODE focus target;
 // Hide when the scene has no mode model).
+// HUD-006 v2 adds the MODE and FULLSCREEN controls here (18 regions in total);
+// flexible.secondary_a stays as the informational mode panel (no focus).
 const std::unordered_set<std::string>& navigationRegions() {
 	static const std::unordered_set<std::string> regions = {
-		"flexible.secondary_a",
+		"flexible.secondary_a", "controls.mode", "controls.fullscreen",
 	};
 	return regions;
 }
@@ -161,6 +167,10 @@ std::string HudWireframeRenderer::primaryRoleFor(HudWidgetType type) const {
 
 void HudWireframeRenderer::update(float dt, const FakeHudFrameData& frame) {
 	elapsedSeconds_ += dt;
+	if (activationPending_) { // see triggerActivationFeedback(): starts on the frame that shows it
+		activationStart_ = elapsedSeconds_;
+		activationPending_ = false;
+	}
 	history_.update(dt);
 
 	// Generation-change detection drives HudHistoryStore's event-pulse
@@ -193,6 +203,8 @@ void HudWireframeRenderer::resolveBinding(const HudCompiledBinding& compiled, co
 	input.bindingId = binding.bindingId;
 	input.regionId = binding.regionId;
 	input.widgetType = binding.widgetType;
+	input.variantId = binding.variantId;
+	input.labelTypography = labelTypography_; // dev-only playground; null in production
 	input.captionText = compiled.resolvedLabelText;
 	input.elapsedSeconds = elapsedSeconds_;
 
@@ -315,6 +327,10 @@ void HudWireframeRenderer::update(float dt, const HudFrameData& frame) {
 	currentSceneNativeSize_ = frame.sceneFrame.nativeSize;
 
 	elapsedSeconds_ += dt;
+	if (activationPending_) { // see triggerActivationFeedback(): starts on the frame that shows it
+		activationStart_ = elapsedSeconds_;
+		activationPending_ = false;
+	}
 	history_.update(dt);
 
 	// Generation change: same-scene reseed/reconfiguration signal, kept
@@ -344,6 +360,8 @@ void HudWireframeRenderer::resolveBindingReal(const HudCompiledBinding& compiled
 	input.bindingId = binding.bindingId;
 	input.regionId = binding.regionId;
 	input.widgetType = binding.widgetType;
+	input.variantId = binding.variantId;
+	input.labelTypography = labelTypography_; // dev-only playground; null in production
 	input.captionText = compiled.resolvedLabelText;
 	input.elapsedSeconds = elapsedSeconds_;
 
@@ -450,6 +468,59 @@ void HudWireframeRenderer::draw() const {
 		ofPopStyle();
 	}
 
+	// Reactive Control Artwork v0.1 — the optional pressed sprite, above the
+	// shell and below every widget/label/focus bracket, only during the
+	// existing accepted-activation feedback interval (same fade). Straight-
+	// alpha source-over like the shell; drawn UNSCALED (1:1 canvas pixels) at
+	// the rectangle derived from the region (+4 px bleed, snapped outward) —
+	// see HudReactiveControlArt.h.
+	// Shared button faces (idle / focused, with the active face fading over
+	// the focused control) — drawn first so the legacy NEXT SCENE sprite,
+	// when a skin supplies only that one, still works unchanged.
+	if (hasButtonFaces()) {
+		ofPushStyle();
+		ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+		for (const auto& reg : regions_.all()) {
+			if (reg.role != HudRegionRole::Controls) continue;
+			if (!controlEnabled(reg.regionId).has_value()) continue; // hidden/unsupported controls keep the baked housing
+			const ofRectangle b = pixelBoundsFor(reg.regionId);
+			const auto face = reactive::buttonFaceRect(b.x, b.y, b.width, b.height);
+			const bool focusedHere = focusedControl_ && *focusedControl_ == reg.regionId;
+			const ofTexture* base = (focusedHere && buttonFocusedTexture_) ? buttonFocusedTexture_ : buttonIdleTexture_;
+			if (base) {
+				ofSetColor(255, 255, 255, 255);
+				base->draw(float(face.x), float(face.y), float(face.width), float(face.height));
+			}
+			const float active = buttonActiveOpacity(reg.regionId);
+			if (active > 0.0f) {
+				ofSetColor(255, 255, 255, static_cast<int>(255.0f * active + 0.5f));
+				buttonActiveTexture_->draw(float(face.x), float(face.y), float(face.width), float(face.height));
+			}
+		}
+		ofPopStyle();
+	}
+
+	const float pressedOpacity = buttonActiveTexture_ ? 0.0f : pressedArtworkOpacity(); // the shared active face supersedes it
+	if (pressedOpacity > 0.0f) {
+		ofPushStyle();
+		ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+		ofSetColor(255, 255, 255, static_cast<int>(255.0f * pressedOpacity + 0.5f));
+		const ofRectangle b = pixelBoundsFor(pressedRegionId_);
+		const auto sprite = reactive::pressedSpriteRect(b.x, b.y, b.width, b.height);
+		pressedTexture_->draw(float(sprite.x), float(sprite.y), float(sprite.width), float(sprite.height));
+		ofPopStyle();
+	}
+
+	// Nav-button labels sit on the skin's own faces when it supplies them
+	// (light marble in the day skin, dark glass at night): palette primary
+	// with the palette shadow, not the light-on-black baked-face tokens.
+	HudWidgetColors widgetColors = colors_;
+	if (buttonIdleTexture_ || buttonFocusedTexture_) {
+		widgetColors.buttonText = widgetColors.primary;
+		widgetColors.buttonShadow = widgetColors.shadow;
+	}
+	devTextHook() = labelTypography_; // dev typography playground (nullptr in production)
+	hudTextShadowColor() = colors_.shadow;
 	stats_ = FrameStats{};
 	stats_.historySignalCount = static_cast<int>(history_.trackedSignalCount());
 	stats_.historyBytes = HudHistoryStore::estimatedBytes();
@@ -491,9 +562,10 @@ void HudWireframeRenderer::draw() const {
 			float slotHeight = bounds.height / static_cast<float>(slotCount);
 			bounds = ofRectangle(bounds.x, bounds.y + slotHeight * static_cast<float>(slotIndex), bounds.width, slotHeight);
 		}
-		HudWidgetColors colors; // no skin system in this increment — see this task's "No skin-specific C++ logic" constraint
+		const HudWidgetColors& colors = widgetColors; // day/night palette from the skin schedule
 
 		uint64_t widgetStart = ofGetElapsedTimeMicros();
+		if (labelTypography_) devTextRegion() = compiled.binding.regionId;
 		widgets_.widgetFor(effectiveType).draw(bounds, colors, it->second);
 		uint64_t widgetEnd = ofGetElapsedTimeMicros();
 
@@ -506,17 +578,42 @@ void HudWireframeRenderer::draw() const {
 	// actually visible this frame (hidden controls cannot hold focus).
 	if (focusedControl_ && controlEnabled(*focusedControl_).has_value()) {
 		const ofRectangle b = pixelBoundsFor(*focusedControl_);
-		const HudWidgetColors colors;
+		const HudWidgetColors& colors = colors_;
 		ofPushStyle();
 		ofEnableAlphaBlending();
 		const float age = elapsedSeconds_ - activationStart_;
-		if (activationStart_ >= 0.0f && age >= 0.0f && age < kActivationFlashSeconds) {
+		// While the optional pressed artwork shows, IT is the accepted
+		// feedback for that control — no accent fill over it. Refused
+		// feedback, and every control without artwork, are unchanged.
+		const bool pressedArtworkShowing = pressedOpacity > 0.0f || buttonActiveOpacity(*focusedControl_) > 0.0f;
+		if (!pressedArtworkShowing && activationStart_ >= 0.0f && age >= 0.0f && age < kActivationFlashSeconds) {
 			const float fade = 1.0f - age / kActivationFlashSeconds;
 			ofColor c = activationAccepted_ ? colors.accent : colors.warning;
-			c.a = static_cast<unsigned char>(110.0f * fade);
+			c.a = static_cast<unsigned char>(45.0f * fade); // subtle (was 110)
 			ofFill();
 			ofSetColor(c);
 			ofDrawRectangle(b);
+		}
+		// Reactive Control Artwork v0.1 — subtle focused-edge illumination for
+		// a control whose skin provides reactive artwork: three inset hairlines
+		// fading inward, inside the region's own bounds (labels are centred, so
+		// the edges never cross text), slowly breathing; dimmer when the
+		// control is disabled. Complements the brackets below, never replaces
+		// them. No allocation: plain line primitives.
+		if (pressedTexture_ != nullptr && !buttonFocusedTexture_ && *focusedControl_ == pressedRegionId_) {
+			const bool enabled = controlEnabled(*focusedControl_).value_or(false);
+			const float breath = 0.80f + 0.20f * std::sin(elapsedSeconds_ * 2.0f * 3.14159265f * 0.4f);
+			const float strength = breath * (enabled ? 1.0f : 0.4f);
+			ofNoFill();
+			ofSetLineWidth(1.0f);
+			const float alphas[] = {90.0f, 50.0f, 22.0f};
+			for (int i = 0; i < 3; ++i) {
+				const float inset = 1.0f + 1.5f * static_cast<float>(i);
+				ofColor c = colors.accent;
+				c.a = static_cast<unsigned char>(alphas[i] * strength);
+				ofSetColor(c);
+				ofDrawRectangle(b.x + inset, b.y + inset, b.width - 2.0f * inset, b.height - 2.0f * inset);
+			}
 		}
 		// Corner brackets 3 px outside the region (inside the existing gaps),
 		// so the label itself is never overdrawn.
@@ -535,8 +632,25 @@ void HudWireframeRenderer::draw() const {
 		ofPopStyle();
 	}
 
+	devTextHook() = nullptr;
+	devTextRegion().clear();
 	uint64_t drawEnd = ofGetElapsedTimeMicros();
 	stats_.totalDrawMicros = static_cast<double>(drawEnd - drawStart);
+}
+
+float HudWireframeRenderer::buttonActiveOpacity(const std::string& regionId) const {
+	if (buttonActiveTexture_ == nullptr || !buttonActiveTexture_->isAllocated()) return 0.0f;
+	const bool focusedIsRegion = focusedControl_ && *focusedControl_ == regionId;
+	return reactive::pressedArtworkOpacity(true, focusedIsRegion, focusedIsRegion && controlEnabled(regionId).has_value(),
+		activationAccepted_, activationStart_, elapsedSeconds_, kActivationFlashSeconds);
+}
+
+float HudWireframeRenderer::pressedArtworkOpacity() const {
+	if (pressedTexture_ == nullptr || !pressedTexture_->isAllocated()) return 0.0f;
+	const bool focusedIsRegion = focusedControl_ && *focusedControl_ == pressedRegionId_;
+	const bool visible = focusedIsRegion && controlEnabled(pressedRegionId_).has_value();
+	return reactive::pressedArtworkOpacity(true, focusedIsRegion, visible, activationAccepted_,
+		activationStart_, elapsedSeconds_, kActivationFlashSeconds);
 }
 
 std::optional<bool> HudWireframeRenderer::controlEnabled(const std::string& regionId) const {

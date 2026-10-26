@@ -59,6 +59,9 @@ enum class CanonicalSource : uint8_t {
 	SceneModePosition,
 	ControlSceneNextModeAvailable,
 	ControlRuntimeImmersiveAvailable,
+	ControlRuntimeFullscreenAvailable,
+	ControlRuntimeFullscreenState,
+	RuntimeLogRecent,
 	ControlScenePreviousAvailable,
 	ControlSceneNextAvailable,
 	ControlMediaPreviousAvailable,
@@ -153,6 +156,9 @@ const std::vector<CanonicalEntry>& canonicalTable() {
 		{"control.scene.next_mode.available", CanonicalSource::ControlSceneNextModeAvailable, HudSourceValueType::Boolean},
 		// HUD & Scene Experience v0.3: the IMMERSIVE control (runtime-owned).
 		{"control.runtime.immersive.available", CanonicalSource::ControlRuntimeImmersiveAvailable, HudSourceValueType::Boolean},
+		{"control.runtime.fullscreen.available", CanonicalSource::ControlRuntimeFullscreenAvailable, HudSourceValueType::Boolean},
+		{"control.runtime.fullscreen.state", CanonicalSource::ControlRuntimeFullscreenState, HudSourceValueType::Identifier},
+		{"runtime.log.recent", CanonicalSource::RuntimeLogRecent, HudSourceValueType::Text},
 		{"control.scene.previous.available", CanonicalSource::ControlScenePreviousAvailable, HudSourceValueType::Boolean},
 		{"control.scene.next.available", CanonicalSource::ControlSceneNextAvailable, HudSourceValueType::Boolean},
 		{"control.media.previous.available", CanonicalSource::ControlMediaPreviousAvailable, HudSourceValueType::Boolean},
@@ -439,6 +445,9 @@ std::optional<HudResolvedValue> HudSourceResolver::resolveCanonical(const std::s
 		case CanonicalSource::SceneModePosition:
 		case CanonicalSource::ControlSceneNextModeAvailable:
 		case CanonicalSource::ControlRuntimeImmersiveAvailable:
+		case CanonicalSource::ControlRuntimeFullscreenAvailable:
+		case CanonicalSource::ControlRuntimeFullscreenState:
+		case CanonicalSource::RuntimeLogRecent:
 		case CanonicalSource::MediaPlaybackTime:
 			// The fake frame carries no wall clock, scene registry or mode
 			// status (deterministic Validation Studio scenarios); only

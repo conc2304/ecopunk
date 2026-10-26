@@ -25,15 +25,34 @@ void ProgressBarWidget::draw(const ofRectangle& bounds, const HudWidgetColors& c
 	// 19.2 px progress slot of overlay.transition) draws "CAPTION value" on
 	// one line above the bar, so neither line rises into the region above.
 	const bool singleLine = !input.captionText.empty() && bounds.height < kBitmapTwoLineMinHeight;
+	// Optional trailing status (e.g. the scene health beside "TRANSITION x%"),
+	// right-aligned in accent on the caption line.
+	const auto* statusRole = input.findRole("status");
+	const bool hasStatus = statusRole && statusRole->shouldRender && !statusRole->useAmbientFallback && !statusRole->formattedText.empty();
+	float statusW = 0.0f;
+	if (hasStatus) {
+		const auto& st = textCache_.truncateToWidth(statusRole->formattedText, localMaxWidth * 0.5f);
+		statusW = hudTextWidth(st.text, st.widthLocal);
+		ofSetColor(scaledAlpha(colors.accent, opacity));
+		drawText(st.text, bounds.getRight() - statusW, captionBaselineY(bounds, wu(bounds, 10.0f)));
+	}
 	if (!input.captionText.empty()) {
 		ofSetColor(scaledAlpha(captionColor(colors, valueRole), opacity));
 		const auto& caption = textCache_.truncateToWidth(input.captionText, localMaxWidth);
 		const float baseline = captionBaselineY(bounds, wu(bounds, 10.0f));
-		drawText(caption.text, bounds.x, baseline);
+		// "centered" variant: the "CAPTION value" line is centred horizontally.
+		float lineX = bounds.x;
+		if (input.variantId == "centered") {
+			const float captionW = hudTextWidth(caption.text, caption.widthLocal);
+			float total = captionW;
+			if (singleLine && live) total += 8.0f + hudTextWidth(valueRole->formattedText, textCache_.truncateToWidth(valueRole->formattedText, localMaxWidth).widthLocal);
+			lineX = bounds.getCenter().x - total * 0.5f;
+		}
+		drawText(caption.text, lineX, baseline);
 		if (singleLine && live) {
-			const float valueX = bounds.x + caption.widthLocal + 8.0f;
+			const float valueX = lineX + hudTextWidth(caption.text, caption.widthLocal) + 8.0f;
 			ofSetColor(scaledAlpha(colors.primary, opacity));
-			const auto& value = textCache_.truncateToWidth(valueRole->formattedText, std::max(0.0f, bounds.getRight() - valueX));
+			const auto& value = textCache_.truncateToWidth(valueRole->formattedText, std::max(0.0f, bounds.getRight() - valueX - (hasStatus ? statusW + 8.0f : 0.0f)));
 			drawText(value.text, valueX, baseline);
 		}
 	}

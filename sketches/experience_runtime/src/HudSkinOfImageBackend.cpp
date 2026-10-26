@@ -29,6 +29,7 @@ SkinImageStageResult failure(SkinLoadStage stage, const char* code, std::string 
 
 SkinImageStageResult HudSkinOfImageBackend::stageImage(const std::vector<uint8_t>& pngBytes,
 	uint32_t requiredWidth, uint32_t requiredHeight) {
+	stageCalls_++;
 
 	// -- Decode ------------------------------------------------------------------
 	ofPixels pixels;
@@ -59,8 +60,14 @@ SkinImageStageResult HudSkinOfImageBackend::stageImage(const std::vector<uint8_t
 	const GLenum glError = glGetError();
 	pixels.clear(); // CPU decode buffer freed before returning, success or not
 
-	const bool injected = failNextUpload_;
+	bool injected = failNextUpload_;
 	failNextUpload_ = false;
+	if (failUploadSkips_ == 0) {
+		injected = true;
+		failUploadSkips_ = -1;
+	} else if (failUploadSkips_ > 0) {
+		failUploadSkips_--;
+	}
 	if (injected || glError != GL_NO_ERROR || !texture->isAllocated() ||
 		texture->getTextureData().textureID == 0) {
 		texture->clear();

@@ -29,7 +29,7 @@ void BlueprintSceneCore::setup(VideoPlaybackService* video, const Config& config
 	gridState_.setup(GRID_COLS, GRID_ROWS, GRIDSTATE_DECAY_RATE);
 	erosionFBO_.setup(cw, ch, EROSION_DECAY_RATE);
 
-	motionEx_.setup();
+	motionEx_.setup(cw, ch); // RT-007: canvas-sized, never the host window
 	motionEx_.setOutputMode(0); // LUMA_GLOW
 	motionEx_.setReferenceMode(MotionExtraction::REFERENCE_ACCUMULATION);
 

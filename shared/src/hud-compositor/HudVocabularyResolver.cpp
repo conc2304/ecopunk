@@ -36,6 +36,12 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		// "icon:<id>" = an icon-only control: LabelWidget draws the reserved
 		// icon slot for <id> instead of text (placeholder until final SVG).
 		{"control.runtime.immersive.label", "icon:immersive"},
+		// HUD-006 v2 buttons (stacked two-line labels split at the space).
+		{"control.scene.next_mode.label", "NEXT MODE"},
+		{"slot.scene.mode.line.label", "Mode:"},
+		{"control.runtime.fullscreen.label", "FULL SCREEN"},
+		{"control.runtime.fullscreen.state.off", "FULL SCREEN"},
+		{"control.runtime.fullscreen.state.on", "EXIT FULL"},
 
 		// -- Scene titles (displayTitleId values) ------------------------
 		{"scene.blob-region-prototype.title", "REGION FIELD STUDY"},

@@ -105,8 +105,14 @@ std::optional<int> VideoSelectionPolicy::requestInitialCandidate() {
 }
 
 std::optional<int> VideoSelectionPolicy::requestManualPreviousCandidate() const {
-	if (cursor_ <= 0) return std::nullopt;
-	return history_[static_cast<size_t>(cursor_ - 1)];
+	if (cursor_ > 0) return history_[static_cast<size_t>(cursor_ - 1)];
+	// At the oldest history entry Previous WRAPS: the previous playable clip
+	// in catalog order (first -> last), recorded at the front of history.
+	if (playableIndices_.size() < 2) return std::nullopt;
+	const int active = activeIndex_.value_or(playableIndices_.front());
+	auto it = std::find(playableIndices_.begin(), playableIndices_.end(), active);
+	if (it == playableIndices_.end() || it == playableIndices_.begin()) return playableIndices_.back();
+	return *std::prev(it);
 }
 
 std::optional<int> VideoSelectionPolicy::requestManualNextCandidate() {
@@ -143,9 +149,15 @@ std::optional<int> VideoSelectionPolicy::requestRecoveryCandidate(const std::vec
 void VideoSelectionPolicy::confirmActivationSucceeded(int catalogIndex, MediaSelectionOrigin origin) {
 	if (origin == MediaSelectionOrigin::ManualPrevious) {
 		// Precondition: caller only confirms with this origin after a
-		// successful requestManualPreviousCandidate() result — replay,
-		// cursor moves back onto the existing history entry.
-		cursor_ = cursor_ - 1;
+		// successful requestManualPreviousCandidate() result. Replay moves
+		// the cursor back onto the existing entry; a wrap (at the oldest
+		// entry) prepends the clip, so the cursor stays at the front.
+		if (cursor_ > 0 && history_[static_cast<size_t>(cursor_ - 1)] == catalogIndex) {
+			cursor_ = cursor_ - 1;
+		} else {
+			history_.insert(history_.begin(), catalogIndex);
+			cursor_ = 0;
+		}
 	} else if (origin == MediaSelectionOrigin::ManualNext
 		&& cursor_ + 1 < static_cast<int>(history_.size())
 		&& history_[static_cast<size_t>(cursor_ + 1)] == catalogIndex) {
@@ -300,7 +312,7 @@ bool VideoSelectionPolicy::isHoldComplete() const {
 }
 
 bool VideoSelectionPolicy::canSelectPrevious() const {
-	return cursor_ > 0;
+	return cursor_ > 0 || playableIndices_.size() > 1; // wraps at the oldest entry
 }
 
 bool VideoSelectionPolicy::canSelectNext() const {

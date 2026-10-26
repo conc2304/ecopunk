@@ -15,6 +15,9 @@ public:
 	void draw(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const override;
 
 private:
+	void drawClock(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const;
+	void drawInline(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const;
+
 	mutable HudTextMetricsCache textCache_;
 };
 

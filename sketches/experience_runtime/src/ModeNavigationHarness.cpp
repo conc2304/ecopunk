@@ -19,7 +19,8 @@ const std::string kBlueprintId = BlueprintProductionScene::kSceneId;
 const std::string kFragmentId = FragmentProductionScene::kSceneId;
 const std::string kQuadrantId = QuadrantProductionScene::kSceneId;
 constexpr const char* kCaptureDir = "captures/mode-navigation";
-constexpr const char* kModePanel = "flexible.secondary_a";
+constexpr const char* kModePanel = "universal.media_title"; // the one-line "Mode: <name>   x/y" text (spill checks)
+constexpr const char* kModeControl = "controls.mode";       // HUD-006 v2 NEXT MODE control (focus/activation)
 constexpr float kStepTimeoutSeconds = 45.0f;
 constexpr int kSettleFrames = 90;
 
@@ -123,14 +124,14 @@ ModeNavigationHarness::TextSpill ModeNavigationHarness::textSpill(const std::str
 
 void ModeNavigationHarness::buildScript() {
 	auto framesAtLeast = [this](int n) { return [this, n] { return framesInStep_ >= n; }; };
-	auto panelEnabled = [this]() { return runtime_.hudCompositorBridgeForTesting().renderer().controlEnabled(kModePanel); };
+	auto panelEnabled = [this]() { return runtime_.hudCompositorBridgeForTesting().renderer().controlEnabled(kModeControl); };
 	auto temporalRunning = [this]() {
 		return runtime_.temporalSceneForTesting().coreForTesting().compositionPhase() == TFComposition::CyclePhase::RUNNING;
 	};
 	// Steps RIGHT through the focus ring (one press every other frame) until
 	// the mode panel holds focus — the real focus path, not a direct set.
 	auto focusModePanel = [this]() {
-		if (focused() == kModePanel) return true;
+		if (focused() == kModeControl) return true;
 		if (framesInStep_ % 2 == 0) runtime_.keyPressed(OF_KEY_RIGHT);
 		return false;
 	};
@@ -198,7 +199,7 @@ void ModeNavigationHarness::buildScript() {
 		{"temporal focus activation", framesAtLeast(2), [this] {
 			const auto& rec = runtime_.lastFocusActivationForTesting();
 			check("Temporal: Enter on the focused mode panel dispatches SceneCommand::NextMode, accepted",
-				rec.serial == serialBefore_ + 1 && rec.region == kModePanel && rec.command == "SceneCommand::NextMode"
+				rec.serial == serialBefore_ + 1 && rec.region == kModeControl && rec.command == "SceneCommand::NextMode"
 					&& rec.accepted && !rec.refused,
 				rec.command);
 			check("Temporal: focus path stepped to the next pattern", modeIndex() == (indexBefore_ + 1) % 9, modeId());
@@ -215,7 +216,7 @@ void ModeNavigationHarness::buildScript() {
 			},
 			[this] {
 				const TextSpill t = textSpill(kModePanel, 24.0f);
-				check("Temporal: ECOLOGICAL SUCCESSION (7/9) drawn inside flexible.secondary_a, no spill toward the clock",
+				check("Temporal: ECOLOGICAL SUCCESSION (7/9) drawn inside the mode line (universal.media_title), no spill",
 					modeId() == "ecological_succession" && t.inside > 0 && t.outside == 0,
 					ofToString(t.inside) + " px inside, " + ofToString(t.outside) + " px in the 24 px gap");
 				capture("06b_temporal_ecological_succession");
@@ -233,12 +234,12 @@ void ModeNavigationHarness::buildScript() {
 				capture("06c_temporal_mode_9_of_9");
 			}},
 		{"to blueprint", [this, temporalRunning] { return temporalRunning() && framesInStep_ >= 30; }, [this] {
-			check("mode panel focused before the switch", focused() == kModePanel, focused());
+			check("mode panel focused before the switch", focused() == kModeControl, focused());
 			runtime_.keyPressed(']');
 		}},
 		{"temporal->blueprint loading", [this] { return loading(); }, [this] {
 			check("Loading: panel hidden, focus fell back automatically, restoration pending",
-				focused() != kModePanel && restorationPending(), focused());
+				focused() != kModeControl && restorationPending(), focused());
 			capture("07a_loading_focus_fallback");
 		}},
 
@@ -250,7 +251,7 @@ void ModeNavigationHarness::buildScript() {
 					modeId());
 				const auto enabled = panelEnabled();
 				check("Blueprint: NEXT MODE advertised and enabled", enabled.has_value() && *enabled);
-				check("Blueprint: focus restored to the mode panel after Loading", focused() == kModePanel && !restorationPending(),
+				check("Blueprint: focus restored to the mode panel after Loading", focused() == kModeControl && !restorationPending(),
 					focused());
 				capture("07_blueprint_mode_before_next");
 				mediaBefore_ = mediaId();
@@ -277,7 +278,7 @@ void ModeNavigationHarness::buildScript() {
 		{"blueprint focus activation", framesAtLeast(2), [this] {
 			const auto& rec = runtime_.lastFocusActivationForTesting();
 			check("Blueprint: Enter on the mode panel dispatches SceneCommand::NextMode, accepted",
-				rec.serial == serialBefore_ + 1 && rec.region == kModePanel && rec.command == "SceneCommand::NextMode"
+				rec.serial == serialBefore_ + 1 && rec.region == kModeControl && rec.command == "SceneCommand::NextMode"
 					&& rec.accepted && !rec.refused, rec.command);
 			check("Blueprint: focus path switched the mode", modeIndex() == 1 - indexBefore_, modeId());
 			capture("08_blueprint_next_mode_focus_activation");
@@ -297,7 +298,7 @@ void ModeNavigationHarness::buildScript() {
 		{"blueprint->fragment loading", [this] { return loading(); }, [this] {
 			runtime_.keyPressed(OF_KEY_LEFT); // deliberate navigation while the panel is hidden
 			check("explicit LEFT during Loading replaces the intended control (restoration cancelled)",
-				!restorationPending() && focused() != kModePanel, focused());
+				!restorationPending() && focused() != kModeControl, focused());
 		}},
 
 		// -- Fragment (4/5): three content modes, wraparound -----------------
@@ -306,7 +307,7 @@ void ModeNavigationHarness::buildScript() {
 				check("Fragment: scene position 4/5", position() == "4/5", position());
 				check("Fragment: 3 content modes, starts on EFFECT_VARIED", modeCount() == 3 && modeId() == "effect_varied",
 					modeId());
-				check("Fragment: no focus stealing — focus stayed where the user put it", focused() != kModePanel, focused());
+				check("Fragment: no focus stealing — focus stayed where the user put it", focused() != kModeControl, focused());
 				capture("09_fragment_effect_varied");
 				pressM();
 			}},
@@ -315,7 +316,7 @@ void ModeNavigationHarness::buildScript() {
 		}},
 		{"fragment param variant settled", framesAtLeast(150), [this, pressM] {
 			const TextSpill t = textSpill(kModePanel, 24.0f);
-			check("Fragment: EFFECT PARAM VARIANT drawn inside flexible.secondary_a, no spill", t.inside > 0 && t.outside == 0,
+			check("Fragment: EFFECT PARAM VARIANT drawn inside the mode line (universal.media_title), no spill", t.inside > 0 && t.outside == 0,
 				ofToString(t.inside) + " px inside, " + ofToString(t.outside) + " px in the gap");
 			capture("10_fragment_effect_param_variant");
 			pressM();
@@ -362,13 +363,13 @@ void ModeNavigationHarness::buildScript() {
 			runtime_.keyPressed('['); // PreviousScene, the other direction, panel focused
 		}},
 		{"blob->quadrant loading", [this] { return loading(); }, [this] {
-			check("PreviousScene Loading: fallback with restoration pending", focused() != kModePanel && restorationPending(),
+			check("PreviousScene Loading: fallback with restoration pending", focused() != kModeControl && restorationPending(),
 				focused());
 		}},
 		{"quadrant again", [this] { return idleOn(kQuadrantId) && framesInStep_ >= kSettleFrames && modeIndex() >= 0; }, [this] {
 			check("PreviousScene ring wraps 1/5 -> 5/5", position() == "5/5", position());
 			check("Quadrant: revisit resets to DRIFT (activation reset policy)", modeId() == "motion_drift", modeId());
-			check("focus restored to the mode panel after PreviousScene Loading", focused() == kModePanel && !restorationPending(),
+			check("focus restored to the mode panel after PreviousScene Loading", focused() == kModeControl && !restorationPending(),
 				focused());
 			capture("15_quadrant_revisit_focus_restored");
 		}},

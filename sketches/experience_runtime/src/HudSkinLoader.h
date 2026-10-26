@@ -63,6 +63,11 @@ namespace loadcodes {
 	inline constexpr const char* DecodeFailed = "SKIN_LOAD_DECODE_FAILED";
 	inline constexpr const char* DecodedFormatInvalid = "SKIN_LOAD_DECODED_FORMAT_INVALID";
 	inline constexpr const char* UploadFailed = "SKIN_LOAD_UPLOAD_FAILED";
+	// Reactive Control Artwork v0.1 — optional-asset diagnostics. NONFATAL:
+	// they never reject a skin; the asset is simply not used.
+	inline constexpr const char* OptionalNotRegularFile = "SKIN_OPTIONAL_NOT_REGULAR_FILE";
+	inline constexpr const char* OptionalUnreadable = "SKIN_OPTIONAL_UNREADABLE";
+	inline constexpr const char* OptionalWrongSize = "SKIN_OPTIONAL_WRONG_SIZE";
 } // namespace loadcodes
 
 // Result of decoding + uploading one image. A backend must leave NOTHING
@@ -94,13 +99,48 @@ struct SkinLoaderConfig {
 	// Caller-supplied expected Blueprint pair — passed straight to the
 	// accepted validator, which fails closed if either is unset.
 	SkinManifestValidationPolicy expectedBlueprint;
+	// Reactive Control Artwork: the exact pixel size controls/scene_next/
+	// pressed.png must have — derived from the HUD-006 catalog by the caller
+	// (HudReactiveControlArt.h pressedSpriteRect). 0x0 = not configured, so
+	// any pressed artwork is a nonfatal wrong-size diagnostic.
+	uint32_t pressedSpriteWidth = 0;
+	uint32_t pressedSpriteHeight = 0;
+	// Exact size of every controls/button/*.png face (control region + 4 px
+	// bleed per side), derived from the catalog by the caller. 0x0 = not
+	// configured -> any face is a nonfatal wrong-size diagnostic.
+	uint32_t buttonFaceWidth = 0;
+	uint32_t buttonFaceHeight = 0;
+};
+
+// One optional texture staged alongside the shell (Reactive Control
+// Artwork v0.1: controls/scene_next/pressed.png). Owned by the ActiveSkin it
+// belongs to — loaded with it, released with it.
+struct OptionalSkinImage {
+	uint64_t handle = 0;
+	size_t gpuBytes = 0;
+	uint32_t width = 0;
+	uint32_t height = 0;
 };
 
 struct ActiveSkin {
 	std::string skinId;
 	std::string skinVersion;
 	uint64_t handle = 0;
-	size_t gpuBytes = 0;
+	size_t gpuBytes = 0; // shell texture
+	std::optional<OptionalSkinImage> sceneNextPressed; // absent: no (valid) optional artwork
+	// Shared navigation-button faces (controls/button/{idle,focused,active}.png);
+	// each independently optional.
+	std::optional<OptionalSkinImage> buttonIdle;
+	std::optional<OptionalSkinImage> buttonFocused;
+	std::optional<OptionalSkinImage> buttonActive;
+};
+
+// A nonfatal problem with an optional asset (logged; the skin still loads).
+struct SkinOptionalDiagnostic {
+	std::string asset; // package-relative path
+	SkinLoadStage stage = SkinLoadStage::ImageRead;
+	std::string code;
+	std::string detail;
 };
 
 struct SkinLoadOutcome {
@@ -116,6 +156,10 @@ struct SkinLoadOutcome {
 	std::optional<std::string> activeSkinIdAfter;
 	size_t peakGpuBytesDuringRequest = 0; // active + staged candidate
 	size_t cpuPeakBytes = 0;              // PNG file bytes + backend decode buffer
+	// Reactive Control Artwork v0.1 (only meaningful when activated):
+	bool sceneNextPressedLoaded = false;
+	int buttonFacesLoaded = 0; // 0..3 of idle / focused / active
+	std::vector<SkinOptionalDiagnostic> optionalDiagnostics; // invalid optional assets; empty if absent or valid
 };
 
 class HudSkinLoader {
@@ -133,12 +177,24 @@ public:
 	void shutdown();
 
 	const std::optional<ActiveSkin>& active() const { return active_; }
-	size_t steadyGpuBytes() const { return active_ ? active_->gpuBytes : 0; }
+	size_t steadyGpuBytes() const {
+		if (!active_) return 0;
+		size_t bytes = active_->gpuBytes;
+		for (const auto* img : {&active_->sceneNextPressed, &active_->buttonIdle, &active_->buttonFocused, &active_->buttonActive}) {
+			if (*img) bytes += (*img)->gpuBytes;
+		}
+		return bytes;
+	}
 	size_t lifetimePeakGpuBytes() const { return lifetimePeakGpuBytes_; }
 	size_t lifetimePeakCpuBytes() const { return lifetimePeakCpuBytes_; }
 
 private:
 	SkinLoadOutcome finish(SkinLoadOutcome outcome);
+	// Stages controls/scene_next/pressed.png if present and valid; records a
+	// nonfatal diagnostic otherwise. Never affects whether the skin activates.
+	std::optional<OptionalSkinImage> stageOptionalImage(const std::filesystem::path& packageRoot, const std::string& relativePath,
+		uint32_t requiredWidth, uint32_t requiredHeight, const std::string& sizeHint, SkinLoadOutcome& o);
+	void releaseSkin(const ActiveSkin& skin);
 
 	ISkinImageBackend& backend_;
 	SkinLoaderConfig config_;

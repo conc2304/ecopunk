@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "skinId": "faces-and-pressed",
+  "displayName": "Reactive artwork fixture (test)",
+  "skinVersion": "0.0.1",
+  "blueprintId": "ecopunk-hud-blueprint",
+  "blueprintVersion": 2,
+  "assets": {
+    "shell": {
+      "path": "shell.png",
+      "required": true,
+      "coordinateSpace": "canvas",
+      "expectedWidth": 1280,
+      "expectedHeight": 720
+    }
+  }
+}

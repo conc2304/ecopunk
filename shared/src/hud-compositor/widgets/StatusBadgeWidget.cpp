@@ -26,7 +26,7 @@ void StatusBadgeWidget::draw(const ofRectangle& bounds, const HudWidgetColors& c
 	ofDrawRectangle(bounds);
 	drawOutline(bounds, scaledAlpha(colors.muted, opacity));
 
-	float pad = wu(bounds, 4.0f);
+	float pad = containerPad(bounds);
 	// Fixed native pixel-space budget (see HudWidgetDrawUtils.h's v1
 	// typography strategy comment) — not scale-adjusted.
 	float localMaxWidth = std::max(0.0f, bounds.width - pad * 2.0f);

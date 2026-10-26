@@ -83,7 +83,7 @@ private:
 	static float perFrameRate(float rateAt60, float dt);
 
 	// Line metrics
-	float lineWidth = 10.f;
+	float lineWidth = 7.f;
 
 	// Halo
 	glm::vec2 haloPos = { 640.f, 360.f };

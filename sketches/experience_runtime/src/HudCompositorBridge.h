@@ -107,6 +107,10 @@ public:
 	const HudFocusNavigator& focus() const { return focus_; }
 	// Shows the activation flash for the result ExperienceRuntime got back.
 	void reportActivation(bool accepted) { renderer_.triggerActivationFeedback(accepted); }
+	// Day/night text palette (skin schedule); default = night.
+	void setColors(const hudpresent::HudWidgetColors& colors) { renderer_.setColors(colors); }
+	// Development-only Live Typography Playground (null = production default).
+	void setLabelTypography(const hudpresent::IHudLabelTypography* typography) { renderer_.setLabelTypography(typography); }
 
 	// Inspection / harness surface.
 	const hudskin::HudSkinLoader& skinLoader() const { return skinLoader_; }
@@ -121,8 +125,10 @@ private:
 	// Traversal order = the HUD-006 controls row, left to right, then the
 	// mode panel (flexible.secondary_a: Enter -> NEXT MODE). Hidden stops
 	// (no "enabled" source this frame) are skipped like any other control.
-	HudFocusNavigator focus_{{"controls.scene_previous", "controls.scene_next", "controls.media_previous",
-		"controls.media_next", "controls.reseed", "flexible.secondary_a"}};
+	// HUD-006 v2: the six-button row, left to right (the mode panel is
+	// informational and no longer a focus stop).
+	HudFocusNavigator focus_{{"controls.scene_previous", "controls.scene_next", "controls.mode",
+		"controls.media_previous", "controls.media_next", "controls.fullscreen"}};
 
 	hudpresent::HudWireframeRenderer renderer_;
 	bool visible_ = true;

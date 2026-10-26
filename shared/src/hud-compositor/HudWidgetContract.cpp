@@ -60,7 +60,10 @@ const std::unordered_map<HudWidgetType, HudWidgetContract>& contractTable() {
 		m[HudWidgetType::ProgressBar] = {
 			HudWidgetType::ProgressBar,
 			{ {"value", true, {T::Ratio}},
-			  {"label", false, {T::Identifier, T::Text}} },
+			  {"label", false, {T::Identifier, T::Text}},
+			  // Optional trailing status, right-aligned in accent on the
+			  // caption line (overlay: scene health beside the transition %).
+			  {"status", false, {T::Identifier, T::Text}} },
 			false
 		};
 
@@ -79,7 +82,10 @@ const std::unordered_map<HudWidgetType, HudWidgetContract>& contractTable() {
 
 		m[HudWidgetType::EffectChips] = {
 			HudWidgetType::EffectChips,
-			{ {"value", true, {T::IdentifierList}} },
+			{ {"value", true, {T::IdentifierList}},
+			  // Optional trailing status, right-aligned in accent
+			  // (effects health beside the active-effect chips).
+			  {"status", false, {T::Identifier, T::Text}} },
 			false
 		};
 

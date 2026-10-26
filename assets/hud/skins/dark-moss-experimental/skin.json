@@ -4,7 +4,7 @@
   "displayName": "Dark Moss Experimental",
   "skinVersion": "1.0.0",
   "blueprintId": "ecopunk-hud-blueprint",
-  "blueprintVersion": 1,
+  "blueprintVersion": 2,
   "assets": {
     "shell": {
       "path": "shell.png",

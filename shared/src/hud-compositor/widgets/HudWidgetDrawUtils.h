@@ -1,5 +1,7 @@
 #pragma once
 
+#include "HudLabelTypography.h"
+
 // ============================================================================
 // HudWidgetDrawUtils.h — small drawing helpers shared by every compositor
 // widget. Deliberately mirrors shared/src/hud/shared/HudUtils.h's
@@ -38,6 +40,12 @@
 #include <algorithm>
 #include <cmath>
 #include <string>
+
+namespace hudpresent {
+// Current palette's text-shadow colour; the renderer sets it at the start of
+// each draw from its HudWidgetColors (default: black at ~55%).
+inline ofColor& hudTextShadowColor() { static ofColor c(0, 0, 0, 140); return c; }
+}
 
 namespace hudpresent {
 
@@ -81,7 +89,7 @@ inline void drawReservedIcon(const std::string& iconId, const ofRectangle& squar
 }
 
 inline float captionBaselineY(const ofRectangle& b, float scaledOffset) {
-	return b.y + std::max(scaledOffset, kBitmapCapHeight + 2.0f);
+	return b.y + std::max(scaledOffset, kBitmapCapHeight + 3.0f); // >= 3 px top padding above caps
 }
 inline float bottomBaselineY(const ofRectangle& b, float scaledInset) {
 	return b.getBottom() - std::max(scaledInset, kBitmapDescent + 3.0f);
@@ -97,6 +105,28 @@ inline float wy(const ofRectangle& b, float valueAtBaseHeight, float baseHeight 
 
 inline float wu(const ofRectangle& b, float valueAtBase, float base = 120.0f) {
 	return valueAtBase * (std::min(b.width, b.height) / base);
+}
+
+// Every container keeps at least 3 px of padding inside its edges.
+constexpr float kContainerPad = 3.0f;
+inline float containerPad(const ofRectangle& b) { return std::max(kContainerPad, wu(b, 4.0f)); }
+
+// Line height for multi-line text in the region being drawn (native = 13 px
+// bitmap line unless the dev typography playground restyles the region).
+inline float hudLineHeight(float nativeLine) {
+	if (const auto* hook = hudpresent::devTextHook()) return hook->lineHeight(hudpresent::devTextRegion(), nativeLine);
+	return nativeLine;
+}
+
+// On-screen width of `text` as it will actually be drawn: the dev typography
+// playground's font when it restyles this region, else native bitmap metrics
+// (widthLocal = HudTextMetricsCache width, already native px) x scale.
+inline float hudTextWidth(const std::string& text, float widthLocal, float scale = 1.0f) {
+	if (const auto* hook = hudpresent::devTextHook()) {
+		const float w = hook->measureText(hudpresent::devTextRegion(), text, scale);
+		if (w >= 0.0f) return w;
+	}
+	return widthLocal * scale;
 }
 
 inline ofColor withAlpha(ofColor c, float alpha01) {
@@ -129,11 +159,49 @@ inline ofColor scaledAlpha(ofColor c, float scale) {
 // here, formally, as this domain's Architecture-Closure Session
 // typography decision — not silently kept as dead/misleading code.
 inline void drawText(const std::string& text, float x, float y, float scale = 1.0f) {
+	if (const auto* hook = hudpresent::devTextHook()) { // dev typography playground only
+		if (hook->drawText(hudpresent::devTextRegion(), text, x, y, scale, ofGetStyle().color)) return;
+	}
+	{ // mild drop shadow: 1 px down-right, palette shadow colour scaled by the text's own alpha
+		const ofColor fg = ofGetStyle().color;
+		const ofColor sh = hudTextShadowColor();
+		ofSetColor(sh.r, sh.g, sh.b, static_cast<int>(fg.a * (sh.a / 255.0f)));
+		ofDrawBitmapString(text, x + 1.0f, y + 1.0f);
+		ofSetColor(fg);
+	}
 	(void)scale; // see this function's own comment — intentionally unused in v1
 	ofPushMatrix();
 	ofTranslate(x, y);
 	ofDrawBitmapString(text, 0, 0);
 	ofPopMatrix();
+}
+
+// The one exception to the fixed-native-size rule above: text that is
+// deliberately enlarged (clock time, scene title, active time). Switches
+// to OF_BITMAPMODE_MODEL — which, unlike the default billboard mode,
+// honours the model transform — so glyphs render at `scale` x their
+// native 8x13 cell. Measure such text as native width * scale. `bold`
+// overdraws the string one screen pixel to the right (faux bold; the
+// bitmap font has no bold face).
+inline void drawTextScaled(const std::string& text, float x, float y, float scale, bool bold = false) {
+	if (const auto* hook = hudpresent::devTextHook()) { // dev typography playground only
+		if (hook->drawText(hudpresent::devTextRegion(), text, x, y, scale, ofGetStyle().color)) return;
+	}
+	const ofColor fg = ofGetStyle().color;
+	ofPushStyle();
+	ofSetDrawBitmapMode(OF_BITMAPMODE_MODEL);
+	ofPushMatrix();
+	ofTranslate(x, y);
+	ofScale(scale, scale);
+	// Mild drop shadow: 1 screen px down-right, black at ~55% of the text alpha.
+	const ofColor sh = hudTextShadowColor();
+	ofSetColor(sh.r, sh.g, sh.b, static_cast<int>(fg.a * (sh.a / 255.0f)));
+	ofDrawBitmapString(text, 1.0f / scale, 1.0f / scale);
+	ofSetColor(fg);
+	ofDrawBitmapString(text, 0, 0);
+	if (bold) ofDrawBitmapString(text, 1.0f / scale, 0);
+	ofPopMatrix();
+	ofPopStyle();
 }
 
 // A thin single-line frame — every widget here uses this instead of the

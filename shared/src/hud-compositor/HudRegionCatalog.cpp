@@ -29,6 +29,13 @@ HudRegionCatalog::HudRegionCatalog() {
 	using W = HudWidgetType;
 
 	// -- Universal regions (task §3 list, in the same order) -----------
+	// Content map (HUD content relocation, 2026-10-23; geometry unchanged):
+	//   scene_title    scene title + [Scene x/y]        media_title   "Mode: <name>   x/y"
+	//   primary_state  media title + progress           activity      primary-state badge
+	//   effect_summary activity bar                     timing        active effects (+health)
+	//   flexible.secondary_a  active time               overlay.health      transition (+scene health)
+	//   overlay.transition    recent activity log
+	// The accepted widget sets below were widened to allow exactly that.
 	regions_.push_back(makeRegion("universal.scene_title", HudRegionRole::Universal,
 		{0.66f, 0.03f, 0.32f, 0.06f}, {W::Label}, 1, false));
 
@@ -36,10 +43,10 @@ HudRegionCatalog::HudRegionCatalog() {
 		{0.66f, 0.10f, 0.32f, 0.05f}, {W::Label}, 1, false));
 
 	regions_.push_back(makeRegion("universal.primary_state", HudRegionRole::Universal,
-		{0.66f, 0.16f, 0.32f, 0.06f}, {W::StatusBadge}, 1, false));
+		{0.66f, 0.16f, 0.32f, 0.06f}, {W::Label, W::StatusBadge}, 1, false));
 
 	regions_.push_back(makeRegion("universal.activity", HudRegionRole::Universal,
-		{0.66f, 0.23f, 0.32f, 0.06f}, {W::NumericValue, W::ProgressBar}, 1, false));
+		{0.66f, 0.23f, 0.32f, 0.06f}, {W::NumericValue, W::ProgressBar, W::StatusBadge}, 1, false));
 
 	// maxBindings=2 (Architecture-Closure Session, DEC-015): the chips
 	// binding (effects.active, dominance-derived) plus a StatusBadge
@@ -49,10 +56,10 @@ HudRegionCatalog::HudRegionCatalog() {
 	// reused here rather than inventing new geometry, per the closure
 	// plan's "preserve canonical wireframe geometry" instruction.
 	regions_.push_back(makeRegion("universal.effect_summary", HudRegionRole::Universal,
-		{0.66f, 0.30f, 0.32f, 0.06f}, {W::EffectChips, W::StatusBadge}, 2, false));
+		{0.66f, 0.30f, 0.32f, 0.06f}, {W::EffectChips, W::StatusBadge, W::ProgressBar, W::NumericValue}, 2, false));
 
 	regions_.push_back(makeRegion("universal.timing", HudRegionRole::Universal,
-		{0.66f, 0.37f, 0.32f, 0.05f}, {W::NumericValue, W::Label}, 1, false));
+		{0.66f, 0.37f, 0.32f, 0.05f}, {W::NumericValue, W::Label, W::EffectChips}, 1, false));
 
 	regions_.push_back(makeRegion("universal.activity_trace", HudRegionRole::Universal,
 		{0.66f, 0.43f, 0.32f, 0.10f}, {W::Sparkline}, 1, true));
@@ -60,17 +67,23 @@ HudRegionCatalog::HudRegionCatalog() {
 	regions_.push_back(makeRegion("universal.secondary_trace", HudRegionRole::Universal,
 		{0.66f, 0.54f, 0.32f, 0.10f}, {W::Sparkline}, 1, true));
 
-	// -- Controls regions ------------------------------------------------
+	// -- Controls regions (HUD-006 v2: six 72x72 squares) -------------------
+	// Row y = 633.6..705.6 (0.88 + 0.10); gaps 12.8 px in a group, 32 px
+	// between groups: [PREV SCENE][NEXT SCENE][MODE] [PREV MEDIA][NEXT MEDIA]
+	// [FULLSCREEN]. controls.reseed (v1) is retired. Normalized against the
+	// 1280x720 canvas: x / 1280, y and h / 720, w = 72 / 1280 = 0.05625.
 	regions_.push_back(makeRegion("controls.scene_previous", HudRegionRole::Controls,
-		{0.02f, 0.90f, 0.08f, 0.06f}, {W::Label}, 1, false));
+		{0.02f, 0.88f, 0.05625f, 0.10f}, {W::Label}, 1, false));
 	regions_.push_back(makeRegion("controls.scene_next", HudRegionRole::Controls,
-		{0.12f, 0.90f, 0.08f, 0.06f}, {W::Label}, 1, false));
+		{0.08625f, 0.88f, 0.05625f, 0.10f}, {W::Label}, 1, false));
+	regions_.push_back(makeRegion("controls.mode", HudRegionRole::Controls,
+		{0.1525f, 0.88f, 0.05625f, 0.10f}, {W::Label}, 1, false));
 	regions_.push_back(makeRegion("controls.media_previous", HudRegionRole::Controls,
-		{0.24f, 0.90f, 0.08f, 0.06f}, {W::Label}, 1, false));
+		{0.23375f, 0.88f, 0.05625f, 0.10f}, {W::Label}, 1, false));
 	regions_.push_back(makeRegion("controls.media_next", HudRegionRole::Controls,
-		{0.34f, 0.90f, 0.08f, 0.06f}, {W::Label}, 1, false));
-	regions_.push_back(makeRegion("controls.reseed", HudRegionRole::Controls,
-		{0.46f, 0.90f, 0.10f, 0.06f}, {W::Label}, 1, false));
+		{0.30f, 0.88f, 0.05625f, 0.10f}, {W::Label}, 1, false));
+	regions_.push_back(makeRegion("controls.fullscreen", HudRegionRole::Controls,
+		{0.38125f, 0.88f, 0.05625f, 0.10f}, {W::Label}, 1, false));
 
 	// -- Flexible scene-specific regions ---------------------------------
 	// flexible.primary accepts the broadest set — it is where each scene's
@@ -109,7 +122,7 @@ HudRegionCatalog::HudRegionCatalog() {
 
 	// -- Overlay regions ---------------------------------------------------
 	regions_.push_back(makeRegion("overlay.health", HudRegionRole::Overlay,
-		{0.02f, 0.03f, 0.20f, 0.06f}, {W::StatusBadge, W::Label}, 1, false));
+		{0.02f, 0.03f, 0.20f, 0.06f}, {W::StatusBadge, W::Label, W::ProgressBar}, 2, false));
 
 	// maxBindings=3: ProgressBar (progress) + 2 Labels (phase, message) —
 	// see HudPresentationProfile.cpp's "overlay.transition.phase_label"/

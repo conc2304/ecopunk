@@ -43,6 +43,7 @@ ScenePresentationProfile buildUniversalProfile() {
 	{
 		auto b = makeBinding("universal.scene_title.label", "universal.scene_title",
 			HudWidgetType::Label, HudMissingPolicy::Placeholder, HudFormatKind::VocabularyValue);
+		b.variantId = "title"; // 1.5x text, 10 px left padding
 		b.addSource({"text", "scene.title", true});
 		// Scene & Pattern Navigation: "  2/5" from SceneManager's registry.
 		b.addSource({"suffix", "scene.position", false});
@@ -53,7 +54,7 @@ ScenePresentationProfile buildUniversalProfile() {
 		// plus playback progress (bar + "current / total") from canonical
 		// Shared Video status. Automatic formatting resolves the title exactly
 		// as VocabularyValue did (Identifier -> vocabulary, Text -> as-is).
-		auto b = makeBinding("universal.media_title.label", "universal.media_title",
+		auto b = makeBinding("universal.media_title.label", "universal.primary_state",
 			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic);
 		b.addSource({"text", "media.title", false});
 		b.addSource({"progress", "media.playback.progress", false});
@@ -61,7 +62,18 @@ ScenePresentationProfile buildUniversalProfile() {
 		p.bindings.push_back(b);
 	}
 	{
-		auto b = makeBinding("universal.primary_state.badge", "universal.primary_state",
+		// Scene mode on ONE line in universal.media_title: "Mode: <name>   x/y"
+		// (informational; NEXT MODE is the controls.mode button).
+		{
+			auto m = makeBinding("universal.mode.line", "universal.media_title",
+				HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic,
+				std::string("slot.scene.mode.line.label"));
+			m.variantId = "modeline";
+			m.addSource({"text", "scene.mode.name", true});
+			m.addSource({"suffix", "scene.mode.position", false});
+			p.bindings.push_back(m);
+		}
+		auto b = makeBinding("universal.primary_state.badge", "universal.activity",
 			HudWidgetType::StatusBadge, HudMissingPolicy::Placeholder);
 		b.addSource({"value", "scene.state.primary", true});
 		// v0.3: the scene's secondary state (e.g. Quadrant's active
@@ -74,7 +86,7 @@ ScenePresentationProfile buildUniversalProfile() {
 	// -- Activity (optional per §12.3; dimmed rather than hidden so the
 	// universal region doesn't visibly flicker on a momentary nullopt) --
 	{
-		auto b = makeBinding("universal.activity.bar", "universal.activity",
+		auto b = makeBinding("universal.activity.bar", "universal.effect_summary",
 			HudWidgetType::ProgressBar, HudMissingPolicy::DimLastValid, HudFormatKind::Percentage,
 			std::string("slot.scene.activity.label"));
 		b.addSource({"value", "scene.activity.overall", true});
@@ -84,32 +96,22 @@ ScenePresentationProfile buildUniversalProfile() {
 	// -- Effect summary + timing (deferred from the first vertical slice
 	// per this task's §13, still fully defined/compiled/testable here) --
 	{
-		auto b = makeBinding("universal.effect_summary.chips", "universal.effect_summary",
+		// Active effects in universal.timing, with the frozen
+		// EffectActivityStatus::health (DEC-015/DEC-016: never derived from
+		// slot count) as a right-aligned trailing "status" on the same row
+		// instead of the old separate stacked badge. Hide: no authoritative
+		// snapshot -> nothing; the optional status is simply not drawn.
+		auto b = makeBinding("universal.effect_summary.chips", "universal.timing",
 			HudWidgetType::EffectChips, HudMissingPolicy::Hide);
 		b.addSource({"value", "effects.active", true});
+		b.addSource({"status", "effects.health", false});
 		p.bindings.push_back(b);
 	}
 	{
-		// Architecture-Closure Session (DEC-015/DEC-016): the frozen
-		// EffectActivityStatus::health (Ready/Degraded/Failed), owned by
-		// Shared Effects — never derived from slot count (an empty list
-		// with health==Ready is a fully valid state, not a failure; see
-		// HudRealFrameResolver.cpp's effects.health handling). Hidden on
-		// the fake-scenario path (no real EffectActivityStatus exists
-		// there, so this always resolves missing) — visible only via the
-		// real HudFrameData path, same as every other effects.* slot.
-		// Captioned ("EFFECTS") so the bare health value never reads as
-		// belonging to the universal.timing region directly below it.
-		auto b = makeBinding("universal.effect_summary.health", "universal.effect_summary",
-			HudWidgetType::StatusBadge, HudMissingPolicy::Hide, HudFormatKind::Automatic,
-			std::string("slot.effects.health.label"));
-		b.addSource({"value", "effects.health", true});
-		p.bindings.push_back(b);
-	}
-	{
-		auto b = makeBinding("universal.timing.value", "universal.timing",
+		auto b = makeBinding("universal.timing.value", "flexible.secondary_a",
 			HudWidgetType::NumericValue, HudMissingPolicy::RetainLastValid, HudFormatKind::Duration,
 			std::string("slot.scene.timing.label"));
+		b.variantId = "inline"; // "ACTIVE TIME    3:42" on one line
 		b.addSource({"value", "scene.time.active", true});
 		p.bindings.push_back(b);
 	}
@@ -123,23 +125,9 @@ ScenePresentationProfile buildUniversalProfile() {
 	{
 		auto b = makeBinding("universal.clock.value", "flexible.secondary_b",
 			HudWidgetType::NumericValue, HudMissingPolicy::Hide, HudFormatKind::ClockTime);
+		b.variantId = "clock"; // large time left, two-line date/zone right
 		b.addSource({"value", "runtime.clock.local_seconds", true});
 		b.addSource({"label", "runtime.clock.local_label", false});
-		p.bindings.push_back(b);
-	}
-
-	// -- Scene & Pattern Navigation (product-approved): the active scene's
-	// mode in flexible.secondary_a, beside the clock. Top line "MODE 3/9",
-	// bottom line the mode name. Also the focusable NEXT MODE control:
-	// "enabled" puts it in the focus ring (Enter -> SceneCommand::NextMode);
-	// a scene with no mode model publishes nothing and the region recesses.
-	{
-		auto b = makeBinding("universal.mode.value", "flexible.secondary_a",
-			HudWidgetType::NumericValue, HudMissingPolicy::Hide, HudFormatKind::Automatic,
-			std::string("slot.scene.mode.label"));
-		b.addSource({"value", "scene.mode.name", true});
-		b.addSource({"label", "scene.mode.position", false});
-		b.addSource({"enabled", "control.scene.next_mode.available", false});
 		p.bindings.push_back(b);
 	}
 
@@ -166,6 +154,7 @@ ScenePresentationProfile buildUniversalProfile() {
 		auto b = makeBinding(bindingId, regionId, HudWidgetType::Label, HudMissingPolicy::Hide,
 			HudFormatKind::VocabularyValue, std::string(vocabId));
 		b.addSource({"enabled", availSource, false});
+		b.variantId = "button"; // label centred in its control
 		p.bindings.push_back(b);
 	};
 	addControl("controls.scene_previous.label", "controls.scene_previous",
@@ -176,57 +165,61 @@ ScenePresentationProfile buildUniversalProfile() {
 		"control.media.previous.label", "control.media.previous.available");
 	addControl("controls.media_next.label", "controls.media_next",
 		"control.media.next.label", "control.media.next.available");
-	// HUD & Scene Experience v0.3: the frozen controls.reseed region now
-	// hosts the icon-only IMMERSIVE control. The visible RESEED button is
-	// retired; SceneCommand::Regenerate itself is untouched (key '2', scene
-	// capabilities, control.scene.reseed.* sources and vocabulary remain).
-	addControl("controls.immersive.icon", "controls.reseed",
-		"control.runtime.immersive.label", "control.runtime.immersive.available");
+	// HUD-006 v2: controls.reseed is retired (IMMERSIVE is keyboard 'i';
+	// SceneCommand::Regenerate stays on key '2'). MODE (SceneCommand::NextMode, scene-advertised) and
+	// FULLSCREEN, which enters IMMERSIVE: the scene fills the OF window
+	// viewport (HUD-006 v2 decision D1 option (b)). Native window fullscreen
+	// stays on key 'f'. Static caption — the HUD is hidden while immersive,
+	// so there is no "on" state to show.
+	addControl("controls.mode.label", "controls.mode",
+		"control.scene.next_mode.label", "control.scene.next_mode.available");
+	{
+		auto b = makeBinding("controls.fullscreen.label", "controls.fullscreen", HudWidgetType::Label, HudMissingPolicy::Hide,
+			HudFormatKind::VocabularyValue, std::string("control.runtime.fullscreen.label"));
+		b.addSource({"enabled", "control.runtime.immersive.available", false});
+		b.variantId = "button";
+		p.bindings.push_back(b);
+	}
 
 	return p;
 }
 
+// HUD content relocation (2026-10-23): overlay.health (profile id kept) now
+// hosts the TRANSITION status — "TRANSITION x%" + bar, with the scene health
+// ("READY", accent) merged right-aligned on the same caption line — and the
+// phase label beneath. The old transition message ("NextScene accepted ...")
+// is no longer drawn.
 ScenePresentationProfile buildOverlayHealthProfile() {
 	ScenePresentationProfile p;
 	p.profileId = "overlay.health";
-	auto b = makeBinding("overlay.health.badge", "overlay.health",
-		HudWidgetType::StatusBadge, HudMissingPolicy::RetainLastValid);
-	b.addSource({"value", "scene.health", true});
+	// Automatic (not Percentage): the format kind applies to every role of a
+	// binding, and the trailing "status" (scene health) is an identifier;
+	// Automatic still renders the Ratio value as a percentage.
+	auto b = makeBinding("overlay.transition.bar", "overlay.health",
+		HudWidgetType::ProgressBar, HudMissingPolicy::RetainLastValid, HudFormatKind::Automatic,
+		std::string("overlay.transition.label"));
+	b.variantId = "centered"; // "TRANSITION x%" centred; the health stays right-aligned
+	b.addSource({"value", "manager.transition.progress", true});
+	b.addSource({"status", "scene.health", false});
 	p.bindings.push_back(b);
+	auto phaseLabel = makeBinding("overlay.transition.phase_label", "overlay.health",
+		HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::VocabularyValue);
+	phaseLabel.variantId = "centered"; // "IDLE" centred
+	phaseLabel.addSource({"text", "manager.transition.phase", true});
+	p.bindings.push_back(phaseLabel);
 	return p;
 }
 
+// overlay.transition (profile id kept) now hosts the recent activity log: the
+// last few console lines, truncated to the region (2-4 lines by text size).
 ScenePresentationProfile buildOverlayTransitionProfile() {
 	ScenePresentationProfile p;
 	p.profileId = "overlay.transition";
-	auto b = makeBinding("overlay.transition.bar", "overlay.transition",
-		HudWidgetType::ProgressBar, HudMissingPolicy::RetainLastValid, HudFormatKind::Percentage,
-		std::string("overlay.transition.label"));
-	b.addSource({"value", "manager.transition.progress", true});
+	auto b = makeBinding("overlay.activity_log", "overlay.transition",
+		HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic);
+	b.variantId = "log";
+	b.addSource({"text", "runtime.log.recent", true});
 	p.bindings.push_back(b);
-
-	// Phase + message — this task's §4 "Bind SceneManager-owned:
-	// transition phase; transition progress; transition message." Second
-	// binding into the same region (now maxBindings=2, see
-	// HudRegionCatalog.cpp) rather than teaching ProgressBar a second
-	// role — "use an overlay/profile layer rather than teaching every
-	// widget manager transition semantics" (this task's own instruction).
-	{
-		auto phaseLabel = makeBinding("overlay.transition.phase_label", "overlay.transition",
-			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::VocabularyValue);
-		phaseLabel.addSource({"text", "manager.transition.phase", true});
-		p.bindings.push_back(phaseLabel);
-	}
-	{
-		// Optional — most frames have no manager message at all (only
-		// populated on a failed transition, per SceneManagerStatus's own
-		// contract). Hide policy: no message this frame -> nothing drawn,
-		// never a placeholder ("—") cluttering the common case.
-		auto messageLabel = makeBinding("overlay.transition.message_label", "overlay.transition",
-			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic);
-		messageLabel.addSource({"text", "manager.message", false});
-		p.bindings.push_back(messageLabel);
-	}
 	return p;
 }
 

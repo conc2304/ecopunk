@@ -1,6 +1,7 @@
 #include "HudSkinLoader.h"
 
 #include "HudSkinPng.h"
+#include "HudReactiveControlArt.h"
 
 #include <algorithm>
 #include <fstream>
@@ -152,11 +153,30 @@ SkinLoadOutcome HudSkinLoader::requestSkin(const std::string& selection) {
 	}
 	o.peakGpuBytesDuringRequest = activeBytes + staged.gpuBytes;
 
+	// -- Optional artwork (Reactive Control Artwork v0.1) ----------------------------
+	// Only after the required shell is fully staged, so a rejected candidate
+	// never stages it. Nonfatal by construction: no path out of here rejects.
+	std::optional<OptionalSkinImage> pressed = stageOptionalImage(packageRoot, hudpresent::reactive::kSceneNextPressedPath,
+		config_.pressedSpriteWidth, config_.pressedSpriteHeight,
+		"controls.scene_next region + 4 px bleed, snapped outward — HUD-006 v2", o);
+	if (pressed) o.peakGpuBytesDuringRequest += pressed->gpuBytes;
+	const std::string faceHint = "navigation control region + 4 px bleed per side — HUD-006 v2";
+	auto stageFace = [&](const char* path) {
+		auto img = stageOptionalImage(packageRoot, path, config_.buttonFaceWidth, config_.buttonFaceHeight, faceHint, o);
+		if (img) o.peakGpuBytesDuringRequest += img->gpuBytes;
+		return img;
+	};
+	std::optional<OptionalSkinImage> idleFace = stageFace(hudpresent::reactive::kButtonIdlePath);
+	std::optional<OptionalSkinImage> focusedFace = stageFace(hudpresent::reactive::kButtonFocusedPath);
+	std::optional<OptionalSkinImage> activeFace = stageFace(hudpresent::reactive::kButtonActivePath);
+
 	// -- Atomic activation -----------------------------------------------------------
 	std::optional<ActiveSkin> previous = std::move(active_);
-	active_ = ActiveSkin{m.skinId, m.skinVersion, staged.handle, staged.gpuBytes};
+	active_ = ActiveSkin{m.skinId, m.skinVersion, staged.handle, staged.gpuBytes, pressed, idleFace, focusedFace, activeFace};
+	o.sceneNextPressedLoaded = pressed.has_value();
+	o.buttonFacesLoaded = int(idleFace.has_value()) + int(focusedFace.has_value()) + int(activeFace.has_value());
 	if (previous) {
-		backend_.release(previous->handle);
+		releaseSkin(*previous); // shell + its optional artwork
 		o.releasedPrevious = true;
 	}
 	o.activated = true;
@@ -174,9 +194,74 @@ SkinLoadOutcome HudSkinLoader::finish(SkinLoadOutcome o) {
 	return o;
 }
 
+void HudSkinLoader::releaseSkin(const ActiveSkin& skin) {
+	backend_.release(skin.handle);
+	for (const auto* img : {&skin.sceneNextPressed, &skin.buttonIdle, &skin.buttonFocused, &skin.buttonActive}) {
+		if (*img) backend_.release((*img)->handle);
+	}
+}
+
+std::optional<OptionalSkinImage> HudSkinLoader::stageOptionalImage(const fs::path& packageRoot, const std::string& relativePath,
+	uint32_t requiredWidth, uint32_t requiredHeight, const std::string& sizeHint, SkinLoadOutcome& o) {
+	const std::string asset = relativePath;
+	auto diagnose = [&](SkinLoadStage stage, const std::string& code, std::string detail) {
+		o.optionalDiagnostics.push_back(SkinOptionalDiagnostic{asset, stage, code, std::move(detail)});
+		return std::optional<OptionalSkinImage>{};
+	};
+
+	// Walk the fixed path component by component without following symlinks,
+	// so the asset can never resolve outside the package. Absent = no
+	// diagnostic at all: the artwork is optional.
+	std::error_code ec;
+	fs::path cursor = packageRoot;
+	std::vector<std::string> parts;
+	for (size_t start = 0; start <= relativePath.size();) {
+		const size_t slash = relativePath.find('/', start);
+		parts.push_back(relativePath.substr(start, slash == std::string::npos ? std::string::npos : slash - start));
+		if (slash == std::string::npos) break;
+		start = slash + 1;
+	}
+	for (size_t index = 0; index < parts.size(); ++index) {
+		const bool isFile = index + 1 == parts.size();
+		cursor /= parts[index];
+		const fs::file_status st = fs::symlink_status(cursor, ec);
+		if (ec || st.type() == fs::file_type::not_found) return std::nullopt; // absent
+		const bool ok = isFile ? fs::is_regular_file(st) : fs::is_directory(st);
+		if (!ok) {
+			return diagnose(SkinLoadStage::ImageRead, loadcodes::OptionalNotRegularFile,
+				"'" + cursor.lexically_relative(packageRoot).generic_string() + "' is not a " +
+				(isFile ? "regular file" : "directory") + " (symlinks are not followed)");
+		}
+	}
+
+	std::vector<uint8_t> bytes;
+	{
+		std::ifstream in(cursor, std::ios::binary);
+		if (!in) return diagnose(SkinLoadStage::ImageRead, loadcodes::OptionalUnreadable, "cannot open");
+		bytes.assign(std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>());
+		if (in.bad()) return diagnose(SkinLoadStage::ImageRead, loadcodes::OptionalUnreadable, "read error");
+	}
+
+	// Same structural rules as the shell: non-indexed RGBA8, intact chunks.
+	const PngStructureResult png = checkPngStructure(bytes.data(), bytes.size());
+	if (!png.ok) return diagnose(SkinLoadStage::ImageStructure, png.code, png.detail);
+	if (png.width != requiredWidth || png.height != requiredHeight) {
+		return diagnose(SkinLoadStage::ImageStructure, loadcodes::OptionalWrongSize,
+			"PNG is " + std::to_string(png.width) + "x" + std::to_string(png.height) + ", required " +
+			std::to_string(requiredWidth) + "x" + std::to_string(requiredHeight) + " (" + sizeHint + ")");
+	}
+
+	// Decode + upload once, by the same backend (straight alpha, RGBA8, no
+	// gamma conversion — identical pipeline to the shell).
+	SkinImageStageResult staged = backend_.stageImage(bytes, png.width, png.height);
+	o.cpuPeakBytes = std::max(o.cpuPeakBytes, bytes.size() + staged.cpuPeakBytes);
+	if (!staged.ok) return diagnose(staged.stage, staged.code, staged.detail);
+	return OptionalSkinImage{staged.handle, staged.gpuBytes, png.width, png.height};
+}
+
 void HudSkinLoader::shutdown() {
 	if (active_) {
-		backend_.release(active_->handle);
+		releaseSkin(*active_);
 		active_.reset();
 	}
 }

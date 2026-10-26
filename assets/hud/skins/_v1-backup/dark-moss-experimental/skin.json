@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "skinId": "dark-moss-experimental",
+  "displayName": "Dark Moss Experimental",
+  "skinVersion": "1.0.0",
+  "blueprintId": "ecopunk-hud-blueprint",
+  "blueprintVersion": 1,
+  "assets": {
+    "shell": {
+      "path": "shell.png",
+      "required": true,
+      "coordinateSpace": "canvas",
+      "expectedWidth": 1280,
+      "expectedHeight": 720
+    }
+  }
+}

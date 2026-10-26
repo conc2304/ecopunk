@@ -64,6 +64,8 @@
 #include "InstallationStatus.h"
 
 #include <optional>
+#include <vector>
+#include <string>
 
 struct HudFrameData {
 	uint32_t schemaVersion = 1;
@@ -99,4 +101,10 @@ struct HudFrameData {
 	// and observed state (auto-cycle cadence, fullscreen, ENERGY). Absent only
 	// before ExperienceRuntime has loaded its settings.
 	std::optional<InstallationStatus> installation;
+
+	// Recent runtime activity log (the same lines the console prints, without
+	// the level tag), oldest first, newest last — runtime-owned
+	// (HudLogCapture), never produced by a scene. Empty = nothing logged yet.
+	// Source: runtime.log.recent. Additive field; no contract change.
+	std::vector<std::string> activityLog;
 };

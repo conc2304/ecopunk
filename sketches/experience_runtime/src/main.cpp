@@ -1,5 +1,6 @@
 #include "ofMain.h"
 #include "ofApp.h"
+#include "PresentationTransform.h"
 
 // experience_runtime — ExperienceRuntime host application.
 //
@@ -19,6 +20,15 @@ int main() {
 	ofGLWindowSettings settings;
 	settings.setSize(1280, 720);
 	settings.windowMode = OF_WINDOW;
+	// RT-007: EXPERIENCE_RUNTIME_FULLSCREEN=1 creates the host window in
+	// native fullscreen (OF_FULLSCREEN: undecorated, the connected display's
+	// active resolution — not OF_GAME_MODE, which would change the video
+	// mode). Unset/0: the 1280x720 development window, unchanged; harnesses
+	// never set it. ExperienceRuntime::setup() applies the precedence over
+	// the persisted launchFullscreen preference. The canonical 1280x720
+	// composition is scaled to whatever framebuffer results (see
+	// PresentationTransform.h).
+	if (fullscreenOverrideFromEnv().value_or(false)) settings.windowMode = OF_FULLSCREEN;
 
 	auto window = ofCreateWindow(settings);
 	ofRunApp(window, std::make_shared<ofApp>());

@@ -33,6 +33,7 @@ void RadarStationWidget::draw() {
 
 	ofVec2f center = bounds.center();
 	float   radius = bounds.minDim() * options.ringRadiusNorm;
+	ofSetCircleResolution(96); // default resolution reads as a polygon at this radius
 
 	// Ring.
 	ofNoFill();

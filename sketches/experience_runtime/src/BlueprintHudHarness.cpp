@@ -19,7 +19,7 @@ const std::string kBlueprintId = BlueprintProductionScene::kSceneId;
 constexpr const char* kCaptureDir = "captures/blueprint-hud";
 constexpr const char* kPrev = "controls.media_previous";
 constexpr const char* kNext = "controls.media_next";
-constexpr const char* kReseed = "controls.reseed";
+constexpr const char* kFullscreen = "controls.fullscreen"; // HUD-006 v2 (controls.reseed retired)
 constexpr float kStepTimeoutSeconds = 45.0f;
 
 bool hasCommand(const SceneCapabilities& caps, SceneCommand command) {
@@ -99,8 +99,8 @@ void BlueprintHudHarness::buildScript() {
 		// -- Blob: baseline, engage focus, refused activation --------------
 		{"blob live", [this] { return idleOn(kBlobId) && framesInStep_ >= 90; }, [this, frame] {
 			check("Blob: no focus before any input", focused() == "none");
-			const auto immersive = runtime_.hudCompositorBridgeForTesting().renderer().controlEnabled(kReseed);
-			check("Blob: IMMERSIVE visible and enabled; Blob advertises no Regenerate",
+			const auto immersive = runtime_.hudCompositorBridgeForTesting().renderer().controlEnabled(kFullscreen);
+			check("Blob: FULLSCREEN visible and enabled; Blob advertises no Regenerate",
 				immersive.has_value() && *immersive && !hasCommand(frame().capabilities, SceneCommand::Regenerate));
 			capture("01_blob_baseline");
 			runtime_.keyPressed(OF_KEY_RIGHT);
@@ -119,8 +119,8 @@ void BlueprintHudHarness::buildScript() {
 			}},
 		{"blob prev focused", framesAtLeast(2), [this, renderer] {
 			const auto prev = renderer().controlEnabled(kPrev);
-			check("LEFT focuses PREV MEDIA, which is disabled at the start of media history",
-				focused() == kPrev && prev.has_value() && !*prev, focused());
+			check("LEFT focuses PREV MEDIA, enabled at the start of media history (wraps)",
+				focused() == kPrev && prev.has_value() && *prev, focused());
 			activationSerialBefore_ = runtime_.lastFocusActivationForTesting().serial;
 			runtime_.keyPressed(OF_KEY_RETURN);
 		}},
@@ -128,9 +128,9 @@ void BlueprintHudHarness::buildScript() {
 			note("refused flash captured " + ofToString(ofGetLastFrameTime() * 1000.0f, 1) + " ms after Enter (fps " +
 				ofToString(runtime_.currentHudFrameData().runtime.fps, 1) + ")");
 			const auto& rec = runtime_.lastFocusActivationForTesting();
-			check("Enter on disabled PREV MEDIA is refused, nothing dispatched",
-				rec.serial == activationSerialBefore_ + 1 && rec.refused && rec.command.empty() && rec.region == kPrev);
-			capture("02_blob_prev_media_refused_flash");
+			check("Enter on PREV MEDIA at history start is accepted (wraps)",
+				rec.serial == activationSerialBefore_ + 1 && rec.accepted && !rec.refused && rec.command == "SceneCommand::PreviousMedia" && rec.region == kPrev);
+			capture("02_blob_prev_media_wrap_flash");
 			runtime_.keyPressed(OF_KEY_RIGHT); // back to NEXT MEDIA before switching scenes
 		}},
 		// -- Blob -> Temporal: focus stays on NEXT MEDIA ------------------------
@@ -145,8 +145,8 @@ void BlueprintHudHarness::buildScript() {
 		{"temporal settled", framesAtLeast(45), [this, frame] {
 			check("focus stable across Blob -> Temporal (still NEXT MEDIA)", focused() == kNext, focused());
 			check("brackets still on NEXT MEDIA in Temporal", bracketsAt(kNext));
-			const auto immersive = runtime_.hudCompositorBridgeForTesting().renderer().controlEnabled(kReseed);
-			check("Temporal: IMMERSIVE enabled, no Regenerate capability leaked",
+			const auto immersive = runtime_.hudCompositorBridgeForTesting().renderer().controlEnabled(kFullscreen);
+			check("Temporal: FULLSCREEN enabled, no Regenerate capability leaked",
 				immersive.has_value() && *immersive && !hasCommand(frame().capabilities, SceneCommand::Regenerate));
 			capture("03_temporal_focus_stable");
 			runtime_.keyPressed(']');
@@ -163,8 +163,8 @@ void BlueprintHudHarness::buildScript() {
 		}},
 		{"blueprint settled", [this, frame] { return framesInStep_ >= 45 && frame().scene.semantic.has_value(); }, [this, frame, renderer] {
 			const HudFrameData& f = frame();
-			const auto immersive = renderer().controlEnabled(kReseed);
-			check("Blueprint: IMMERSIVE visible and enabled", immersive.has_value() && *immersive);
+			const auto immersive = renderer().controlEnabled(kFullscreen);
+			check("Blueprint: FULLSCREEN visible and enabled", immersive.has_value() && *immersive);
 			check("Blueprint advertises Regenerate; no Temporal effects snapshot leaked",
 				hasCommand(f.capabilities, SceneCommand::Regenerate) && !f.effects.has_value());
 			check("focus stable across Temporal -> Blueprint (still NEXT MEDIA)", focused() == kNext, focused());
@@ -187,28 +187,25 @@ void BlueprintHudHarness::buildScript() {
 			runtime_.keyPressed(OF_KEY_RIGHT);
 		}},
 		{"immersive focused", framesAtLeast(2), [this] {
-			check("RIGHT moves focus NEXT MEDIA -> IMMERSIVE", focused() == kReseed, focused());
-			check("focus brackets drawn around IMMERSIVE", bracketsAt(kReseed));
-			capture("05_blueprint_immersive_focused");
+			check("RIGHT moves focus NEXT MEDIA -> FULLSCREEN (HUD-006 v2 row end)", focused() == kFullscreen, focused());
+			check("focus brackets drawn around FULLSCREEN", bracketsAt(kFullscreen));
+			capture("05_blueprint_fullscreen_focused");
+			runtime_.keyPressed(OF_KEY_LEFT); // back to NEXT MEDIA
 		}},
+		// IMMERSIVE is keyboard 'i' in HUD-006 v2 (no button).
 		{"immersive enter", framesAtLeast(5), [this, composition] {
 			seedBeforeReseed_ = composition().getCycleSeed();
-			activationSerialBefore_ = runtime_.lastFocusActivationForTesting().serial;
-			runtime_.keyPressed(OF_KEY_RETURN);
+			runtime_.keyPressed('i');
 		}},
 		{"immersive activated", framesAtLeast(30), [this, composition] {
-			const auto& rec = runtime_.lastFocusActivationForTesting();
-			check("Enter on IMMERSIVE dispatches Runtime::EnterImmersive and is accepted",
-				rec.serial == activationSerialBefore_ + 1 && rec.region == kReseed
-				&& rec.command == "Runtime::EnterImmersive" && rec.accepted && !rec.refused, rec.command);
-			check("IMMERSIVE active; the composition was NOT regenerated", runtime_.immersiveForTesting()
+			check("'i' enters IMMERSIVE; the composition was NOT regenerated", runtime_.immersiveForTesting()
 				&& composition().getCycleSeed() == seedBeforeReseed_);
 			capture("06_blueprint_immersive");
 			runtime_.keyPressed(' '); // any key exits; consumed
 		}},
 		{"immersive exited", framesAtLeast(10), [this, composition] {
-			check("key exits IMMERSIVE, focus back on IMMERSIVE, scene unchanged",
-				!runtime_.immersiveForTesting() && focused() == kReseed && idleOn(kBlueprintId), focused());
+			check("key exits IMMERSIVE, focus back on NEXT MEDIA, scene unchanged",
+				!runtime_.immersiveForTesting() && focused() == kNext && idleOn(kBlueprintId), focused());
 			seedBeforeReseed_ = composition().getCycleSeed();
 			runtime_.keyPressed('2'); // Regenerate stays available as a command
 		}},
@@ -218,17 +215,17 @@ void BlueprintHudHarness::buildScript() {
 				"t=" + ofToString(composition().getCycleElapsedSeconds(), 2) + " s");
 		}},
 		{"after regenerate", framesAtLeast(60), [this] {
-			check("focus stays on IMMERSIVE", focused() == kReseed, focused());
+			check("focus stays on NEXT MEDIA", focused() == kNext, focused());
 			capture("07_blueprint_after_regenerate");
 			runtime_.keyPressed(']'); // Blueprint -> Blob (ring wraps)
 		}},
-		// -- Blueprint -> Blob: IMMERSIVE stays, focus kept --------------------
+		// -- Blueprint -> Blob: FULLSCREEN stays, focus kept --------------------
 		{"blob again live", [this] { return idleOn(kBlobId) && framesInStep_ >= 2; }, [] {}},
 		{"blob again settled", framesAtLeast(45), [this, frame] {
 			const HudFrameData& f = frame();
 			const auto& r = runtime_.hudCompositorBridgeForTesting().renderer();
-			const auto immersive = r.controlEnabled(kReseed);
-			check("IMMERSIVE still visible on Blob, focus kept on it", immersive.has_value() && *immersive && focused() == kReseed,
+			const auto immersive = r.controlEnabled(kFullscreen);
+			check("FULLSCREEN still visible on Blob, focus kept on NEXT MEDIA", immersive.has_value() && *immersive && focused() == kNext,
 				focused());
 			check("Blob state/capabilities: no Blueprint values leaked",
 				!hasCommand(f.capabilities, SceneCommand::Regenerate) && !f.effects.has_value()

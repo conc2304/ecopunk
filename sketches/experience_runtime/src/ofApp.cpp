@@ -121,6 +121,38 @@ void ofApp::setup() {
 		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
 		&& !temporalWarmRequested && !threeSceneRequested && !modeHarnessRequested && !installationHarnessRequested
 		&& ExperienceV03Harness::isRequested();
+	// RT-007 Fullscreen Presentation & HUD Scaling check: lowest priority; full roster.
+	bool presentationHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
+		&& !temporalWarmRequested && !threeSceneRequested && !modeHarnessRequested && !installationHarnessRequested
+		&& !v03HarnessRequested && PresentationHarness::isRequested();
+	// Reactive Control Artwork v0.1 check: lowest priority; full roster.
+	bool reactiveHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
+		&& !temporalWarmRequested && !threeSceneRequested && !modeHarnessRequested && !installationHarnessRequested
+		&& !v03HarnessRequested && !presentationHarnessRequested && ReactiveControlHarness::isRequested();
+	// Live Typography Playground check: lowest priority; full roster.
+	bool typographyHarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
+		&& !temporalWarmRequested && !threeSceneRequested && !modeHarnessRequested && !installationHarnessRequested
+		&& !v03HarnessRequested && !presentationHarnessRequested && !reactiveHarnessRequested && TypographyHarness::isRequested();
+	bool hud006v2HarnessRequested = !glHarnessRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& !temporalLifecycleRequested && !switchHarnessRequested && !acceptanceRequested
+		&& !skinHarnessRequested && !artExportRequested && !focusHarnessRequested && !blueprintHarnessRequested
+		&& !blueprintHudHarnessRequested && !paritySoakRequested && !resumeWindowRequested && !cadenceRequested
+		&& !temporalWarmRequested && !threeSceneRequested && !modeHarnessRequested && !installationHarnessRequested
+		&& !v03HarnessRequested && !presentationHarnessRequested && !reactiveHarnessRequested && !typographyHarnessRequested
+		&& Hud006v2Harness::isRequested();
+	bool skinCycleHarnessRequested = !hud006v2HarnessRequested && !typographyHarnessRequested && !reactiveHarnessRequested
+		&& !presentationHarnessRequested && !v03HarnessRequested && !installationHarnessRequested && !modeHarnessRequested
+		&& !focusHarnessRequested && !skinHarnessRequested && !artExportRequested && !glHarnessRequested
+		&& SkinCycleHarness::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
 		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
@@ -174,11 +206,23 @@ void ofApp::setup() {
 		const bool anyHarness = glHarnessRequested || blobLifecycleRequested || blobSoakRequested || temporalLifecycleRequested
 			|| switchHarnessRequested || acceptanceRequested || skinHarnessRequested || artExportRequested || focusHarnessRequested
 			|| blueprintHarnessRequested || blueprintHudHarnessRequested || paritySoakRequested || resumeWindowRequested
-			|| cadenceRequested || temporalWarmRequested || threeSceneRequested || modeHarnessRequested || installationHarnessRequested || v03HarnessRequested
+			|| cadenceRequested || temporalWarmRequested || threeSceneRequested || modeHarnessRequested || installationHarnessRequested || v03HarnessRequested || presentationHarnessRequested || reactiveHarnessRequested || typographyHarnessRequested || hud006v2HarnessRequested
 			|| Rt004StallDriver::isRequested() || BlobRenderPathAbHarness::isRequested() || BlobEffectCapacityBench::isRequested();
 		const char* settingsPath = std::getenv("EXPERIENCE_RUNTIME_INSTALLATION_SETTINGS");
 		runtime.setInstallationSettingsPath(settingsPath ? std::string(settingsPath)
 			: anyHarness ? std::string() : ofToDataPath("installation-settings.json", true));
+	}
+	// Day/night HUD skin schedule: normal runs only (harnesses keep their
+	// explicit skin selection and wireframe baselines).
+	{
+		const bool anyHarnessForSkins = glHarnessRequested || blobLifecycleRequested || blobSoakRequested || temporalLifecycleRequested
+			|| switchHarnessRequested || acceptanceRequested || skinHarnessRequested || artExportRequested || focusHarnessRequested
+			|| blueprintHarnessRequested || blueprintHudHarnessRequested || paritySoakRequested || resumeWindowRequested
+			|| cadenceRequested || temporalWarmRequested || threeSceneRequested || modeHarnessRequested || installationHarnessRequested
+			|| v03HarnessRequested || presentationHarnessRequested || reactiveHarnessRequested || typographyHarnessRequested
+			|| hud006v2HarnessRequested || skinCycleHarnessRequested || Rt004StallDriver::isRequested() || BlobRenderPathAbHarness::isRequested()
+			|| BlobEffectCapacityBench::isRequested();
+		runtime.setSkinScheduleEnabled(!anyHarnessForSkins || std::getenv("EXPERIENCE_RUNTIME_SKIN_SCHEDULE") != nullptr);
 	}
 	runtime.setup();
 	if (framePhaseProbe) framePhaseProbe->afterRuntimeSetup(); // limiter/vsync controls apply after the runtime's own baseline
@@ -229,6 +273,16 @@ void ofApp::setup() {
 		installationHarness = std::make_unique<InstallationHarness>(runtime);
 	} else if (v03HarnessRequested) {
 		v03Harness = std::make_unique<ExperienceV03Harness>(runtime);
+	} else if (presentationHarnessRequested) {
+		presentationHarness = std::make_unique<PresentationHarness>(runtime);
+	} else if (reactiveHarnessRequested) {
+		reactiveHarness = std::make_unique<ReactiveControlHarness>(runtime);
+	} else if (typographyHarnessRequested) {
+		typographyHarness = std::make_unique<TypographyHarness>(runtime);
+	} else if (hud006v2HarnessRequested) {
+		hud006v2Harness = std::make_unique<Hud006v2Harness>(runtime);
+	} else if (skinCycleHarnessRequested) {
+		skinCycleHarness = std::make_unique<SkinCycleHarness>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
 		stallDriver = std::make_unique<Rt004StallDriver>(runtime);
 	}
@@ -296,6 +350,21 @@ void ofApp::update() {
 	if (v03Harness) {
 		v03Harness->step(ofGetLastFrameTime());
 	}
+	if (presentationHarness) {
+		presentationHarness->step(ofGetLastFrameTime());
+	}
+	if (reactiveHarness) {
+		reactiveHarness->step(ofGetLastFrameTime());
+	}
+	if (typographyHarness) {
+		typographyHarness->step(ofGetLastFrameTime());
+	}
+	if (hud006v2Harness) {
+		hud006v2Harness->step(ofGetLastFrameTime());
+	}
+	if (skinCycleHarness) {
+		skinCycleHarness->step(ofGetLastFrameTime());
+	}
 	if (blobHarness) {
 		blobHarness->step(ofGetLastFrameTime());
 	}
@@ -316,7 +385,7 @@ void ofApp::update() {
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
 	if (Rt004FramePhaseProbe::presentOnlyControl()) { ofClear(0, 0, 0, 255); return; }
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness && !modeHarness && !installationHarness && !v03Harness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness && !modeHarness && !installationHarness && !v03Harness && !presentationHarness && !reactiveHarness && !typographyHarness && !hud006v2Harness && !skinCycleHarness) {
 		runtime.draw();
 
 		// Blob Experiment 2: serve the bench's capture requests (scene-only
@@ -342,8 +411,9 @@ void ofApp::exit() {
 	rt004::Probe::get().writeSummary();
 }
 
-void ofApp::mousePressed(int, int, int) {
-	runtime.pointerPressed(); // device input: exits IMMERSIVE (only effect today)
+void ofApp::mousePressed(int x, int y, int) {
+	// Framebuffer pixels; the runtime maps them to canvas pixels (RT-007).
+	runtime.pointerPressed(static_cast<float>(x), static_cast<float>(y)); // device input: exits IMMERSIVE (only effect today)
 }
 
 void ofApp::keyPressed(int key) {

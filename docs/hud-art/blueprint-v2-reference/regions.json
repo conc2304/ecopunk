@@ -1,0 +1,476 @@
+{
+    "blueprintId": "ecopunk-hud-blueprint",
+    "blueprintVersion": 2,
+    "buttonFace": {
+        "files": [
+            "controls/button/idle.png",
+            "controls/button/focused.png",
+            "controls/button/active.png"
+        ],
+        "rectsPx": {
+            "controls.fullscreen": [
+                484,
+                630,
+                80,
+                80
+            ],
+            "controls.media_next": [
+                380,
+                630,
+                80,
+                80
+            ],
+            "controls.media_previous": [
+                295,
+                630,
+                80,
+                80
+            ],
+            "controls.mode": [
+                191,
+                630,
+                80,
+                80
+            ],
+            "controls.scene_next": [
+                106,
+                630,
+                80,
+                80
+            ],
+            "controls.scene_previous": [
+                22,
+                630,
+                80,
+                80
+            ]
+        },
+        "rule": "control region + 4 px bleed per side, centred, rounded to whole canvas pixels, drawn unscaled",
+        "size": [
+            80,
+            80
+        ]
+    },
+    "canvas": {
+        "height": 720,
+        "width": 1280
+    },
+    "mediaViewportMesh": {
+        "bevel": 42,
+        "bevelCorner": "bottom-right",
+        "cornerRadius": 18,
+        "outlineVertexCount": 52,
+        "roundedCorners": [
+            "top-left",
+            "top-right",
+            "bottom-left"
+        ]
+    },
+    "presentation": {
+        "canonicalRegions": 20,
+        "fullProfileOnly": 2,
+        "historicalMinimalSlice": 12,
+        "production": 18,
+        "productionParts": {
+            "clock": 1,
+            "historicalMinimalSlice": 12,
+            "livingHud": 2,
+            "modeNavigation": 3
+        }
+    },
+    "reactiveArtwork": {
+        "controls.scene_next": {
+            "file": "controls/scene_next/pressed.png",
+            "rule": "region expanded 4 px per side, snapped outward",
+            "spriteRectPx": [
+                106,
+                629,
+                81,
+                81
+            ]
+        }
+    },
+    "regions": [
+        {
+            "id": "universal.scene_title",
+            "index": 1,
+            "normalized": [
+                0.6600000262260437,
+                0.029999999329447746,
+                0.3199999928474426,
+                0.05999999865889549
+            ],
+            "production": true,
+            "px": [
+                844.800048828125,
+                21.600000381469727,
+                409.5999755859375,
+                43.20000076293945
+            ],
+            "role": "Universal",
+            "scope": "production (historical MinimalSlice-13)"
+        },
+        {
+            "id": "universal.media_title",
+            "index": 2,
+            "normalized": [
+                0.6600000262260437,
+                0.10000000149011612,
+                0.3199999928474426,
+                0.05000000074505806
+            ],
+            "production": true,
+            "px": [
+                844.800048828125,
+                72.0,
+                409.5999755859375,
+                36.0
+            ],
+            "role": "Universal",
+            "scope": "production (historical MinimalSlice-13)"
+        },
+        {
+            "id": "universal.primary_state",
+            "index": 3,
+            "normalized": [
+                0.6600000262260437,
+                0.1599999964237213,
+                0.3199999928474426,
+                0.05999999865889549
+            ],
+            "production": true,
+            "px": [
+                844.800048828125,
+                115.19999694824219,
+                409.5999755859375,
+                43.20000076293945
+            ],
+            "role": "Universal",
+            "scope": "production (historical MinimalSlice-13)"
+        },
+        {
+            "id": "universal.activity",
+            "index": 4,
+            "normalized": [
+                0.6600000262260437,
+                0.23000000417232513,
+                0.3199999928474426,
+                0.05999999865889549
+            ],
+            "production": true,
+            "px": [
+                844.800048828125,
+                165.60000610351563,
+                409.5999755859375,
+                43.20000076293945
+            ],
+            "role": "Universal",
+            "scope": "production (historical MinimalSlice-13)"
+        },
+        {
+            "id": "universal.effect_summary",
+            "index": 5,
+            "normalized": [
+                0.6600000262260437,
+                0.30000001192092896,
+                0.3199999928474426,
+                0.05999999865889549
+            ],
+            "production": true,
+            "px": [
+                844.800048828125,
+                216.00001525878906,
+                409.5999755859375,
+                43.20000076293945
+            ],
+            "role": "Universal",
+            "scope": "production (Living HUD v0.1)"
+        },
+        {
+            "id": "universal.timing",
+            "index": 6,
+            "normalized": [
+                0.6600000262260437,
+                0.3700000047683716,
+                0.3199999928474426,
+                0.05000000074505806
+            ],
+            "production": true,
+            "px": [
+                844.800048828125,
+                266.3999938964844,
+                409.5999755859375,
+                36.0
+            ],
+            "role": "Universal",
+            "scope": "production (Living HUD v0.1)"
+        },
+        {
+            "id": "universal.activity_trace",
+            "index": 7,
+            "normalized": [
+                0.6600000262260437,
+                0.4300000071525574,
+                0.3199999928474426,
+                0.10000000149011612
+            ],
+            "production": false,
+            "px": [
+                844.800048828125,
+                309.6000061035156,
+                409.5999755859375,
+                72.0
+            ],
+            "role": "Universal",
+            "scope": "FullProfile only (not drawn in production)"
+        },
+        {
+            "id": "universal.secondary_trace",
+            "index": 8,
+            "normalized": [
+                0.6600000262260437,
+                0.5400000214576721,
+                0.3199999928474426,
+                0.10000000149011612
+            ],
+            "production": false,
+            "px": [
+                844.800048828125,
+                388.8000183105469,
+                409.5999755859375,
+                72.0
+            ],
+            "role": "Universal",
+            "scope": "FullProfile only (not drawn in production)"
+        },
+        {
+            "id": "controls.scene_previous",
+            "index": 9,
+            "normalized": [
+                0.019999999552965164,
+                0.8799999952316284,
+                0.05624999850988388,
+                0.10000000149011612
+            ],
+            "production": true,
+            "px": [
+                25.599998474121094,
+                633.5999755859375,
+                72.0,
+                72.0
+            ],
+            "role": "Controls",
+            "scope": "production (historical MinimalSlice-13)"
+        },
+        {
+            "id": "controls.scene_next",
+            "index": 10,
+            "normalized": [
+                0.08624999970197678,
+                0.8799999952316284,
+                0.05624999850988388,
+                0.10000000149011612
+            ],
+            "production": true,
+            "px": [
+                110.4000015258789,
+                633.5999755859375,
+                72.0,
+                72.0
+            ],
+            "role": "Controls",
+            "scope": "production (historical MinimalSlice-13)"
+        },
+        {
+            "id": "controls.mode",
+            "index": 11,
+            "normalized": [
+                0.1525000035762787,
+                0.8799999952316284,
+                0.05624999850988388,
+                0.10000000149011612
+            ],
+            "production": true,
+            "px": [
+                195.20001220703125,
+                633.5999755859375,
+                72.0,
+                72.0
+            ],
+            "role": "Controls",
+            "scope": "production (Mode Navigation v0.1)"
+        },
+        {
+            "id": "controls.media_previous",
+            "index": 12,
+            "normalized": [
+                0.23375000059604645,
+                0.8799999952316284,
+                0.05624999850988388,
+                0.10000000149011612
+            ],
+            "production": true,
+            "px": [
+                299.20001220703125,
+                633.5999755859375,
+                72.0,
+                72.0
+            ],
+            "role": "Controls",
+            "scope": "production (historical MinimalSlice-13)"
+        },
+        {
+            "id": "controls.media_next",
+            "index": 13,
+            "normalized": [
+                0.30000001192092896,
+                0.8799999952316284,
+                0.05624999850988388,
+                0.10000000149011612
+            ],
+            "production": true,
+            "px": [
+                384.0,
+                633.5999755859375,
+                72.0,
+                72.0
+            ],
+            "role": "Controls",
+            "scope": "production (historical MinimalSlice-13)"
+        },
+        {
+            "id": "controls.fullscreen",
+            "index": 14,
+            "normalized": [
+                0.3812499940395355,
+                0.8799999952316284,
+                0.05624999850988388,
+                0.10000000149011612
+            ],
+            "production": true,
+            "px": [
+                488.0,
+                633.5999755859375,
+                72.0,
+                72.0
+            ],
+            "role": "Controls",
+            "scope": "production (Mode Navigation v0.1)"
+        },
+        {
+            "id": "flexible.primary",
+            "index": 15,
+            "normalized": [
+                0.6600000262260437,
+                0.6399999856948853,
+                0.3199999928474426,
+                0.1599999964237213
+            ],
+            "production": true,
+            "px": [
+                844.800048828125,
+                460.79998779296875,
+                409.5999755859375,
+                115.19999694824219
+            ],
+            "role": "Flexible",
+            "scope": "production (historical MinimalSlice-13)"
+        },
+        {
+            "id": "flexible.secondary_a",
+            "index": 16,
+            "normalized": [
+                0.6600000262260437,
+                0.8100000023841858,
+                0.15000000596046448,
+                0.05999999865889549
+            ],
+            "production": true,
+            "px": [
+                844.800048828125,
+                583.2000122070313,
+                192.0,
+                43.20000076293945
+            ],
+            "role": "Flexible",
+            "scope": "production (Mode Navigation v0.1)"
+        },
+        {
+            "id": "flexible.secondary_b",
+            "index": 17,
+            "normalized": [
+                0.8299999833106995,
+                0.8100000023841858,
+                0.15000000596046448,
+                0.05999999865889549
+            ],
+            "production": true,
+            "px": [
+                1062.4000244140625,
+                583.2000122070313,
+                192.0,
+                43.20000076293945
+            ],
+            "role": "Flexible",
+            "scope": "production (HUD Clock v0.1)"
+        },
+        {
+            "id": "media_viewport",
+            "index": 18,
+            "normalized": [
+                0.019999999552965164,
+                0.1599999964237213,
+                0.6000000238418579,
+                0.699999988079071
+            ],
+            "production": true,
+            "px": [
+                25.599998474121094,
+                115.19999694824219,
+                768.0,
+                504.0
+            ],
+            "role": "Universal",
+            "scope": "production (mesh, always drawn; historical MinimalSlice-13)"
+        },
+        {
+            "id": "overlay.health",
+            "index": 19,
+            "normalized": [
+                0.019999999552965164,
+                0.029999999329447746,
+                0.20000000298023224,
+                0.05999999865889549
+            ],
+            "production": true,
+            "px": [
+                25.599998474121094,
+                21.600000381469727,
+                256.0,
+                43.20000076293945
+            ],
+            "role": "Overlay",
+            "scope": "production (historical MinimalSlice-13)"
+        },
+        {
+            "id": "overlay.transition",
+            "index": 20,
+            "normalized": [
+                0.019999999552965164,
+                0.10000000149011612,
+                0.20000000298023224,
+                0.07999999821186066
+            ],
+            "production": true,
+            "px": [
+                25.599998474121094,
+                72.0,
+                256.0,
+                57.599998474121094
+            ],
+            "role": "Overlay",
+            "scope": "production (historical MinimalSlice-13)"
+        }
+    ],
+    "source": "derived from live HudWireframeRenderer/HudRegionCatalog at export time; HUD-006 ecopunk-hud-blueprint / 2"
+}

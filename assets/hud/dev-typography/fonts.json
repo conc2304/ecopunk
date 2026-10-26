@@ -1,0 +1,78 @@
+{
+  "comment": "DEV ONLY \u2014 Live Typography Playground font registry. Paths are relative to this file. Not a skin schema; skin.json is unaffected. Add a font: drop the .ttf/.otf in fonts/, add an entry here, press 'r' in the running app.",
+  "fonts": [
+    {
+      "name": "Display Regular (Typo2)",
+      "file": "fonts/Display.ttf"
+    },
+    {
+      "name": "Extros Backstage (imagex)",
+      "file": "fonts/Extros Backstage.ttf"
+    },
+    {
+      "name": "Makisupa (R. Gast)",
+      "file": "fonts/MAKISUPA.TTF"
+    },
+    {
+      "name": "W3$iP Regular (Jaydenlikesfonts)",
+      "file": "fonts/w3-ip.ttf"
+    },
+    {
+      "name": "Rajdhani SemiBold",
+      "file": "fonts/Rajdhani-SemiBold.ttf"
+    },
+    {
+      "name": "Rajdhani Medium",
+      "file": "fonts/Rajdhani-Medium.ttf"
+    },
+    {
+      "name": "Oxanium Medium",
+      "file": "fonts/Oxanium-Medium.ttf"
+    },
+    {
+      "name": "Barlow Condensed Medium",
+      "file": "fonts/BarlowCondensed-Medium.ttf"
+    },
+    {
+      "name": "IBM Plex Mono",
+      "file": "fonts/IBMPlexMono-Regular.ttf"
+    },
+    {
+      "name": "Share Tech Mono",
+      "file": "fonts/ShareTechMono-Regular.ttf"
+    },
+    {
+      "name": "Argaka Fashion (repo, blueprint_emergence)",
+      "file": "../../../sketches/blueprint_emergence/data/fonts/ArgakaFashionRegular.ttf"
+    },
+    {
+      "name": "Liberation Mono (local copy, untracked)",
+      "file": "../../../sketches/blueprint_emergence/bin/data/fonts/LiberationMono-Regular.ttf"
+    }
+  ],
+  "colors": [
+    {
+      "name": "Warm ivory",
+      "hex": "#EDE6CF"
+    },
+    {
+      "name": "Pale sage",
+      "hex": "#C9D8B8"
+    },
+    {
+      "name": "Soft chartreuse",
+      "hex": "#D6E4B0"
+    },
+    {
+      "name": "Muted brass",
+      "hex": "#B9A46E"
+    }
+  ],
+  "targets": [
+    "controls.scene_previous",
+    "controls.scene_next",
+    "controls.media_previous",
+    "controls.media_next",
+    "controls.reseed"
+  ]
+}

@@ -9,6 +9,10 @@
 #include "HudFrameData.h"
 #include "InstallationControl.h"
 #include "InputRouter.h"
+#include "PresentationTransform.h"
+#include "TypographyPlayground.h"
+#include "HudSkinSchedule.h"
+#include "HudLogCapture.h"
 #include "RuntimeServices.h"
 #include "SceneContract.h"
 #include "SceneManager.h"
@@ -16,6 +20,7 @@
 #include "WallClockSampler.h"
 
 #include "ofFbo.h"
+#include <memory>
 #include "ofImage.h"
 
 // ExperienceRuntime — top-level owner, per Scene-HUD-Contract-v1.md §4's
@@ -148,8 +153,24 @@ public:
 
 	void keyPressed(int key);
 	// Any pointer/device press (ofApp mouse events) — exits IMMERSIVE.
-	void pointerPressed();
+	// (x, y) are framebuffer pixels (OF's mouse space); RT-007 maps them
+	// through the inverse final presentation transform to canvas pixels.
+	void pointerPressed(float x = -1.0f, float y = -1.0f);
 	bool immersiveForTesting() const { return immersive_; }
+
+	// RT-007: the final presentation transform used for the current frame
+	// (canonical 1280x720 composition -> physical framebuffer, contain).
+	const PresentationTransform& presentationTransform() const { return presentation_; }
+	// Last pointer press mapped to canonical canvas pixels (test/inspection).
+	glm::vec2 lastPointerCanvasForTesting() const { return lastPointerCanvas_; }
+	TypographyPlayground* typographyPlaygroundForTesting() { return typography_.get(); }
+	// RT-007 test-only: the canonical composition target's last frame (false
+	// while it has never been allocated, i.e. in a 1280x720 framebuffer).
+	bool readPresentationFboPixelsForTesting(ofPixels& out) const {
+		if (!presentationFbo_.isAllocated()) return false;
+		presentationFbo_.readToPixels(out);
+		return true;
+	}
 
 	const HudFrameData& currentHudFrameData() const { return currentHudFrameData_; }
 
@@ -164,6 +185,11 @@ public:
 	const installation::Controller& installationForTesting() const { return installation_; }
 	// Settings file. Call before setup(); "" = no load/save (harness runs).
 	void setInstallationSettingsPath(std::string path) { installationSettingsPath_ = std::move(path); }
+	// Day/night HUD skin schedule (assets/hud/skins/skin-schedule.json):
+	// normal runs only — harnesses keep their explicit skin selection.
+	void setSkinScheduleEnabled(bool enabled) { skinScheduleEnabled_ = enabled; }
+	const std::string& currentSkinForTesting() const { return currentSkin_; }
+	bool skinAutoForTesting() const { return skinAuto_; }
 	uint64_t frameNumber() const { return frameNumber_; }
 
 	// Development/test-only access — see SceneManager::devScene().
@@ -235,6 +261,12 @@ public:
 		uint64_t staticSceneFrames = 0; // transition-only: sceneFbo_ retained the last outgoing frame
 		uint64_t sceneFboAllocations = 0; // every allocate(), including setup()'s
 		uint64_t sceneFboSwitchReallocations = 0; // incoming native size differed on activation
+		// RT-007: frames presented through the canonical composition FBO
+		// (framebuffer != 1280x720) vs drawn directly; and its allocations
+		// (expected: at most 1 per process — never on resize).
+		uint64_t composedPresentationFrames = 0;
+		uint64_t directPresentationFrames = 0;
+		uint64_t presentationFboAllocations = 0;
 	};
 	const PresentationCounters& presentationCountersForTesting() const { return presentationCounters_; }
 
@@ -306,6 +338,18 @@ private:
 	void reallocateSceneFboForActiveSceneIfNeeded();
 
 	ofFbo sceneFbo_;
+	// RT-007: canonical 1280x720 composition target (scene viewport + shell +
+	// HUD), allocated lazily the first time the framebuffer is not exactly
+	// 1280x720 and never reallocated on resize; then scaled once to the
+	// physical framebuffer. Unused (not even allocated) in a 1280x720 window.
+	// Development-only Live Typography Playground: constructed only when
+	// EXPERIENCE_RUNTIME_TYPOGRAPHY_PLAYGROUND=1 (never in production).
+	std::unique_ptr<TypographyPlayground> typography_;
+	ofFbo presentationFbo_;
+	PresentationTransform presentation_;
+	glm::vec2 lastPointerCanvas_{-1.0f, -1.0f};
+	void drawComposition();               // the canonical-canvas HUD composition, into the current target
+	void presentComposedFrame();          // presentationFbo_ -> framebuffer (contain, one draw)
 	uint64_t frameNumber_ = 0;
 
 	// Captured at the top of update(float dt) (step 3-7's own dt) and
@@ -364,6 +408,20 @@ private:
 	// settings, the scene auto-cycle schedule and ENERGY.
 	installation::Controller installation_;
 	std::string installationSettingsPath_;
+	// Recent console activity for the HUD log (installed in setup()).
+	std::shared_ptr<HudLogCapture> logCapture_;
+
+	// Day/night skins (see setSkinScheduleEnabled()).
+	bool skinScheduleEnabled_ = false;
+	HudSkinSchedule skinSchedule_;
+	bool skinAuto_ = false;              // following the schedule (vs a manual 'v' / env choice)
+	std::string currentSkin_;            // active skin package id ("" = wireframe)
+	std::optional<HudSkinSchedule::Period> skinPeriod_;
+	float skinCheckSeconds_ = 0.0f;
+	bool loadSkinSchedule(const std::string& path);
+	bool applySkin(const std::string& skinId, const std::string& reason);
+	void tickSkinSchedule(bool force);
+	static int localMinuteNow();
 	bool installationLoaded_ = false;
 	// IMMERSIVE scene presentation (HUD hidden, scene cover-scaled to the
 	// current window). Runtime presentation state only.

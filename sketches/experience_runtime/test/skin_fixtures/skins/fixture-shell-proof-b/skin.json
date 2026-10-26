@@ -4,7 +4,7 @@
   "displayName": "Shell Loader Proof Fixture B (test)",
   "skinVersion": "0.0.2",
   "blueprintId": "ecopunk-hud-blueprint",
-  "blueprintVersion": 1,
+  "blueprintVersion": 2,
   "assets": {
     "shell": {
       "path": "shell.png",

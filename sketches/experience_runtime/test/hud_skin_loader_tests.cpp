@@ -12,7 +12,10 @@
 
 #include "../src/HudSkinLoader.h"
 #include "../src/HudSkinPng.h"
+#include "HudReactiveControlArt.h"
 
+#include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -59,12 +62,15 @@ class FakeBackend : public ISkinImageBackend {
 public:
 	bool failDecode = false;
 	bool failUpload = false;
+	int failUploadOnCall = -1; // 1-based stageImage() call that fails at upload (-1 = never)
 	int stageCalls = 0;
+	std::vector<std::pair<uint32_t, uint32_t>> stagedSizes;
 	std::set<uint64_t> live;
 	std::vector<uint64_t> released;
 
 	SkinImageStageResult stageImage(const std::vector<uint8_t>& bytes, uint32_t w, uint32_t h) override {
 		stageCalls++;
+		stagedSizes.emplace_back(w, h);
 		SkinImageStageResult r;
 		r.cpuPeakBytes = size_t(w) * h * 4;
 		if (bytes.empty() || failDecode) {
@@ -73,7 +79,7 @@ public:
 			r.detail = "fake decode failure";
 			return r;
 		}
-		if (failUpload) {
+		if (failUpload || stageCalls == failUploadOnCall) {
 			r.stage = SkinLoadStage::GpuUpload;
 			r.code = loadcodes::UploadFailed;
 			r.detail = "fake upload failure";
@@ -99,7 +105,15 @@ SkinLoaderConfig config(const fs::path& root) {
 	SkinLoaderConfig c;
 	c.skinsRoot = root;
 	c.expectedBlueprint.expectedBlueprintId = "ecopunk-hud-blueprint";
-	c.expectedBlueprint.expectedBlueprintVersion = 1u;
+	c.expectedBlueprint.expectedBlueprintVersion = 2u; // HUD-006 v2
+	// v2 controls.scene_next (110.4, 633.6, 72x72) + 4 px bleed, snapped outward.
+	const auto sprite = hudpresent::reactive::pressedSpriteRect(110.4f, 633.6f, 72.0f, 72.0f);
+	c.pressedSpriteWidth = uint32_t(sprite.width);
+	c.pressedSpriteHeight = uint32_t(sprite.height);
+	// Shared button faces: 72x72 control + 4 px bleed per side -> 80x80.
+	const auto face = hudpresent::reactive::buttonFaceRect(110.4f, 633.6f, 72.0f, 72.0f);
+	c.buttonFaceWidth = uint32_t(face.width);
+	c.buttonFaceHeight = uint32_t(face.height);
 	return c;
 }
 
@@ -291,6 +305,172 @@ void test_activation_replacement_and_release() {
 	HUD_CHECK(backend.liveTextureCount() == 0);
 }
 
+// -- Reactive Control Artwork v0.1: optional controls/scene_next/pressed.png ----------
+
+constexpr size_t kPressedBytes = size_t(81) * 81 * 4;
+
+void test_optional_pressed_artwork() {
+	using hudpresent::reactive::kSceneNextPressedPath;
+	FakeBackend backend;
+	HudSkinLoader loader(backend);
+	loader.configure(config(kFixtureRoot));
+
+	// Missing optional asset: exactly the shell-only behaviour, no diagnostic.
+	auto none = loader.requestSkin("fixture-shell-proof");
+	HUD_CHECK(none.activated && !none.sceneNextPressedLoaded && none.optionalDiagnostics.empty());
+	HUD_CHECK(!loader.active()->sceneNextPressed && backend.liveTextureCount() == 1 && loader.steadyGpuBytes() == kShellBytes);
+
+	// Valid sprite (v2 derived size, 81x81): staged once, after the shell; owned by the skin.
+	backend.stagedSizes.clear();
+	auto ok = loader.requestSkin("pressed-valid");
+	HUD_CHECK(ok.activated && ok.sceneNextPressedLoaded && ok.optionalDiagnostics.empty());
+	HUD_CHECK(backend.stagedSizes.size() == 2 && backend.stagedSizes[0] == std::make_pair(1280u, 720u)
+		&& backend.stagedSizes[1] == std::make_pair(81u, 81u));
+	HUD_CHECK(loader.active()->sceneNextPressed && loader.active()->sceneNextPressed->width == 81
+		&& loader.active()->sceneNextPressed->height == 81);
+	HUD_CHECK(backend.liveTextureCount() == 2 && loader.steadyGpuBytes() == kShellBytes + kPressedBytes);
+	HUD_CHECK(ok.releasedPrevious && ok.peakGpuBytesDuringRequest == kShellBytes + kShellBytes + kPressedBytes);
+	const uint64_t shellHandle = loader.active()->handle;
+	const uint64_t pressedHandle = loader.active()->sceneNextPressed->handle;
+
+	// Reloading the same skin swaps in fresh textures and releases BOTH old ones.
+	auto ok1 = loader.requestSkin("pressed-valid");
+	HUD_CHECK(ok1.activated && ok1.sceneNextPressedLoaded && loader.active()->sceneNextPressed->width == 81);
+	auto releasedHas = [&](uint64_t h) { return std::find(backend.released.begin(), backend.released.end(), h) != backend.released.end(); };
+	HUD_CHECK(releasedHas(shellHandle) && releasedHas(pressedHandle) && backend.liveTextureCount() == 2);
+
+	// Replacement WITHOUT artwork: previous optional texture released, none active.
+	const uint64_t pressedPrev = loader.active()->sceneNextPressed->handle;
+	auto plain = loader.requestSkin("fixture-shell-proof-b");
+	HUD_CHECK(plain.activated && !plain.sceneNextPressedLoaded && !loader.active()->sceneNextPressed);
+	HUD_CHECK(releasedHas(pressedPrev) && backend.liveTextureCount() == 1);
+
+	// Invalid optional assets: the skin activates, the asset is not used, one
+	// nonfatal diagnostic names the fixed path and the reason.
+	struct BadCase { const char* pkg; const char* code; SkinLoadStage stage; };
+	const BadCase bad[] = {
+		{"pressed-rgb", pngcodes::NotRgba8, SkinLoadStage::ImageStructure},
+		{"pressed-wrong-size", loadcodes::OptionalWrongSize, SkinLoadStage::ImageStructure},
+		{"pressed-legacy-v1-112x52", loadcodes::OptionalWrongSize, SkinLoadStage::ImageStructure},
+		{"pressed-corrupt", pngcodes::CrcMismatch, SkinLoadStage::ImageStructure},
+		{"pressed-not-file", loadcodes::OptionalNotRegularFile, SkinLoadStage::ImageRead},
+	};
+	for (const BadCase& c : bad) {
+		const int callsBefore = backend.stageCalls;
+		auto o = loader.requestSkin(c.pkg);
+		HUD_CHECK(o.activated && !o.sceneNextPressedLoaded && !loader.active()->sceneNextPressed);
+		HUD_CHECK(o.optionalDiagnostics.size() == 1 && o.optionalDiagnostics[0].asset == kSceneNextPressedPath
+			&& o.optionalDiagnostics[0].code == c.code && o.optionalDiagnostics[0].stage == c.stage);
+		HUD_CHECK(backend.stageCalls == callsBefore + 1); // shell only — invalid art never reaches the decoder
+		HUD_CHECK(backend.liveTextureCount() == 1);
+	}
+
+	// Decoder rejects the artwork / its upload fails: nonfatal, nothing leaked.
+	backend.failUploadOnCall = backend.stageCalls + 2; // the call after this request's shell
+	auto up = loader.requestSkin("pressed-valid");
+	HUD_CHECK(up.activated && !up.sceneNextPressedLoaded && up.optionalDiagnostics.size() == 1
+		&& up.optionalDiagnostics[0].code == loadcodes::UploadFailed && up.optionalDiagnostics[0].stage == SkinLoadStage::GpuUpload);
+	HUD_CHECK(!loader.active()->sceneNextPressed && backend.liveTextureCount() == 1);
+	backend.failUploadOnCall = -1;
+
+	// Broken shell + valid art: the candidate is rejected and the art is never staged.
+	auto ok2 = loader.requestSkin("pressed-valid");
+	HUD_CHECK(ok2.activated && ok2.sceneNextPressedLoaded);
+	const int callsBefore = backend.stageCalls;
+	auto badShell = loader.requestSkin("pressed-bad-shell");
+	HUD_CHECK(!badShell.activated && badShell.retainedPreviousActive && backend.stageCalls == callsBefore);
+	HUD_CHECK(loader.active()->skinId == "pressed-valid" && loader.active()->sceneNextPressed && backend.liveTextureCount() == 2);
+
+	// Unload releases the optional texture too.
+	loader.shutdown();
+	HUD_CHECK(!loader.active() && backend.liveTextureCount() == 0 && loader.steadyGpuBytes() == 0);
+}
+
+// -- Shared navigation-button faces: controls/button/{idle,focused,active}.png -------
+
+constexpr size_t kFaceBytes = size_t(80) * 80 * 4;
+
+void test_button_faces() {
+	using hudpresent::reactive::buttonFaceRect;
+	FakeBackend backend;
+	HudSkinLoader loader(backend);
+	loader.configure(config(kFixtureRoot));
+
+	// Rule: control + 4 px bleed per side, centred, rounded; all six controls get one size.
+	const float xs[] = {25.6f, 110.4f, 195.2f, 299.2f, 384.0f, 488.0f};
+	const int expectX[] = {22, 106, 191, 295, 380, 484};
+	for (int i = 0; i < 6; ++i) {
+		const auto r = buttonFaceRect(xs[i], 633.6f, 72.0f, 72.0f);
+		HUD_CHECK(r.width == 80 && r.height == 80 && r.x == expectX[i] && r.y == 630);
+	}
+
+	// None present: shell-only behaviour, no diagnostics, no faces.
+	auto none = loader.requestSkin("fixture-shell-proof");
+	HUD_CHECK(none.activated && none.buttonFacesLoaded == 0 && none.optionalDiagnostics.empty());
+
+	// All three valid: staged after the shell, owned by the skin, counted in GPU bytes.
+	backend.stagedSizes.clear();
+	auto ok = loader.requestSkin("faces-valid");
+	HUD_CHECK(ok.activated && ok.buttonFacesLoaded == 3 && ok.optionalDiagnostics.empty() && !ok.sceneNextPressedLoaded);
+	HUD_CHECK(backend.stagedSizes.size() == 4 && backend.stagedSizes[0] == std::make_pair(1280u, 720u));
+	for (size_t i = 1; i < 4; ++i) HUD_CHECK(backend.stagedSizes[i] == std::make_pair(80u, 80u));
+	HUD_CHECK(loader.active()->buttonIdle && loader.active()->buttonFocused && loader.active()->buttonActive);
+	HUD_CHECK(backend.liveTextureCount() == 4 && loader.steadyGpuBytes() == kShellBytes + 3 * kFaceBytes);
+	const uint64_t idleHandle = loader.active()->buttonIdle->handle;
+	const uint64_t activeHandle = loader.active()->buttonActive->handle;
+
+	// Partial: only the supplied state loads; no diagnostic for the absent ones.
+	auto part = loader.requestSkin("faces-partial");
+	HUD_CHECK(part.activated && part.buttonFacesLoaded == 1 && part.optionalDiagnostics.empty());
+	HUD_CHECK(loader.active()->buttonIdle && !loader.active()->buttonFocused && !loader.active()->buttonActive);
+	auto releasedHas = [&](uint64_t h) { return std::find(backend.released.begin(), backend.released.end(), h) != backend.released.end(); };
+	HUD_CHECK(releasedHas(idleHandle) && releasedHas(activeHandle)); // replacement released the previous faces
+	HUD_CHECK(backend.liveTextureCount() == 2);
+
+	// One wrong-size face: nonfatal diagnostic naming that file; the other two still load.
+	auto wrong = loader.requestSkin("faces-wrong-size");
+	HUD_CHECK(wrong.activated && wrong.buttonFacesLoaded == 2 && wrong.optionalDiagnostics.size() == 1);
+	HUD_CHECK(wrong.optionalDiagnostics[0].asset == hudpresent::reactive::kButtonFocusedPath
+		&& wrong.optionalDiagnostics[0].code == loadcodes::OptionalWrongSize);
+	HUD_CHECK(!loader.active()->buttonFocused && backend.liveTextureCount() == 3);
+
+	// Faces and the legacy NEXT SCENE sprite coexist (the renderer prefers the shared active face).
+	auto both = loader.requestSkin("faces-and-pressed");
+	HUD_CHECK(both.activated && both.buttonFacesLoaded == 3 && both.sceneNextPressedLoaded && backend.liveTextureCount() == 5);
+
+	// Upload failure of one face is nonfatal and leaks nothing.
+	backend.failUploadOnCall = backend.stageCalls + 3; // shell, legacy-less, idle ok -> focused fails
+	auto up = loader.requestSkin("faces-valid");
+	HUD_CHECK(up.activated && up.buttonFacesLoaded == 2 && up.optionalDiagnostics.size() == 1
+		&& up.optionalDiagnostics[0].code == loadcodes::UploadFailed);
+	backend.failUploadOnCall = -1;
+
+	// Unload releases every face.
+	loader.shutdown();
+	HUD_CHECK(!loader.active() && backend.liveTextureCount() == 0 && loader.steadyGpuBytes() == 0);
+}
+
+// Visibility rule shared with the renderer: accepted feedback on the focused,
+// visible region only, same 0.30 s linear fade as the existing flash.
+void test_pressed_artwork_opacity_rule() {
+	using hudpresent::reactive::pressedArtworkOpacity;
+	using hudpresent::reactive::pressedSpriteRect;
+	const float T = 0.30f;
+	HUD_CHECK(pressedArtworkOpacity(true, true, true, true, 10.0f, 10.0f, T) == 1.0f);   // press frame
+	HUD_CHECK(std::abs(pressedArtworkOpacity(true, true, true, true, 10.0f, 10.15f, T) - 0.5f) < 1e-4f);
+	HUD_CHECK(pressedArtworkOpacity(true, true, true, true, 10.0f, 10.30f, T) == 0.0f);  // released
+	HUD_CHECK(pressedArtworkOpacity(true, true, true, false, 10.0f, 10.05f, T) == 0.0f); // refused / disabled
+	HUD_CHECK(pressedArtworkOpacity(false, true, true, true, 10.0f, 10.05f, T) == 0.0f); // no artwork
+	HUD_CHECK(pressedArtworkOpacity(true, false, true, true, 10.0f, 10.05f, T) == 0.0f); // another control activated
+	HUD_CHECK(pressedArtworkOpacity(true, true, false, true, 10.0f, 10.05f, T) == 0.0f); // control hidden (unavailable)
+	HUD_CHECK(pressedArtworkOpacity(true, true, true, true, -1.0f, 10.05f, T) == 0.0f);  // never activated
+	// D3 rule: region + 4 px per side, snapped outward to whole pixels.
+	const auto v2 = pressedSpriteRect(110.4f, 633.6f, 72.0f, 72.0f);
+	HUD_CHECK(v2.x == 106 && v2.y == 629 && v2.width == 81 && v2.height == 81);
+	const auto whole = pressedSpriteRect(100.0f, 200.0f, 50.0f, 20.0f);
+	HUD_CHECK(whole.x == 96 && whole.y == 196 && whole.width == 58 && whole.height == 28);
+}
+
 void test_outcomes_are_deterministic() {
 	FakeBackend b1, b2;
 	HudSkinLoader l1(b1), l2(b2);
@@ -311,6 +491,9 @@ int main() {
 	test_symlink_escapes();
 	test_activation_replacement_and_release();
 	test_outcomes_are_deterministic();
+	test_optional_pressed_artwork();
+	test_button_faces();
+	test_pressed_artwork_opacity_rule();
 
 	std::cout << (g_total - g_failures) << "/" << g_total << " checks passed.\n";
 	if (g_failures > 0) {

@@ -28,6 +28,7 @@ Usage: python3 make_skin_fixtures.py
 
 import json
 import pathlib
+import shutil
 import struct
 import zlib
 
@@ -39,17 +40,16 @@ TEST_ROOT = HERE / "skins"
 W, H = 1280, 720
 RAMP_X0, RAMP_X1, RAMP_Y0, RAMP_Y1 = 300, 1000, 694, 706  # bottom margin, below controls
 
-# HUD-006 canonical regions, 1280x720 px (HudRegionCatalog.cpp @ 557edc3).
-REGIONS = [
-    (844.8, 21.6, 409.6, 43.2), (844.8, 72.0, 409.6, 36.0), (844.8, 115.2, 409.6, 43.2),
-    (844.8, 165.6, 409.6, 43.2), (844.8, 216.0, 409.6, 43.2), (844.8, 266.4, 409.6, 36.0),
-    (844.8, 309.6, 409.6, 72.0), (844.8, 388.8, 409.6, 72.0),
-    (25.6, 648.0, 102.4, 43.2), (153.6, 648.0, 102.4, 43.2), (307.2, 648.0, 102.4, 43.2),
-    (435.2, 648.0, 102.4, 43.2), (588.8, 648.0, 128.0, 43.2),
-    (844.8, 460.8, 409.6, 115.2), (844.8, 583.2, 192.0, 43.2), (1062.4, 583.2, 192.0, 43.2),
-    (25.6, 115.2, 768.0, 504.0),  # media_viewport
-    (25.6, 21.6, 256.0, 43.2), (25.6, 72.0, 256.0, 57.6),
-]
+# HUD-006 canonical regions, 1280x720 px — read from the generated v2 export
+# (docs/hud-art/blueprint-v2-reference/regions.json, written by
+# HudArtReferenceExporter from HudRegionCatalog). No hand-copied geometry.
+REGIONS_JSON = REPO / "docs" / "hud-art" / "blueprint-v2-reference" / "regions.json"
+_EXPORT = json.loads(REGIONS_JSON.read_text())
+assert _EXPORT.get("blueprintVersion") == 2, "regions.json is not the HUD-006 v2 export"
+REGIONS = [tuple(r["px"]) for r in _EXPORT["regions"]]
+BLUEPRINT_VERSION = _EXPORT["blueprintVersion"]
+# Optional NEXT SCENE pressed sprite size (region + 4 px bleed, snapped outward).
+PRESSED_W, PRESSED_H = _EXPORT["reactiveArtwork"]["controls.scene_next"]["spriteRectPx"][2:4]
 
 PALETTES = {
     "a": {"frame": (0, 200, 180, 150), "ring": (0, 230, 210, 220), "hatch": (170, 80, 255, 170),
@@ -105,8 +105,10 @@ def png(rows, w, h, bit_depth=8, color_type=6, extra_chunks=()):
     return out + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b"")
 
 
-def manifest(skin_id, display, version="0.0.1", blueprint_id="ecopunk-hud-blueprint", blueprint_version=1,
+def manifest(skin_id, display, version="0.0.1", blueprint_id="ecopunk-hud-blueprint", blueprint_version=None,
              shell_path="shell.png", extra_assets=None, include_shell=True):
+    if blueprint_version is None:
+        blueprint_version = BLUEPRINT_VERSION
     assets = {}
     if include_shell:
         assets["shell"] = {"path": shell_path, "required": True, "coordinateSpace": "canvas",
@@ -118,14 +120,42 @@ def manifest(skin_id, display, version="0.0.1", blueprint_id="ecopunk-hud-bluepr
             "blueprintId": blueprint_id, "blueprintVersion": blueprint_version, "assets": assets}
 
 
-def write_package(root, dirname, man, files):
+def write_package(root, dirname, man, files, dirs=()):
     pkg = root / dirname
     pkg.mkdir(parents=True, exist_ok=True)
     for old in pkg.iterdir():
-        old.unlink()
+        shutil.rmtree(old) if old.is_dir() and not old.is_symlink() else old.unlink()
     (pkg / "skin.json").write_text(json.dumps(man, indent=2) + "\n")
-    for name, data in files.items():
+    for name, data in files.items():  # names may be nested ("controls/scene_next/pressed.png")
+        (pkg / name).parent.mkdir(parents=True, exist_ok=True)
         (pkg / name).write_bytes(data)
+    for d in dirs:  # empty directories (e.g. a directory where a file is expected)
+        (pkg / d).mkdir(parents=True, exist_ok=True)
+
+
+# Reactive Control Artwork v0.1 — optional controls/scene_next/pressed.png.
+# TEST ART ONLY: a stand-in pressed sprite at the v2 derived size
+# (controls.scene_next region + 4 px bleed, snapped outward; see regions.json). Straight alpha: a translucent green face (alpha 150)
+# inside an opaque-ish rim (alpha 235), transparent outside a 2 px margin.
+PRESSED = "controls/scene_next/pressed.png"
+
+
+def pressed_pixels(w, h):
+    k = 2
+    rows = []
+    for y in range(h):
+        row = bytearray()
+        for x in range(w):
+            m = min(x, y, w - 1 - x, h - 1 - y)
+            if m < k:
+                px = (0, 0, 0, 0)
+            elif m < 3 * k:
+                px = (120, 255, 170, 235)
+            else:
+                px = (30, 150, 90, 150)
+            row += bytes(px)
+        rows.append(bytes(row))
+    return rows
 
 
 def main():
@@ -156,7 +186,8 @@ def main():
         "fixture-shell-proof": (manifest("fixture-shell-proof", "Shell Loader Proof Fixture A (test)"), {"shell.png": valid_a}),
         "fixture-shell-proof-b": (manifest("fixture-shell-proof-b", "Shell Loader Proof Fixture B (test)", "0.0.2"), {"shell.png": valid_b}),
         "wrong-blueprint": (manifest("wrong-blueprint", "x", blueprint_id="hud-blueprint-v1"), {"shell.png": valid_a}),
-        "wrong-blueprint-version": (manifest("wrong-blueprint-version", "x", blueprint_version=2), {"shell.png": valid_a}),
+        # A v1 skin under the v2 runtime: rejected (HUD-006 v2 D4).
+        "wrong-blueprint-version": (manifest("wrong-blueprint-version", "x", blueprint_version=1), {"shell.png": valid_a}),
         "path-escape": (manifest("path-escape", "x", shell_path="../fixture-shell-proof/shell.png"), {}),
         "missing-shell": (manifest("missing-shell", "x"), {}),
         "shell-undeclared": (manifest("shell-undeclared", "x", include_shell=False), {"shell.png": valid_a}),
@@ -177,6 +208,46 @@ def main():
     }
     for dirname, (man, files) in cases.items():
         write_package(TEST_ROOT, dirname, man, files)
+
+    # -- Reactive Control Artwork v0.1 cases (valid shell + optional asset) --
+    pressed_ok = png(pressed_pixels(PRESSED_W, PRESSED_H), PRESSED_W, PRESSED_H)
+    pressed_rgb = png([bytes(b for i, b in enumerate(r) if i % 4 != 3) for r in pressed_pixels(PRESSED_W, PRESSED_H)], PRESSED_W, PRESSED_H, 8, 2)
+    # Shared button faces (controls/button/{idle,focused,active}.png): control region + 4 px bleed per side.
+    FACE_W = FACE_H = _EXPORT["buttonFace"]["size"][0]
+    def face(r, g, b):
+        rows = []
+        for y in range(FACE_H):
+            row = bytearray()
+            for x in range(FACE_W):
+                m = min(x, y, FACE_W - 1 - x, FACE_H - 1 - y)
+                row += bytes((0, 0, 0, 0) if m < 1 else (r, g, b, 252))
+            rows.append(bytes(row))
+        return png(rows, FACE_W, FACE_H)
+    face_idle, face_focused, face_active = face(40, 90, 70), face(70, 170, 110), face(200, 230, 120)
+    wrong_face = png([bytes(FACE_W * 4 - 4) for _ in range(FACE_H - 8)], FACE_W - 2, FACE_H - 8)  # wrong size
+    FACES = {"controls/button/idle.png": face_idle, "controls/button/focused.png": face_focused, "controls/button/active.png": face_active}
+    pi = pressed_ok.index(b"IDAT")
+    pressed_corrupt = bytearray(pressed_ok); pressed_corrupt[pi + 20] ^= 0xFF  # stale CRC
+    optional_cases = {
+        "pressed-valid": ({"shell.png": valid_a, PRESSED: pressed_ok}, ()),
+        # The v1 HUD Art sprite size (112x52 @ 149,644): wrong under v2.
+        "pressed-legacy-v1-112x52": ({"shell.png": valid_a, PRESSED: png(pressed_pixels(112, 52), 112, 52)}, ()),
+        "pressed-rgb": ({"shell.png": valid_a, PRESSED: pressed_rgb}, ()),
+        "pressed-wrong-size": ({"shell.png": valid_a, PRESSED: png(pressed_pixels(100, 40), 100, 40)}, ()),
+        "pressed-corrupt": ({"shell.png": valid_a, PRESSED: bytes(pressed_corrupt)}, ()),
+        "pressed-not-file": ({"shell.png": valid_a}, (PRESSED,)),
+        # Shell broken, artwork valid: the skin must still be rejected, and
+        # the optional asset must never be staged.
+        "pressed-bad-shell": ({"shell.png": bytes(corrupt_crc), PRESSED: pressed_ok}, ()),
+        "faces-valid": ({"shell.png": valid_a, **FACES}, ()),
+        "faces-partial": ({"shell.png": valid_a, "controls/button/idle.png": face_idle}, ()),
+        "faces-wrong-size": ({"shell.png": valid_a, "controls/button/idle.png": face_idle, "controls/button/focused.png": wrong_face,
+                              "controls/button/active.png": face_active}, ()),
+        "faces-and-pressed": ({"shell.png": valid_a, PRESSED: pressed_ok, **FACES}, ()),
+    }
+    for dirname, (files, dirs) in optional_cases.items():
+        write_package(TEST_ROOT, dirname, manifest(dirname, "Reactive artwork fixture (test)"), files, dirs)
+    cases.update(optional_cases)
 
     print(f"canonical: {CANONICAL_ROOT / 'fixture-shell-proof'} ({len(valid_a)} B shell.png)")
     print(f"test root: {TEST_ROOT} ({len(cases)} packages)")

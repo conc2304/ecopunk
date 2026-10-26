@@ -328,6 +328,28 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 		if (manager.availableSceneCount < 2) return HudResolvedValue::missing(HudSourceValueType::Boolean, HudDataClass::Literal);
 		return HudResolvedValue::boolean(manager.transitionPhase == SceneTransitionPhase::Idle);
 	}
+	// Recent activity log: the last lines, newline-separated (the Label "log"
+	// variant splits and truncates them). Missing while nothing was logged.
+	if (sourceId == "runtime.log.recent") {
+		if (frame.activityLog.empty()) return HudResolvedValue::missing(HudSourceValueType::Text, HudDataClass::Literal);
+		std::string joined;
+		for (const auto& line : frame.activityLog) {
+			if (!joined.empty()) joined += '\n';
+			joined += line;
+		}
+		return HudResolvedValue::text(joined, HudDataClass::Literal);
+	}
+	// HUD-006 v2 FULLSCREEN: available whenever the runtime publishes its
+	// installation status; the label follows the OBSERVED window mode.
+	if (sourceId == "control.runtime.fullscreen.available") {
+		if (!frame.installation) return HudResolvedValue::missing(HudSourceValueType::Boolean, HudDataClass::Literal);
+		return HudResolvedValue::boolean(true);
+	}
+	if (sourceId == "control.runtime.fullscreen.state") {
+		if (!frame.installation) return HudResolvedValue::missing(HudSourceValueType::Identifier, HudDataClass::Literal);
+		return HudResolvedValue::identifier(frame.installation->fullscreen ? "control.runtime.fullscreen.state.on"
+		                                                                   : "control.runtime.fullscreen.state.off");
+	}
 	if (sourceId == "control.runtime.immersive.available") {
 		// IMMERSIVE is runtime-owned presentation, available whenever a
 		// scene owns the frame and no transition is running.

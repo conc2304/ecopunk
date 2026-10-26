@@ -2,6 +2,15 @@
 #include <cmath>
 
 void MotionExtraction::setup() {
+	// Standalone sketches: the canvas is the window (unchanged behavior).
+	setup(ofGetWidth(), ofGetHeight());
+}
+
+// RT-007: size the extraction FBOs from the caller's canvas, never the
+// window, so a fullscreen/resized host window doesn't change (or enlarge)
+// a scene's motion buffers. ExperienceRuntime scenes pass their fixed
+// native canvas.
+void MotionExtraction::setup(int canvasW, int canvasH) {
 	ofFbo::Settings accumSettings;
 	accumSettings.width = ACCUM_W;
 	accumSettings.height = ACCUM_H;
@@ -22,11 +31,11 @@ void MotionExtraction::setup() {
 
 	ofFbo::Settings extractSettings;
 #ifdef PLATFORM_PI
-	extractSettings.width = std::min(ofGetWidth(), 640);
-	extractSettings.height = std::min(ofGetHeight(), 360);
+	extractSettings.width = std::min(canvasW, 640);
+	extractSettings.height = std::min(canvasH, 360);
 #else
-	extractSettings.width = ofGetWidth();
-	extractSettings.height = ofGetHeight();
+	extractSettings.width = canvasW;
+	extractSettings.height = canvasH;
 #endif
 	extractSettings.internalformat = GL_RGB;
 	extractSettings.useDepth = false;
@@ -126,7 +135,9 @@ void MotionExtraction::updateExtract(const ofTexture & videoTex, float sensitivi
 	// output, and so this draw call's implicit texture-unit-0 rebind lands
 	// back on videoTex (the same texture already bound to "currentFrame")
 	// rather than clobbering a different sampler's binding.
-	videoTex.draw(0, 0, ofGetWidth(), ofGetHeight());
+	// RT-007: the target FBO's own extent (identical to the window size for
+	// standalone sketches; the fixed canvas under ExperienceRuntime).
+	videoTex.draw(0, 0, targetFbo.getWidth(), targetFbo.getHeight());
 
 	extractShader.end();
 

@@ -1,0 +1,19 @@
+{
+ "artifact": "controls/scene_next/pressed.png",
+ "region_id": "controls.scene_next",
+ "blueprint": "ecopunk-hud-blueprint / 2",
+ "sprite_rect_px": [
+  106,
+  629,
+  81,
+  81
+ ],
+ "rule": "region expanded 4 px per side, snapped outward",
+ "source": "regions.json reactiveArtwork.controls.scene_next.spriteRectPx",
+ "draw": "1:1 canvas pixels, unscaled, at (106, 629); straight RGBA8, standard source-over above shell.png",
+ "alpha_mode": "straight alpha. Opaque where the pressed art covers the (previously transparent) square and where it replaces opaque shell pixels; partial alpha only where the pressed render itself is partial over the transparent square. Exact over any runtime background (see checks S2).",
+ "shell_dependency": "valid only over the v2 shell.png in this package (decoded RGBA8 pixels sha256 be730dcb6fe6597da111661677788a1ea2717a9283f0d652d2820bff26877069); re-render with the shell if the rail/housing art changes",
+ "pixels_sha256": "23507c2e884e6b4493b4a34652c4872d028929f092a2645ab6293181d4b1470d",
+ "not_skin_json": "art-side metadata only; focused.png is not exported (not loaded under v2)",
+ "hash_note": "pixels_sha256 / shell pixel hash = SHA-256 of decoded RGBA8 pixels (row-major); stable across PNG re-encoding"
+}

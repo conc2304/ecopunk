@@ -78,38 +78,32 @@ void FocusMenuHarness::step(float /*dt*/) {
 			media0_ = mediaId();
 			check("baseline: no focus before any input", focused() == "none" && !bridge.focus().engaged());
 			check("baseline: no focus brackets drawn", !bracketsAt(kNext) && !bracketsAt(kPrev));
-			check("baseline: PREV MEDIA disabled at start of media history, NEXT enabled",
-				renderer.controlEnabled(kPrev) == false && renderer.controlEnabled(kNext) == true,
+			check("baseline: PREV MEDIA enabled at start of media history (wraps), NEXT enabled",
+				renderer.controlEnabled(kPrev) == true && renderer.controlEnabled(kNext) == true,
 				"media=" + media0_);
-			// v0.3: PREV/NEXT SCENE are live (three-scene ring) and the frozen
-			// controls.reseed region is the always-available IMMERSIVE control.
-			check("baseline: PREV SCENE, NEXT SCENE and IMMERSIVE enabled (v0.3 navigation row)",
+			// HUD-006 v2 six-button row: PREV/NEXT SCENE, MODE, PREV/NEXT MEDIA, FULLSCREEN.
+			check("baseline: PREV SCENE, NEXT SCENE, MODE and FULLSCREEN enabled (HUD-006 v2 row)",
 				renderer.controlEnabled("controls.scene_previous") == true && renderer.controlEnabled("controls.scene_next") == true &&
-				renderer.controlEnabled("controls.reseed") == true);
+				renderer.controlEnabled("controls.mode") == true && renderer.controlEnabled("controls.fullscreen") == true);
 			press(OF_KEY_RIGHT, "RIGHT");
 			check("first step engages on the first ENABLED control (PREV SCENE)", focused() == "controls.scene_previous", focused());
+			press(OF_KEY_RIGHT, "RIGHT");
 			press(OF_KEY_RIGHT, "RIGHT");
 			press(OF_KEY_RIGHT, "RIGHT");
 			press(OF_KEY_RIGHT, "RIGHT");
 			break;
 		case 75:
 			capture("focus_01_next_media_focused");
-			check("RIGHT x3 more walks PREV SCENE -> NEXT SCENE -> PREV MEDIA -> NEXT MEDIA", focused() == kNext, focused());
+			check("RIGHT x4 more walks PREV SCENE -> NEXT SCENE -> MODE -> PREV MEDIA -> NEXT MEDIA", focused() == kNext, focused());
 			check("focus brackets drawn around NEXT MEDIA", bracketsAt(kNext) && !bracketsAt(kPrev));
 			press(OF_KEY_LEFT, "LEFT");
 			break;
 		case 90:
-			capture("focus_02_prev_media_focused_disabled");
-			check("LEFT moves focus to PREV MEDIA (disabled controls are focusable)", focused() == kPrev && bracketsAt(kPrev));
-			press(OF_KEY_RETURN, "ENTER");
-			break;
-		case 92:
-			capture("focus_03_refused_activation_flash");
-			check("ENTER on disabled PREV MEDIA is refused, nothing dispatched",
-				runtime_.lastFocusActivationForTesting().refused && runtime_.lastFocusActivationForTesting().command.empty());
+			capture("focus_02_prev_media_focused");
+			check("LEFT moves focus to PREV MEDIA (enabled: wraps at history start)", focused() == kPrev && bracketsAt(kPrev));
 			break;
 		case 150:
-			check("refused activation left the media unchanged", mediaId() == media0_, mediaId());
+			check("focus alone never changes the media", mediaId() == media0_, mediaId());
 			check("focus stable across ~60 frames of HUD updates", focused() == kPrev);
 			press(OF_KEY_RIGHT, "RIGHT");
 			press(OF_KEY_RETURN, "ENTER");
@@ -144,9 +138,9 @@ void FocusMenuHarness::step(float /*dt*/) {
 			check("existing 'n' key still works alongside focus", mediaId() != media0_, mediaId());
 			check("existing key did not move focus", focused() == kPrev);
 			for (int i = 0; i < 6; ++i) press(OF_KEY_RIGHT, "RIGHT");
-			// Six visible stops (v0.3): PREV SCENE, NEXT SCENE, PREV MEDIA,
-			// NEXT MEDIA, IMMERSIVE, and the mode panel (flexible.secondary_a).
-			check("RIGHT x6 wraps back to PREV MEDIA (PREV/NEXT SCENE, PREV/NEXT MEDIA, IMMERSIVE, mode panel)",
+			// Six stops (HUD-006 v2): PREV SCENE, NEXT SCENE, MODE, PREV MEDIA,
+			// NEXT MEDIA, FULLSCREEN — the mode panel is no longer a stop.
+			check("RIGHT x6 wraps back to PREV MEDIA (PREV/NEXT SCENE, MODE, PREV/NEXT MEDIA, FULLSCREEN)",
 				focused() == kPrev, focused());
 			press(OF_KEY_DOWN, "DOWN");
 			check("DOWN steps forward like RIGHT", focused() == kNext);

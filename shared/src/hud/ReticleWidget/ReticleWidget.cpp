@@ -288,7 +288,7 @@ void ReticleWidget::draw() {
     if (theme.additive) ofEnableBlendMode(OF_BLENDMODE_ADD); else ofEnableAlphaBlending();
     frame.draw(bounds, theme.colors, theme.frame, time);
     ofNoFill();
-    ofSetLineWidth(std::max(1.0f, su(bounds, 1.0f) * 0.8f));
+    ofSetLineWidth(std::max(0.5f, su(bounds, 1.0f) * 0.4f));
 
     for (const auto& t : targets) {
         ofVec2f p;

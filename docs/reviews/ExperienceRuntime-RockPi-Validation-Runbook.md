@@ -79,18 +79,65 @@ nohup env EXPERIENCE_RUNTIME_HUD_SKIN=dark-moss-experimental ./bin/experience_ru
 - To put the kiosk back: `sudo systemctl start fireplace-waterfall.service` (operator).
 - With no keyboard attached, keys can be sent with `xdotool`; see §1 _Sending keys to a running instance_.
 
-### Keys (v0.3)
+### Keys (HUD-006 v2)
 
 | Key | Action |
 | --- | --- |
 | `[` / `]` | previous / next scene |
-| `p` / `n` | previous / next media |
+| `p` / `n` | previous / next media (previous wraps at the start of history) |
 | `m` | NEXT MODE (pattern / mode / strategy of the current scene) |
-| `2` | Regenerate (Blueprint; the RESEED button is gone) · `1` reset the current scene |
+| `2` | Regenerate (Blueprint) · `1` reset the current scene |
 | `e` | ENERGY adjustment: arrows adjust, Enter closes |
-| `f` / `h` / `Esc` | fullscreen / HUD on-off / quit |
-| arrows + `Enter` | HUD focus row: PREV SCENE · NEXT SCENE · PREV MEDIA · NEXT MEDIA · IMMERSIVE, then the mode panel (NEXT MODE) |
-| IMMERSIVE (focus it + `Enter`) | scene over the whole window, HUD hidden, no OS fullscreen. Any key or click exits, and that first input does nothing else |
+| `f` / `h` / `Esc` | native fullscreen / HUD on-off / quit |
+| `i` | IMMERSIVE: the scene over the whole window, HUD hidden, no OS fullscreen. Any key or click exits, and that first input does nothing else |
+| `v` / `V` | next HUD skin (manual) / back to the day-night schedule (see below) |
+| arrows + `Enter` | HUD button row: PREV SCENE · NEXT SCENE · NEXT MODE · PREV MEDIA · NEXT MEDIA · FULL SCREEN |
+
+### HUD skins: day/night schedule and switching
+
+Three Blueprint v2 skin packages are installed in `assets/hud/skins/`:
+
+| Skin ID | Look | Period | Text palette |
+| --- | --- | --- | --- |
+| `plywood-marble` | Plywood + Marble (light) | day | dark ink, with light button labels |
+| `dark-moss-experimental` | Dark Moss (dark) | night (default) | light text |
+| `abyssal-bioluminescence` | Abyssal Bioluminescence (dark) | night | light text |
+
+**Automatic (normal runs).** `assets/hud/skins/skin-schedule.json` picks the skin by local time. It shows the first listed day skin from `dayStart` (07:00) and the first night skin from `nightStart` (19:00). It checks about once a second and switches only when the period changes. To change the times or the order, edit that file and restart the app.
+
+```json
+{
+  "dayStart": "07:00", "nightStart": "19:00",
+  "day":   { "skins": ["plywood-marble"], "palette": "day" },
+  "night": { "skins": ["dark-moss-experimental", "abyssal-bioluminescence"], "palette": "night" }
+}
+```
+
+**Manual.**
+
+- `v` loads the next skin: day skins first, then night skins, wrapping. This pauses the schedule.
+- `V` (Shift+v) returns to the schedule.
+- Switching is live, with no restart. A skin that fails to load keeps the current one.
+
+**Pin one skin.** Launch with `EXPERIENCE_RUNTIME_HUD_SKIN=<skin-id>`. That skin stays until you press `v`; the schedule is not used.
+
+```bash
+cd sketches/experience_runtime/bin
+./experience_runtime.app/Contents/MacOS/experience_runtime                                            # schedule (day/night)
+EXPERIENCE_RUNTIME_HUD_SKIN=plywood-marble ./experience_runtime.app/Contents/MacOS/experience_runtime   # pinned
+```
+
+On the Rock Pi, use the same commands with `DISPLAY=:0`, plus `EXPERIENCE_RUNTIME_FULLSCREEN=1` for native fullscreen. Harness runs ignore the schedule unless `EXPERIENCE_RUNTIME_SKIN_SCHEDULE=1` is set.
+
+**Adding a skin.**
+
+1. Put the package in `assets/hud/skins/<skin-id>/`. The folder name must equal `skinId`, and `skin.json` must declare `"blueprintVersion": 2`.
+2. Add its ID to `day.skins` or `night.skins` in `skin-schedule.json`.
+3. Restart the app.
+
+Each skin may also ship shared button faces: `controls/button/idle.png`, `focused.png` and `active.png`, 80×80 each, used by all six buttons. All three are optional and load independently.
+
+v1 skins are rejected (`SKIN_BLUEPRINT_VERSION_MISMATCH`), and an optional `controls/scene_next/pressed.png` must be 81×81 (see `docs/hud-art/blueprint-v2-reference/HUD_ART_HANDOFF.md`).
 
 ## Summary
 

@@ -1,4 +1,7 @@
 #include "HudArtReferenceExporter.h"
+#include <set>
+#include <map>
+#include "HudReactiveControlArt.h"
 
 #include "ofAppRunner.h"
 #include "ofFbo.h"
@@ -106,7 +109,7 @@ bool HudArtReferenceExporter::isRequested() {
 
 HudArtReferenceExporter::HudArtReferenceExporter(ExperienceRuntime& runtime) : runtime_(runtime) {
 	const char* dir = std::getenv("EXPERIENCE_RUNTIME_HUD_ART_EXPORT_DIR");
-	outDir_ = (dir && dir[0]) ? std::string(dir) : ofToDataPath("../../../../docs/hud-art/blueprint-v1-reference", true);
+	outDir_ = (dir && dir[0]) ? std::string(dir) : ofToDataPath("../../../../docs/hud-art/blueprint-v2-reference", true);
 	std::error_code ec;
 	fs::create_directories(outDir_, ec);
 	note("HudArtReferenceExporter: output " + outDir_);
@@ -140,7 +143,7 @@ void HudArtReferenceExporter::exportAll() {
 	const auto& regions = r.regionCatalog().all();
 
 	check("no skin active (comparison frame is the plain wireframe)", !bridge.skinLoader().active().has_value());
-	check("catalog has 19 regions", regions.size() == 19, ofToString(regions.size()));
+	check("catalog has 20 regions (HUD-006 v2)", regions.size() == 20, ofToString(regions.size()));
 	int originalCount = 0, productionCount = 0, livingCount = 0, clockCount = 0, navCount = 0;
 	for (const auto& reg : regions) {
 		const std::string scope = scopeOf(reg.regionId);
@@ -151,10 +154,13 @@ void HudArtReferenceExporter::exportAll() {
 		navCount += scope == kScopeNavigation;
 	}
 	const int fullOnlyCount = int(regions.size()) - productionCount;
-	check("historical MinimalSlice presentation has 13 regions", originalCount == 13, ofToString(originalCount));
-	check("current production presentation has 17 regions (13 + 2 Living HUD + clock + mode)",
-		productionCount == 17 && livingCount == 2 && clockCount == 1 && navCount == 1, ofToString(productionCount));
-	check("flexible.secondary_a = Mode Navigation, flexible.secondary_b = Clock",
+	check("historical MinimalSlice part has 12 regions (v1 13 minus retired controls.reseed)", originalCount == 12, ofToString(originalCount));
+	check("production presentation has 18 regions (12 + 2 Living HUD + clock + mode panel/MODE/FULLSCREEN)",
+		productionCount == 18 && livingCount == 2 && clockCount == 1 && navCount == 3, ofToString(productionCount));
+	check("controls.reseed retired; controls.mode and controls.fullscreen present",
+		r.regionCatalog().find("controls.reseed") == nullptr && r.regionCatalog().find("controls.mode") != nullptr
+			&& r.regionCatalog().find("controls.fullscreen") != nullptr);
+	check("flexible.secondary_a = navigation-scope region (active time), flexible.secondary_b = Clock",
 		scopeOf("flexible.secondary_a") == kScopeNavigation && scopeOf("flexible.secondary_b") == kScopeClock);
 
 	// -- Real runtime frame (the frame just drawn by runtime_.draw()) ----------
@@ -293,13 +299,13 @@ void HudArtReferenceExporter::exportAll() {
 	}
 	ofSetColor(235, 240, 235, 255);
 	float ly = vp.y + 22;
-	ofDrawBitmapString("ecopunk-hud-blueprint / 1 — 19 canonical regions (px, 1280x720; from HudRegionCatalog)", vp.x + 10, ly);
+	ofDrawBitmapString("ecopunk-hud-blueprint / 2 — " + ofToString(regions.size()) + " canonical regions (px, 1280x720; from HudRegionCatalog)", vp.x + 10, ly);
 	ly += 18;
 	for (const auto& l : legend) { ofDrawBitmapString(l, vp.x + 10, ly); ly += 15; }
 	ly += 6;
 	ofSetColor(40, 170, 160, 255);
 	ofDrawBitmapString("teal = historical MinimalSlice (" + ofToString(originalCount) + ")", vp.x + 10, ly);
-	ofSetColor(200, 90, 200, 255); ofDrawBitmapString("magenta = Overlay (in historical 13)", vp.x + 340, ly);
+	ofSetColor(200, 90, 200, 255); ofDrawBitmapString("magenta = Overlay (in historical slice)", vp.x + 340, ly);
 	ly += 15;
 	ofSetColor(150, 200, 60, 255); ofDrawBitmapString("green = Living HUD v0.1 (+" + ofToString(livingCount) + ")", vp.x + 10, ly);
 	ofSetColor(80, 150, 240, 255); ofDrawBitmapString("blue = HUD Clock v0.1 (+" + ofToString(clockCount) + ")", vp.x + 340, ly);
@@ -389,7 +395,7 @@ void HudArtReferenceExporter::exportAll() {
 	ofDrawBitmapString("= historical MinimalSlice " + ofToString(originalCount) + " + Living HUD " + ofToString(livingCount)
 		+ " + Clock " + ofToString(clockCount) + " + Mode " + ofToString(navCount), vp.x + 10, py); py += 18;
 	ofDrawBitmapString("grey = FullProfile only, NOT drawn in production (" + ofToString(fullOnlyCount) + ")", vp.x + 10, py); py += 24;
-	ofDrawBitmapString("flexible.secondary_a: mode panel  'MODE i/n' + mode name; NEXT MODE focus stop", vp.x + 10, py); py += 15;
+	ofDrawBitmapString("flexible.secondary_a: active time (the mode line moved to universal.media_title)", vp.x + 10, py); py += 15;
 	ofDrawBitmapString("flexible.secondary_b: clock       local date + zone / HH:MM", vp.x + 10, py); py += 15;
 	ofDrawBitmapString("universal.scene_title: scene name + '  i/n' (SceneManager registry)", vp.x + 10, py); py += 15;
 	ofDrawBitmapString("All text is live runtime output: never bake it into skin art.", vp.x + 10, py);
@@ -441,7 +447,9 @@ void HudArtReferenceExporter::exportAll() {
 
 	// regions.json — derived export of the live catalog (not an independent definition).
 	ofJson j;
-	j["source"] = "derived from live HudWireframeRenderer/HudRegionCatalog at export time; HUD-006 ecopunk-hud-blueprint / 1";
+	j["source"] = "derived from live HudWireframeRenderer/HudRegionCatalog at export time; HUD-006 ecopunk-hud-blueprint / 2";
+	j["blueprintId"] = "ecopunk-hud-blueprint";
+	j["blueprintVersion"] = 2;
 	j["canvas"] = {{"width", kW}, {"height", kH}};
 	j["presentation"] = {{"canonicalRegions", regions.size()}, {"historicalMinimalSlice", originalCount},
 		{"production", productionCount},
@@ -458,7 +466,81 @@ void HudArtReferenceExporter::exportAll() {
 			{"px", {b.x, b.y, b.width, b.height}}, {"scope", scopeOf(reg.regionId)},
 			{"production", scopeOf(reg.regionId) != kScopeFullOnly}});
 	}
+	// Derived sprite rectangle for the optional NEXT SCENE pressed artwork
+	// (HUD-006 v2 D3): region + 4 px bleed, snapped outward.
+	{
+		const ofRectangle b = r.pixelBoundsFor("controls.scene_next");
+		const auto sp = hudpresent::reactive::pressedSpriteRect(b.x, b.y, b.width, b.height);
+		j["reactiveArtwork"] = {{"controls.scene_next", {{"file", "controls/scene_next/pressed.png"},
+			{"spriteRectPx", {sp.x, sp.y, sp.width, sp.height}}, {"rule", "region expanded 4 px per side, snapped outward"}}}};
+	}
+	// Shared navigation-button faces: control region + 4 px bleed per side,
+	// centred and rounded to whole pixels; one size, six rectangles.
+	{
+		ofJson rects = ofJson::object();
+		int fw = 0, fh = 0;
+		for (const auto& reg : regions) {
+			if (reg.role != hudpresent::HudRegionRole::Controls) continue;
+			const ofRectangle b = r.pixelBoundsFor(reg.regionId);
+			const auto f = hudpresent::reactive::buttonFaceRect(b.x, b.y, b.width, b.height);
+			fw = f.width; fh = f.height;
+			rects[reg.regionId] = {f.x, f.y, f.width, f.height};
+		}
+		j["buttonFace"] = {{"rule", "control region + 4 px bleed per side, centred, rounded to whole canvas pixels, drawn unscaled"},
+			{"size", {fw, fh}},
+			{"files", {"controls/button/idle.png", "controls/button/focused.png", "controls/button/active.png"}},
+			{"rectsPx", rects}};
+	}
 	ofSavePrettyJson(fs::path(outDir_) / "regions.json", j);
 	note("wrote regions.json (" + ofToString(regions.size()) + " regions)");
+
+	// Production membership table.
+	{
+		std::ofstream md(fs::path(outDir_) / "production_membership.md");
+		md << "# HUD-006 v2 production membership (generated from HudRegionCatalog)\n\n";
+		md << "| # | Region | Role | px (x, y, w, h) | Scope |\n|---|---|---|---|---|\n";
+		int k = 1;
+		for (const auto& reg : regions) {
+			const ofRectangle b = r.pixelBoundsFor(reg.regionId);
+			md << "| " << k++ << " | `" << reg.regionId << "` | " << roleName(reg.role) << " | " << rectText(b) << " | " << scopeOf(reg.regionId) << " |\n";
+		}
+		md << "\nCanonical " << regions.size() << ", production " << productionCount << ", FullProfile only " << fullOnlyCount << ".\n";
+		note("wrote production_membership.md");
+	}
+
+	// v1 -> v2 crosswalk, computed against the committed v1 export (no hand-written geometry).
+	{
+		ofJson v1;
+		try { v1 = ofLoadJson(fs::path(outDir_).parent_path() / "blueprint-v1-reference" / "regions.json"); } catch (...) {}
+		std::map<std::string, ofJson> v1px;
+		if (v1.is_object() && v1.contains("regions")) for (const auto& e : v1["regions"]) v1px[e.value("id", std::string())] = e["px"];
+		ofJson cw;
+		cw["from"] = "ecopunk-hud-blueprint / 1 (docs/hud-art/blueprint-v1-reference/regions.json)";
+		cw["to"] = "ecopunk-hud-blueprint / 2 (this folder's regions.json)";
+		std::set<std::string> v2ids;
+		for (const auto& reg : regions) {
+			v2ids.insert(reg.regionId);
+			const ofRectangle b = r.pixelBoundsFor(reg.regionId);
+			const ofJson now = {b.x, b.y, b.width, b.height};
+			auto it = v1px.find(reg.regionId);
+			std::string status = it == v1px.end() ? "added" : "unchanged";
+			if (it != v1px.end()) {
+				for (int i = 0; i < 4; ++i) if (std::abs(it->second[i].get<float>() - now[i].get<float>()) > 0.01f) status = "moved/resized";
+			}
+			ofJson e = {{"id", reg.regionId}, {"status", status}, {"v2px", now}};
+			if (it != v1px.end()) e["v1px"] = it->second;
+			cw["regions"].push_back(e);
+		}
+		for (const auto& [id, px] : v1px) {
+			if (!v2ids.count(id)) cw["regions"].push_back({{"id", id}, {"status", "retired"}, {"v1px", px},
+				{"note", id == "controls.reseed" ? "IMMERSIVE moved to keyboard 'i'; FULLSCREEN is controls.fullscreen" : ""}});
+		}
+		cw["behaviour"] = {{"flexible.secondary_a", "active time (was the informational mode panel; the one-line mode text now lives in universal.media_title; NEXT MODE -> controls.mode)"},
+			{"focusRing", {"controls.scene_previous", "controls.scene_next", "controls.mode", "controls.media_previous",
+				"controls.media_next", "controls.fullscreen"}}};
+		check("crosswalk computed against the v1 export", !v1px.empty(), ofToString(v1px.size()) + " v1 regions");
+		ofSavePrettyJson(fs::path(outDir_) / "crosswalk-v1-v2.json", cw);
+		note("wrote crosswalk-v1-v2.json");
+	}
 	note("RESULT: " + ofToString(passes_) + " passed, " + ofToString(failures_) + " failed");
 }

@@ -46,9 +46,18 @@ public:
 	// at the upload stage exactly as a real upload failure would (texture
 	// released, error reported). Self-clearing after one use.
 	void failNextUploadForTesting() { failNextUpload_ = true; }
+	// Reactive Control Artwork v0.1: fail the upload of the stageImage() call
+	// AFTER `skipCalls` successful ones (1 = the optional artwork staged right
+	// after a skin's shell). Self-clearing after one use.
+	void failUploadAfterForTesting(int skipCalls) { failUploadSkips_ = skipCalls; }
+	// Total stageImage() calls (decode + upload) — proves assets are staged at
+	// skin load only, never per frame.
+	uint64_t stageCallCount() const { return stageCalls_; }
 
 private:
 	std::map<uint64_t, std::unique_ptr<ofTexture>> textures_;
 	uint64_t nextHandle_ = 1;
 	bool failNextUpload_ = false;
+	int failUploadSkips_ = -1;
+	uint64_t stageCalls_ = 0;
 };

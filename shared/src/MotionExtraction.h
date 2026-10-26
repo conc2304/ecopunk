@@ -13,7 +13,8 @@ public:
 		REFERENCE_ACCUMULATION = 1
 	};
 
-	void setup();
+	void setup(); // canvas = current window (standalone sketches)
+	void setup(int canvasW, int canvasH); // RT-007: explicit canvas (ExperienceRuntime scenes)
 	void update(const ofTexture & videoTex, float decayWeight, float sensitivity);
 
 	void setOutputMode(int mode);

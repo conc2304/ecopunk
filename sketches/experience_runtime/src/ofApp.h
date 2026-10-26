@@ -15,6 +15,11 @@
 #include "ModeNavigationHarness.h"
 #include "InstallationHarness.h"
 #include "ExperienceV03Harness.h"
+#include "PresentationHarness.h"
+#include "ReactiveControlHarness.h"
+#include "TypographyHarness.h"
+#include "Hud006v2Harness.h"
+#include "SkinCycleHarness.h"
 #include "ParitySoakHarness.h"
 #include "ResumeWindowHarness.h"
 #include "CadenceHarness.h"
@@ -73,6 +78,11 @@ private:
 	std::unique_ptr<ModeNavigationHarness> modeHarness; // Scene & Pattern Navigation, full roster
 	std::unique_ptr<InstallationHarness> installationHarness; // Installation Controls & ENERGY, full roster
 	std::unique_ptr<ExperienceV03Harness> v03Harness; // HUD & Scene Experience v0.3, full roster
+	std::unique_ptr<PresentationHarness> presentationHarness; // RT-007 fullscreen presentation, full roster
+	std::unique_ptr<ReactiveControlHarness> reactiveHarness; // Reactive Control Artwork v0.1, full roster
+	std::unique_ptr<TypographyHarness> typographyHarness; // dev Live Typography Playground, full roster
+	std::unique_ptr<Hud006v2Harness> hud006v2Harness; // HUD-006 v2 six-button navigation, full roster
+	std::unique_ptr<SkinCycleHarness> skinCycleHarness; // day/night skin schedule + 'v' switching
 	std::unique_ptr<Rt004StallDriver> stallDriver; // RT-004 diagnostic, normal path only
 	std::unique_ptr<Rt004FramePhaseProbe> framePhaseProbe; // RT-004 frame-phase diagnostic (EXPERIENCE_RUNTIME_FRAME_PHASE_PROBE)
 };

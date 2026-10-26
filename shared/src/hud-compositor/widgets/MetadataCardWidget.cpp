@@ -18,7 +18,8 @@ void MetadataCardWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 	ofDrawRectangle(bounds);
 	drawOutline(bounds, scaledAlpha(colors.muted, opacity));
 
-	float pad = wu(bounds, 6.0f);
+	float pad = std::max(kContainerPad, wu(bounds, 6.0f));
+	constexpr float kLineSpacing = 1.4f; // looser lines between caption / title / value / meta
 	float y = bounds.y + pad + wu(bounds, 8.0f);
 	// Fixed native pixel-space budget (see HudWidgetDrawUtils.h's v1
 	// typography strategy comment) — not scale-adjusted.
@@ -28,14 +29,14 @@ void MetadataCardWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 		ofSetColor(scaledAlpha(captionColor(colors, titleRole), opacity * 0.9f));
 		const auto& t = textCache_.truncateToWidth(input.captionText, localMaxWidth);
 		drawText(t.text, bounds.x + pad, y);
-		y += wu(bounds, 14.0f);
+		y += wu(bounds, 14.0f) * kLineSpacing;
 	}
 
 	if (titleRole && titleRole->shouldRender) {
 		ofSetColor(scaledAlpha(titleRole->useAmbientFallback ? colors.muted : colors.primary, opacity));
 		const auto& t = textCache_.truncateToWidth(titleRole->formattedText, localMaxWidth);
 		drawText(t.text, bounds.x + pad, y);
-		y += wu(bounds, 16.0f);
+		y += wu(bounds, 16.0f) * kLineSpacing;
 	}
 
 	if (const auto* valueRole = input.findRole("value")) {
@@ -43,7 +44,7 @@ void MetadataCardWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 			ofSetColor(scaledAlpha(colors.secondary, opacity));
 			const auto& t = textCache_.truncateToWidth(valueRole->formattedText, localMaxWidth);
 			drawText(t.text, bounds.x + pad, y);
-			y += wu(bounds, 14.0f);
+			y += wu(bounds, 14.0f) * kLineSpacing;
 		}
 	}
 

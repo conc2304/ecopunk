@@ -124,7 +124,7 @@ static void test_multi_item_navigation_enabled_after_startup() {
 	auto first = policy.requestInitialCandidate();
 	policy.confirmActivationSucceeded(*first, MediaSelectionOrigin::Startup);
 
-	VSP_CHECK(policy.canSelectPrevious() == false);  // nothing before the first item
+	VSP_CHECK(policy.canSelectPrevious() == true);   // wraps: previous never disabled with >1 item
 	VSP_CHECK(policy.canSelectNext() == true);       // other items exist
 }
 
@@ -148,8 +148,23 @@ static void test_manual_previous_replays_prior_history_entry() {
 	policy.confirmActivationSucceeded(*backTo, MediaSelectionOrigin::ManualPrevious);
 	VSP_CHECK(policy.activeCatalogIndex() == *a);
 	VSP_CHECK(policy.activeSelectionOrigin() == MediaSelectionOrigin::ManualPrevious);
-	VSP_CHECK(!policy.canSelectPrevious());  // back at the very start of history
+	VSP_CHECK(policy.canSelectPrevious());   // at the start of history: wraps instead of disabling
 	VSP_CHECK(policy.canSelectNext());       // b is still ahead, replayable
+}
+
+// Previous at the oldest history entry wraps through the catalog in reverse
+// order (first -> last) and prepends to history; Next then replays forward.
+static void test_manual_previous_wraps_at_history_start() {
+	VideoSelectionPolicy policy;
+	policy.reset(makeCatalog(3), {}, identityRandom());
+	auto a = policy.requestInitialCandidate();
+	policy.confirmActivationSucceeded(*a, MediaSelectionOrigin::Startup);
+	auto w = policy.requestManualPreviousCandidate();
+	VSP_CHECK(w.has_value() && *w == (*a + 3 - 1) % 3);
+	policy.confirmActivationSucceeded(*w, MediaSelectionOrigin::ManualPrevious);
+	VSP_CHECK(policy.activeCatalogIndex() == *w && policy.canSelectPrevious());
+	auto fwd = policy.requestManualNextCandidate();
+	VSP_CHECK(fwd.has_value() && *fwd == *a); // the wrapped clip was prepended: Next replays a
 }
 
 static void test_backward_then_forward_history_traversal() {
@@ -220,9 +235,10 @@ static void test_failed_candidate_not_recorded_in_history() {
 	VSP_CHECK(policy.activeCatalogIndex() == *recovery);
 	VSP_CHECK(policy.activeSelectionOrigin() == MediaSelectionOrigin::Recovery);
 	// `first` (the failed candidate) must never have become the active
-	// item, and canSelectPrevious() must reflect a history of exactly one
-	// entry (the recovered one) -- not two.
-	VSP_CHECK(!policy.canSelectPrevious());
+	// item: history holds exactly one entry (the recovered one), so
+	// Previous is a catalog-order WRAP from it, not a replay of `first`.
+	auto wrap = policy.requestManualPreviousCandidate();
+	VSP_CHECK(wrap.has_value() && *wrap == (*recovery + 3 - 1) % 3);
 }
 
 static void test_recovery_candidate_exhausted_returns_nullopt() {
@@ -380,6 +396,7 @@ int main() {
 	test_one_item_catalog_navigation_disabled();
 	test_multi_item_navigation_enabled_after_startup();
 	test_manual_previous_replays_prior_history_entry();
+	test_manual_previous_wraps_at_history_start();
 	test_backward_then_forward_history_traversal();
 	test_fresh_forward_step_after_going_back_clears_stale_redo();
 	test_failed_candidate_not_recorded_in_history();

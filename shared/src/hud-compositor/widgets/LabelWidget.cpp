@@ -2,7 +2,15 @@
 
 #include "HudWidgetDrawUtils.h"
 
+#include <cmath>
+#include <vector>
+#include "HudLabelTypography.h"
+
 namespace hudpresent {
+
+namespace {
+constexpr float kBitmapLineHeightLog = 13.0f; // native bitmap line, activity-log variant
+}
 
 void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const {
 	// Engineering Session 2: the three-state control distinction
@@ -43,11 +51,12 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 	// / nothing loaded) draws no bar at all, so the slot never shows a
 	// misleading 0%; the title still shows.
 	if (const auto* progressRole = input.findRole("progress")) {
-		const float pad = wu(bounds, 4.0f);
+		const float pad = containerPad(bounds);
 		const float left = bounds.x + pad;
 		const float right = bounds.getRight() - pad;
 		const bool twoLines = bounds.height >= kBitmapTwoLineMinHeight;
-		const float titleBaseline = twoLines ? captionBaselineY(bounds, wu(bounds, 12.0f)) : bounds.y + bounds.height * 0.65f;
+		// Title 3 px lower than the caption line (and centred, below).
+		const float titleBaseline = (twoLines ? captionBaselineY(bounds, wu(bounds, 12.0f)) : bounds.y + bounds.height * 0.65f) + 3.0f;
 		const float barBaseline = twoLines ? bottomBaselineY(bounds, wu(bounds, 6.0f)) : titleBaseline;
 		const float barMidY = barBaseline - kBitmapCapHeight * 0.5f;
 
@@ -68,7 +77,9 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 			const float budget = twoLines ? (right - left) : std::max(0.0f, std::min((right - left) * 0.45f, barRight - left - 12.0f));
 			const auto& title = textCache_.truncateToWidth(textRole->formattedText, budget);
 			ofSetColor(scaledAlpha(colors.primary, opacity));
-			drawText(title.text, left, titleBaseline);
+			// Two lines: the media title is centred in its container.
+			const float titleX = twoLines ? std::max(left, bounds.getCenter().x - hudTextWidth(title.text, title.widthLocal) * 0.5f) : left;
+			drawText(title.text, titleX, titleBaseline);
 			if (!twoLines) barLeft = left + title.widthLocal + 12.0f;
 		}
 
@@ -102,7 +113,95 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 		return;
 	}
 
-	float pad = wu(bounds, 4.0f);
+	// "centered" variant (overlay phase "IDLE"): the text centred horizontally
+	// in its slot, on the standard label baseline.
+	if (input.variantId == "centered") {
+		const float padC = containerPad(bounds);
+		const auto& t = textCache_.truncateToWidth(text, std::max(0.0f, bounds.width - padC * 2.0f));
+		ofSetColor(scaledAlpha(colors.primary, opacity));
+		drawText(t.text, bounds.getCenter().x - hudTextWidth(t.text, t.widthLocal) * 0.5f, bounds.y + bounds.height * 0.65f);
+		ofPopStyle();
+		return;
+	}
+
+	// "modeline" variant (universal.media_title): the scene mode on ONE line,
+	// "Mode: <name>   x/y" — caption + name in primary, the position in the
+	// caption colour after a three-glyph gap. Drawn through drawText so the
+	// dev typography playground restyles it like any other info text.
+	if (input.variantId == "modeline") {
+		const float padM = containerPad(bounds);
+		const float availM = std::max(0.0f, bounds.width - padM * 2.0f);
+		const std::string line = input.captionText.empty() ? text : input.captionText + " " + text;
+		const auto* posRole = input.findRole("suffix");
+		const bool hasPos = posRole && posRole->shouldRender && !posRole->formattedText.empty();
+		const float gap = HudTextMetricsCache::kGlyphWidthLocal * 3.0f;
+		const float posW = hasPos ? hudTextWidth(posRole->formattedText, textCache_.truncateToWidth(posRole->formattedText, availM).widthLocal) : 0.0f;
+		const auto& lineT = textCache_.truncateToWidth(line, std::max(0.0f, availM - posW - (hasPos ? gap : 0.0f)));
+		const float baselineM = bounds.getCenter().y + kBitmapCapHeight * 0.5f;
+		ofSetColor(scaledAlpha(colors.primary, opacity));
+		drawText(lineT.text, bounds.x + padM, baselineM);
+		if (hasPos) {
+			ofSetColor(scaledAlpha(colors.caption, opacity));
+			drawText(posRole->formattedText, bounds.x + padM + hudTextWidth(lineT.text, lineT.widthLocal) + gap, baselineM);
+		}
+		ofPopStyle();
+		return;
+	}
+
+	// "log" variant (overlay.transition): the most recent activity-log lines
+	// (newline-separated, oldest first), truncated per line, as many as fit
+	// (1-4) at the current text size. Caption colour: informational.
+	if (input.variantId == "log") {
+		const float padL = containerPad(bounds);
+		std::vector<std::string> all;
+		for (size_t start = 0; start <= text.size();) {
+			const size_t nl = text.find('\n', start);
+			const std::string one = text.substr(start, nl == std::string::npos ? std::string::npos : nl - start);
+			if (!one.empty()) all.push_back(one);
+			if (nl == std::string::npos) break;
+			start = nl + 1;
+		}
+		const float lineH = std::max(8.0f, hudLineHeight(kBitmapLineHeightLog));
+		const int fit = static_cast<int>(std::floor((bounds.height - padL * 2.0f) / lineH));
+		const size_t n = std::min(all.size(), static_cast<size_t>(std::clamp(fit, 1, 4)));
+		const float avail = std::max(0.0f, bounds.width - padL * 2.0f);
+		ofSetColor(scaledAlpha(colors.caption, opacity));
+		for (size_t i = 0; i < n; ++i) {
+			std::string line = all[all.size() - n + i];
+			// A long "Module: message" would be cut inside the module name and
+			// hide the message: when it doesn't fit, show the message part.
+			if (textCache_.truncateToWidth(line, 1e5f).widthLocal > avail) {
+				const size_t colon = line.find(": ");
+				if (colon != std::string::npos) line = line.substr(colon + 2);
+			}
+			const auto& t = textCache_.truncateToWidth(line, avail);
+			drawText(t.text, bounds.x + padL, bounds.y + padL + lineH * float(i) + lineH * 0.8f);
+		}
+		ofPopStyle();
+		return;
+	}
+
+	// Development-only Live Typography Playground: offered first, declines
+	// for anything it doesn't target (null in production -> no change).
+	float pad = containerPad(bounds);
+	// Scene title's "[Scene X/Y]" suffix: small, no glow, right-aligned in
+	// the container (drawn by both the playground and the native paths).
+	constexpr float kSuffixScale = 1.05f; // [Scene X/Y]: +~4 px over the previous 0.75x (13 px glyph: 9.75 -> 13.7 px)
+	const auto* titleSuffix = input.variantId == "title" ? input.findRole("suffix") : nullptr;
+	auto drawTitleSuffix = [&]() {
+		if (!titleSuffix || !titleSuffix->shouldRender || titleSuffix->formattedText.empty()) return;
+		const auto& suffix = textCache_.truncateToWidth(titleSuffix->formattedText, bounds.width * 0.4f / kSuffixScale);
+		const float w = hudTextWidth(suffix.text, suffix.widthLocal, kSuffixScale);
+		ofSetColor(scaledAlpha(colors.caption, opacity));
+		drawTextScaled(suffix.text, bounds.getRight() - pad - w, bounds.getCenter().y + kBitmapCapHeight * kSuffixScale * 0.5f, kSuffixScale);
+	};
+	if (input.labelTypography != nullptr && !text.empty()
+		&& input.labelTypography->drawLabel(input.regionId, bounds, text, opacity)) {
+		drawTitleSuffix();
+		ofPopStyle();
+		return;
+	}
+
 	float scale = wu(bounds, 0.9f, 120.0f);
 	// Deterministic truncation/ellipsis (this task's §11): measured
 	// directly in real on-screen PIXELS, so a region narrower than the
@@ -134,6 +233,55 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 	// wireframe-acceptance task is not scoped to make).
 	float localMaxWidth = std::max(0.0f, bounds.width - pad * 2.0f);
 	const float baseline = bounds.y + bounds.height * 0.65f;
+
+	// "title" variant (scene title): 1.5x glyphs, 10 px left padding,
+	// vertically centred. Widths are native widths * kTitleScale.
+	if (input.variantId == "title") {
+		constexpr float kTitleScale = 1.5f;
+		constexpr float kTitlePadLeft = 10.0f;
+		const float left = bounds.x + kTitlePadLeft;
+		const float maxLocal = std::max(0.0f, bounds.getRight() - pad - left) / kTitleScale;
+		const float titleBaseline = bounds.getCenter().y + kBitmapCapHeight * kTitleScale * 0.5f;
+		const bool hasSuffix = titleSuffix && titleSuffix->shouldRender && !titleSuffix->formattedText.empty();
+		const float suffixReserve = hasSuffix
+			? (textCache_.truncateToWidth(titleSuffix->formattedText, maxLocal).widthLocal * kSuffixScale + kSuffixGap) / kTitleScale : 0.0f;
+		const auto& title = textCache_.truncateToWidth(text, std::max(0.0f, maxLocal - suffixReserve));
+		ofSetColor(scaledAlpha(colors.primary, opacity));
+		drawTextScaled(title.text, left, titleBaseline, kTitleScale);
+		drawTitleSuffix();
+		ofPopStyle();
+		return;
+	}
+
+	// Nav buttons ("button" variant, HUD-006 v2 72x72 squares): stacked label,
+	// one word per line ("PREV" / "SCENE"), each line centred; the block is
+	// centred vertically. One word -> one centred line.
+	if (input.variantId == "button") {
+		std::vector<std::string> lines; // one word per line
+		{
+			std::string word;
+			for (char ch : text + " ") {
+				if (ch == ' ') { if (!word.empty()) lines.push_back(word); word.clear(); }
+				else word += ch;
+			}
+			if (lines.empty()) lines.push_back(text);
+		}
+		constexpr float kLineGap = 6.0f;
+		const float blockH = kBitmapCapHeight * float(lines.size()) + kLineGap * float(lines.size() - 1);
+		float baseline = bounds.getCenter().y - blockH * 0.5f + kBitmapCapHeight;
+		ofSetColor(scaledAlpha(colors.buttonText, opacity));
+		const ofColor panelShadow = hudTextShadowColor();
+		hudTextShadowColor() = colors.buttonShadow; // dark over the baked faces; palette shadow over skin faces
+		for (const auto& line : lines) {
+			const auto& t = textCache_.truncateToWidth(line, localMaxWidth);
+			const float w = hudTextWidth(t.text, t.widthLocal);
+			drawText(t.text, bounds.getCenter().x - w * 0.5f, baseline);
+			baseline += kBitmapCapHeight + kLineGap;
+		}
+		hudTextShadowColor() = panelShadow;
+		ofPopStyle();
+		return;
+	}
 
 	// Optional dynamic suffix (scene title "  2/5"): reserved first so the
 	// main text truncates around it and the suffix itself is never cut.

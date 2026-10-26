@@ -1,5 +1,7 @@
 #pragma once
 
+#include "HudLabelTypography.h"
+
 // ============================================================================
 // HudWireframeRenderer.h — the renderer-private orchestrator that ties
 // every piece in this domain together into one minimal wireframe
@@ -162,6 +164,47 @@ public:
 	void setShellTexture(const ofTexture* shell) { shellTexture_ = shell; }
 	const ofTexture* shellTexture() const { return shellTexture_; }
 
+	// Reactive Control Artwork v0.1 (HUD-004 optional extension). A non-
+	// owning pointer to the active skin's optional pressed face for ONE
+	// control region (today only controls.scene_next — see
+	// HudReactiveControlArt.h), or nullptr when the skin has none. Drawn
+	// above the shell and below every widget/label and the focus brackets,
+	// only while the EXISTING accepted activation feedback runs on that
+	// focused control; plus a subtle edge illumination while it is focused.
+	// Same ownership rule as the shell: the skin owner clears/replaces this
+	// before releasing the texture. No skin-ID logic.
+	void setPressedArtwork(const std::string& regionId, const ofTexture* texture) {
+		pressedRegionId_ = regionId;
+		pressedTexture_ = texture;
+	}
+	const ofTexture* pressedArtwork() const { return pressedTexture_; }
+
+	// Shared navigation-button faces (HUD Art hud-state-buttons): idle /
+	// focused / active textures for ALL controls, any of which may be null.
+	// Non-owning, same ownership rule as the shell. Drawn above the shell and
+	// below every label, focus bracket and the legacy pressed overlay:
+	// focused face while a control holds focus, otherwise idle; the active
+	// face fades over it during the existing accepted-activation interval.
+	void setButtonFaces(const ofTexture* idle, const ofTexture* focused, const ofTexture* active) {
+		buttonIdleTexture_ = idle;
+		buttonFocusedTexture_ = focused;
+		buttonActiveTexture_ = active;
+	}
+	bool hasButtonFaces() const { return buttonIdleTexture_ || buttonFocusedTexture_ || buttonActiveTexture_; }
+	// Active-face opacity for a control this frame (0 = not drawn).
+	float buttonActiveOpacity(const std::string& regionId) const;
+
+	// Development-only Live Typography Playground (HudLabelTypography.h):
+	// non-owning; nullptr (default, production) = native bitmap labels.
+	void setLabelTypography(const IHudLabelTypography* typography) { labelTypography_ = typography; }
+	// Day/night text palette for every widget, focus bracket and flash
+	// (HudWidgetColors; default = the night palette). Set by the runtime's
+	// skin schedule alongside the shell.
+	void setColors(const HudWidgetColors& colors) { colors_ = colors; }
+	const HudWidgetColors& colors() const { return colors_; }
+	// The pressed artwork's opacity for the current state (0 = not drawn).
+	float pressedArtworkOpacity() const;
+
 	// Playable HUD Menu v0.1 — focus presentation for existing controls.
 	// controlEnabled() reports a control region's state from the bindings the
 	// last update() ALREADY resolved, using exactly LabelWidget's rule:
@@ -174,8 +217,18 @@ public:
 	const std::optional<std::string>& focusedControl() const { return focusedControl_; }
 	// One short activation flash on the focused control (accepted = accent,
 	// refused = warning), fading over kActivationFlashSeconds.
-	void triggerActivationFeedback(bool accepted) { activationStart_ = elapsedSeconds_; activationAccepted_ = accepted; }
+	// The interval starts at the NEXT update() — the frame that first shows
+	// it — not at the input event: an accepted NEXT/PREV SCENE switches
+	// scenes synchronously and that frame can take longer than the whole
+	// interval (0.59 s measured), which used to expire the feedback unseen.
+	void triggerActivationFeedback(bool accepted) {
+		activationPending_ = true;
+		activationStart_ = -1.0f;
+		activationAccepted_ = accepted;
+	}
 	static constexpr float kActivationFlashSeconds = 0.30f;
+	// Seconds since the last activation feedback started (< 0 = never).
+	float activationFeedbackAgeSeconds() const { return activationStart_ < 0.0f ? -1.0f : elapsedSeconds_ - activationStart_; }
 
 	struct FrameStats {
 		int activeWidgetCount = 0;
@@ -243,8 +296,16 @@ private:
 	// stays at defaults for the fake/Studio path).
 	const ofTexture* currentSceneTexture_ = nullptr; // non-owning, valid only for the frame that supplied it — see SceneFrame's own lifetime rule
 	const ofTexture* shellTexture_ = nullptr; // non-owning — see setShellTexture()
+	const ofTexture* pressedTexture_ = nullptr; // non-owning — see setPressedArtwork()
+	const ofTexture* buttonIdleTexture_ = nullptr;    // non-owning — see setButtonFaces()
+	const ofTexture* buttonFocusedTexture_ = nullptr;
+	const ofTexture* buttonActiveTexture_ = nullptr;
+	const IHudLabelTypography* labelTypography_ = nullptr; // non-owning, dev-only
+	HudWidgetColors colors_;
+	std::string pressedRegionId_;
 	std::optional<std::string> focusedControl_;
 	float activationStart_ = -1.0f;
+	bool activationPending_ = false; // set by triggerActivationFeedback(), started by the next update()
 	bool activationAccepted_ = false;
 	glm::ivec2 currentSceneNativeSize_{0, 0};
 	uint64_t lastObservedFrameNumber_ = 0;

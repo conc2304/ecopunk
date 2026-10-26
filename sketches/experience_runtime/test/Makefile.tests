@@ -120,6 +120,7 @@ SCENE_SWITCH_BIN = scene_switch_controller_tests
 # openFrameworks ships header-only in libs/json/include — no OF/GL linkage.
 SKIN_LOADER_CXXFLAGS = $(CXXFLAGS) \
 	-I../../../tools/hud-skin-manifest \
+	-I../../../shared/src/hud-compositor \
 	-I../../../../../../libs/json/include \
 	-DHUD_SKIN_TEST_FIXTURE_DIR='"$(abspath skin_fixtures)"'
 SKIN_LOADER_SRC = hud_skin_loader_tests.cpp ../src/HudSkinLoader.cpp ../src/HudSkinPng.cpp \
@@ -139,6 +140,10 @@ WALL_CLOCK_BIN = wall_clock_sampler_tests
 # Installation Controls & ENERGY v0.1: installation::Controller (OF-free, header-only).
 INSTALLATION_SRC = installation_control_tests.cpp
 INSTALLATION_BIN = installation_control_tests
+SCHEDULE_SRC = hud_skin_schedule_tests.cpp
+SCHEDULE_BIN = hud_skin_schedule_tests
+PRESENTATION_SRC = presentation_transform_tests.cpp
+PRESENTATION_BIN = presentation_transform_tests
 
 .PHONY: test session2 skin focus wall-clock installation clean
 
@@ -151,6 +156,18 @@ wall-clock: $(WALL_CLOCK_BIN)
 installation: $(INSTALLATION_BIN)
 	./$(INSTALLATION_BIN)
 
+presentation: $(PRESENTATION_BIN)
+	./$(PRESENTATION_BIN)
+
+schedule: $(SCHEDULE_BIN)
+	./$(SCHEDULE_BIN)
+
+$(SCHEDULE_BIN): $(SCHEDULE_SRC) ../src/HudSkinSchedule.h
+	$(CXX) $(CXXFLAGS) -I../src $(SCHEDULE_SRC) -o $(SCHEDULE_BIN)
+
+$(PRESENTATION_BIN): $(PRESENTATION_SRC) ../src/PresentationTransform.h
+	$(CXX) $(CXXFLAGS) -I../src $(PRESENTATION_SRC) -o $(PRESENTATION_BIN)
+
 $(INSTALLATION_BIN): $(INSTALLATION_SRC) ../src/InstallationControl.h
 	$(CXX) $(CXXFLAGS) -I../src -pthread $(INSTALLATION_SRC) -o $(INSTALLATION_BIN)
 
@@ -160,7 +177,7 @@ $(WALL_CLOCK_BIN): $(WALL_CLOCK_SRC) ../../../shared/src/hud-runtime/WallClockSa
 $(FOCUS_BIN): $(FOCUS_SRC) ../src/HudFocusNavigator.h
 	$(CXX) $(CXXFLAGS) $(FOCUS_SRC) -o $(FOCUS_BIN)
 
-test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(INSTALLATION_BIN)
+test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(INSTALLATION_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN)
 	./$(LIFECYCLE_BIN)
 	./$(SESSION2_BIN)
 	./$(BLOB_SEMANTIC_BIN)
@@ -177,6 +194,8 @@ test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY
 	./$(FOCUS_BIN)
 	./$(WALL_CLOCK_BIN)
 	./$(INSTALLATION_BIN)
+	./$(PRESENTATION_BIN)
+	./$(SCHEDULE_BIN)
 
 blueprint-semantic: $(BLUEPRINT_SEMANTIC_BIN)
 	./$(BLUEPRINT_SEMANTIC_BIN)
@@ -199,7 +218,7 @@ $(QUADRANT_SEMANTIC_BIN): $(QUADRANT_SEMANTIC_SRC) ../src/QuadrantSemanticMappin
 skin: $(SKIN_LOADER_BIN)
 	./$(SKIN_LOADER_BIN)
 
-$(SKIN_LOADER_BIN): $(SKIN_LOADER_SRC) ../src/HudSkinLoader.h ../src/HudSkinPng.h ../../../tools/hud-skin-manifest/HudSkinManifest.h
+$(SKIN_LOADER_BIN): $(SKIN_LOADER_SRC) ../src/HudSkinLoader.h ../src/HudSkinPng.h ../../../shared/src/hud-compositor/HudReactiveControlArt.h ../../../tools/hud-skin-manifest/HudSkinManifest.h
 	$(CXX) $(SKIN_LOADER_CXXFLAGS) $(SKIN_LOADER_SRC) -o $(SKIN_LOADER_BIN)
 
 session2: $(SESSION2_BIN)
@@ -233,4 +252,4 @@ $(SCENE_SWITCH_BIN): $(SCENE_SWITCH_SRC) ../src/SceneSwitchController.h
 	$(CXX) $(CXXFLAGS) $(SCENE_SWITCH_SRC) -o $(SCENE_SWITCH_BIN)
 
 clean:
-	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(INSTALLATION_BIN)
+	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(INSTALLATION_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN)

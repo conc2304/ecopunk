@@ -19,14 +19,18 @@ void ChannelStripWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 	ofPushStyle();
 	ofEnableAlphaBlending();
 
+	// Section title at native size (was 0.5x and illegible), padded 3 px;
+	// the four cells sit below it and shrink to make room.
+	const float pad = kContainerPad;
+	const float captionBaseline = bounds.y + pad + kBitmapCapHeight;
 	if (!input.captionText.empty()) {
 		ofSetColor(captionColor(colors, input.findRole("channel0")));
-		drawText(input.captionText, bounds.x, bounds.y + wu(bounds, 10.0f), wu(bounds, 0.5f, 120.0f));
+		drawText(input.captionText, bounds.x + pad, captionBaseline);
 	}
 
 	float cellWidth = bounds.width / 4.0f;
-	float cellTop = bounds.y + wu(bounds, 14.0f);
-	float cellHeight = bounds.height - wu(bounds, 16.0f);
+	float cellTop = captionBaseline + kBitmapDescent + 4.0f;
+	float cellHeight = std::max(12.0f, bounds.getBottom() - pad - cellTop);
 
 	for (int i = 0; i < 4; ++i) {
 		float x = bounds.x + cellWidth * static_cast<float>(i);
@@ -44,17 +48,17 @@ void ChannelStripWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 		// typography strategy comment) — each cell is only 1/4 of the
 		// region's own already-narrow width, so this is the tightest
 		// truncation budget of any binding in this widget layer.
-		float cellPad = wu(bounds, 3.0f);
+		float cellPad = 4.0f; // Q-id / value inset from the cell's top-left
 		float cellMaxWidth = std::max(0.0f, cell.width - cellPad);
 
 		ofSetColor(scaledAlpha(colors.muted, 0.9f));
 		const auto& label = textCache_.truncateToWidth(kChannelLabels[i], cellMaxWidth);
-		drawText(label.text, cell.x + cellPad, cell.y + wu(bounds, 10.0f));
+		drawText(label.text, cell.x + cellPad, cell.y + cellPad + kBitmapCapHeight);
 
 		if (has) {
 			ofSetColor(scaledAlpha(r->dimmed ? colors.muted : colors.secondary, r->dimmed ? 0.6f : 1.0f));
 			const auto& value = textCache_.truncateToWidth(r->formattedText, cellMaxWidth);
-			drawText(value.text, cell.x + cellPad, cell.y + cell.height - wu(bounds, 4.0f));
+			drawText(value.text, cell.x + cellPad, cell.getBottom() - cellPad - kBitmapDescent);
 		}
 	}
 

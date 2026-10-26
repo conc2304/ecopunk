@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib> // std::getenv (EXPERIENCE_RUNTIME_HUD_SKIN)
+#include <ctime>   // localtime_r (day/night skin schedule)
 
 ExperienceRuntime::ExperienceRuntime()
 	: blobScene_(runtimeServices_.video())
@@ -165,6 +166,13 @@ void ExperienceRuntime::establishGlobalRenderingBaseline() {
 }
 
 void ExperienceRuntime::setup() {
+	// HUD activity log: wrap the current logger channel (the console prints
+	// exactly as before) and keep the last lines for HudFrameData::activityLog.
+	if (!logCapture_) {
+		logCapture_ = std::make_shared<HudLogCapture>(ofGetLoggerChannel());
+		ofSetLoggerChannel(logCapture_);
+	}
+
 	establishGlobalRenderingBaseline();
 
 	// VideoPlaybackService setup, per Implement-Shared-Video-Playback-
@@ -271,24 +279,48 @@ void ExperienceRuntime::setup() {
 		hudPaths.skinsRoot = ofToDataPath("../../../../assets/hud/skins", true);
 		hudskin::SkinManifestValidationPolicy expected;
 		expected.expectedBlueprintId = "ecopunk-hud-blueprint";
-		expected.expectedBlueprintVersion = 1u;
+		expected.expectedBlueprintVersion = 2u; // HUD-006 v2: v1 skins are rejected (SKIN_BLUEPRINT_VERSION_MISMATCH)
 		hudCompositorBridge_.configureSkins(hudPaths, expected);
 
-		// Setup-time selection only (spec §5: no live skin-switching UI).
-		// Unset → functional wireframe, exactly as before this increment.
+		// Skin selection. EXPERIENCE_RUNTIME_HUD_SKIN (explicit) wins and fixes
+		// the skin; otherwise, on normal runs, the day/night schedule picks it
+		// by local time. Neither -> functional wireframe, as before. The 'v'
+		// key cycles skins live (atomic loader replacement), 'V' resumes the
+		// schedule — see ExperienceRuntime::keyPressed.
+		if (skinScheduleEnabled_) loadSkinSchedule(ofToDataPath("../../../../assets/hud/skins/skin-schedule.json", true));
 		const char* skin = std::getenv("EXPERIENCE_RUNTIME_HUD_SKIN");
 		if (skin != nullptr && skin[0] != '\0') {
-			hudCompositorBridge_.requestSkin(skin);
+			applySkin(skin, "EXPERIENCE_RUNTIME_HUD_SKIN");
+		} else if (skinScheduleEnabled_ && skinSchedule_.valid()) {
+			skinAuto_ = true;
+			tickSkinSchedule(true);
 		} else {
-			ofLogNotice("HudSkin") << "no HUD skin selected (EXPERIENCE_RUNTIME_HUD_SKIN unset): functional wireframe";
+			ofLogNotice("HudSkin") << "no HUD skin selected (EXPERIENCE_RUNTIME_HUD_SKIN unset, no schedule): functional wireframe";
 		}
+	}
+
+	// Development-only Live Typography Playground (off unless explicitly requested).
+	if (TypographyPlayground::isRequested()) {
+		typography_ = std::make_unique<TypographyPlayground>();
+		const char* dir = std::getenv("EXPERIENCE_RUNTIME_TYPOGRAPHY_DIR");
+		typography_->load(dir ? std::string(dir) : ofToDataPath("../../../../assets/hud/dev-typography", true));
+		hudCompositorBridge_.setLabelTypography(typography_.get());
+		ofLogNotice("Typography") << "DEV typography playground ENABLED (EXPERIENCE_RUNTIME_TYPOGRAPHY_PLAYGROUND=1)";
 	}
 
 	// Installation Controls & ENERGY v0.1: settings (validated) and the
 	// persistent launch preference. applyMediaCadence() applies the media
 	// cadence every frame from here on.
 	loadInstallationSettings();
-	if (installation_.settings().launchFullscreen) {
+	// RT-007 precedence for NATIVE host fullscreen at startup (one authority
+	// per launch): an explicit EXPERIENCE_RUNTIME_FULLSCREEN=1/0 wins — main.cpp
+	// already created the window in that mode — otherwise the persisted
+	// Installation Controls launchFullscreen preference applies. The
+	// preference itself is never rewritten by the override.
+	if (const auto overrideFullscreen = fullscreenOverrideFromEnv()) {
+		ofLogNotice("Presentation") << "EXPERIENCE_RUNTIME_FULLSCREEN=" << (*overrideFullscreen ? "1" : "0")
+			<< " overrides launchFullscreen (" << (installation_.settings().launchFullscreen ? "on" : "off") << ")";
+	} else if (installation_.settings().launchFullscreen) {
 		ofSetFullscreen(true);
 		ofLogNotice("Installation") << "launchFullscreen: starting fullscreen";
 	}
@@ -296,8 +328,73 @@ void ExperienceRuntime::setup() {
 	didSetup_ = true;
 }
 
+bool ExperienceRuntime::loadSkinSchedule(const std::string& path) {
+	ofJson j;
+	try {
+		if (ofFile::doesFileExist(path, false)) j = ofLoadJson(path);
+	} catch (...) {
+		j = ofJson();
+	}
+	if (!j.is_object()) {
+		ofLogNotice("HudSkin") << "no skin schedule at " << path;
+		return false;
+	}
+	HudSkinSchedule s;
+	if (auto m = HudSkinSchedule::parseClock(j.value("dayStart", std::string("07:00")))) s.dayStartMinute = *m;
+	if (auto m = HudSkinSchedule::parseClock(j.value("nightStart", std::string("19:00")))) s.nightStartMinute = *m;
+	auto readGroup = [&](const char* key, HudSkinSchedule::Group& g, const char* defaultPalette) {
+		g.palette = defaultPalette;
+		if (!j.contains(key) || !j[key].is_object()) return;
+		g.palette = j[key].value("palette", std::string(defaultPalette));
+		if (j[key].contains("skins") && j[key]["skins"].is_array()) {
+			for (const auto& id : j[key]["skins"]) if (id.is_string()) g.skins.push_back(id.get<std::string>());
+		}
+	};
+	readGroup("day", s.day, "day");
+	readGroup("night", s.night, "night");
+	skinSchedule_ = s;
+	ofLogNotice("HudSkin") << "skin schedule: day " << s.day.skins.size() << " skin(s) from " << s.dayStartMinute / 60 << ":"
+		<< ofToString(s.dayStartMinute % 60, 2, '0') << ", night " << s.night.skins.size() << " skin(s) from "
+		<< s.nightStartMinute / 60 << ":" << ofToString(s.nightStartMinute % 60, 2, '0');
+	return s.valid();
+}
+
+bool ExperienceRuntime::applySkin(const std::string& skinId, const std::string& reason) {
+	if (skinId.empty()) return false;
+	const auto outcome = hudCompositorBridge_.requestSkin(skinId); // atomic: a failure keeps the current skin
+	if (outcome.activated) {
+		currentSkin_ = skinId;
+		const std::string palette = skinSchedule_.paletteFor(skinId);
+		hudCompositorBridge_.setColors(hudpresent::hudPaletteNamed(palette));
+		ofLogNotice("HudSkin") << "skin '" << skinId << "' (" << palette << " palette) — " << reason;
+	}
+	return outcome.activated;
+}
+
+int ExperienceRuntime::localMinuteNow() {
+	const std::time_t now = std::time(nullptr);
+	std::tm local{};
+	localtime_r(&now, &local);
+	return local.tm_hour * 60 + local.tm_min;
+}
+
+void ExperienceRuntime::tickSkinSchedule(bool force) {
+	if (!skinAuto_) return;
+	const HudSkinSchedule::Period p = skinSchedule_.periodAt(localMinuteNow());
+	if (!force && skinPeriod_ && *skinPeriod_ == p) return;
+	skinPeriod_ = p;
+	applySkin(skinSchedule_.autoSkin(p), std::string("schedule: ") + (p == HudSkinSchedule::Period::Day ? "day" : "night"));
+}
+
 void ExperienceRuntime::update(float dt) {
 	lastDt_ = dt; // reused by draw() (step 14) — see this member's own comment
+	// Day/night skin schedule: checked about once a second (cheap; switches
+	// only when the period changes, and only while following the schedule).
+	skinCheckSeconds_ += dt;
+	if (skinCheckSeconds_ >= 1.0f) {
+		skinCheckSeconds_ = 0.0f;
+		tickSkinSchedule(false);
+	}
 	tickInstallation(dt); // installation requests/automation, before the frame's scene work
 
 	// Step 1 (resolve raw input) and step 2 (dispatch accepted
@@ -452,6 +549,7 @@ void ExperienceRuntime::draw() {
 	// conversion per distinct second (see WallClockSampler.h), never a scene's.
 	currentHudFrameData_.wallClock = wallClockSampler_.sample(std::chrono::system_clock::now());
 	if (installationLoaded_) currentHudFrameData_.installation = buildInstallationStatus();
+	if (logCapture_) currentHudFrameData_.activityLog = logCapture_->recent();
 	presentationCounters_.hudFrameDataAssemblies++;
 
 	// Step 16: hand the ONE assembled HudFrameData to the compositor
@@ -462,7 +560,24 @@ void ExperienceRuntime::draw() {
 	// rectangle + debug text) — canonical 1280x720 layout, MediaViewportMesh,
 	// widgets, drawn at the canvas origin (no destRect: see
 	// HudCompositorBridge's header comment for why none is needed).
-	ofBackground(12, 12, 12);
+	// RT-007: the final presentation transform for THIS frame, from the
+	// actual framebuffer size (ofGetWidth/Height are framebuffer pixels under
+	// GLFW) — read every frame, so fullscreen toggles, WM/external resizes
+	// and late X11 mode changes are picked up without any resize callback,
+	// and never inferred from a fullscreen request having been made.
+	{
+		const PresentationTransform next = PresentationTransform::contain(ofGetWidth(), ofGetHeight());
+		static int lastLoggedWindowMode = -1; // fullscreen can settle a few frames after the size does
+		const int windowMode = static_cast<int>(ofGetWindowMode());
+		if (next != presentation_ || frameNumber_ == 1 || windowMode != lastLoggedWindowMode) {
+			lastLoggedWindowMode = windowMode;
+			ofLogNotice("Presentation") << "framebuffer " << next.framebufferWidth << "x" << next.framebufferHeight
+				<< " (" << (ofGetWindowMode() == OF_FULLSCREEN ? "fullscreen" : "windowed") << ") -> "
+				<< (next.isIdentity() ? std::string("direct 1280x720") : "canonical 1280x720 composition scaled "
+					+ ofToString(next.scale, 4) + " at (" + ofToString(next.offsetX, 1) + ", " + ofToString(next.offsetY, 1) + ")");
+		}
+		presentation_ = next;
+	}
 	// Architecture-Closure Session: HUD-only allocation isolation — see
 	// this class's own header comment (lastHudOnlyNewCount()/
 	// lastHudOnlyDeleteCount()). Reads alloccounter's global counters
@@ -476,21 +591,66 @@ void ExperienceRuntime::draw() {
 		if (immersive_) {
 			// IMMERSIVE (HUD & Scene Experience v0.3): the HUD keeps updating
 			// (focus/status stay current) but is not drawn; the runtime-owned
-			// scene FBO fills the CURRENT window instead — aspect-preserving
-			// cover scale, centred crop. No window/fullscreen change, no
-			// per-scene rendering.
+			// scene FBO fills the CURRENT framebuffer instead — aspect-
+			// preserving cover scale, centred crop. No window/fullscreen
+			// change, no per-scene rendering. Independent of RT-007's
+			// contain transform (scene-only presentation, by design).
 			RT004_SCOPE("Immersive.draw");
 			drawImmersiveScene();
-		} else {
+		} else if (presentation_.isIdentity()) {
+			// 1280x720 framebuffer: draw the canonical composition directly,
+			// exactly as before RT-007 (no extra target, no extra pass).
 			RT004_SCOPE("Hud.draw");
-			hudCompositorBridge_.draw();
-			presentationCounters_.hudDraws++;
+			ofBackground(12, 12, 12);
+			drawComposition();
+			presentationCounters_.directPresentationFrames++;
+		} else {
+			// Any other framebuffer: compose once at the canonical 1280x720
+			// (shell, widgets, native-size bitmap text and the beveled
+			// MediaViewportMesh all keep their 1:1 pixel layout), then scale
+			// the finished image once. A plain ofScale() around the HUD is NOT
+			// equivalent: OF's default bitmap-string mode billboards only the
+			// translation and draws glyphs at native size, so text would
+			// shrink relative to the shell.
+			RT004_SCOPE("Hud.drawComposed");
+			if (!presentationFbo_.isAllocated()) {
+				presentationFbo_.allocate(static_cast<int>(PresentationTransform::kCanvasWidth),
+					static_cast<int>(PresentationTransform::kCanvasHeight), GL_RGBA);
+				presentationFbo_.getTexture().setTextureMinMagFilter(GL_LINEAR, GL_LINEAR);
+				presentationCounters_.presentationFboAllocations++;
+				ofLogNotice("Presentation") << "canonical composition FBO allocated 1280x720 RGBA (once)";
+			}
+			presentationFbo_.begin();
+			ofClear(12, 12, 12, 255);
+			drawComposition();
+			presentationFbo_.end();
+			presentComposedFrame();
+			presentationCounters_.composedPresentationFrames++;
 		}
+	} else {
+		ofBackground(12, 12, 12);
 	}
 	lastHudOnlyNewCount_ = alloccounter::newCount() - hudAllocBefore;
 	lastHudOnlyDeleteCount_ = alloccounter::deleteCount() - hudDeallocBefore;
 
 	// Step 15: present — openFrameworks swaps buffers after draw() returns.
+}
+
+void ExperienceRuntime::drawComposition() {
+	hudCompositorBridge_.draw();
+	if (typography_) typography_->drawOverlay(); // dev-only info panel, above the HUD
+	presentationCounters_.hudDraws++;
+}
+
+void ExperienceRuntime::presentComposedFrame() {
+	ofBackground(0); // letterbox bars (none at 16:9 framebuffers such as 1600x900)
+	ofPushStyle();
+	// Copy RGB only: translucent HUD elements lowered the composition's
+	// alpha inside the FBO; blending it over black would darken them.
+	ofDisableAlphaBlending();
+	ofSetColor(255);
+	presentationFbo_.draw(presentation_.offsetX, presentation_.offsetY, presentation_.drawWidth(), presentation_.drawHeight());
+	ofPopStyle();
 }
 
 void ExperienceRuntime::exit() {
@@ -544,20 +704,20 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 
 	// Control region -> existing command. Same meanings the HUD's availability
 	// sources use (HudRealFrameResolver control.* sources).
-	if (*target == "controls.reseed") {
-		// The frozen controls.reseed region hosts the IMMERSIVE control
-		// (v0.3); Regenerate stays reachable through key '2'.
+	if (*target == "controls.fullscreen") {
+		// FULLSCREEN = IMMERSIVE: the scene fills the OF window viewport (HUD
+		// hidden; any key/press exits). It never changes the window mode —
+		// native fullscreen is key 'f' / Installation Controls.
+		enterImmersive();
 		rec.command = "Runtime::EnterImmersive";
 		rec.accepted = true;
-		enterImmersive();
+	} else if (*target == "controls.mode") {
+		rec.command = "SceneCommand::NextMode";
+		rec.accepted = sceneManager_.dispatchSceneCommand(SceneCommand::NextMode);
 	} else if (*target == "controls.media_previous" || *target == "controls.media_next") {
 		const SceneCommand cmd = *target == "controls.media_previous" ? SceneCommand::PreviousMedia : SceneCommand::NextMedia;
 		rec.command = cmd == SceneCommand::PreviousMedia ? "SceneCommand::PreviousMedia" : "SceneCommand::NextMedia";
 		rec.accepted = sceneManager_.dispatchSceneCommand(cmd);
-	} else if (*target == "flexible.secondary_a") {
-		// Scene & Pattern Navigation: the mode panel's activation is NEXT MODE.
-		rec.command = "SceneCommand::NextMode";
-		rec.accepted = sceneManager_.dispatchSceneCommand(SceneCommand::NextMode);
 	} else if (*target == "controls.scene_previous" || *target == "controls.scene_next") {
 		const RuntimeCommand cmd = *target == "controls.scene_previous" ? RuntimeCommand::PreviousScene : RuntimeCommand::NextScene;
 		rec.command = cmd == RuntimeCommand::PreviousScene ? "RuntimeCommand::PreviousScene" : "RuntimeCommand::NextScene";
@@ -584,7 +744,13 @@ bool ExperienceRuntime::exitImmersiveOnInput() {
 	return true;
 }
 
-void ExperienceRuntime::pointerPressed() {
+void ExperienceRuntime::pointerPressed(float x, float y) {
+	// RT-007: framebuffer -> canonical canvas through the inverse of the
+	// final presentation transform (no pointer-driven HUD control exists
+	// yet; the press itself only exits IMMERSIVE).
+	if (x >= 0.0f && y >= 0.0f) {
+		lastPointerCanvas_ = {presentation_.toCanvasX(x), presentation_.toCanvasY(y)};
+	}
 	exitImmersiveOnInput();
 }
 
@@ -606,6 +772,31 @@ void ExperienceRuntime::drawImmersiveScene() const {
 void ExperienceRuntime::keyPressed(int key) {
 	// IMMERSIVE: any key only exits (and is consumed).
 	if (exitImmersiveOnInput()) return;
+
+	// IMMERSIVE: keyboard 'i' or the FULLSCREEN control — distinct from
+	// native window fullscreen, which is 'f'.
+	if (key == 'i' || key == 'I') {
+		enterImmersive();
+		return;
+	}
+
+	// HUD skins: 'v' cycles every scheduled skin (manual — the schedule
+	// pauses), 'V' (Shift+v) resumes the day/night schedule.
+	if ((key == 'v' || key == 'V') && skinSchedule_.valid()) {
+		if (key == 'v') {
+			skinAuto_ = false;
+			applySkin(skinSchedule_.nextSkin(currentSkin_), "manual ('v')");
+		} else {
+			skinAuto_ = true;
+			skinPeriod_.reset();
+			tickSkinSchedule(true);
+		}
+		return;
+	}
+
+	// Development-only typography playground: consumes only its own keys
+	// (all unbound elsewhere); absent in production.
+	if (typography_ && typography_->handleKey(key)) return;
 
 	// -- Playable HUD Menu v0.1: focus navigation (arrows / Enter) -------
 	if (auto focusInput = inputRouter_.translateToFocusInput(key)) {

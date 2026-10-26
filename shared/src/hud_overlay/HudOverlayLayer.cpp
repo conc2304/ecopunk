@@ -102,7 +102,12 @@ void HudOverlayLayer::applyThemeIfChanged(Palette palette) {
 	appliedPalette = palette;
 	hud::HudTheme theme = themeForPalette(palette);
 
-	radarStation.setTheme(theme);
+	// The radar sweep uses the canonical HUD widget colors — the same
+	// palette quadrant-crosshair and blueprint_emergence render with —
+	// rather than the overlay's palette-dial accent.
+	hud::HudTheme radarTheme = theme;
+	radarTheme.colors = hud::WidgetColors();
+	radarStation.setTheme(radarTheme);
 	breathingTicks.setTheme(theme);
 	accentBurst.setTheme(theme);
 	frameCounter.setTheme(theme);

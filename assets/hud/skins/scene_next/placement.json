@@ -1,0 +1,107 @@
+{
+ "proposal": "art-to-runtime integration proposal (not a skin.json schema change)",
+ "shell_dependency": "scaffold12 heavier-housing candidate shell (renders/dark_moss_assets/component/dma_shell_full_assets_x4_1280x720.png as exported by scaffold12); NOT valid over the accepted scaffold09 shell",
+ "region_id": "controls.scene_next",
+ "blueprint": "HUD-006 ecopunk-hud-blueprint / 1 (regions.json)",
+ "canonical_region_px": [
+  153.6,
+  648.0,
+  102.4,
+  43.2
+ ],
+ "canvas": [
+  1280,
+  720
+ ],
+ "states": {
+  "pressed": {
+   "visual_state": "pressed",
+   "file": "pressed.png",
+   "role": "primary",
+   "content_bounds_canvas_px": [
+    153,
+    647,
+    104,
+    45
+   ],
+   "pixels_sha256": "120bf6b4e0dba966afef03b7178e132dc2d670b63f7b08cedea2c2cfaaf10a61",
+   "pixels_sha256_note": "SHA-256 of the decoded RGBA8 pixels (row-major, top row first); stable across PNG re-encoding",
+   "image_size": [
+    112,
+    52
+   ],
+   "canvas_destination_rect": [
+    149,
+    644,
+    112,
+    52
+   ],
+   "source_crop_rect": [
+    149,
+    644,
+    112,
+    52
+   ],
+   "relationship": "1:1 canvas pixels; sprite pixel (0,0) = canvas (149,644); draw unscaled",
+   "alpha": "straight RGBA8, binary coverage (0 or 255): every pixel the button covers is opaque, edge colours are pre-blended against this shell's rail; no partial alpha",
+   "blend": "standard source-over; with binary alpha this equals a masked copy (no premultiplication sensitivity)",
+   "replaces_idle": "replaces the idle button's own pixel footprint (incl. its anti-aliased edge) exactly; idle shell stays loaded underneath. Valid only for the scaffold12 heavier-housing candidate shell export (not the accepted scaffold09 shell); re-render with the shell if the rail/chassis art changes",
+   "render_order": [
+    "shell (idle baked)",
+    "controls/scene_next/pressed.png",
+    "runtime label + icon",
+    "runtime focus brackets"
+   ]
+  },
+  "focused": {
+   "visual_state": "focused",
+   "file": "focused.png",
+   "role": "optional art candidate (load only if HUD Runtime authorizes it)",
+   "content_bounds_canvas_px": [
+    153,
+    647,
+    104,
+    45
+   ],
+   "pixels_sha256": "9d563521ca7064c7bcc8d5ab08a25cc9d440ce8e854c7cc2c08cca3ca6793e38",
+   "pixels_sha256_note": "SHA-256 of the decoded RGBA8 pixels (row-major, top row first); stable across PNG re-encoding",
+   "image_size": [
+    112,
+    52
+   ],
+   "canvas_destination_rect": [
+    149,
+    644,
+    112,
+    52
+   ],
+   "source_crop_rect": [
+    149,
+    644,
+    112,
+    52
+   ],
+   "alpha": "straight RGBA8, binary coverage (0/255), edge colours pre-blended against this shell",
+   "blend": "standard source-over",
+   "replaces_idle": "replaces the idle button's pixel footprint exactly; optional art candidate: do not assume it is loaded",
+   "render_order": [
+    "shell (idle baked)",
+    "controls/scene_next/focused.png",
+    "runtime label + icon",
+    "runtime focus brackets"
+   ]
+  }
+ },
+ "state_semantics": {
+  "pressed": "momentary activation (not a persistent selected state); runtime owns timing",
+  "focused": "energized, not pressed (face at rest height)"
+ },
+ "fallback": "if a state file is missing or fails to load, draw nothing for that state: the shell's baked idle button is complete underneath",
+ "content_safe_interior_px": "face area 158.6,653,92.4x33.2 (heavier housing) left clear: no text, no icons baked",
+ "source": {
+  "scene": "ecopunk_hud_scaffold12_control_housings.blend",
+  "rig": "scripts/hud_button_states.py",
+  "config": "asset_config.json > button_states",
+  "pipeline": "asset_render.render (Cycles 160 spp, 4x supersample, compositor dark_moss_balanced, premultiplied box reduction, straight sRGB8)"
+ }
+}

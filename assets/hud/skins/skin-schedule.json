@@ -1,0 +1,18 @@
+{
+  "comment": "Runtime day/night HUD skin schedule (NOT a skin.json field; HUD-004 manifest unchanged). Times are local. 'palette': day = dark ink for light skins, night = light text for dark skins. Keys: v = next skin (manual), V = back to this schedule.",
+  "dayStart": "07:00",
+  "nightStart": "19:00",
+  "day": {
+    "skins": [
+      "plywood-marble"
+    ],
+    "palette": "day"
+  },
+  "night": {
+    "skins": [
+      "dark-moss-experimental",
+      "abyssal-bioluminescence"
+    ],
+    "palette": "night"
+  }
+}
