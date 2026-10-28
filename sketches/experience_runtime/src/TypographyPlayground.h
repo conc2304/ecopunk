@@ -43,6 +43,12 @@ public:
 	// Playground shortcuts only (all keys unbound elsewhere in the runtime);
 	// returns false for every other key so normal input is untouched.
 	bool handleKey(int key);
+	// Production use: apply the saved preset only. No key handling, no overlay.
+	void setApplyOnly() { applyOnly_ = true; overlayVisible_ = false; }
+	// Runtime -> playground: the active skin and its text palette ("day" / "night").
+	// Colour edits (`k`) and the preview then apply to that skin; a skin with no
+	// colour of its own falls back to its palette's colour.
+	void setSkin(const std::string& skin, const std::string& palette);
 
 	bool drawLabel(const std::string& regionId, const ofRectangle& bounds, const std::string& text, float opacity) const override;
 	bool drawText(const std::string& regionId, const std::string& text, float x, float y, float nativeScale, const ofColor& color) const override;
@@ -68,6 +74,21 @@ public:
 	int fontLoads() const { return fontLoads_; }          // successful ofTrueTypeFont::load calls (cache misses)
 	int fontLoadFailures() const { return fontLoadFailures_; }
 	int labelDraws() const { return labelDraws_; }
+	bool dayPaletteForTesting() const { return dayPalette_; }
+	// One line per group: font / size / colours, as currently applied (harness + logs).
+	std::string styleSummaryForTesting() const {
+		static const char* names[3] = {"buttons", "title", "info"};
+		std::string out;
+		for (int g = 0; g < 3; ++g) {
+			const Style& s = styles_[g];
+			out += std::string(names[g]) + "=" + fonts_[std::clamp(s.font, 0, int(fonts_.size()) - 1)].name + " " + std::to_string(s.size)
+				+ "px night:" + colors_[std::clamp(s.color, 0, int(colors_.size()) - 1)].name
+				+ " day:" + colors_[std::clamp(s.colorDay, 0, int(colors_.size()) - 1)].name;
+			for (const auto& [skin, idx] : s.skin) out += " " + skin + ":" + colors_[std::clamp(idx, 0, int(colors_.size()) - 1)].name;
+			out += "; ";
+		}
+		return out;
+	}
 	// Last drawn glyph box per region (canvas px), for centring checks.
 	const std::map<std::string, ofRectangle>& lastLabelBoxes() const { return lastBoxes_; }
 	const std::string& presetPath() const { return presetPath_; }
@@ -75,7 +96,7 @@ public:
 	void reload() { load(directory_); }
 	// Harness-only: put the style in a known state (no font I/O here).
 	void setStyleForTesting(int sizePx, float spacing, int colorIndex, float glow) {
-		sizePx_ = sizePx; letterSpacing_ = spacing; colorIndex_ = colorIndex; glow_ = glow;
+		sizePx_ = sizePx; letterSpacing_ = spacing; colorIndex_ = colorIndex; glow_ = glow; colorEdited_ = true;
 	}
 
 private:
@@ -103,8 +124,20 @@ private:
 	int colorIndex_ = 0;
 	float glow_ = 0.0f;
 	bool overlayVisible_ = true; // never persisted
+	bool applyOnly_ = false;
 	// Three groups (Tab cycles): 0 buttons (controls.*), 1 scene title, 2 info/meta (other labels).
-	struct Style { int font = 0; int size = 15; float spacing = 1.0f; int color = 0; float glow = 0.0f; };
+	// color = fallback colour under the night palette; colorDay = fallback under the
+	// day palette (index 0 = "HUD default": the palette's own ink, i.e. dark on the
+	// light skin); skin = per-skin colour overrides keyed by skin id. `k` edits the
+	// active skin's override (see setSkin()).
+	struct Style { int font = 0; int size = 15; float spacing = 1.0f; int color = 0; float glow = 0.0f; int colorDay = 0; std::map<std::string, int> skin; };
+	bool dayPalette_ = false;
+	std::string skin_;
+	bool colorEdited_ = false; // colourIndex_ holds an edit not yet stored in the group
+	int resolveColor(const Style& s) const {
+		auto it = skin_.empty() ? s.skin.end() : s.skin.find(skin_);
+		return it != s.skin.end() ? it->second : (dayPalette_ ? s.colorDay : s.color);
+	}
 	Style styles_[3];
 	int group_ = 0;
 	static int groupOf(const std::string& regionId);
@@ -118,8 +151,20 @@ private:
 	Style effective(const std::string& regionId) const;
 	bool ensureLoaded(int index, int size);
 	void preloadAll(); // every group font at its size + every override size
-	void storeGroup() { styles_[group_] = {fontIndex_, sizePx_, letterSpacing_, colorIndex_, glow_}; }
-	void loadGroup() { const Style& s = styles_[group_]; fontIndex_ = s.font; sizePx_ = s.size; letterSpacing_ = s.spacing; colorIndex_ = s.color; glow_ = s.glow; }
+	void storeGroup() {
+		Style& s = styles_[group_];
+		s.font = fontIndex_; s.size = sizePx_; s.spacing = letterSpacing_; s.glow = glow_;
+		if (colorEdited_) {
+			if (skin_.empty()) (dayPalette_ ? s.colorDay : s.color) = colorIndex_;
+			else s.skin[skin_] = colorIndex_;
+			colorEdited_ = false;
+		}
+	}
+	void loadGroup() {
+		const Style& s = styles_[group_];
+		fontIndex_ = s.font; sizePx_ = s.size; letterSpacing_ = s.spacing; glow_ = s.glow;
+		colorIndex_ = resolveColor(s);
+	}
 
 	// (absolute path, px) -> font; a failed load is cached as nullptr until 'r'.
 	mutable std::map<std::pair<std::string, int>, std::unique_ptr<ofTrueTypeFont>> cache_;

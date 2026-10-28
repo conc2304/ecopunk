@@ -153,6 +153,10 @@ void ofApp::setup() {
 		&& !presentationHarnessRequested && !v03HarnessRequested && !installationHarnessRequested && !modeHarnessRequested
 		&& !focusHarnessRequested && !skinHarnessRequested && !artExportRequested && !glHarnessRequested
 		&& SkinCycleHarness::isRequested();
+	bool settingsPageHarnessRequested = !skinCycleHarnessRequested && !hud006v2HarnessRequested && !typographyHarnessRequested
+		&& !reactiveHarnessRequested && !presentationHarnessRequested && !v03HarnessRequested && !installationHarnessRequested
+		&& !modeHarnessRequested && !focusHarnessRequested && !skinHarnessRequested && !artExportRequested && !glHarnessRequested
+		&& SettingsPageHarness::isRequested();
 	bool wantTemporalScene = temporalLifecycleRequested
 		|| (!switchHarnessRequested && !acceptanceRequested && std::getenv("EXPERIENCE_RUNTIME_TEMPORAL_SCENE") != nullptr);
 
@@ -206,7 +210,7 @@ void ofApp::setup() {
 		const bool anyHarness = glHarnessRequested || blobLifecycleRequested || blobSoakRequested || temporalLifecycleRequested
 			|| switchHarnessRequested || acceptanceRequested || skinHarnessRequested || artExportRequested || focusHarnessRequested
 			|| blueprintHarnessRequested || blueprintHudHarnessRequested || paritySoakRequested || resumeWindowRequested
-			|| cadenceRequested || temporalWarmRequested || threeSceneRequested || modeHarnessRequested || installationHarnessRequested || v03HarnessRequested || presentationHarnessRequested || reactiveHarnessRequested || typographyHarnessRequested || hud006v2HarnessRequested
+			|| cadenceRequested || temporalWarmRequested || threeSceneRequested || modeHarnessRequested || installationHarnessRequested || v03HarnessRequested || presentationHarnessRequested || reactiveHarnessRequested || typographyHarnessRequested || hud006v2HarnessRequested || settingsPageHarnessRequested
 			|| Rt004StallDriver::isRequested() || BlobRenderPathAbHarness::isRequested() || BlobEffectCapacityBench::isRequested();
 		const char* settingsPath = std::getenv("EXPERIENCE_RUNTIME_INSTALLATION_SETTINGS");
 		runtime.setInstallationSettingsPath(settingsPath ? std::string(settingsPath)
@@ -220,9 +224,10 @@ void ofApp::setup() {
 			|| blueprintHarnessRequested || blueprintHudHarnessRequested || paritySoakRequested || resumeWindowRequested
 			|| cadenceRequested || temporalWarmRequested || threeSceneRequested || modeHarnessRequested || installationHarnessRequested
 			|| v03HarnessRequested || presentationHarnessRequested || reactiveHarnessRequested || typographyHarnessRequested
-			|| hud006v2HarnessRequested || skinCycleHarnessRequested || Rt004StallDriver::isRequested() || BlobRenderPathAbHarness::isRequested()
+			|| hud006v2HarnessRequested || skinCycleHarnessRequested || settingsPageHarnessRequested || Rt004StallDriver::isRequested() || BlobRenderPathAbHarness::isRequested()
 			|| BlobEffectCapacityBench::isRequested();
 		runtime.setSkinScheduleEnabled(!anyHarnessForSkins || std::getenv("EXPERIENCE_RUNTIME_SKIN_SCHEDULE") != nullptr);
+		runtime.setTypographyPresetEnabled(!anyHarnessForSkins);
 	}
 	runtime.setup();
 	if (framePhaseProbe) framePhaseProbe->afterRuntimeSetup(); // limiter/vsync controls apply after the runtime's own baseline
@@ -281,6 +286,8 @@ void ofApp::setup() {
 		typographyHarness = std::make_unique<TypographyHarness>(runtime);
 	} else if (hud006v2HarnessRequested) {
 		hud006v2Harness = std::make_unique<Hud006v2Harness>(runtime);
+	} else if (settingsPageHarnessRequested) {
+		settingsPageHarness = std::make_unique<SettingsPageHarness>(runtime);
 	} else if (skinCycleHarnessRequested) {
 		skinCycleHarness = std::make_unique<SkinCycleHarness>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
@@ -365,6 +372,9 @@ void ofApp::update() {
 	if (skinCycleHarness) {
 		skinCycleHarness->step(ofGetLastFrameTime());
 	}
+	if (settingsPageHarness) {
+		settingsPageHarness->step(ofGetLastFrameTime());
+	}
 	if (blobHarness) {
 		blobHarness->step(ofGetLastFrameTime());
 	}
@@ -385,7 +395,7 @@ void ofApp::update() {
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
 	if (Rt004FramePhaseProbe::presentOnlyControl()) { ofClear(0, 0, 0, 255); return; }
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness && !modeHarness && !installationHarness && !v03Harness && !presentationHarness && !reactiveHarness && !typographyHarness && !hud006v2Harness && !skinCycleHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness && !modeHarness && !installationHarness && !v03Harness && !presentationHarness && !reactiveHarness && !typographyHarness && !hud006v2Harness && !skinCycleHarness && !settingsPageHarness) {
 		runtime.draw();
 
 		// Blob Experiment 2: serve the bench's capture requests (scene-only

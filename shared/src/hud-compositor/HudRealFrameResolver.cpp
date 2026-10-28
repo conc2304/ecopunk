@@ -286,6 +286,34 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 		return HudResolvedValue::missing(staticType ? *staticType : HudSourceValueType::Identifier, HudDataClass::Literal);
 	}
 
+	// -- System Telemetry v1: runtime.vitals.<metric>[.stale] from the
+	// immutable HudFrameData::systemVitals snapshot. A null snapshot or an
+	// Unavailable metric is MISSING (never 0). A Stale metric's scalar is
+	// MISSING too (so it is never shown as a live reading); its ".stale"
+	// companion is true. A genuine 0 is a present value.
+	if (sourceId.compare(0, 14, "runtime.vitals") == 0) {
+		const auto* snap = frame.systemVitals.get();
+		auto resolveSeries = [&](const char* name, auto SeriesSnapshotSelector) -> std::optional<HudResolvedValue> {
+			const std::string base = std::string("runtime.vitals.") + name;
+			const bool isStale = sourceId == base + ".stale";
+			if (sourceId != base && !isStale) return std::nullopt;
+			const auto type = isStale ? HudSourceValueType::Boolean : HudSourceValueType::Scalar;
+			if (!snap) return HudResolvedValue::missing(type, HudDataClass::Literal);
+			const auto st = SeriesSnapshotSelector(*snap);
+			if (st.state == sysvitals::State::Unavailable || !st.hasLatest) return HudResolvedValue::missing(type, HudDataClass::Literal);
+			if (isStale) return HudResolvedValue::boolean(st.state == sysvitals::State::Stale);
+			if (st.state != sysvitals::State::Valid) return HudResolvedValue::missing(type, HudDataClass::Literal);
+			return HudResolvedValue::number(HudSourceValueType::Scalar, st.latest, HudDataClass::Literal);
+		};
+		struct Brief { sysvitals::State state; bool hasLatest; float latest; };
+		auto brief = [](const auto& s) { return Brief{s.state, s.hasLatest, s.latest}; };
+		if (auto v = resolveSeries("fps", [&](const sysvitals::SystemVitalsSnapshot& s) { return brief(s.fps); })) return v;
+		if (auto v = resolveSeries("frame_time_max", [&](const sysvitals::SystemVitalsSnapshot& s) { return brief(s.frameTimeMax); })) return v;
+		if (auto v = resolveSeries("cpu", [&](const sysvitals::SystemVitalsSnapshot& s) { return brief(s.cpuBusy); })) return v;
+		if (auto v = resolveSeries("gpu_temp", [&](const sysvitals::SystemVitalsSnapshot& s) { return brief(s.gpuTemp); })) return v;
+		if (auto v = resolveSeries("rss", [&](const sysvitals::SystemVitalsSnapshot& s) { return brief(s.processRss); })) return v;
+	}
+
 	// -- HUD Clock v0.1: runtime-owned HudFrameData::wallClock. Both sources
 	// derive from the same snapshot; an absent snapshot, or one whose instant/
 	// offset could not be a real local time, resolves MISSING — never a
@@ -350,6 +378,8 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 		return HudResolvedValue::identifier(frame.installation->fullscreen ? "control.runtime.fullscreen.state.on"
 		                                                                   : "control.runtime.fullscreen.state.off");
 	}
+	// MENU (Experience Settings): runtime-owned UI, always available.
+	if (sourceId == "control.runtime.menu.available") return HudResolvedValue::boolean(true);
 	if (sourceId == "control.runtime.immersive.available") {
 		// IMMERSIVE is runtime-owned presentation, available whenever a
 		// scene owns the frame and no transition is running.

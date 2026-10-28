@@ -47,6 +47,7 @@ const char* const kScopeOriginal = "production (historical MinimalSlice-13)";
 const char* const kScopeLivingHud = "production (Living HUD v0.1)";
 const char* const kScopeClock = "production (HUD Clock v0.1)";
 const char* const kScopeNavigation = "production (Mode Navigation v0.1)";
+const char* const kScopeVitals = "production (System Telemetry v1)";
 const char* const kScopeFullOnly = "FullProfile only (not drawn in production)";
 
 std::string scopeOf(const std::string& id) {
@@ -54,7 +55,7 @@ std::string scopeOf(const std::string& id) {
 	const char* part = HudWireframeRenderer::productionProvenance(id);
 	if (part == nullptr) return kScopeFullOnly;
 	const std::string p(part);
-	return p == "original" ? kScopeOriginal : p == "living_hud" ? kScopeLivingHud : p == "clock" ? kScopeClock : kScopeNavigation;
+	return p == "original" ? kScopeOriginal : p == "living_hud" ? kScopeLivingHud : p == "clock" ? kScopeClock : p == "system_telemetry" ? kScopeVitals : kScopeNavigation;
 }
 
 ofColor scopeColor(const std::string& scope, HudRegionRole role, int alpha) {
@@ -62,6 +63,7 @@ ofColor scopeColor(const std::string& scope, HudRegionRole role, int alpha) {
 	if (scope == kScopeLivingHud) return ofColor(150, 200, 60, alpha);
 	if (scope == kScopeClock) return ofColor(80, 150, 240, alpha);
 	if (scope == kScopeNavigation) return ofColor(235, 215, 70, alpha);
+	if (scope == kScopeVitals) return ofColor(240, 120, 120, alpha);
 	if (role == HudRegionRole::Overlay) return ofColor(200, 90, 200, alpha);
 	return ofColor(40, 170, 160, alpha);
 }
@@ -143,8 +145,8 @@ void HudArtReferenceExporter::exportAll() {
 	const auto& regions = r.regionCatalog().all();
 
 	check("no skin active (comparison frame is the plain wireframe)", !bridge.skinLoader().active().has_value());
-	check("catalog has 20 regions (HUD-006 v2)", regions.size() == 20, ofToString(regions.size()));
-	int originalCount = 0, productionCount = 0, livingCount = 0, clockCount = 0, navCount = 0;
+	check("catalog has 21 regions (HUD-006 v2 + MENU)", regions.size() == 21, ofToString(regions.size()));
+	int originalCount = 0, productionCount = 0, livingCount = 0, clockCount = 0, navCount = 0, vitalsCount = 0;
 	for (const auto& reg : regions) {
 		const std::string scope = scopeOf(reg.regionId);
 		originalCount += scope == kScopeMesh || scope == kScopeOriginal;
@@ -152,11 +154,12 @@ void HudArtReferenceExporter::exportAll() {
 		livingCount += scope == kScopeLivingHud;
 		clockCount += scope == kScopeClock;
 		navCount += scope == kScopeNavigation;
+		vitalsCount += scope == kScopeVitals;
 	}
 	const int fullOnlyCount = int(regions.size()) - productionCount;
 	check("historical MinimalSlice part has 12 regions (v1 13 minus retired controls.reseed)", originalCount == 12, ofToString(originalCount));
-	check("production presentation has 18 regions (12 + 2 Living HUD + clock + mode panel/MODE/FULLSCREEN)",
-		productionCount == 18 && livingCount == 2 && clockCount == 1 && navCount == 3, ofToString(productionCount));
+	check("production presentation has 21 regions (12 + 2 Living HUD + clock + mode panel/MODE/FULLSCREEN/MENU + 2 System Telemetry v1 traces)",
+		productionCount == 21 && livingCount == 2 && clockCount == 1 && navCount == 4 && vitalsCount == 2, ofToString(productionCount));
 	check("controls.reseed retired; controls.mode and controls.fullscreen present",
 		r.regionCatalog().find("controls.reseed") == nullptr && r.regionCatalog().find("controls.mode") != nullptr
 			&& r.regionCatalog().find("controls.fullscreen") != nullptr);
@@ -311,6 +314,8 @@ void HudArtReferenceExporter::exportAll() {
 	ofSetColor(80, 150, 240, 255); ofDrawBitmapString("blue = HUD Clock v0.1 (+" + ofToString(clockCount) + ")", vp.x + 340, ly);
 	ly += 15;
 	ofSetColor(235, 215, 70, 255); ofDrawBitmapString("yellow = Mode Navigation v0.1 (+" + ofToString(navCount) + ")", vp.x + 10, ly);
+	ly += 16;
+	ofSetColor(240, 120, 120, 255); ofDrawBitmapString("red = System Telemetry v1 (+" + ofToString(vitalsCount) + ")", vp.x + 10, ly);
 	ofSetColor(230, 150, 40, 255);
 	ofDrawBitmapString("amber = FullProfile only (" + ofToString(fullOnlyCount) + ")", vp.x + 340, ly);
 	ly += 15;
@@ -393,7 +398,7 @@ void HudArtReferenceExporter::exportAll() {
 	ofDrawBitmapString("CURRENT PRODUCTION PRESENTATION — " + ofToString(productionCount) + " of " + ofToString(regions.size())
 		+ " regions (from the live allowlist)", vp.x + 10, py); py += 18;
 	ofDrawBitmapString("= historical MinimalSlice " + ofToString(originalCount) + " + Living HUD " + ofToString(livingCount)
-		+ " + Clock " + ofToString(clockCount) + " + Mode " + ofToString(navCount), vp.x + 10, py); py += 18;
+		+ " + Clock " + ofToString(clockCount) + " + Mode " + ofToString(navCount) + " + Vitals " + ofToString(vitalsCount), vp.x + 10, py); py += 18;
 	ofDrawBitmapString("grey = FullProfile only, NOT drawn in production (" + ofToString(fullOnlyCount) + ")", vp.x + 10, py); py += 24;
 	ofDrawBitmapString("flexible.secondary_a: active time (the mode line moved to universal.media_title)", vp.x + 10, py); py += 15;
 	ofDrawBitmapString("flexible.secondary_b: clock       local date + zone / HH:MM", vp.x + 10, py); py += 15;
@@ -454,7 +459,7 @@ void HudArtReferenceExporter::exportAll() {
 	j["presentation"] = {{"canonicalRegions", regions.size()}, {"historicalMinimalSlice", originalCount},
 		{"production", productionCount},
 		{"productionParts", {{"historicalMinimalSlice", originalCount}, {"livingHud", livingCount}, {"clock", clockCount},
-			{"modeNavigation", navCount}}},
+			{"modeNavigation", navCount}, {"systemTelemetry", vitalsCount}}},
 		{"fullProfileOnly", fullOnlyCount}};
 	j["mediaViewportMesh"] = {{"cornerRadius", 18}, {"bevel", 42}, {"roundedCorners", {"top-left", "top-right", "bottom-left"}},
 		{"bevelCorner", "bottom-right"}, {"outlineVertexCount", outline.size()}};
@@ -537,7 +542,7 @@ void HudArtReferenceExporter::exportAll() {
 		}
 		cw["behaviour"] = {{"flexible.secondary_a", "active time (was the informational mode panel; the one-line mode text now lives in universal.media_title; NEXT MODE -> controls.mode)"},
 			{"focusRing", {"controls.scene_previous", "controls.scene_next", "controls.mode", "controls.media_previous",
-				"controls.media_next", "controls.fullscreen"}}};
+				"controls.media_next", "controls.fullscreen", "controls.menu"}}};
 		check("crosswalk computed against the v1 export", !v1px.empty(), ofToString(v1px.size()) + " v1 regions");
 		ofSavePrettyJson(fs::path(outDir_) / "crosswalk-v1-v2.json", cw);
 		note("wrote crosswalk-v1-v2.json");

@@ -61,11 +61,16 @@ HudRegionCatalog::HudRegionCatalog() {
 	regions_.push_back(makeRegion("universal.timing", HudRegionRole::Universal,
 		{0.66f, 0.37f, 0.32f, 0.05f}, {W::NumericValue, W::Label, W::EffectChips}, 1, false));
 
+	// System Telemetry v1: the two trace regions host the five system-vitals
+	// sparklines as stacked slots (draw-time slicing, like effect_summary):
+	// activity_trace 3 x 24 px (FPS, FRAME MAX, CPU), secondary_trace
+	// 2 x 36 px (GPU TEMP, RSS). maxBindings 1 -> 3 / 2 is the only catalog
+	// change; IDs, numbering and bounds are untouched.
 	regions_.push_back(makeRegion("universal.activity_trace", HudRegionRole::Universal,
-		{0.66f, 0.43f, 0.32f, 0.10f}, {W::Sparkline}, 1, true));
+		{0.66f, 0.43f, 0.32f, 0.10f}, {W::Sparkline}, 3, true));
 
 	regions_.push_back(makeRegion("universal.secondary_trace", HudRegionRole::Universal,
-		{0.66f, 0.54f, 0.32f, 0.10f}, {W::Sparkline}, 1, true));
+		{0.66f, 0.54f, 0.32f, 0.10f}, {W::Sparkline}, 2, true));
 
 	// -- Controls regions (HUD-006 v2: six 72x72 squares) -------------------
 	// Row y = 633.6..705.6 (0.88 + 0.10); gaps 12.8 px in a group, 32 px
@@ -131,6 +136,18 @@ HudRegionCatalog::HudRegionCatalog() {
 	// requirement (progress alone was Session 1's whole overlay).
 	regions_.push_back(makeRegion("overlay.transition", HudRegionRole::Overlay,
 		{0.02f, 0.10f, 0.20f, 0.08f}, {W::ProgressBar, W::Label}, 3, false));
+
+	// -- Seventh navigation control (operator-directed narrow exception to the
+	// HUD-006 v2 six-button row): MENU opens the Experience Settings page.
+	// APPENDED (existing regions keep their numbering); same 72x72 square and
+	// row y as the six. Placement derived from canonical coordinates: the
+	// bottom navigation panel's inner right edge is x = 723 px in every shipped
+	// skin shell (last panel pixel 722), and the existing NEXT MEDIA -> FULLSCREEN
+	// edge gap is 456 -> 488 = 32 px, so MENU.right = 723 - 32 = 691 and
+	// MENU.x = 691 - 72 = 619 px (619 / 1280 = 0.48359375). It clears FULLSCREEN
+	// (right edge 560) by 59 px.
+	regions_.push_back(makeRegion("controls.menu", HudRegionRole::Controls,
+		{0.48359375f, 0.88f, 0.05625f, 0.10f}, {W::Label}, 1, false));
 
 	// Every region in this catalog is also a legal home for the
 	// tooling-only BindingPlaceholder widget (Validation Studio's

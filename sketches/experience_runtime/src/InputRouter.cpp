@@ -47,3 +47,19 @@ std::optional<RuntimeCommand> InputRouter::translateToRuntimeCommand(int key) co
 		default:           return std::nullopt;
 	}
 }
+
+std::optional<DpadInput> InputRouter::translateToDpad(int key) const {
+	switch (key) {
+		case OF_KEY_UP:     return DpadInput::Up;
+		case OF_KEY_DOWN:   return DpadInput::Down;
+		case OF_KEY_LEFT:   return DpadInput::Left;
+		case OF_KEY_RIGHT:  return DpadInput::Right;
+		case OF_KEY_RETURN: return DpadInput::Ok;
+		case OF_KEY_ESC:    return DpadInput::Back;
+		default:            return std::nullopt;
+	}
+}
+
+bool InputRouter::isSettingsToggle(int key) const {
+	return key == OF_KEY_F1 || key == ',';
+}

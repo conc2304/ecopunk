@@ -2,38 +2,77 @@
     "groups": {
         "buttons": {
             "color": "",
-            "font": "Extros Backstage (imagex)",
-            "fontFile": "fonts/Extros Backstage.ttf",
+            "colorDay": "",
+            "colors": {
+                "dark-moss-experimental": "#C9D8B8",
+                "plywood-marble": "#EDE6CF"
+            },
+            "font": "W3$iP Regular (Jaydenlikesfonts)",
+            "fontFile": "fonts/w3-ip.ttf",
             "glow": {
-                "enabled": true,
-                "intensity": 0.1
+                "enabled": false,
+                "intensity": 0.15
             },
             "letterSpacing": 1.0,
             "size": 13
         },
         "info": {
             "color": "#EDE6CF",
-            "font": "",
-            "fontFile": "",
+            "colorDay": "",
+            "colors": {
+                "dark-moss-experimental": "#EDE6CF"
+            },
+            "font": "Calculator",
+            "fontFile": "fonts/Calculator.ttf",
             "glow": {
-                "enabled": true,
-                "intensity": 0.35
+                "enabled": false,
+                "intensity": 0.15
             },
             "letterSpacing": 1.0,
             "size": 15
         },
         "title": {
-            "color": "#B9A46E",
-            "font": "W3$iP Regular (Jaydenlikesfonts)",
-            "fontFile": "fonts/w3-ip.ttf",
+            "color": "",
+            "colorDay": "",
+            "colors": {
+                "abyssal-bioluminescence": "#D6E4B0",
+                "plywood-marble": "#7A5A18"
+            },
+            "font": "Fliped",
+            "fontFile": "fonts/Fliped.otf",
             "glow": {
                 "enabled": true,
-                "intensity": 0.1
+                "intensity": 0.2
             },
-            "letterSpacing": 0.9,
+            "letterSpacing": 1.0,
+            "size": 31
+        }
+    },
+    "panels": {
+        "flexible.secondary_b": {
+            "size": 15
+        },
+        "overlay.health": {
+            "size": 16
+        },
+        "overlay.transition": {
+            "size": 15
+        },
+        "universal.activity": {
+            "size": 21
+        },
+        "universal.activity_trace": {
+            "size": 15
+        },
+        "universal.effect_summary": {
+            "size": 15
+        },
+        "universal.media_title": {
+            "size": 16
+        },
+        "universal.primary_state": {
             "size": 20
         }
     },
-    "panels": {},
     "version": 2
 }

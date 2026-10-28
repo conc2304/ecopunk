@@ -148,7 +148,31 @@ void test_queue_from_other_thread() {
 
 } // namespace
 
+void test_automation_suspension() {
+	Controller c;
+	Settings s;
+	s.sceneAutoCycle = {true, 10.0f};
+	c.load(s);
+	for (int i = 0; i < 8; ++i) c.tickSceneCycle(1.0f, true);
+	check(c.sceneCycleElapsed() > 7.0f, "scene period accrues normally");
+	c.setAutomationSuspended(true);
+	bool fired = false;
+	for (int i = 0; i < 60; ++i) fired = c.tickSceneCycle(1.0f, true) || fired;
+	check(!fired && c.automationSuspended(), "suspended: a minute of ticks never fires the scene cycle");
+	c.setAutomationSuspended(false);
+	check(c.sceneCycleElapsed() == 0.0f, "resume starts a fresh period (no catch-up)");
+	check(!c.tickSceneCycle(1.0f, true), "first tick after resume does not fire");
+	Request r = req(Request::Kind::SetClock24Hour);
+	r.flag = false;
+	check(c.submit(r).accepted && !c.settings().clock24Hour && c.takeSettingsChanged(), "SetClock24Hour is a validated, persisted setting");
+	Settings loaded;
+	loaded.clock24Hour = false;
+	c.load(loaded);
+	check(!c.settings().clock24Hour, "clock24Hour survives load()");
+}
+
 int main() {
+	test_automation_suspension();
 	test_defaults_and_load_validation();
 	test_runtime_updates_validated();
 	test_scene_cycle_schedule();

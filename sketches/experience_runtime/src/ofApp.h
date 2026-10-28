@@ -19,6 +19,7 @@
 #include "ReactiveControlHarness.h"
 #include "TypographyHarness.h"
 #include "Hud006v2Harness.h"
+#include "SettingsPageHarness.h"
 #include "SkinCycleHarness.h"
 #include "ParitySoakHarness.h"
 #include "ResumeWindowHarness.h"
@@ -82,6 +83,7 @@ private:
 	std::unique_ptr<ReactiveControlHarness> reactiveHarness; // Reactive Control Artwork v0.1, full roster
 	std::unique_ptr<TypographyHarness> typographyHarness; // dev Live Typography Playground, full roster
 	std::unique_ptr<Hud006v2Harness> hud006v2Harness; // HUD-006 v2 six-button navigation, full roster
+	std::unique_ptr<SettingsPageHarness> settingsPageHarness; // Experience Settings page, keyboard-only
 	std::unique_ptr<SkinCycleHarness> skinCycleHarness; // day/night skin schedule + 'v' switching
 	std::unique_ptr<Rt004StallDriver> stallDriver; // RT-004 diagnostic, normal path only
 	std::unique_ptr<Rt004FramePhaseProbe> framePhaseProbe; // RT-004 frame-phase diagnostic (EXPERIENCE_RUNTIME_FRAME_PHASE_PROBE)

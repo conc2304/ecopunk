@@ -40,6 +40,8 @@
 // deliberately undefined/unadded here — still-unapproved concepts outside
 // this increment's scope.
 //
+// UPDATED for System Telemetry v1: adds additive `systemVitals` (see below).
+//
 // UPDATED for HUD Clock v0.1 (Architecture-approved): adds one additive
 // `std::optional<WallClockStatus> wallClock` field — see the member's own
 // comment and WallClockStatus.h.
@@ -62,7 +64,9 @@
 #include "EffectActivityStatus.h"
 #include "WallClockStatus.h"
 #include "InstallationStatus.h"
+#include "SystemVitalsSnapshot.h"
 
+#include <memory>
 #include <optional>
 #include <vector>
 #include <string>
@@ -101,6 +105,13 @@ struct HudFrameData {
 	// and observed state (auto-cycle cadence, fullscreen, ENERGY). Absent only
 	// before ExperienceRuntime has loaded its settings.
 	std::optional<InstallationStatus> installation;
+
+	// System Telemetry v1 (Architecture-ratified Tier C): runtime-owned,
+	// immutable, bounded system vitals — see SystemVitalsSnapshot.h. A shared
+	// pointer so the per-frame HudFrameData copy is a refcount bump, never a
+	// history copy. Null = no snapshot yet (never a snapshot of zeros).
+	// Sources: runtime.vitals.*. Additive field.
+	std::shared_ptr<const sysvitals::SystemVitalsSnapshot> systemVitals;
 
 	// Recent runtime activity log (the same lines the console prints, without
 	// the level tag), oldest first, newest last — runtime-owned

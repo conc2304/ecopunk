@@ -65,6 +65,10 @@ void SkinCycleHarness::step(float) {
 				check("[" + skin_ + "] all three button faces loaded and handed to the renderer",
 					active && active->buttonIdle && active->buttonFocused && active->buttonActive && r.hasButtonFaces(),
 					active ? "idle/focused/active" : "no skin");
+				if (auto* pg = runtime_.typographyPlaygroundForTesting()) {
+					lines_.push_back("playground: label draws " + ofToString(pg->labelDraws()) + ", font loads " + ofToString(pg->fontLoads())
+						+ ", active font index " + ofToString(pg->fontIndex()) + ", palette day=" + (pg->dayPaletteForTesting() ? "1" : "0") + " | " + pg->styleSummaryForTesting());
+				}
 				check("[" + skin_ + "] focus is on MODE", bridge.focus().focused() && *bridge.focus().focused() == "controls.mode");
 				const ofRectangle b = r.pixelBoundsFor("controls.mode");
 				const auto rect = hudpresent::reactive::buttonFaceRect(b.x, b.y, b.width, b.height);

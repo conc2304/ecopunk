@@ -34,6 +34,8 @@
 
 namespace hudpresent {
 
+struct HudVitalsDrawData; // HudVitalsDraw.h (OF-dependent; the renderer owns it)
+
 struct HudWidgetRoleValue {
 	std::string role;
 	bool shouldRender = false;
@@ -97,6 +99,12 @@ struct HudWidgetInput {
 	// widget draw-call logic needed to change, only this field's type.
 	HudHistoryStore::SampleView historySamples;
 	HudHistoryStore::Stats historyStats;
+
+	// System Telemetry v1 (variantId "vitals" on a Sparkline): the renderer's
+	// cached, already-built trace for this binding — built from
+	// HudFrameData::systemVitals, never from HudHistoryStore. Non-owning;
+	// null for every other widget. The widget only strokes it.
+	const HudVitalsDrawData* vitals = nullptr;
 
 	// Validation-Studio-only: populated when the orchestrator substitutes
 	// a BindingPlaceholder for a binding HudProfileCompiler marked

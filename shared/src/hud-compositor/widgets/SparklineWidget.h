@@ -22,6 +22,7 @@ public:
 	void draw(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const override;
 
 private:
+	void drawVitals(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const;
 	mutable HudTextMetricsCache textCache_;
 };
 

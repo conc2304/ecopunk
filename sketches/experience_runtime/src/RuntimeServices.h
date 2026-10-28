@@ -46,6 +46,10 @@ public:
 	}
 
 	const RuntimeTelemetry& telemetry() const { return telemetryCollector_.snapshot(); }
+	// System Telemetry v1: collector (tests/probes) and the immutable snapshot
+	// ExperienceRuntime publishes in HudFrameData::systemVitals.
+	const sysvitals::SystemVitals& systemVitals() const { return telemetryCollector_.systemVitals(); }
+	const std::shared_ptr<const sysvitals::SystemVitalsSnapshot>& systemVitalsSnapshot() const { return telemetryCollector_.systemVitalsSnapshot(); }
 
 	VideoPlaybackService& video() { return videoService_; }
 	const VideoPlaybackService& video() const { return videoService_; }

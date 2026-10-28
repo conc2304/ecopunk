@@ -18,6 +18,82 @@
       "file": "fonts/w3-ip.ttf"
     },
     {
+      "name": "Calculator",
+      "file": "fonts/Calculator.ttf"
+    },
+    {
+      "name": "Five Fonts at Freddy's",
+      "file": "fonts/FiveFontsatFreddy's-Regular.ttf"
+    },
+    {
+      "name": "Fliped",
+      "file": "fonts/Fliped.otf"
+    },
+    {
+      "name": "Alarm Clock",
+      "file": "fonts/alarm clock.ttf"
+    },
+    {
+      "name": "Digital-7 Italic",
+      "file": "fonts/digital_7/digital-7 (italic).ttf"
+    },
+    {
+      "name": "Digital-7 Mono Italic",
+      "file": "fonts/digital_7/digital-7 (mono italic).ttf"
+    },
+    {
+      "name": "Digital-7 Mono",
+      "file": "fonts/digital_7/digital-7 (mono).ttf"
+    },
+    {
+      "name": "Digital-7",
+      "file": "fonts/digital_7/digital-7.ttf"
+    },
+    {
+      "name": "Digital Desolation Plus",
+      "file": "fonts/digital_desolation_plus/Digital-Desolation-Plus.otf"
+    },
+    {
+      "name": "Digital Gothic Bold Italic",
+      "file": "fonts/digital_gothic/Digital Gothic-Bold-Italic.otf"
+    },
+    {
+      "name": "Digital Gothic Bold",
+      "file": "fonts/digital_gothic/Digital Gothic-Bold.otf"
+    },
+    {
+      "name": "Digital Gothic Hollow Inverse",
+      "file": "fonts/digital_gothic/Digital Gothic-Hollow-Inverse.otf"
+    },
+    {
+      "name": "Digital Gothic Hollow",
+      "file": "fonts/digital_gothic/Digital Gothic-Hollow.otf"
+    },
+    {
+      "name": "Digital Gothic Inverse",
+      "file": "fonts/digital_gothic/Digital Gothic-Inverse.otf"
+    },
+    {
+      "name": "Digital Gothic Italic",
+      "file": "fonts/digital_gothic/Digital Gothic-Italic.otf"
+    },
+    {
+      "name": "Digital Gothic",
+      "file": "fonts/digital_gothic/Digital Gothic.otf"
+    },
+    {
+      "name": "Distortion Dos Digital",
+      "file": "fonts/distortion_dos_digital/Distortion Dos Digital.otf"
+    },
+    {
+      "name": "EAS VHS",
+      "file": "fonts/eas-vhs.ttf"
+    },
+    {
+      "name": "Madawaska River",
+      "file": "fonts/madawaska_river/Madawaska River.otf"
+    },
+    {
       "name": "Rajdhani SemiBold",
       "file": "fonts/Rajdhani-SemiBold.ttf"
     },
@@ -66,6 +142,26 @@
     {
       "name": "Muted brass",
       "hex": "#B9A46E"
+    },
+    {
+      "name": "Dark ink",
+      "hex": "#26221A"
+    },
+    {
+      "name": "Walnut",
+      "hex": "#3B2F20"
+    },
+    {
+      "name": "Deep moss",
+      "hex": "#2C4A2E"
+    },
+    {
+      "name": "Charcoal",
+      "hex": "#3A3A3A"
+    },
+    {
+      "name": "Dark brass",
+      "hex": "#7A5A18"
     }
   ],
   "targets": [

@@ -5,6 +5,7 @@
 ## What changed (v1 → v2)
 
 - **Navigation row:** six 72×72 squares at y 633.6, in groups `[PREV SCENE][NEXT SCENE][MODE]`, `[PREV MEDIA][NEXT MEDIA]`, `[FULLSCREEN]`.
+- **Seventh control (operator-directed exception, 2026-10-27):** `controls.menu` (MENU → Experience Settings), 72×72 at x 619, y 633.6, appended after `overlay.transition` (existing numbering untouched). Placement: nav panel inner right edge x=723 (last panel pixel 722, identical in all shipped skin shells) − the NEXT MEDIA→FULLSCREEN gap (456→488 = 32) = right edge 691. Uses the shared button faces; no new art. The reference PNG/JSON exports in this folder predate it (20 regions) until the exporter is re-run.
 
   | Control | x |
   |---|---|

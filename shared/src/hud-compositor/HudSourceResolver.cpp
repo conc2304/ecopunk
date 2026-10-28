@@ -48,6 +48,16 @@ enum class CanonicalSource : uint8_t {
 	RuntimeQualityProfile,
 	RuntimeHealth,
 	RuntimeClockLocalSeconds,
+	RuntimeVitalsFps,
+	RuntimeVitalsFpsStale,
+	RuntimeVitalsFrameTimeMax,
+	RuntimeVitalsFrameTimeMaxStale,
+	RuntimeVitalsCpu,
+	RuntimeVitalsCpuStale,
+	RuntimeVitalsGpuTemp,
+	RuntimeVitalsGpuTempStale,
+	RuntimeVitalsRss,
+	RuntimeVitalsRssStale,
 	RuntimeClockLocalLabel,
 	SceneIndex,
 	SceneCount,
@@ -60,6 +70,7 @@ enum class CanonicalSource : uint8_t {
 	ControlSceneNextModeAvailable,
 	ControlRuntimeImmersiveAvailable,
 	ControlRuntimeFullscreenAvailable,
+	ControlRuntimeMenuAvailable,
 	ControlRuntimeFullscreenState,
 	RuntimeLogRecent,
 	ControlScenePreviousAvailable,
@@ -138,6 +149,21 @@ const std::vector<CanonicalEntry>& canonicalTable() {
 		{"runtime.throttled", CanonicalSource::RuntimeThrottled, HudSourceValueType::Boolean},
 		{"runtime.quality_profile", CanonicalSource::RuntimeQualityProfile, HudSourceValueType::Identifier},
 		{"runtime.health", CanonicalSource::RuntimeHealth, HudSourceValueType::Identifier},
+		// System Telemetry v1 (Architecture-ratified): runtime-owned
+		// HudFrameData::systemVitals. Scalar = latest value, present only while
+		// VALID (missing when unavailable OR stale); *.stale = Boolean, missing
+		// when unavailable. Units: Hz, ms (worst frame per 500 ms), % system CPU
+		// busy, deg C (gpu-thermal), MiB (process VmRSS).
+		{"runtime.vitals.fps", CanonicalSource::RuntimeVitalsFps, HudSourceValueType::Scalar},
+		{"runtime.vitals.fps.stale", CanonicalSource::RuntimeVitalsFpsStale, HudSourceValueType::Boolean},
+		{"runtime.vitals.frame_time_max", CanonicalSource::RuntimeVitalsFrameTimeMax, HudSourceValueType::Scalar},
+		{"runtime.vitals.frame_time_max.stale", CanonicalSource::RuntimeVitalsFrameTimeMaxStale, HudSourceValueType::Boolean},
+		{"runtime.vitals.cpu", CanonicalSource::RuntimeVitalsCpu, HudSourceValueType::Scalar},
+		{"runtime.vitals.cpu.stale", CanonicalSource::RuntimeVitalsCpuStale, HudSourceValueType::Boolean},
+		{"runtime.vitals.gpu_temp", CanonicalSource::RuntimeVitalsGpuTemp, HudSourceValueType::Scalar},
+		{"runtime.vitals.gpu_temp.stale", CanonicalSource::RuntimeVitalsGpuTempStale, HudSourceValueType::Boolean},
+		{"runtime.vitals.rss", CanonicalSource::RuntimeVitalsRss, HudSourceValueType::Scalar},
+		{"runtime.vitals.rss.stale", CanonicalSource::RuntimeVitalsRssStale, HudSourceValueType::Boolean},
 		// HUD Clock v0.1 (approved): runtime-owned HudFrameData::wallClock.
 		{"runtime.clock.local_seconds", CanonicalSource::RuntimeClockLocalSeconds, HudSourceValueType::DurationSeconds},
 		{"runtime.clock.local_label", CanonicalSource::RuntimeClockLocalLabel, HudSourceValueType::Text},
@@ -157,6 +183,7 @@ const std::vector<CanonicalEntry>& canonicalTable() {
 		// HUD & Scene Experience v0.3: the IMMERSIVE control (runtime-owned).
 		{"control.runtime.immersive.available", CanonicalSource::ControlRuntimeImmersiveAvailable, HudSourceValueType::Boolean},
 		{"control.runtime.fullscreen.available", CanonicalSource::ControlRuntimeFullscreenAvailable, HudSourceValueType::Boolean},
+		{"control.runtime.menu.available", CanonicalSource::ControlRuntimeMenuAvailable, HudSourceValueType::Boolean},
 		{"control.runtime.fullscreen.state", CanonicalSource::ControlRuntimeFullscreenState, HudSourceValueType::Identifier},
 		{"runtime.log.recent", CanonicalSource::RuntimeLogRecent, HudSourceValueType::Text},
 		{"control.scene.previous.available", CanonicalSource::ControlScenePreviousAvailable, HudSourceValueType::Boolean},
@@ -433,6 +460,16 @@ std::optional<HudResolvedValue> HudSourceResolver::resolveCanonical(const std::s
 			// No real field — see FakeHudSemanticTypes.h's reconciliation note.
 			if (!runtime.runtimeHealthId) return HudResolvedValue::missing(HudSourceValueType::Identifier, HudDataClass::Literal);
 			return HudResolvedValue::identifier(*runtime.runtimeHealthId);
+		case CanonicalSource::RuntimeVitalsFps:
+		case CanonicalSource::RuntimeVitalsFpsStale:
+		case CanonicalSource::RuntimeVitalsFrameTimeMax:
+		case CanonicalSource::RuntimeVitalsFrameTimeMaxStale:
+		case CanonicalSource::RuntimeVitalsCpu:
+		case CanonicalSource::RuntimeVitalsCpuStale:
+		case CanonicalSource::RuntimeVitalsGpuTemp:
+		case CanonicalSource::RuntimeVitalsGpuTempStale:
+		case CanonicalSource::RuntimeVitalsRss:
+		case CanonicalSource::RuntimeVitalsRssStale:
 		case CanonicalSource::RuntimeClockLocalSeconds:
 		case CanonicalSource::RuntimeClockLocalLabel:
 		case CanonicalSource::SceneIndex:
@@ -446,6 +483,7 @@ std::optional<HudResolvedValue> HudSourceResolver::resolveCanonical(const std::s
 		case CanonicalSource::ControlSceneNextModeAvailable:
 		case CanonicalSource::ControlRuntimeImmersiveAvailable:
 		case CanonicalSource::ControlRuntimeFullscreenAvailable:
+		case CanonicalSource::ControlRuntimeMenuAvailable:
 		case CanonicalSource::ControlRuntimeFullscreenState:
 		case CanonicalSource::RuntimeLogRecent:
 		case CanonicalSource::MediaPlaybackTime:

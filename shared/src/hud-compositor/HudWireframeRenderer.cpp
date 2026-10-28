@@ -89,7 +89,18 @@ const std::unordered_set<std::string>& clockRegions() {
 // flexible.secondary_a stays as the informational mode panel (no focus).
 const std::unordered_set<std::string>& navigationRegions() {
 	static const std::unordered_set<std::string> regions = {
-		"flexible.secondary_a", "controls.mode", "controls.fullscreen",
+		"flexible.secondary_a", "controls.mode", "controls.fullscreen", "controls.menu",
+	};
+	return regions;
+}
+
+// Part 5: System Telemetry v1 — the two trace regions host the five system
+// vitals sparklines (3 + 2) fed by HudFrameData::systemVitals. Enabling
+// existing regions is not a Blueprint version change (Architecture-Freeze-
+// HUD-006-Canonical-Blueprint-Identity-v1); bounds and IDs are untouched.
+const std::unordered_set<std::string>& systemTelemetryRegions() {
+	static const std::unordered_set<std::string> regions = {
+		"universal.activity_trace", "universal.secondary_trace",
 	};
 	return regions;
 }
@@ -129,7 +140,8 @@ void HudWireframeRenderer::setScene(const std::string& sceneId) {
 
 bool HudWireframeRenderer::regionInMinimalSlice(const std::string& regionId) {
 	return originalSliceRegions().count(regionId) != 0 || livingHudRegions().count(regionId) != 0
-		|| clockRegions().count(regionId) != 0 || navigationRegions().count(regionId) != 0;
+		|| clockRegions().count(regionId) != 0 || navigationRegions().count(regionId) != 0
+		|| systemTelemetryRegions().count(regionId) != 0;
 }
 
 bool HudWireframeRenderer::regionInOriginalMinimalSlice(const std::string& regionId) {
@@ -141,6 +153,7 @@ const char* HudWireframeRenderer::productionProvenance(const std::string& region
 	if (livingHudRegions().count(regionId) != 0) return "living_hud";
 	if (clockRegions().count(regionId) != 0) return "clock";
 	if (navigationRegions().count(regionId) != 0) return "navigation";
+	if (systemTelemetryRegions().count(regionId) != 0) return "system_telemetry";
 	return nullptr;
 }
 
@@ -327,6 +340,7 @@ void HudWireframeRenderer::update(float dt, const HudFrameData& frame) {
 	currentSceneNativeSize_ = frame.sceneFrame.nativeSize;
 
 	elapsedSeconds_ += dt;
+	slotCounts_ = computeRegionSlotCounts(); // sizes the system-vitals traces (update path, never draw)
 	if (activationPending_) { // see triggerActivationFeedback(): starts on the frame that shows it
 		activationStart_ = elapsedSeconds_;
 		activationPending_ = false;
@@ -434,7 +448,77 @@ void HudWireframeRenderer::resolveBindingReal(const HudCompiledBinding& compiled
 		}
 	}
 
+	if (binding.widgetType == HudWidgetType::Sparkline && binding.variantId == "vitals") {
+		resolveVitalsTrace(compiled, frame, input);
+	}
+
 	widgetInputs_[binding.bindingId] = std::move(input);
+}
+
+std::unordered_map<std::string, int> HudWireframeRenderer::computeRegionSlotCounts() const {
+	std::unordered_map<std::string, int> counts;
+	for (const auto& compiled : compiled_.bindings) {
+		if (renderScope_ == RenderScope::MinimalSlice && !regionInMinimalSlice(compiled.binding.regionId)) continue;
+		if (!compiled.valid && !studioMode_) continue;
+		counts[compiled.binding.regionId]++;
+	}
+	return counts;
+}
+
+void HudWireframeRenderer::resolveVitalsTrace(const HudCompiledBinding& compiled, const HudFrameData& frame, HudWidgetInput& input) {
+	const auto& binding = compiled.binding;
+	const auto* valueSrc = binding.findSource("value");
+	const VitalsMetricSpec* spec = valueSrc ? vitalsSpecForSource(valueSrc->sourceId) : nullptr;
+	if (!spec) return; // not a system-vitals binding: leave input.vitals null
+
+	// Slot size = the region's pixel size, divided by this region's slot count
+	// exactly as draw() slices it.
+	const ofRectangle region = pixelBoundsFor(binding.regionId);
+	const auto countIt = slotCounts_.find(binding.regionId);
+	const int slots = (countIt == slotCounts_.end() || countIt->second < 1) ? 1 : countIt->second;
+	HudVitalsDrawData& d = vitalsDraw_[binding.bindingId];
+	d.slotWidth = region.width;
+	d.slotHeight = region.height / static_cast<float>(slots);
+	d.plotX = kVitalsPad + kVitalsTextColumn;
+	d.plotY = 3.0f;
+	d.plotW = std::max(0.0f, d.slotWidth - d.plotX - kVitalsPad);
+	d.plotH = std::max(0.0f, d.slotHeight - 2.0f * d.plotY);
+
+	VitalsSeriesView view; // default = Unavailable, empty
+	if (const auto* snap = frame.systemVitals.get()) {
+		switch (spec->metric) {
+			case sysvitals::Metric::Fps: view = vitalsViewOf(snap->fps); break;
+			case sysvitals::Metric::FrameTimeMs: view = vitalsViewOf(snap->frameTimeMax); break;
+			case sysvitals::Metric::CpuPercent: view = vitalsViewOf(snap->cpuBusy); break;
+			case sysvitals::Metric::GpuTempC: view = vitalsViewOf(snap->gpuTemp); break;
+			case sysvitals::Metric::RssMiB: view = vitalsViewOf(snap->processRss); break;
+			default: break;
+		}
+	}
+	// A null snapshot (default view) has revision 0, which would alias a real
+	// first revision: key the empty case off the trace's own state instead.
+	if (d.trace.update(*spec, view, d.plotW, d.plotH) || d.linesBuiltAtRebuild != d.trace.rebuildCount()) {
+		d.lines.clear();
+		d.dots.clear();
+		for (size_t i = 0; i < d.trace.segmentCount(); ++i) {
+			const auto seg = d.trace.segment(i);
+			if (seg.count == 1) {
+				const auto& v = d.trace.vertex(seg.first);
+				d.dots.push_back(v);
+				continue;
+			}
+			ofPolyline line;
+			line.getVertices().reserve(seg.count);
+			for (uint16_t k = 0; k < seg.count; ++k) {
+				const auto& v = d.trace.vertex(seg.first + k);
+				line.addVertex(v.x, v.y);
+			}
+			d.lines.push_back(std::move(line));
+		}
+		d.linesBuiltAtRebuild = d.trace.rebuildCount();
+		d.polylineRebuilds++;
+	}
+	input.vitals = &d;
 }
 
 void HudWireframeRenderer::draw() const {
@@ -535,12 +619,7 @@ void HudWireframeRenderer::draw() const {
 	// multi-binding region can be sliced into vertically-stacked slots
 	// instead of every binding drawing on top of the others at identical
 	// bounds.
-	std::unordered_map<std::string, int> regionSlotCounts;
-	for (const auto& compiled : compiled_.bindings) {
-		if (renderScope_ == RenderScope::MinimalSlice && !regionInMinimalSlice(compiled.binding.regionId)) continue;
-		if (!compiled.valid && !studioMode_) continue;
-		regionSlotCounts[compiled.binding.regionId]++;
-	}
+	const std::unordered_map<std::string, int> regionSlotCounts = computeRegionSlotCounts();
 	std::unordered_map<std::string, int> regionSlotCursor;
 
 	for (const auto& compiled : compiled_.bindings) {
@@ -556,7 +635,8 @@ void HudWireframeRenderer::draw() const {
 		if (it == widgetInputs_.end()) continue; // update() never ran for this binding yet
 
 		ofRectangle bounds = pixelBoundsFor(compiled.binding.regionId);
-		int slotCount = regionSlotCounts[compiled.binding.regionId];
+		const auto slotIt = regionSlotCounts.find(compiled.binding.regionId);
+		const int slotCount = slotIt == regionSlotCounts.end() ? 1 : slotIt->second;
 		if (slotCount > 1) {
 			int slotIndex = regionSlotCursor[compiled.binding.regionId]++;
 			float slotHeight = bounds.height / static_cast<float>(slotCount);

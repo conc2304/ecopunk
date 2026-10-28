@@ -142,6 +142,20 @@ VIEWPORT_BIN = hud_media_viewport_tests
 # an OF API that crashes without a live GL context) — so, unlike
 # VIEWPORT_SRC below, this compiles and links with the plain
 # dependency-free $(CXXFLAGS)/no-OF path, exactly like $(SRC) above.
+# -- test-vitals: System Telemetry v1 HUD integration (HudVitalsTrace +
+# HudWireframeRenderer's update path against the real HudFrameData::
+# systemVitals snapshot and the real sysvitals::SystemVitals collector).
+# Links libopenFrameworks like test-viewport (HudWireframeRenderer pulls in
+# the widget layer); no window/GL context is created.
+VITALS_SRC = \
+	hud_vitals_tests.cpp \
+	$(wildcard $(HUD_SRC_DIR)/*.cpp) \
+	$(wildcard $(HUD_SRC_DIR)/widgets/*.cpp) \
+	../../../sketches/experience_runtime/src/SystemVitals.cpp \
+	../video-effects/knowledge/EffectActivityStatus.cpp
+VITALS_CXXFLAGS = $(REAL_CXXFLAGS) -I../../../sketches/experience_runtime/src -I$(HUD_SRC_DIR) -I$(HUD_SRC_DIR)/widgets
+VITALS_BIN = hud_vitals_tests
+
 TYPOGRAPHY_SRC = \
 	hud_typography_tests.cpp \
 	$(HUD_SRC_DIR)/widgets/HudTextMetricsCache.cpp
@@ -185,7 +199,7 @@ OF_FRAMEWORKS = -framework Accelerate -framework AppKit -framework ApplicationSe
 	-framework OpenGL -framework QuartzCore -framework Security -framework SystemConfiguration
 OF_LDFLAGS = -stdlib=libc++ -mmacosx-version-min=10.15 $(OF_FRAMEWORKS) $(OF_LIB) $(OF_XCFRAMEWORK_LIBS) -lobjc
 
-.PHONY: test test-real test-viewport test-typography test-all clean
+.PHONY: test test-real test-viewport test-typography test-vitals test-all clean
 
 test: $(BIN)
 	./$(BIN)
@@ -199,7 +213,10 @@ test-viewport: $(VIEWPORT_BIN)
 test-typography: $(TYPOGRAPHY_BIN)
 	./$(TYPOGRAPHY_BIN)
 
-test-all: test test-real test-viewport test-typography
+test-vitals: $(VITALS_BIN)
+	./$(VITALS_BIN)
+
+test-all: test test-real test-viewport test-typography test-vitals
 
 $(BIN): $(SRC)
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(BIN)
@@ -209,6 +226,9 @@ $(REAL_BIN): $(REAL_SRC)
 
 $(VIEWPORT_BIN): $(VIEWPORT_SRC)
 	$(CXX) $(REAL_CXXFLAGS) $(VIEWPORT_SRC) -x none $(OF_LDFLAGS) -o $(VIEWPORT_BIN)
+
+$(VITALS_BIN): $(VITALS_SRC)
+	$(CXX) $(VITALS_CXXFLAGS) $(VITALS_SRC) -x none $(OF_LDFLAGS) -o $(VITALS_BIN)
 
 $(TYPOGRAPHY_BIN): $(TYPOGRAPHY_SRC)
 	$(CXX) $(CXXFLAGS) $(TYPOGRAPHY_SRC) -o $(TYPOGRAPHY_BIN)

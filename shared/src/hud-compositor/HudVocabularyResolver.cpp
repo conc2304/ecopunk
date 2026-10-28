@@ -12,6 +12,12 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"slot.effects.health.label", "EFFECTS"},
 		{"slot.scene.mode.label", "MODE"},
 		{"overlay.transition.label", "TRANSITION"},
+		// System Telemetry v1 trace captions.
+		{"slot.runtime.vitals.fps.label", "FPS"},
+		{"slot.runtime.vitals.frame_time.label", "FRAME MAX"},
+		{"slot.runtime.vitals.cpu.label", "CPU"},
+		{"slot.runtime.vitals.gpu_temp.label", "GPU TEMP"},
+		{"slot.runtime.vitals.rss.label", "RSS"},
 
 		// -- Health (shared across scene.health/media.health/
 		// effects.health/runtime.health — all four resolve the same
@@ -40,6 +46,7 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"control.scene.next_mode.label", "NEXT MODE"},
 		{"slot.scene.mode.line.label", "Mode:"},
 		{"control.runtime.fullscreen.label", "FULL SCREEN"},
+		{"control.runtime.menu.label", "MENU"},
 		{"control.runtime.fullscreen.state.off", "FULL SCREEN"},
 		{"control.runtime.fullscreen.state.on", "EXIT FULL"},
 

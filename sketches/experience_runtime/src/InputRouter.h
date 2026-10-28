@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DpadInput.h"
 #include "HudFocusNavigator.h" // HudFocusInput (device-neutral step/activate)
 #include "SceneContract.h"
 
@@ -38,6 +39,13 @@ public:
 	// HudFocusInput (detent = Step ±1, click = Activate) without any change
 	// to the focus or command logic.
 	std::optional<HudFocusInput> translateToFocusInput(int key) const;
+	// Experience Settings page: the five-way D-pad (arrows = Up/Down/Left/Right,
+	// Enter = OK, Esc = Back). Used only while the page is open; the page is
+	// the sole consumer, so nothing leaks to scene/HUD controls.
+	std::optional<DpadInput> translateToDpad(int key) const;
+	// Opens the page (F1 or ','): a keyboard entry point until the frozen HUD
+	// nav-row geometry gains a Settings button.
+	bool isSettingsToggle(int key) const;
 	// Installation ENERGY v0.1: enter/exit ENERGY adjustment ('e'); while it
 	// is open, the encoder-style focus steps adjust ENERGY.
 	bool isEnergyAdjustToggle(int key) const { return key == 'e' || key == 'E'; }

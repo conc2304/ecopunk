@@ -38,6 +38,7 @@ struct Settings {
 	AutoCycle mediaAutoCycle{true, 30.0f};   // = Shared Video's existing automatic dwell
 	bool launchFullscreen = false;
 	float energyTarget = 0.5f;
+	bool clock24Hour = true; // app-owned time display preference (Experience Settings page); never changes the OS clock
 };
 
 constexpr float kMinSceneCycleSeconds = 10.0f;
@@ -59,6 +60,7 @@ struct Request {
 		SetSceneAutoCycle, // flag (+ optional duration)
 		SetMediaAutoCycle, // flag (+ optional duration)
 		SetLaunchFullscreen,
+		SetClock24Hour,    // flag
 		ToggleFullscreen,
 		SetEnergyTarget,   // value
 		StepEnergy,        // steps (encoder detents, signed)
@@ -91,6 +93,7 @@ public:
 		if (validMediaDuration(candidate.mediaAutoCycle.durationSeconds)) s.mediaAutoCycle.durationSeconds = candidate.mediaAutoCycle.durationSeconds;
 		else rejected.push_back("mediaAutoCycle.durationSeconds");
 		s.launchFullscreen = candidate.launchFullscreen;
+		s.clock24Hour = candidate.clock24Hour;
 		if (validEnergy(candidate.energyTarget)) s.energyTarget = candidate.energyTarget;
 		else rejected.push_back("energy.target");
 		settings_ = s;
@@ -118,6 +121,10 @@ public:
 			}
 			case K::SetLaunchFullscreen:
 				settings_.launchFullscreen = r.flag;
+				settingsChanged_ = true;
+				return {true, "ok"};
+			case K::SetClock24Hour:
+				settings_.clock24Hour = r.flag;
 				settingsChanged_ = true;
 				return {true, "ok"};
 			case K::ToggleFullscreen:
@@ -167,12 +174,22 @@ public:
 	// transition/loading), caps a stalled frame's contribution, and fires at
 	// most once — the period restarts at zero, never carrying a remainder.
 	bool tickSceneCycle(float dt, bool sceneIdle) {
-		if (!settings_.sceneAutoCycle.enabled || !sceneIdle) return false;
+		if (automationSuspended_ || !settings_.sceneAutoCycle.enabled || !sceneIdle) return false;
 		sceneElapsed_ += std::clamp(dt, 0.0f, kMaxScheduleStepSeconds);
 		if (sceneElapsed_ < settings_.sceneAutoCycle.durationSeconds) return false;
 		sceneElapsed_ = 0.0f;
 		return true;
 	}
+
+	// Experience Settings page: while open, automatic scene cycling neither
+	// counts nor fires; saved preferences are untouched. Resuming starts a
+	// fresh period, so there is never a catch-up burst. (Shared Video's media
+	// timer is gated by ExperienceRuntime::applyMediaCadence with the same flag.)
+	void setAutomationSuspended(bool suspended) {
+		if (automationSuspended_ && !suspended) sceneElapsed_ = 0.0f;
+		automationSuspended_ = suspended;
+	}
+	bool automationSuspended() const { return automationSuspended_; }
 
 	// Any scene change (manual navigation or the cycle's own) restarts the
 	// period, so automation never cuts a freshly chosen scene short.
@@ -208,6 +225,7 @@ private:
 	bool energyAdjusting_ = false;
 	bool fullscreenToggleRequested_ = false;
 	bool settingsChanged_ = false;
+	bool automationSuspended_ = false;
 	std::mutex queueMutex_;
 	std::vector<Request> queue_;
 };

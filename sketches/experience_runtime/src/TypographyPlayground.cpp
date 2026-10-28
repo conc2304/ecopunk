@@ -155,6 +155,27 @@ void TypographyPlayground::load(const std::string& directory) {
 			for (size_t i = 0; i < colors_.size(); ++i) {
 				if (!colors_[i].hudDefault && toHex(colors_[i].color) == hex) s.color = int(i);
 			}
+			// Day-palette colour: "" / absent = the palette's own ink (dark on the light skin).
+			std::string hexDay = o.value("colorDay", std::string());
+			std::transform(hexDay.begin(), hexDay.end(), hexDay.begin(), [](unsigned char ch) { return static_cast<char>(std::toupper(ch)); });
+			s.colorDay = 0;
+			for (size_t i = 0; i < colors_.size(); ++i) {
+				if (!colors_[i].hudDefault && toHex(colors_[i].color) == hexDay) s.colorDay = int(i);
+			}
+			// Per-skin colours: {"<skin id>": "#RRGGBB" | ""}; "" = the palette's own ink.
+			s.skin.clear();
+			if (o.contains("colors") && o["colors"].is_object()) {
+				for (auto it = o["colors"].begin(); it != o["colors"].end(); ++it) {
+					if (!it.value().is_string()) continue;
+					std::string hs = it.value().get<std::string>();
+					std::transform(hs.begin(), hs.end(), hs.begin(), [](unsigned char ch) { return static_cast<char>(std::toupper(ch)); });
+					int idx = 0;
+					for (size_t i = 0; i < colors_.size(); ++i) {
+						if (!colors_[i].hudDefault && toHex(colors_[i].color) == hs) idx = int(i);
+					}
+					s.skin[it.key()] = idx;
+				}
+			}
 			s.glow = 0.0f;
 			if (o.contains("glow") && o["glow"].is_object() && o["glow"].value("enabled", false)) {
 				s.glow = std::clamp(o["glow"].value("intensity", 0.15f), 0.0f, 0.5f);
@@ -225,7 +246,18 @@ void TypographyPlayground::selectFont(int direction) {
 	}
 }
 
+void TypographyPlayground::setSkin(const std::string& skin, const std::string& palette) {
+	const bool day = palette == "day";
+	if (day == dayPalette_ && skin == skin_) return;
+	storeGroup();      // keep an edit made under the old skin
+	dayPalette_ = day;
+	skin_ = skin;
+	loadGroup();       // show/edit the new skin's colour
+	logState("skin: " + skin_ + (day ? " (day)" : " (night)"));
+}
+
 bool TypographyPlayground::handleKey(int key) {
+	if (applyOnly_) return false;
 	std::string why;
 	if (key == OF_KEY_TAB) {
 		if (ofGetKeyPressed(OF_KEY_SHIFT) && group_ == 2) {
@@ -280,7 +312,7 @@ bool TypographyPlayground::handleKey(int key) {
 			break;
 		case '0': letterSpacing_ = std::min(kMaxSpacing, letterSpacing_ + kSpacingStep); why = "spacing"; break;
 		case '9': letterSpacing_ = std::max(kMinSpacing, letterSpacing_ - kSpacingStep); why = "spacing"; break;
-		case 'k': case 'K': colorIndex_ = (colorIndex_ + 1) % int(colors_.size()); why = "color"; break;
+		case 'k': case 'K': colorIndex_ = (colorIndex_ + 1) % int(colors_.size()); colorEdited_ = true; why = "color"; break;
 		case 'g': case 'G': {
 			const int n = int(sizeof(kGlowSteps) / sizeof(kGlowSteps[0]));
 			int i = 0;
@@ -312,6 +344,16 @@ bool TypographyPlayground::save() {
 		o["letterSpacing"] = std::round(double(s.spacing) * 100.0) / 100.0;
 		const ColorPreset& c = colors_[std::clamp(s.color, 0, int(colors_.size()) - 1)];
 		o["color"] = c.hudDefault ? std::string("") : toHex(c.color);
+		const ColorPreset& cd = colors_[std::clamp(s.colorDay, 0, int(colors_.size()) - 1)];
+		o["colorDay"] = cd.hudDefault ? std::string("") : toHex(cd.color);
+		if (!s.skin.empty()) {
+			ofJson per = ofJson::object();
+			for (const auto& [skin, idx] : s.skin) {
+				const ColorPreset& cs = colors_[std::clamp(idx, 0, int(colors_.size()) - 1)];
+				per[skin] = cs.hudDefault ? std::string("") : toHex(cs.color);
+			}
+			o["colors"] = per;
+		}
 		o["glow"] = {{"enabled", s.glow > 0.0f}, {"intensity", std::round(double(s.glow > 0.0f ? s.glow : 0.15f) * 100.0) / 100.0}};
 		return o;
 	};
@@ -338,6 +380,7 @@ void TypographyPlayground::logState(const std::string& why) const {
 TypographyPlayground::Style TypographyPlayground::effective(const std::string& regionId) const {
 	const int g = groupOf(regionId);
 	Style s = styles_[g];
+	s.color = resolveColor(s);
 	if (g == 2) {
 		auto it = overrides_.find(regionId);
 		if (it != overrides_.end()) {
@@ -525,13 +568,13 @@ void TypographyPlayground::drawOverlay() const {
 	std::vector<std::string> lines = {
 		std::string("TYPOGRAPHY PLAYGROUND (dev only)   editing: ") + (group_ == 0 ? "BUTTONS" : group_ == 1 ? "SCENE TITLE" : "INFO / META") + (group_ == 2 && !panel_.empty() ? " > " + panel_ : std::string()) + "  [tab: next group]",
 		"font " + ofToString(fontIndex_ + 1) + "/" + ofToString(fonts_.size()) + ": " + f.name,
-		"size " + ofToString(sizePx_) + " px   spacing " + ofToString(letterSpacing_, 2) + "   color " + colors_[colorIndex_].name
+		"size " + ofToString(sizePx_) + " px   spacing " + ofToString(letterSpacing_, 2) + "   color" + (dayPalette_ ? "(day) " : "(night) ") + (skin_.empty() ? std::string() : "[" + skin_ + "] ") + colors_[colorIndex_].name
 			+ "   glow " + (glow_ > 0.0f ? ofToString(glow_, 2) : std::string("off")),
 		ofToString(available) + " usable, " + ofToString(missing_.size()) + " missing candidate(s) (see log)",
 		", .  font    - =  size    9 0  spacing    k color   g glow",
 		"r reload   w save preset   u hide/show this panel",
 		"info/meta: shift+tab next panel (size/spacing per panel)   x reset panel to group",
-		std::string("l fit text to layout width: ") + (fitLayout_ ? "ON (size = maximum)" : "OFF (may overflow)"),
+		std::string("k sets the colour for the ACTIVE skin only (v: switch skin)   l fit text to layout width: ") + (fitLayout_ ? "ON (size = maximum)" : "OFF (may overflow)"),
 	};
 	if (!status_.empty()) lines.push_back(status_.size() > 70 ? "..." + status_.substr(status_.size() - 67) : status_);
 	const float x = 36.0f, y = 128.0f, lineH = 14.0f;

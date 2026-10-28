@@ -128,7 +128,7 @@ private:
 	// HUD-006 v2: the six-button row, left to right (the mode panel is
 	// informational and no longer a focus stop).
 	HudFocusNavigator focus_{{"controls.scene_previous", "controls.scene_next", "controls.mode",
-		"controls.media_previous", "controls.media_next", "controls.fullscreen"}};
+		"controls.media_previous", "controls.media_next", "controls.fullscreen", "controls.menu"}};
 
 	hudpresent::HudWireframeRenderer renderer_;
 	bool visible_ = true;

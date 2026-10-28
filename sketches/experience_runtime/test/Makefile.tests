@@ -137,9 +137,16 @@ WALL_CLOCK_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/hud-runtime -I../../../s
 WALL_CLOCK_SRC = wall_clock_sampler_tests.cpp
 WALL_CLOCK_BIN = wall_clock_sampler_tests
 
+# System Telemetry v1 (../src/SystemVitals.h/.cpp) — OF-free, standard library only.
+SYSTEM_VITALS_SRC = system_vitals_tests.cpp ../src/SystemVitals.cpp
+SYSTEM_VITALS_BIN = system_vitals_tests
+
 # Installation Controls & ENERGY v0.1: installation::Controller (OF-free, header-only).
 INSTALLATION_SRC = installation_control_tests.cpp
 INSTALLATION_BIN = installation_control_tests
+# Experience Settings page v0.1: page model + SystemClockService (OF-free).
+SETTINGS_PAGE_SRC = experience_settings_page_tests.cpp ../src/SystemClockService.cpp ../src/HudFocusNavigator.cpp
+SETTINGS_PAGE_BIN = experience_settings_page_tests
 SCHEDULE_SRC = hud_skin_schedule_tests.cpp
 SCHEDULE_BIN = hud_skin_schedule_tests
 PRESENTATION_SRC = presentation_transform_tests.cpp
@@ -156,6 +163,9 @@ wall-clock: $(WALL_CLOCK_BIN)
 installation: $(INSTALLATION_BIN)
 	./$(INSTALLATION_BIN)
 
+settings-page: $(SETTINGS_PAGE_BIN)
+	./$(SETTINGS_PAGE_BIN)
+
 presentation: $(PRESENTATION_BIN)
 	./$(PRESENTATION_BIN)
 
@@ -171,13 +181,19 @@ $(PRESENTATION_BIN): $(PRESENTATION_SRC) ../src/PresentationTransform.h
 $(INSTALLATION_BIN): $(INSTALLATION_SRC) ../src/InstallationControl.h
 	$(CXX) $(CXXFLAGS) -I../src -pthread $(INSTALLATION_SRC) -o $(INSTALLATION_BIN)
 
+$(SETTINGS_PAGE_BIN): $(SETTINGS_PAGE_SRC) ../src/ExperienceSettingsPage.h ../src/SystemClockService.h ../src/InstallationControl.h ../src/DpadInput.h
+	$(CXX) $(CXXFLAGS) -I../src -pthread $(SETTINGS_PAGE_SRC) -o $(SETTINGS_PAGE_BIN)
+
+$(SYSTEM_VITALS_BIN): $(SYSTEM_VITALS_SRC) ../src/SystemVitals.h
+	$(CXX) $(CXXFLAGS) -I../src -I../../../shared/src/hud-runtime $(SYSTEM_VITALS_SRC) -o $(SYSTEM_VITALS_BIN)
+
 $(WALL_CLOCK_BIN): $(WALL_CLOCK_SRC) ../../../shared/src/hud-runtime/WallClockSampler.h ../../../shared/src/hud-runtime/WallClockStatus.h ../../../shared/src/hud-compositor/HudClockFormat.h
 	$(CXX) $(WALL_CLOCK_CXXFLAGS) $(WALL_CLOCK_SRC) -o $(WALL_CLOCK_BIN)
 
 $(FOCUS_BIN): $(FOCUS_SRC) ../src/HudFocusNavigator.h
 	$(CXX) $(CXXFLAGS) $(FOCUS_SRC) -o $(FOCUS_BIN)
 
-test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(INSTALLATION_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN)
+test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(SYSTEM_VITALS_BIN) $(INSTALLATION_BIN) $(SETTINGS_PAGE_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN)
 	./$(LIFECYCLE_BIN)
 	./$(SESSION2_BIN)
 	./$(BLOB_SEMANTIC_BIN)
@@ -193,7 +209,9 @@ test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY
 	./$(SKIN_LOADER_BIN)
 	./$(FOCUS_BIN)
 	./$(WALL_CLOCK_BIN)
+	./$(SYSTEM_VITALS_BIN)
 	./$(INSTALLATION_BIN)
+	./$(SETTINGS_PAGE_BIN)
 	./$(PRESENTATION_BIN)
 	./$(SCHEDULE_BIN)
 
@@ -252,4 +270,4 @@ $(SCENE_SWITCH_BIN): $(SCENE_SWITCH_SRC) ../src/SceneSwitchController.h
 	$(CXX) $(CXXFLAGS) $(SCENE_SWITCH_SRC) -o $(SCENE_SWITCH_BIN)
 
 clean:
-	rm -f $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(INSTALLATION_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN)
+	rm -f $(SETTINGS_PAGE_BIN) $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(SYSTEM_VITALS_BIN) $(INSTALLATION_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN)

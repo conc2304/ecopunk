@@ -21,7 +21,7 @@ namespace {
 constexpr const char* kCaptureDir = "captures/hud006-v2";
 constexpr float kTimeout = 45.0f;
 const char* const kRing[] = {"controls.scene_previous", "controls.scene_next", "controls.mode",
-	"controls.media_previous", "controls.media_next", "controls.fullscreen"};
+	"controls.media_previous", "controls.media_next", "controls.fullscreen", "controls.menu"};
 } // namespace
 
 bool Hud006v2Harness::isRequested() { return std::getenv("EXPERIENCE_RUNTIME_HUD006V2_HARNESS") != nullptr; }
@@ -77,17 +77,24 @@ void Hud006v2Harness::buildScript() {
 		{"start", [this] { return idle() && framesInStep_ >= 90; }, [this, &rt] {
 			const auto& r = rt.hudCompositorBridgeForTesting().renderer();
 			const auto& cat = r.regionCatalog();
-			check("HUD-006 v2 catalog: 20 regions, controls.reseed retired", cat.all().size() == 20 && cat.find("controls.reseed") == nullptr,
+			check("HUD-006 v2 catalog + MENU: 21 regions, controls.reseed retired", cat.all().size() == 21 && cat.find("controls.reseed") == nullptr,
 				ofToString(cat.all().size()));
-			const float xs[] = {25.6f, 110.4f, 195.2f, 299.2f, 384.0f, 488.0f};
+			const float xs[] = {25.6f, 110.4f, 195.2f, 299.2f, 384.0f, 488.0f, 619.0f};
 			bool geom = true;
 			std::string bad;
-			for (int i = 0; i < 6; ++i) {
+			for (int i = 0; i < 7; ++i) {
 				const ofRectangle b = r.pixelBoundsFor(kRing[i]);
 				if (std::fabs(b.x - xs[i]) > 0.05f || std::fabs(b.y - 633.6f) > 0.05f || std::fabs(b.width - 72.0f) > 0.05f
 					|| std::fabs(b.height - 72.0f) > 0.05f) { geom = false; bad += std::string(" ") + kRing[i]; }
 			}
-			check("six 72x72 squares at the approved coordinates (y 633.6)", geom, bad.empty() ? "all six" : bad);
+			check("seven 72x72 squares at the approved coordinates (y 633.6; MENU x 619)", geom, bad.empty() ? "all seven" : bad);
+			{
+				// Right-inset rule: MENU.right = nav panel inner right (723) - the NEXT MEDIA -> FULLSCREEN gap.
+				const ofRectangle nm = r.pixelBoundsFor("controls.media_next"), fs = r.pixelBoundsFor("controls.fullscreen"), mn = r.pixelBoundsFor("controls.menu");
+				const float gap = fs.x - (nm.x + nm.width), inset = 723.0f - (mn.x + mn.width);
+				check("MENU right inset equals the NEXT MEDIA -> FULLSCREEN gap", std::fabs(gap - 32.0f) < 0.05f && std::fabs(inset - gap) < 0.05f && mn.x > fs.x + fs.width,
+					"gap " + ofToString(gap, 2) + ", inset " + ofToString(inset, 2) + ", MENU " + ofToString(mn.x, 1) + "," + ofToString(mn.y, 1) + " " + ofToString(mn.width, 1) + "x" + ofToString(mn.height, 1));
+			}
 			check("v1 Dark Moss skin rejected under Blueprint v2 (wireframe kept)", !rt.hudCompositorBridgeForTesting().skinLoader().active(),
 				"no active skin");
 			check("PREV MEDIA enabled at the start of media history (wraps)", r.controlEnabled("controls.media_previous").value_or(false));
@@ -100,13 +107,13 @@ void Hud006v2Harness::buildScript() {
 		{"ring walk", framesAtLeast(2), [this, &rt] {
 			std::string order = focused();
 			bool modePanel = false;
-			for (int i = 0; i < 6; ++i) {
+			for (int i = 0; i < 7; ++i) {
 				rt.keyPressed(OF_KEY_RIGHT);
 				order += " > " + focused();
 				modePanel = modePanel || focused() == "flexible.secondary_a";
 			}
-			check("focus ring: scene_previous > scene_next > mode > media_previous > media_next > fullscreen (wraps)",
-				order == "controls.scene_previous > controls.scene_next > controls.mode > controls.media_previous > controls.media_next > controls.fullscreen > controls.scene_previous",
+			check("focus ring: scene_previous > scene_next > mode > media_previous > media_next > fullscreen > menu (wraps)",
+				order == "controls.scene_previous > controls.scene_next > controls.mode > controls.media_previous > controls.media_next > controls.fullscreen > controls.menu > controls.scene_previous",
 				order);
 			check("mode panel is never a focus stop", !modePanel);
 		}},

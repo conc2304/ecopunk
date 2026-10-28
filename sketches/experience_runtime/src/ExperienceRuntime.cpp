@@ -1,4 +1,8 @@
+#include <chrono>
+#include <filesystem>
+#include <fstream>
 #include "ExperienceRuntime.h"
+#include "ExperienceSettingsPageView.h"
 #include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
 
 #include "SceneRenderGuard.h"
@@ -59,7 +63,7 @@ void ExperienceRuntime::applyMediaCadence(bool liveThisFrame) {
 	// automatic-advance timer (still the only media scheduler); boundary-
 	// driven scenes keep it off as before.
 	const installation::AutoCycle& media = installation_.settings().mediaAutoCycle;
-	const bool timerWanted = media.enabled && !boundaryDriven;
+	const bool timerWanted = media.enabled && !boundaryDriven && !settingsPage_.isOpen(); // paused while Settings is open; re-enabling starts a fresh dwell
 	VideoPlaybackService& video = runtimeServices_.video();
 	if (video.minimumDwellSeconds() != media.durationSeconds) video.setMinimumDwellSeconds(media.durationSeconds);
 	if (video.automaticAdvanceEnabled() != timerWanted) {
@@ -67,6 +71,126 @@ void ExperienceRuntime::applyMediaCadence(bool liveThisFrame) {
 		ofLogNotice("ExperienceRuntime") << "media cadence -> "
 			<< (boundaryDriven ? "scene-boundary-driven (" + owner + ")" : timerWanted ? std::string("automatic") : std::string("manual only (installation setting)"));
 	}
+}
+
+namespace {
+// Monotonic seconds: Settings-page timing (OK debounce, OS-clock re-read
+// cadence) must not move when the wall clock is changed.
+double steadySeconds() {
+	return std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
+} // namespace
+
+// -- Experience Settings page v0.1 -------------------------------------------
+void ExperienceRuntime::refreshSettingsContext(bool rereadOsClock) {
+	const double now = steadySeconds();
+	if (rereadOsClock || now - clockSnapshotAt_ > 10.0) {
+		clockSnapshot_ = clockService_.read(); // one fixed-argv `timedatectl show` on Linux
+		clockSnapshotAt_ = now;
+	}
+	settingspage::Context c;
+	c.settings = installation_.settings();
+	c.persistenceEnabled = !installationSettingsPath_.empty();
+	c.persistenceStatus = saveStatus_;
+	c.persistenceFailed = saveFailed_;
+	c.clock = clockSnapshot_;
+	// The seconds tick live without re-running timedatectl.
+	const std::time_t t = std::time(nullptr);
+	std::tm lt{};
+	if (localtime_r(&t, &lt) != nullptr) {
+		c.clock.local = {lt.tm_year + 1900, lt.tm_mon + 1, lt.tm_mday, lt.tm_hour, lt.tm_min};
+		c.clock.second = lt.tm_sec;
+	}
+	const systemclock::WriteCapability cap = clockService_.writeCapability();
+	c.clockWritable = cap.enabled;
+	c.clockWriteNote = cap.note;
+	c.clockResult = clockResult_;
+	c.clockResultFailed = clockResultFailed_;
+	c.zones = &clockService_.zones();
+	c.commonZones = clockService_.commonCount();
+	settingsPage_.setContext(c);
+}
+
+void ExperienceRuntime::openSettingsPage() {
+	if (settingsPage_.isOpen() || immersive_) return;
+	if (installation_.energyAdjusting()) { // never leave ENERGY capturing steps behind the page
+		installation::Request r;
+		r.kind = installation::Request::Kind::EndEnergyAdjust;
+		installation_.submit(r);
+	}
+	saveStatus_.clear();
+	saveFailed_ = false;
+	clockResult_.clear();
+	clockResultFailed_ = false;
+	lastOkInputAt_ = steadySeconds(); // swallow the OK (and its key-repeat) that opened the page
+	refreshSettingsContext(true);
+	settingsPage_.open(settingsPage_.context());
+	ofSetEscapeQuitsApp(false); // ESC returns to the experience while the page is open
+	escapeQuitSuppressed_ = true;
+	ofLogNotice("Settings") << "page opened (scene/media auto-cycle paused; artwork keeps running)";
+}
+
+void ExperienceRuntime::closeSettingsPage() {
+	if (!settingsPage_.isOpen()) return;
+	settingsPage_.close();
+	settingsClosedAt_ = steadySeconds();
+	installation_.setAutomationSuspended(false); // fresh period; no catch-up burst
+	ofLogNotice("Settings") << "page closed (automation resumes with a fresh period)";
+}
+
+void ExperienceRuntime::performSettingsAction(const settingspage::Action& a) {
+	using K = settingspage::Action::Kind;
+	installation::Request r;
+	const installation::Settings& s = installation_.settings();
+	switch (a.kind) {
+		case K::Close: closeSettingsPage(); return;
+		case K::SetSceneAuto:
+			r.kind = installation::Request::Kind::SetSceneAutoCycle; r.flag = a.flag; break;
+		case K::SetSceneInterval:
+			r.kind = installation::Request::Kind::SetSceneAutoCycle; r.flag = s.sceneAutoCycle.enabled; r.durationSeconds = a.seconds; break;
+		case K::SetMediaAuto:
+			r.kind = installation::Request::Kind::SetMediaAutoCycle; r.flag = a.flag; break;
+		case K::SetMediaInterval:
+			r.kind = installation::Request::Kind::SetMediaAutoCycle; r.flag = s.mediaAutoCycle.enabled; r.durationSeconds = a.seconds; break;
+		case K::SetClock24:
+			r.kind = installation::Request::Kind::SetClock24Hour; r.flag = a.flag; break;
+		case K::ApplyClock: {
+			const systemclock::ApplyResult res = clockService_.apply(a.change);
+			clockResult_ = res.message;
+			clockResultFailed_ = !res.ok;
+			ofLogNotice("Settings") << "clock apply: " << (res.ok ? "ok" : "FAILED") << " - " << res.message;
+			refreshSettingsContext(true); // show the OS's actual state, never the requested one
+			return;
+		}
+	}
+	const installation::Result result = installation_.submit(r);
+	if (!result.accepted) {
+		saveStatus_ = "REJECTED (" + result.code + ")";
+		saveFailed_ = true;
+		return;
+	}
+	// Confirmed edit: persist now (not on every D-pad step) and report the outcome.
+	if (installation_.takeSettingsChanged()) saveInstallationSettings();
+}
+
+bool ExperienceRuntime::handleSettingsKey(int key) {
+	if (!settingsPage_.isOpen()) {
+		if (inputRouter_.isSettingsToggle(key) && !immersive_) { openSettingsPage(); return true; }
+		return false;
+	}
+	// Open: the page is the sole input consumer — nothing reaches scene, HUD
+	// focus or runtime commands (ESC returns to the experience, never exits).
+	if (inputRouter_.isSettingsToggle(key)) { closeSettingsPage(); return true; }
+	if (auto d = inputRouter_.translateToDpad(key)) {
+		if (*d == DpadInput::Ok) { // OK is debounced; Left/Right keep auto-repeat for stepping
+			const double now = steadySeconds();
+			if (lastOkInputAt_ >= 0.0 && now - lastOkInputAt_ < 0.25) return true;
+			lastOkInputAt_ = now;
+		}
+		for (const auto& action : settingsPage_.handle(*d)) performSettingsAction(action);
+		if (settingsPage_.isOpen()) refreshSettingsContext(false);
+	}
+	return true;
 }
 
 void ExperienceRuntime::loadInstallationSettings() {
@@ -84,6 +208,7 @@ void ExperienceRuntime::loadInstallationSettings() {
 			s.mediaAutoCycle.durationSeconds = num(j["mediaAutoCycle"], "durationSeconds", s.mediaAutoCycle.durationSeconds);
 		}
 		s.launchFullscreen = flag(j, "launchFullscreen", s.launchFullscreen);
+		s.clock24Hour = flag(j, "clock24Hour", s.clock24Hour);
 		if (j.contains("energy") && j["energy"].is_object()) s.energyTarget = num(j["energy"], "target", s.energyTarget);
 		ofLogNotice("Installation") << "settings loaded from " << installationSettingsPath_;
 	} else {
@@ -98,20 +223,37 @@ void ExperienceRuntime::loadInstallationSettings() {
 	installationLoaded_ = true;
 }
 
-void ExperienceRuntime::saveInstallationSettings() const {
-	if (installationSettingsPath_.empty()) return;
+void ExperienceRuntime::saveInstallationSettings() {
+	if (installationSettingsPath_.empty()) { saveStatus_ = "not saved (persistence off)"; saveFailed_ = false; return; }
 	const installation::Settings& s = installation_.settings();
 	ofJson j;
 	j["sceneAutoCycle"] = {{"enabled", s.sceneAutoCycle.enabled}, {"durationSeconds", s.sceneAutoCycle.durationSeconds}};
 	j["mediaAutoCycle"] = {{"enabled", s.mediaAutoCycle.enabled}, {"durationSeconds", s.mediaAutoCycle.durationSeconds}};
 	j["launchFullscreen"] = s.launchFullscreen;
 	j["energy"] = {{"target", s.energyTarget}};
-	ofSavePrettyJson(installationSettingsPath_, j);
+	j["clock24Hour"] = s.clock24Hour;
+	// Write a sibling temp file, then rename over the target: a crash or full
+	// disk can never leave a truncated settings file behind.
+	namespace fs = std::filesystem;
+	const std::string tmp = installationSettingsPath_ + ".tmp";
+	std::error_code ec;
+	bool ok = false;
+	{
+		std::ofstream out(tmp, std::ios::trunc);
+		if (out) { out << j.dump(4) << "\n"; out.flush(); ok = static_cast<bool>(out); }
+	}
+	if (ok) { fs::rename(tmp, installationSettingsPath_, ec); ok = !ec; }
+	if (!ok) fs::remove(tmp, ec);
+	saveFailed_ = !ok;
+	saveStatus_ = ok ? "saved" : "SAVE FAILED (cannot write " + installationSettingsPath_ + ")";
+	if (ok) ofLogNotice("Installation") << "settings saved to " << installationSettingsPath_;
+	else ofLogError("Installation") << saveStatus_;
 }
 
 // Start of every frame — the same point key events reach the runtime, so a
 // scheduled NextScene takes exactly the path a ']' press takes.
 void ExperienceRuntime::tickInstallation(float dt) {
+	installation_.setAutomationSuspended(settingsPage_.isOpen()); // Settings page open: scene auto-cycle paused
 	for (const auto& result : installation_.drainQueue()) {
 		if (!result.accepted) ofLogWarning("Installation") << "queued request rejected: " << result.code;
 	}
@@ -299,13 +441,25 @@ void ExperienceRuntime::setup() {
 		}
 	}
 
-	// Development-only Live Typography Playground (off unless explicitly requested).
-	if (TypographyPlayground::isRequested()) {
-		typography_ = std::make_unique<TypographyPlayground>();
-		const char* dir = std::getenv("EXPERIENCE_RUNTIME_TYPOGRAPHY_DIR");
-		typography_->load(dir ? std::string(dir) : ofToDataPath("../../../../assets/hud/dev-typography", true));
-		hudCompositorBridge_.setLabelTypography(typography_.get());
-		ofLogNotice("Typography") << "DEV typography playground ENABLED (EXPERIENCE_RUNTIME_TYPOGRAPHY_PLAYGROUND=1)";
+	// Typography: the preset saved by the dev Live Typography Playground applies to the
+	// production runtime too (fonts, sizes, per-skin colours). The playground's editing
+	// keys and overlay are on only when explicitly requested; EXPERIENCE_RUNTIME_TYPOGRAPHY=off
+	// disables the preset (stock HUD fonts).
+	{
+		const char* dirEnv = std::getenv("EXPERIENCE_RUNTIME_TYPOGRAPHY_DIR");
+		const char* offEnv = std::getenv("EXPERIENCE_RUNTIME_TYPOGRAPHY");
+		const bool off = !typographyPresetEnabled_ || (offEnv != nullptr && std::string(offEnv) == "off");
+		const bool editing = TypographyPlayground::isRequested();
+		const std::string dir = dirEnv ? std::string(dirEnv) : ofToDataPath("../../../../assets/hud/dev-typography", true);
+		if (editing || (!off && std::filesystem::exists(std::filesystem::path(dir) / "preset.json"))) {
+			typography_ = std::make_unique<TypographyPlayground>();
+			typography_->load(dir);
+			if (!editing) typography_->setApplyOnly();
+			hudCompositorBridge_.setLabelTypography(typography_.get());
+			typography_->setSkin(currentSkin_, currentSkin_.empty() ? std::string("night") : skinSchedule_.paletteFor(currentSkin_));
+			ofLogNotice("Typography") << (editing ? "DEV typography playground ENABLED (EXPERIENCE_RUNTIME_TYPOGRAPHY_PLAYGROUND=1)"
+			                                      : "typography preset applied from " + dir);
+		}
 	}
 
 	// Installation Controls & ENERGY v0.1: settings (validated) and the
@@ -366,6 +520,7 @@ bool ExperienceRuntime::applySkin(const std::string& skinId, const std::string& 
 		currentSkin_ = skinId;
 		const std::string palette = skinSchedule_.paletteFor(skinId);
 		hudCompositorBridge_.setColors(hudpresent::hudPaletteNamed(palette));
+		if (typography_) typography_->setSkin(skinId, palette);
 		ofLogNotice("HudSkin") << "skin '" << skinId << "' (" << palette << " palette) — " << reason;
 	}
 	return outcome.activated;
@@ -387,6 +542,11 @@ void ExperienceRuntime::tickSkinSchedule(bool force) {
 }
 
 void ExperienceRuntime::update(float dt) {
+	if (settingsPage_.isOpen()) refreshSettingsContext(false);
+	else if (escapeQuitSuppressed_) { // restored one frame after closing: the closing ESC must not quit
+		ofSetEscapeQuitsApp(true);
+		escapeQuitSuppressed_ = false;
+	}
 	lastDt_ = dt; // reused by draw() (step 14) — see this member's own comment
 	// Day/night skin schedule: checked about once a second (cheap; switches
 	// only when the period changes, and only while following the schedule).
@@ -536,6 +696,9 @@ void ExperienceRuntime::draw() {
 	currentHudFrameData_.sceneManager = lastSceneManagerStatus_;      // captured in update(), step 6
 	currentHudFrameData_.capabilities = sceneManager_.activeCapabilities(); // cached, not re-polled
 	currentHudFrameData_.runtime = runtimeServices_.telemetry();
+	// System Telemetry v1: shared_ptr copy only (refcount bump) — the
+	// immutable snapshot is rebuilt in RuntimeServices::update, never here.
+	currentHudFrameData_.systemVitals = runtimeServices_.systemVitalsSnapshot();
 	// Captured once here, from RuntimeServices' already-updated (step 7)
 	// VideoPlaybackService — never polled again during the HUD draw call
 	// below, matching this same rule for every other HudFrameData field
@@ -639,6 +802,7 @@ void ExperienceRuntime::draw() {
 void ExperienceRuntime::drawComposition() {
 	hudCompositorBridge_.draw();
 	if (typography_) typography_->drawOverlay(); // dev-only info panel, above the HUD
+	if (settingsPage_.isOpen()) drawExperienceSettingsPage(settingsPage_); // topmost: Experience Settings
 	presentationCounters_.hudDraws++;
 }
 
@@ -683,6 +847,9 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 		return;
 	}
 
+	// The Enter that closed Settings (or its key-repeat) must not re-activate
+	// the MENU control the HUD focus returned to.
+	if (settingsClosedAt_ >= 0.0 && steadySeconds() - settingsClosedAt_ < 0.6) return;
 	// Activate: only an ENABLED focused control dispatches, and only through
 	// the existing command paths — the same calls the 'n'/'p'/'['/']' keys use.
 	FocusActivationRecord rec;
@@ -711,6 +878,13 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 		enterImmersive();
 		rec.command = "Runtime::EnterImmersive";
 		rec.accepted = true;
+	} else if (*target == "controls.menu") {
+		// MENU: the one established Settings entry point (same as F1 / ','); no
+		// scene/media/mode command. HUD focus stays on MENU, so closing the page
+		// returns to it. Key-repeat from this Enter must not hit the page's first row.
+		openSettingsPage();
+		rec.command = "Runtime::OpenSettings";
+		rec.accepted = settingsPage_.isOpen();
 	} else if (*target == "controls.mode") {
 		rec.command = "SceneCommand::NextMode";
 		rec.accepted = sceneManager_.dispatchSceneCommand(SceneCommand::NextMode);
@@ -745,6 +919,7 @@ bool ExperienceRuntime::exitImmersiveOnInput() {
 }
 
 void ExperienceRuntime::pointerPressed(float x, float y) {
+	if (settingsPage_.isOpen()) return; // the page is keyboard/D-pad only; a press must not leak underneath
 	// RT-007: framebuffer -> canonical canvas through the inverse of the
 	// final presentation transform (no pointer-driven HUD control exists
 	// yet; the press itself only exits IMMERSIVE).
@@ -772,6 +947,9 @@ void ExperienceRuntime::drawImmersiveScene() const {
 void ExperienceRuntime::keyPressed(int key) {
 	// IMMERSIVE: any key only exits (and is consumed).
 	if (exitImmersiveOnInput()) return;
+
+	// Experience Settings page: F1 / ',' open it; while open it consumes every key.
+	if (handleSettingsKey(key)) return;
 
 	// IMMERSIVE: keyboard 'i' or the FULLSCREEN control — distinct from
 	// native window fullscreen, which is 'f'.

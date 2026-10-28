@@ -32,6 +32,7 @@
 #include "HudMissingDataController.h"
 #include "HudPresentationProfile.h"
 #include "HudProfileCompiler.h"
+#include "HudVitalsDraw.h"
 #include "HudRealFrameResolver.h" // production path — real HudFrameData (see below)
 #include "HudRegionCatalog.h"
 #include "HudSourceResolver.h"
@@ -243,6 +244,13 @@ public:
 	// resolution/formatting/policy decisions.
 	const FrameStats& lastFrameStats() const { return stats_; }
 
+	// System Telemetry v1 instrumentation/tests: geometry rebuild counters for
+	// a vitals binding (null if the binding has no vitals cache).
+	const HudVitalsDrawData* vitalsDrawFor(const std::string& bindingId) const {
+		auto it = vitalsDraw_.find(bindingId);
+		return it == vitalsDraw_.end() ? nullptr : &it->second;
+	}
+
 	// Validation Studio inspection surface (this task's §12).
 	const HudCompiledProfile& compiledProfile() const { return compiled_; }
 	const HudRegionCatalog& regionCatalog() const { return regions_; }
@@ -256,7 +264,8 @@ public:
 	static bool regionInOriginalMinimalSlice(const std::string& regionId);
 	// Which production allowlist part a binding region belongs to, for
 	// tooling (HudArtReferenceExporter): "original" (historical §13 slice),
-	// "living_hud", "clock", "navigation"; nullptr = FullProfile only.
+	// "living_hud", "clock", "navigation", "system_telemetry"; nullptr =
+	// FullProfile only.
 	// media_viewport is not a binding region (always drawn) -> nullptr.
 	static const char* productionProvenance(const std::string& regionId);
 
@@ -264,6 +273,11 @@ private:
 	void resolveBinding(const HudCompiledBinding& compiled, const FakeHudFrameData& frame);
 	void resolveBindingReal(const HudCompiledBinding& compiled, const HudFrameData& frame);
 	std::string primaryRoleFor(HudWidgetType type) const;
+	// Bindings that will attempt to draw per region this frame (scope/studio
+	// filtered) — the slot count draw() slices multi-binding regions by, and
+	// the same number update() sizes vitals traces with.
+	std::unordered_map<std::string, int> computeRegionSlotCounts() const;
+	void resolveVitalsTrace(const HudCompiledBinding& compiled, const HudFrameData& frame, HudWidgetInput& input);
 
 	HudRegionCatalog regions_;
 	HudPresentationProfileRegistry profiles_;
@@ -314,6 +328,10 @@ private:
 
 	std::unordered_map<std::string, HudResolvedValue> lastValid_; // key: bindingId + "\x1f" + role
 	std::unordered_map<std::string, HudWidgetInput> widgetInputs_; // key: bindingId
+	// System Telemetry v1: per-binding cached trace geometry (key: bindingId).
+	// unordered_map nodes are address-stable, so widgetInputs_ can point at them.
+	std::unordered_map<std::string, HudVitalsDrawData> vitalsDraw_;
+	std::unordered_map<std::string, int> slotCounts_; // computeRegionSlotCounts() as of the last update()
 
 	mutable FrameStats stats_;
 };

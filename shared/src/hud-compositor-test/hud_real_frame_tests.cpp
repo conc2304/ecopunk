@@ -18,6 +18,7 @@
 // dereferenced.
 
 #include <cassert>
+#include <memory>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -890,6 +891,70 @@ void test_real_v03_controls_and_playback_time() {
 	HUD_CHECK_EQ_STR(resolver.resolve("media.playback.time", frame)->textValue, "1:02:05 / --:--"); // zero duration is unknown
 }
 
+
+// ---------------------------------------------------------------------
+// System Telemetry v1 — runtime.vitals.* against HudFrameData::systemVitals.
+// ---------------------------------------------------------------------
+void test_real_system_vitals_sources() {
+	HudRealFrameResolver resolver;
+	HudFrameData frame = makeMinimalRealFrame();
+	frame.runtime.fps = 41.0f;
+	frame.runtime.frameTimeMs = 24.0f;
+
+	// All ten additive IDs are registered, typed, and resolve missing with no snapshot.
+	const char* names[] = {"fps", "frame_time_max", "cpu", "gpu_temp", "rss"};
+	for (const char* n : names) {
+		const std::string base = std::string("runtime.vitals.") + n;
+		HUD_CHECK(HudSourceResolver::isKnownCanonicalSource(base));
+		HUD_CHECK(HudSourceResolver::isKnownCanonicalSource(base + ".stale"));
+		HUD_CHECK(HudSourceResolver::staticValueTypeOf(base) == HudSourceValueType::Scalar);
+		HUD_CHECK(HudSourceResolver::staticValueTypeOf(base + ".stale") == HudSourceValueType::Boolean);
+		auto v = resolver.resolve(base, frame);
+		HUD_CHECK(v && !v->present);
+		auto st = resolver.resolve(base + ".stale", frame);
+		HUD_CHECK(st && !st->present);
+	}
+
+	auto snap = std::make_shared<sysvitals::SystemVitalsSnapshot>();
+	auto setValid = [](auto& s, float v) { s.state = sysvitals::State::Valid; s.hasLatest = true; s.latest = v; };
+	setValid(snap->fps, 29.5f);
+	setValid(snap->frameTimeMax, 61.0f);
+	setValid(snap->cpuBusy, 0.0f); // a genuine zero
+	snap->gpuTemp.state = sysvitals::State::Unavailable;
+	setValid(snap->processRss, 512.0f);
+	snap->processRss.state = sysvitals::State::Stale;
+	frame.systemVitals = snap;
+
+	auto fps = resolver.resolve("runtime.vitals.fps", frame);
+	HUD_CHECK(fps && fps->present && std::abs(fps->numberValue - 29.5f) < 1e-6);
+	auto ft = resolver.resolve("runtime.vitals.frame_time_max", frame);
+	HUD_CHECK(ft && ft->present && std::abs(ft->numberValue - 61.0f) < 1e-6);
+	auto cpu = resolver.resolve("runtime.vitals.cpu", frame);
+	HUD_CHECK(cpu && cpu->present && cpu->numberValue == 0.0f); // valid zero is PRESENT
+	auto cpuStale = resolver.resolve("runtime.vitals.cpu.stale", frame);
+	HUD_CHECK(cpuStale && cpuStale->present && cpuStale->boolValue == false);
+	auto gpu = resolver.resolve("runtime.vitals.gpu_temp", frame);
+	HUD_CHECK(gpu && !gpu->present); // unavailable is MISSING, not 0
+	auto gpuStale = resolver.resolve("runtime.vitals.gpu_temp.stale", frame);
+	HUD_CHECK(gpuStale && !gpuStale->present);
+	auto rss = resolver.resolve("runtime.vitals.rss", frame);
+	HUD_CHECK(rss && !rss->present); // stale is never shown as a live reading
+	auto rssStale = resolver.resolve("runtime.vitals.rss.stale", frame);
+	HUD_CHECK(rssStale && rssStale->present && rssStale->boolValue == true);
+
+	// Established scalar bindings are untouched by the snapshot.
+	auto legacyFps = resolver.resolve("runtime.fps", frame);
+	HUD_CHECK(legacyFps && legacyFps->present && std::abs(legacyFps->numberValue - 41.0f) < 1e-6);
+	auto legacyFt = resolver.resolve("runtime.frame_time", frame);
+	HUD_CHECK(legacyFt && legacyFt->present && std::abs(legacyFt->numberValue - 24.0f) < 1e-6);
+	auto legacyMem = resolver.resolve("runtime.memory", frame);
+	HUD_CHECK(legacyMem && !legacyMem->present);
+
+	// Copying HudFrameData shares (does not copy) the snapshot.
+	HudFrameData copy = frame;
+	HUD_CHECK(copy.systemVitals.get() == frame.systemVitals.get());
+}
+
 int main() {
 	test_real_v03_controls_and_playback_time();
 	test_real_scene_position();
@@ -919,6 +984,7 @@ int main() {
 	test_real_effects_intensity_always_absent();
 	test_real_manager_transition_fields();
 	test_real_exhaustive_canonical_coverage();
+	test_real_system_vitals_sources();
 
 	std::cout << (g_total - g_failures) << "/" << g_total << " checks passed.\n";
 	if (g_failures > 0) {

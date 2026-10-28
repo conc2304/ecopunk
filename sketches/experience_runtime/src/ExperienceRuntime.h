@@ -7,7 +7,9 @@
 #include "QuadrantProductionScene.h"
 #include "HudCompositorBridge.h"
 #include "HudFrameData.h"
+#include "ExperienceSettingsPage.h"
 #include "InstallationControl.h"
+#include "SystemClockService.h"
 #include "InputRouter.h"
 #include "PresentationTransform.h"
 #include "TypographyPlayground.h"
@@ -183,8 +185,13 @@ public:
 	installation::Result submitInstallationRequest(const installation::Request& r) { return installation_.submit(r); }
 	void enqueueInstallationRequest(const installation::Request& r) { installation_.enqueue(r); }
 	const installation::Controller& installationForTesting() const { return installation_; }
+	const settingspage::Page& settingsPageForTesting() const { return settingsPage_; }
 	// Settings file. Call before setup(); "" = no load/save (harness runs).
 	void setInstallationSettingsPath(std::string path) { installationSettingsPath_ = std::move(path); }
+	// Saved typography preset applies to normal runs only; harnesses keep the
+	// stock HUD fonts their pixel measurements are baselined on (the dev
+	// playground env still forces it on).
+	void setTypographyPresetEnabled(bool enabled) { typographyPresetEnabled_ = enabled; }
 	// Day/night HUD skin schedule (assets/hud/skins/skin-schedule.json):
 	// normal runs only — harnesses keep their explicit skin selection.
 	void setSkinScheduleEnabled(bool enabled) { skinScheduleEnabled_ = enabled; }
@@ -324,7 +331,13 @@ private:
 	bool exitImmersiveOnInput();
 	void drawImmersiveScene() const;
 	void loadInstallationSettings();
-	void saveInstallationSettings() const;
+	void saveInstallationSettings();
+	// -- Experience Settings page v0.1 -----------------------------------
+	void openSettingsPage();
+	void closeSettingsPage();
+	bool handleSettingsKey(int key); // true = consumed (every key is, while open)
+	void performSettingsAction(const settingspage::Action& action);
+	void refreshSettingsContext(bool rereadOsClock);
 	void tickInstallation(float dt);
 	InstallationStatus buildInstallationStatus() const;
 	std::vector<std::string> boundaryDrivenMediaScenes_;
@@ -408,6 +421,20 @@ private:
 	// settings, the scene auto-cycle schedule and ENERGY.
 	installation::Controller installation_;
 	std::string installationSettingsPath_;
+	bool typographyPresetEnabled_ = true;
+	// Experience Settings page: runtime-owned overlay (not a scene). The page
+	// model holds no settings; it reads installation_ and SystemClockService.
+	settingspage::Page settingsPage_;
+	systemclock::SystemClockService clockService_;
+	systemclock::Snapshot clockSnapshot_;
+	double clockSnapshotAt_ = 0.0;        // monotonic seconds of the last OS read
+	std::string saveStatus_;              // last settings-file outcome shown on the page
+	bool saveFailed_ = false;
+	std::string clockResult_;
+	bool clockResultFailed_ = false;
+	bool escapeQuitSuppressed_ = false;   // OF quits on ESC by itself; off while the page is open
+	double settingsClosedAt_ = -1.0;      // monotonic; guards the closing Enter against re-activating MENU
+	double lastOkInputAt_ = -1.0;         // monotonic; debounces OK auto-repeat
 	// Recent console activity for the HUD log (installed in setup()).
 	std::shared_ptr<HudLogCapture> logCapture_;
 

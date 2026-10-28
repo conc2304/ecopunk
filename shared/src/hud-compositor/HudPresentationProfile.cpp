@@ -131,21 +131,24 @@ ScenePresentationProfile buildUniversalProfile() {
 		p.bindings.push_back(b);
 	}
 
-	// -- Traces (deferred/secondary per §13; still defined here) --------
-	{
-		auto b = makeBinding("universal.activity_trace.spark", "universal.activity_trace",
-			HudWidgetType::Sparkline, HudMissingPolicy::Hide);
-		b.addSource({"value", "scene.activity.overall", true});
-		b.history = HudHistoryRequest{32, 8.0f};
+	// -- System Telemetry v1 traces: five system-vitals sparklines in the two
+	// trace regions (3 + 2), fed by HudFrameData::systemVitals (timestamped,
+	// runtime-global 60 s / 5 min histories) — NOT by HudHistoryStore, so no
+	// `history` request. These replace the earlier FullProfile-only
+	// scene.activity.overall / .motion trace bindings (never drawn in
+	// production). variantId "vitals" selects the history-fed layout.
+	auto addVital = [&](const char* bindingId, const char* regionId, const char* sourceId, const char* labelId) {
+		auto b = makeBinding(bindingId, regionId, HudWidgetType::Sparkline, HudMissingPolicy::Hide,
+			HudFormatKind::Automatic, std::string(labelId));
+		b.variantId = "vitals";
+		b.addSource({"value", sourceId, true});
 		p.bindings.push_back(b);
-	}
-	{
-		auto b = makeBinding("universal.secondary_trace.spark", "universal.secondary_trace",
-			HudWidgetType::Sparkline, HudMissingPolicy::Hide);
-		b.addSource({"value", "scene.activity.motion", true});
-		b.history = HudHistoryRequest{32, 8.0f};
-		p.bindings.push_back(b);
-	}
+	};
+	addVital("universal.vitals.fps", "universal.activity_trace", "runtime.vitals.fps", "slot.runtime.vitals.fps.label");
+	addVital("universal.vitals.frame_time", "universal.activity_trace", "runtime.vitals.frame_time_max", "slot.runtime.vitals.frame_time.label");
+	addVital("universal.vitals.cpu", "universal.activity_trace", "runtime.vitals.cpu", "slot.runtime.vitals.cpu.label");
+	addVital("universal.vitals.gpu_temp", "universal.secondary_trace", "runtime.vitals.gpu_temp", "slot.runtime.vitals.gpu_temp.label");
+	addVital("universal.vitals.rss", "universal.secondary_trace", "runtime.vitals.rss", "slot.runtime.vitals.rss.label");
 
 	// -- Controls (nonfunctional visual states only — see this task's
 	// frozen constraints; "enabled" governs dim/nonfunctional rendering,
@@ -180,6 +183,9 @@ ScenePresentationProfile buildUniversalProfile() {
 		b.variantId = "button";
 		p.bindings.push_back(b);
 	}
+	// Seventh control: MENU opens the Experience Settings page.
+	addControl("controls.menu.label", "controls.menu",
+		"control.runtime.menu.label", "control.runtime.menu.available");
 
 	return p;
 }
