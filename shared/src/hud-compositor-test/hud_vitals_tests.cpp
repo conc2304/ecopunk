@@ -8,8 +8,10 @@
 // SystemVitalsHudHarness.
 
 #include "../hud-compositor/HudVitalsTrace.h"
+#include "../hud-compositor/HudVitalsDial.h"
 #include "../hud-compositor/HudWireframeRenderer.h"
 #include "../hud-compositor/HudProfileCompiler.h"
+#include "../hud-compositor/HudRealFrameResolver.h"
 #include "../hud-compositor/HudPresentationProfile.h"
 #include "../hud-compositor/HudRegionCatalog.h"
 #include "../hud-compositor/HudVocabularyResolver.h"
@@ -248,20 +250,26 @@ void testProfileAndRegions() {
 	for (const char* scene : scenes) {
 		auto compiled = compiler.compile(scene, registry);
 		CHECK(!compiled.hasErrors(), std::string("no compile errors for ") + scene);
-		int vitals = 0, inActivity = 0, inSecondary = 0, flexiblePrimary = 0;
+		int vitals = 0, inPrimary = 0, orbitUpper = 0, orbitLower = 0, flexiblePrimary = 0, statusInSummary = 0;
 		for (const auto& b : compiled.bindings) {
 			if (b.binding.variantId == "vitals") {
 				vitals++;
 				CHECK(b.valid, "vitals binding valid: " + b.binding.bindingId);
 				CHECK(!b.binding.history.has_value(), "vitals binding does not use HudHistoryStore: " + b.binding.bindingId);
 				CHECK(b.resolvedLabelText.find("slot.") == std::string::npos && !b.resolvedLabelText.empty(), "label resolves via vocabulary: " + b.resolvedLabelText);
-				inActivity += b.binding.regionId == "universal.activity_trace";
-				inSecondary += b.binding.regionId == "universal.secondary_trace";
+				inPrimary += b.binding.regionId == "flexible.primary";
 			}
+			// Orbit Console v0.1 reallocation: Orbit owns #7/#8, vitals own flexible.primary (#15).
+			orbitUpper += b.binding.variantId == "orbit.upper" && b.binding.regionId == "universal.activity_trace" && b.valid;
+			orbitLower += b.binding.variantId == "orbit.lower" && b.binding.regionId == "universal.secondary_trace" && b.valid;
 			flexiblePrimary += b.binding.regionId == "flexible.primary" && b.valid;
+			// compact scene status + (optional) effect chips share universal.effect_summary
+			statusInSummary += b.binding.regionId == "universal.effect_summary" && b.valid;
 		}
-		CHECK(vitals == 5 && inActivity == 3 && inSecondary == 2, std::string("3 + 2 distribution in ") + scene);
-		CHECK(flexiblePrimary == 1, std::string("scene flexible.primary content intact in ") + scene);
+		CHECK(vitals == 5 && inPrimary == 5 && flexiblePrimary == 5, std::string("all five vitals in flexible.primary for ") + scene);
+		CHECK(orbitUpper == 1 && orbitLower == 1, std::string("one Orbit binding per trace region in ") + scene);
+		const bool twoLine = std::string(scene) == "blob-region-prototype" || std::string(scene) == "fragment-trail";
+		CHECK(statusInSummary == (twoLine ? 3 : 2), std::string("effect_summary hosts chips + scene status binding(s) in ") + scene);
 	}
 	// Canonical geometry and numbering untouched (1280x720).
 	const auto* r7 = catalog.find("universal.activity_trace");
@@ -271,6 +279,7 @@ void testProfileAndRegions() {
 	CHECK(catalog.all().size() == 21, "catalog is the 20 v2 regions + controls.menu");
 	CHECK(HudWireframeRenderer::regionInMinimalSlice("universal.activity_trace") && HudWireframeRenderer::regionInMinimalSlice("universal.secondary_trace"), "both trace regions are in the production set");
 	CHECK(std::string(HudWireframeRenderer::productionProvenance("universal.activity_trace")) == "system_telemetry", "provenance system_telemetry");
+	CHECK(HudWireframeRenderer::regionInMinimalSlice("flexible.primary") && HudWireframeRenderer::regionInMinimalSlice("universal.timing") && HudWireframeRenderer::regionInMinimalSlice("universal.effect_summary"), "#4-#6 and #15 remain in the production set");
 	// No overlap with the regions above/below them.
 	const auto* timing = catalog.find("universal.timing");
 	const auto* primary = catalog.find("flexible.primary");
@@ -302,9 +311,9 @@ void testRendererSnapshotIntegration() {
 	const auto* cpu = r.vitalsDrawFor("universal.vitals.cpu");
 	const auto* gpu = r.vitalsDrawFor("universal.vitals.gpu_temp");
 	const auto* rss = r.vitalsDrawFor("universal.vitals.rss");
-	CHECK(fps && near(fps->slotWidth, 409.6f) && near(fps->slotHeight, 24.0f), "activity_trace slot = 409.6 x 24 (3 slots of 72)");
-	CHECK(rss && near(rss->slotWidth, 409.6f) && near(rss->slotHeight, 36.0f), "secondary_trace slot = 409.6 x 36 (2 slots of 72)");
-	CHECK(fps && fps->plotW > 200.0f && fps->plotH >= 16.0f, "plot area legible (" + std::to_string(fps ? fps->plotW : 0) + " x " + std::to_string(fps ? fps->plotH : 0) + ")");
+	CHECK(fps && near(fps->slotWidth, 81.92f) && near(fps->slotHeight, 115.2f), "flexible.primary slot = 81.92 x 115.2 (5 dial columns of 409.6)");
+	CHECK(rss && near(rss->slotWidth, 81.92f) && near(rss->slotHeight, 115.2f), "all five vitals share the 81.92 px dial column");
+	CHECK(fps && fps->plotW > 60.0f && fps->plotH >= 90.0f, "plot area legible (" + std::to_string(fps ? fps->plotW : 0) + " x " + std::to_string(fps ? fps->plotH : 0) + ")");
 	CHECK(rss && rss->trace.state() == State::Valid && std::strcmp(rss->trace.valueText(), "200 MiB") == 0, std::string("rss value: ") + (rss ? rss->trace.valueText() : "?"));
 	CHECK(cpu && cpu->trace.state() == State::Valid && std::strcmp(cpu->trace.valueText(), "25 %") == 0, std::string("cpu value: ") + (cpu ? cpu->trace.valueText() : "?"));
 	CHECK(gpu && std::strcmp(gpu->trace.valueText(), "47.0 C") == 0, std::string("gpu value: ") + (gpu ? gpu->trace.valueText() : "?"));
@@ -342,7 +351,7 @@ void testRendererSnapshotIntegration() {
 	const uint64_t before = fps->trace.rebuildCount();
 	r.setCanvasSize(1600.0f, 900.0f);
 	r.update(1.0f / 60.0f, frameFor("blob-region-prototype", snap1));
-	CHECK(fps->trace.rebuildCount() == before + 1 && near(fps->slotWidth, 512.0f), "canvas change rebuilds once at the new slot size");
+	CHECK(fps->trace.rebuildCount() == before + 1 && near(fps->slotWidth, 102.4f), "canvas change rebuilds once at the new slot size");
 	r.setCanvasSize(1280.0f, 720.0f);
 	r.update(1.0f / 60.0f, frameFor("blob-region-prototype", snap1));
 
@@ -371,8 +380,276 @@ void testRendererSnapshotIntegration() {
 
 } // namespace
 
+
+// ---- Option B: visibility-aware universal.effect_summary allocation ----------
+
+SceneMetric numberMetric(const char* id, HudMetricValueType t, float v) {
+	SceneMetric m; m.metricId = id; m.valueType = t; m.value = v; return m;
+}
+SceneMetric idMetric(const char* id, const char* valueId) {
+	SceneMetric m; m.metricId = id; m.valueType = HudMetricValueType::Identifier; m.valueId = valueId; return m;
+}
+
+HudFrameData statusFrame(const std::string& scene, std::vector<SceneMetric> metrics, bool effectsSnapshot = false, SceneHealth health = SceneHealth::Ready) {
+	HudFrameData f = frameFor(scene, nullptr);
+	f.scene.health = health;
+	SceneSemanticData sem;
+	sem.state.primaryStateId = "scene.test.state";
+	sem.metrics = std::move(metrics);
+	f.scene.semantic = sem;
+	if (effectsSnapshot) f.effects = videoeffects::EffectActivityStatus{};
+	return f;
+}
+
+int slots(const std::string& scene, const HudFrameData& f, const char* region = "universal.effect_summary") {
+	HudWireframeRenderer r;
+	r.setup(1280.0f, 720.0f);
+	r.update(1.0f / 60.0f, f);
+	(void)scene;
+	return r.regionSlotCount(region);
+}
+
+void testStatusColumnVariants() {
+	HudRegionCatalog catalog; HudVocabularyResolver vocab; HudProfileCompiler compiler(catalog, vocab); HudPresentationProfileRegistry registry;
+	auto variantOf = [&](const char* scene, const char* id) -> std::string {
+		for (const auto& b : compiler.compile(scene, registry).bindings) if (b.binding.bindingId == id) return b.binding.variantId;
+		return "(absent)";
+	};
+	CHECK(variantOf("fragment-trail", "fragment.status.count") == "inline.col" && variantOf("fragment-trail", "fragment.status.preset") == "inline.col", "Fragment status lines share the aligned value column");
+	CHECK(variantOf("blob-region-prototype", "blob.status.regions") == "inline.col" && variantOf("blob-region-prototype", "blob.status.fragments") == "inline.col", "Blob status lines share the aligned value column");
+	CHECK(variantOf("quadrant-crosshair", "quadrant.status.channels") == "grid", "Quadrant keeps the 2x2 grid");
+}
+
+void testVisibilityAwareEffectSummary() {
+	using T = HudMetricValueType;
+	// Blob: chips hidden (no effects snapshot) -> two status lines share the region.
+	auto blob2 = statusFrame("blob-region-prototype", {numberMetric("scene.blob.metric.region_count", T::Count, 7), numberMetric("scene.blob.metric.fragment_count", T::Count, 12)});
+	CHECK(slots("blob", blob2) == 2, "Blob: region + fragments lines, hidden chips reserve nothing");
+	auto blob1 = statusFrame("blob-region-prototype", {numberMetric("scene.blob.metric.region_count", T::Count, 7)});
+	CHECK(slots("blob", blob1) == 1, "Blob: a missing fragment_count frees its slice (one line gets the full height)");
+	CHECK(slots("blob", statusFrame("blob-region-prototype", {})) == 0, "Blob: no metrics and no effects -> nothing reserved");
+	// Fragment: count + preset.
+	auto frag = statusFrame("fragment-trail", {numberMetric("scene.fragment.metric.fragment_count", T::Count, 17), idMetric("scene.fragment.metric.movement_preset", "scene.fragment.metric.movement_preset.hunt")});
+	CHECK(slots("frag", frag) == 2, "Fragment: count + preset lines");
+	CHECK(slots("frag", statusFrame("fragment-trail", {numberMetric("scene.fragment.metric.fragment_count", T::Count, 17)})) == 1, "Fragment: no preset -> one full-height line");
+	// Quadrant: one 2x2 grid binding when any channel exists.
+	auto quad = statusFrame("quadrant-crosshair", {idMetric("scene.quadrant.metric.channel_0_state", "scene.quadrant.state.online"), idMetric("scene.quadrant.metric.channel_1_state", "scene.quadrant.state.quiet"),
+		idMetric("scene.quadrant.metric.channel_2_state", "scene.quadrant.state.quiet"), idMetric("scene.quadrant.metric.channel_3_state", "scene.quadrant.state.standby")});
+	CHECK(slots("quad", quad) == 1, "Quadrant: the 2x2 grid owns the whole region");
+	// Blueprint: Placeholder keeps its slot when phase_progress is absent (explicit unavailable), and when present.
+	CHECK(slots("bp", statusFrame("blueprint_emergence", {})) == 1, "Blueprint: absent progress still occupies (placeholder, not hidden)");
+	CHECK(slots("bp", statusFrame("blueprint_emergence", {numberMetric("scene.blueprint.metric.phase_progress", T::Ratio, 0.62f)})) == 1, "Blueprint: present progress occupies one slot");
+	// Temporal: effect chips occupy the whole region only when a snapshot exists.
+	CHECK(slots("tf", statusFrame("temporal-fields", {}, true)) == 1, "Temporal: present-empty effects snapshot occupies (NONE ACTIVE)");
+	CHECK(slots("tf", statusFrame("temporal-fields", {}, false)) == 0, "Temporal: no snapshot -> chips hidden, no reservation");
+	// Loading dims but still renders: occupancy must hold.
+	auto loading = statusFrame("blob-region-prototype", {numberMetric("scene.blob.metric.region_count", T::Count, 7), numberMetric("scene.blob.metric.fragment_count", T::Count, 12)}, false, SceneHealth::Loading);
+	CHECK(slots("blob", loading) == 2, "Loading: dimmed values keep their slots");
+	// Untouched regions keep their allocation in every case.
+	for (const auto* f : {&blob2, &quad, &loading}) {
+		CHECK(slots("x", *f, "flexible.primary") == 5, "#15 still five vitals slots");
+		CHECK(slots("x", *f, "universal.activity_trace") == 1 && slots("x", *f, "universal.secondary_trace") == 1, "#7/#8 Orbit slots unchanged");
+		CHECK(slots("x", *f, "universal.timing") == 1, "#6 activity gauge slot unchanged");
+	}
+}
+
+// ---- Orbit Console: the ratified HudFrameData::sceneColor snapshot reaches the Orbit model ----
+
+std::shared_ptr<scenecolor::SceneColorSnapshot> colorSnap(uint64_t rev, uint64_t gen, scenecolor::State st, int n, float lin) {
+	auto s = std::make_shared<scenecolor::SceneColorSnapshot>();
+	s->revision = rev; s->generation = gen; s->sceneId = "blob-region-prototype"; s->state = st; s->count = uint32_t(n);
+	for (int i = 0; i < n; ++i) {
+		auto& x = s->history[size_t(i)];
+		x.t = 100.0 + 0.5 * i; x.r = lin; x.g = lin * 0.5f; x.b = 0.0f; x.luma = 0.2126f * x.r + 0.7152f * x.g; x.valid = true;
+	}
+	return s;
+}
+
+void testSceneColorSnapshotReachesOrbit() {
+	HudWireframeRenderer r;
+	r.setup(1280.0f, 720.0f);
+	// No snapshot: Unavailable, nothing invented.
+	auto f = frameFor("blob-region-prototype", nullptr);
+	r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().model.state() == OrbitState::Unavailable && !r.orbitDraw().model.hasLatest(), "null sceneColor -> Unavailable");
+
+	auto snap = colorSnap(1, 7, scenecolor::State::Valid, 10, 0.2158f); // linear 0.2158 == sRGB 0.5
+	f.sceneColor = snap;
+	r.update(1.0f / 60.0f, f);
+	const auto& m = r.orbitDraw().model;
+	CHECK(m.state() == OrbitState::Valid && m.hasLatest() && m.generation() == 7, "Valid snapshot -> Valid model, generation carried");
+	CHECK(near(m.latest().r, 0.5f, 0.003f), "linear 0.2158 is display-encoded to ~0.5 for the swatch/orbit");
+	CHECK(near(m.latest().luma, 0.2126f * 0.2158f + 0.7152f * 0.1079f, 1e-4f), "relative luminance stays LINEAR");
+	CHECK(m.history().count() > 0, "history reaches the shared strips");
+	// Same revision on later frames: no rebuild (cache keyed by snapshot revision).
+	const uint64_t rb = r.orbitDraw().polylineRebuilds;
+	for (int i = 0; i < 100; ++i) r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().polylineRebuilds == rb, "unchanged snapshot revision: geometry not rebuilt");
+	// Stale: same samples, new revision, state Stale -> model Stale, still shows the last values.
+	f.sceneColor = colorSnap(2, 7, scenecolor::State::Stale, 10, 0.2158f);
+	r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().model.state() == OrbitState::Stale && r.orbitDraw().model.hasLatest(), "Stale snapshot -> Stale model, readings retained");
+	// Scene change: new generation, empty history -> Unavailable, not carried over.
+	f.sceneColor = colorSnap(3, 8, scenecolor::State::Unavailable, 0, 0.0f);
+	r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().model.generation() == 8 && r.orbitDraw().model.state() == OrbitState::Unavailable && !r.orbitDraw().model.hasLatest(), "new generation: history cleared, no carry-over");
+	// Gap sample: published invalid -> a gap, never a zero.
+	auto gapSnap = colorSnap(4, 8, scenecolor::State::Valid, 4, 0.3f);
+	gapSnap->history[2].valid = false;
+	f.sceneColor = gapSnap;
+	r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().model.history().count() > 0 && r.orbitDraw().model.history().seg(2).kind != SegKind::Valid, "invalid sample stays a gap in the shared history");
+	// Resolver: runtime.scene_color is the newest valid luminance only while Valid.
+	HudRealFrameResolver res;
+	auto v = res.resolve("runtime.scene_color", f);
+	CHECK(v && v->present && near(v->numberValue, gapSnap->history[3].luma, 1e-5f), "runtime.scene_color resolves the newest valid luminance");
+	f.sceneColor = colorSnap(5, 8, scenecolor::State::Stale, 4, 0.3f);
+	auto vs = res.resolve("runtime.scene_color", f);
+	CHECK(vs && !vs->present, "Stale -> missing, never a live-looking reading");
+	f.sceneColor = nullptr;
+	auto vn = res.resolve("runtime.scene_color", f);
+	CHECK(vn && !vn->present, "no snapshot -> missing");
+}
+
+// OC-003B: HudFrameData::sceneColorRaw -> the Orbit RAW strip + runtime.scene_color.raw, independent of FX.
+void testRawVideoReachesOrbit() {
+	HudWireframeRenderer r;
+	r.setup(1280.0f, 720.0f);
+	auto f = frameFor("blob-region-prototype", nullptr);
+	r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().model.rawState() == OrbitState::Unavailable, "null sceneColorRaw -> RAW Unavailable (NO RAW VIDEO)");
+
+	// FX only: RAW stays unavailable and is never derived from FX.
+	f.sceneColor = colorSnap(1, 7, scenecolor::State::Valid, 10, 0.2158f);
+	r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().model.state() == OrbitState::Valid && r.orbitDraw().model.rawState() == OrbitState::Unavailable, "FX valid, RAW absent: RAW does not borrow FX");
+
+	// RAW published with its OWN generation/revision: both strips live, independent.
+	auto raw = colorSnap(1, 3, scenecolor::State::Valid, 8, 0.0508f); // linear 0.0508 ~ sRGB 0.25
+	raw->sceneId = "media.auto.1234";
+	f.sceneColorRaw = raw;
+	r.update(1.0f / 60.0f, f);
+	const auto& m = r.orbitDraw().model;
+	CHECK(m.state() == OrbitState::Valid && m.generation() == 7, "FX unchanged by RAW publication");
+	CHECK(m.rawState() == OrbitState::Valid && m.raw().generation == 3, "RAW Valid with its own generation");
+	CHECK(near(m.raw().latest.r, 0.25f, 0.01f) && !near(m.raw().latest.r, m.latest().r, 0.05f), "RAW colours come from the RAW snapshot, not FX");
+
+	// RAW resets (media change) while FX keeps its history.
+	const uint32_t fxCount = m.history().count();
+	f.sceneColorRaw = colorSnap(2, 4, scenecolor::State::Unavailable, 0, 0.0f);
+	r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().model.rawState() == OrbitState::Unavailable && r.orbitDraw().model.history().count() == fxCount && r.orbitDraw().model.generation() == 7,
+		"RAW generation reset leaves FX history and generation untouched");
+
+	// RAW Stale and a gap keep source-specific semantics.
+	f.sceneColorRaw = colorSnap(3, 4, scenecolor::State::Stale, 6, 0.0508f);
+	r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().model.rawState() == OrbitState::Stale && r.orbitDraw().model.state() == OrbitState::Valid, "RAW Stale while FX is Valid");
+	auto black = colorSnap(4, 4, scenecolor::State::Valid, 4, 0.0f); // valid black is a reading, not a gap
+	black->history[0].luma = 0.0f;
+	f.sceneColorRaw = black;
+	r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().model.rawState() == OrbitState::Valid, "valid black RAW is Valid");
+
+	// Unchanged RAW revision: no rebuild.
+	const uint64_t rb = r.orbitDraw().polylineRebuilds;
+	for (int i = 0; i < 100; ++i) r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().polylineRebuilds == rb, "unchanged RAW revision: geometry not rebuilt");
+
+	// Disabling RAW (null) goes back to Unavailable, FX untouched.
+	f.sceneColorRaw = nullptr;
+	r.update(1.0f / 60.0f, f);
+	CHECK(r.orbitDraw().model.rawState() == OrbitState::Unavailable && r.orbitDraw().model.state() == OrbitState::Valid, "RAW null -> Unavailable, FX untouched");
+
+	// Resolver: runtime.scene_color.raw follows RAW only, never FX.
+	HudRealFrameResolver res;
+	f.sceneColor = colorSnap(9, 7, scenecolor::State::Valid, 4, 0.3f);
+	f.sceneColorRaw = nullptr;
+	auto none = res.resolve("runtime.scene_color.raw", f);
+	CHECK(none && !none->present, "no RAW snapshot -> missing even though FX is Valid");
+	auto rawSnap = colorSnap(5, 4, scenecolor::State::Valid, 4, 0.1f);
+	f.sceneColorRaw = rawSnap;
+	auto v = res.resolve("runtime.scene_color.raw", f);
+	CHECK(v && v->present && near(v->numberValue, rawSnap->history[3].luma, 1e-5f), "runtime.scene_color.raw resolves the newest valid RAW luminance");
+	auto fxv = res.resolve("runtime.scene_color", f);
+	CHECK(fxv && fxv->present && near(fxv->numberValue, f.sceneColor->history[3].luma, 1e-5f), "runtime.scene_color still resolves FX");
+	f.sceneColorRaw = colorSnap(6, 4, scenecolor::State::Stale, 4, 0.1f);
+	auto vs = res.resolve("runtime.scene_color.raw", f);
+	CHECK(vs && !vs->present, "RAW Stale -> missing, never a live-looking reading");
+}
+
+// System Performance arc dials: fill (normalised value) and health are separate;
+// direction is per metric (no universal greater-is-better rule).
+static void testDialRules() {
+	using sysvitals::Metric;
+	const auto& fps = vitalsDialSpec(Metric::Fps);
+	const auto& ft = vitalsDialSpec(Metric::FrameTimeMs);
+	const auto& cpu = vitalsDialSpec(Metric::CpuPercent);
+	const auto& gpu = vitalsDialSpec(Metric::GpuTempC);
+	const auto& rss = vitalsDialSpec(Metric::RssMiB);
+	CHECK(near(vitalsDialFraction(fps, 30.0f), 0.5f) && vitalsDialFraction(fps, 200.0f) == 1.0f && vitalsDialFraction(fps, -5.0f) == 0.0f, "fps fill clamps to 0..1");
+	CHECK(near(vitalsDialFraction(gpu, 60.0f), 0.5f), "gpu temp fill uses its 30..90 range");
+	CHECK(vitalsDialHealth(fps, 60.0f) == VitalsHealth::Good && vitalsDialHealth(fps, 24.0f) == VitalsHealth::Ok && vitalsDialHealth(fps, 10.0f) == VitalsHealth::Bad, "high fps is healthy");
+	CHECK(vitalsDialHealth(ft, 16.0f) == VitalsHealth::Good && vitalsDialHealth(ft, 40.0f) == VitalsHealth::Ok && vitalsDialHealth(ft, 60.0f) == VitalsHealth::Bad, "high frame time is unhealthy");
+	CHECK(vitalsDialHealth(cpu, 30.0f) == VitalsHealth::Good && vitalsDialHealth(cpu, 95.0f) == VitalsHealth::Bad, "cpu: low good, high bad");
+	CHECK(vitalsDialHealth(gpu, 50.0f) == VitalsHealth::Good && vitalsDialHealth(gpu, 85.0f) == VitalsHealth::Bad, "gpu temp: hot is bad");
+	CHECK(vitalsDialHealth(rss, 300.0f) == VitalsHealth::Good && vitalsDialHealth(rss, 900.0f) == VitalsHealth::Bad, "rss: large is bad");
+	// Same fill, opposite health: 50% of range for fps (30) is OK-good, for cpu (50) is good; 90% fill differs by direction.
+	CHECK(vitalsDialFraction(fps, 54.0f) > 0.85f && vitalsDialHealth(fps, 54.0f) == VitalsHealth::Good, "90% fps fill is GOOD");
+	CHECK(vitalsDialFraction(cpu, 90.0f) > 0.85f && vitalsDialHealth(cpu, 91.0f) == VitalsHealth::Bad, "90% cpu fill is BAD");
+}
+
+// OC-004: the region #6 segmented gauge consumes scene.visual.activity through the real renderer path:
+// disabled -> unavailable (never scene.activity.overall), valid zero shows 0, smoothing, stale/transition
+// -> unavailable, generation change resets.
+void testVisualActivityGauge() {
+	HudWireframeRenderer r;
+	r.setup(1280.0f, 720.0f);
+	auto mk = [](scenevisual::State st, float level, uint64_t gen) {
+		auto s = std::make_shared<scenevisual::SceneVisualActivitySnapshot>();
+		s->state = st; s->level = level; s->generation = gen;
+		return std::shared_ptr<const scenevisual::SceneVisualActivitySnapshot>(s);
+	};
+	auto gauge = [&](std::shared_ptr<const scenevisual::SceneVisualActivitySnapshot> snap, float dt = 1.0f / 30.0f) {
+		auto f = frameFor("blob-region-prototype", nullptr);
+		SceneSemanticData sem; sem.activity.overall = 0.77f; // must never leak into the gauge
+		f.scene.semantic = sem;
+		f.sceneVisualActivity = snap;
+		r.update(dt, f);
+		const auto* in = r.widgetInputFor("universal.activity.bar");
+		return in ? in->findRole("value") : nullptr;
+	};
+	auto isAmbientPlaceholder = [](const hudpresent::HudWidgetRoleValue* v) {
+		return v && v->shouldRender && !v->useAmbientFallback && v->value.dataClass == HudDataClass::Ambient;
+	};
+	auto isReal = [](const hudpresent::HudWidgetRoleValue* v, float expect) {
+		return v && v->shouldRender && !v->useAmbientFallback && v->value.dataClass != HudDataClass::Ambient
+			&& std::fabs(v->value.numberValue - expect) < 1e-4f;
+	};
+	// sampling disabled (null) -> honest unavailable, not 0.77
+	CHECK(isAmbientPlaceholder(gauge(nullptr)), "disabled sampling renders the unavailable placeholder, not scene.activity.overall");
+	// valid level
+	CHECK(isReal(gauge(mk(scenevisual::State::Valid, 0.6f, 1)), 0.6f), "valid level drives the gauge (first observation seeds)");
+	// valid zero is zero (smoothed down from 0.6 over time, then exactly decays to ~0 but remains a REAL value)
+	for (int i = 0; i < 400; ++i) gauge(mk(scenevisual::State::Valid, 0.0f, 1));
+	const auto* z = gauge(mk(scenevisual::State::Valid, 0.0f, 1));
+	CHECK(z && z->shouldRender && z->value.dataClass != HudDataClass::Ambient && z->value.numberValue < 0.001f, "valid zero displays as real zero, not unavailable");
+	// attack is fast, decay is slow
+	CHECK(gauge(mk(scenevisual::State::Valid, 1.0f, 1)) && r.widgetInputFor("universal.activity.bar")->findRole("value")->value.numberValue > 0.3f, "fast attack (~34% of the gap in one 33 ms frame)");
+	// stale / transition / unavailable -> placeholder (no retained lit value)
+	for (auto st : {scenevisual::State::Stale, scenevisual::State::Transition, scenevisual::State::Unavailable}) {
+		gauge(mk(scenevisual::State::Valid, 0.9f, 1));
+		CHECK(isAmbientPlaceholder(gauge(mk(st, 0.9f, 1))), "non-valid state renders unavailable");
+	}
+	// generation change: no ramp from the previous scene's value
+	gauge(mk(scenevisual::State::Valid, 1.0f, 1));
+	CHECK(isReal(gauge(mk(scenevisual::State::Valid, 0.1f, 2)), 0.1f), "generation change resets smoothing");
+}
+
 int main() {
 	testSpecs();
+	testDialRules();
+	testRawVideoReachesOrbit();
 	testTimestampPlacement();
 	testGapsAndBreaks();
 	testStatesAndZeros();
@@ -380,6 +657,10 @@ int main() {
 	testCacheInvalidation();
 	testProfileAndRegions();
 	testRendererSnapshotIntegration();
+	testVisibilityAwareEffectSummary();
+	testStatusColumnVariants();
+	testSceneColorSnapshotReachesOrbit();
+	testVisualActivityGauge();
 	std::cout << (g_total - g_failures) << "/" << g_total << " checks passed\n";
 	return g_failures ? 1 : 0;
 }

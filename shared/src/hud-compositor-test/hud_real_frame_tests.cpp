@@ -25,6 +25,7 @@
 
 #include "../hud-compositor/HudRealFrameResolver.h"
 #include "../hud-compositor/HudSourceResolver.h" // for the static canonical-ID table
+#include "../hud-compositor/HudVisualActivityBallistics.h"
 
 using namespace hudpresent;
 
@@ -140,6 +141,34 @@ void test_real_metric_lookup() {
 
 	auto unknown = resolver.resolve("scene.activity.bogus_signal", frame);
 	HUD_CHECK(!unknown.has_value()); // not canonical, not metric-shaped -> genuinely unknown
+}
+
+void test_real_media_file_label() {
+	HudRealFrameResolver resolver;
+	HudFrameData frame = makeMinimalRealFrame();
+	VideoPlaybackStatus video;
+	video.titleId = "media.sample_01";
+	video.fallbackDisplayTitle = "Lightning Storm";
+	video.displayFileName = "Lightning Storm.mp4";
+	video.sampleIndex = 4;
+	video.sampleCount = 12;
+	frame.video = video;
+	auto label = resolver.resolve("media.file_label", frame);
+	HUD_CHECK(label && label->present && label->valueType == HudSourceValueType::Text);
+	HUD_CHECK_EQ_STR(label->textValue, "Lightning_Storm.mp4");
+	HUD_CHECK_EQ_STR(mediaSampleLabel(*frame.video), "[Sample 04/12]");
+	auto sample = resolver.resolve("media.sample_label", frame);
+	HUD_CHECK(sample && sample->present && sample->textValue == "[Sample 04/12]");
+
+	video.sampleIndex = 12;
+	video.sampleCount = 100;
+	HUD_CHECK_EQ_STR(mediaSampleLabel(video), "[Sample 12/100]");
+
+	// No file identity -> falls back to the title (identifier tier here).
+	frame.video->displayFileName.reset();
+	label = resolver.resolve("media.file_label", frame);
+	HUD_CHECK(label && label->present);
+	HUD_CHECK_EQ_STR(label->textValue, "media.sample_01");
 }
 
 void test_real_media_title_fallback_chain() {
@@ -779,12 +808,12 @@ void test_real_scene_position() {
 	frame.sceneManager.availableSceneCount = 5;
 	HUD_CHECK(resolver.resolve("scene.index", frame)->numberValue == 2.0f); // one-based
 	HUD_CHECK(resolver.resolve("scene.count", frame)->numberValue == 5.0f);
-	HUD_CHECK_EQ_STR(resolver.resolve("scene.position", frame)->textValue, "[Scene 2/5]");
+	HUD_CHECK_EQ_STR(resolver.resolve("scene.position", frame)->textValue, "[EXP 2/5]");
 
 	// Reduced harness rosters report their own real size.
 	frame.sceneManager.activeSceneIndex = 2;
 	frame.sceneManager.availableSceneCount = 3;
-	HUD_CHECK_EQ_STR(resolver.resolve("scene.position", frame)->textValue, "[Scene 3/3]");
+	HUD_CHECK_EQ_STR(resolver.resolve("scene.position", frame)->textValue, "[EXP 3/3]");
 
 	// An index outside the registry is never displayed.
 	frame.sceneManager.activeSceneIndex = 5;
@@ -955,6 +984,76 @@ void test_real_system_vitals_sources() {
 	HUD_CHECK(copy.systemVitals.get() == frame.systemVitals.get());
 }
 
+// OC-004: scene.visual.activity resolution + HUD-owned ballistics.
+scenevisual::SceneVisualActivitySnapshot makeVisualSnap(scenevisual::State st, float level, uint64_t gen) {
+	scenevisual::SceneVisualActivitySnapshot s;
+	s.state = st; s.level = level; s.generation = gen;
+	return s;
+}
+
+void test_real_visual_activity_resolution() {
+	HudRealFrameResolver resolver;
+	HudFrameData frame = makeMinimalRealFrame();
+	// Optional publication: null snapshot (sampling disabled) -> MISSING, even with a populated scene.activity.overall.
+	SceneSemanticData semantic;
+	semantic.activity.overall = 0.9f;
+	frame.scene.semantic = semantic;
+	auto none = resolver.resolve("scene.visual.activity", frame);
+	HUD_CHECK(none.has_value() && !none->present);
+	// Existing scene activity is unchanged by (and independent of) the new source.
+	auto overall = resolver.resolve("scene.activity.overall", frame);
+	HUD_CHECK(overall && overall->present && std::abs(overall->numberValue - 0.9f) < 1e-6);
+	// Valid level is present; valid ZERO is present (not missing).
+	frame.sceneVisualActivity = std::make_shared<scenevisual::SceneVisualActivitySnapshot>(makeVisualSnap(scenevisual::State::Valid, 0.42f, 1));
+	auto v = resolver.resolve("scene.visual.activity", frame);
+	HUD_CHECK(v && v->present && std::abs(v->numberValue - 0.42f) < 1e-6);
+	frame.sceneVisualActivity = std::make_shared<scenevisual::SceneVisualActivitySnapshot>(makeVisualSnap(scenevisual::State::Valid, 0.0f, 1));
+	auto z = resolver.resolve("scene.visual.activity", frame);
+	HUD_CHECK(z && z->present && z->numberValue == 0.0f);
+	// Unavailable / Stale / Transition are MISSING (never 0, never scene.activity.overall) even if level is populated.
+	for (auto st : {scenevisual::State::Unavailable, scenevisual::State::Stale, scenevisual::State::Transition}) {
+		frame.sceneVisualActivity = std::make_shared<scenevisual::SceneVisualActivitySnapshot>(makeVisualSnap(st, 0.7f, 1));
+		auto m = resolver.resolve("scene.visual.activity", frame);
+		HUD_CHECK(m && !m->present);
+	}
+}
+
+void test_visual_activity_ballistics() {
+	using scenevisual::State;
+	HudVisualActivityBallistics b;
+	auto snap = [](State st, float lv, uint64_t g) { return makeVisualSnap(st, lv, g); };
+	// no snapshot / invalid: nothing shown
+	b.update(nullptr, 0.033);
+	HUD_CHECK(!b.has());
+	auto s1 = snap(State::Valid, 0.8f, 1);
+	b.update(&s1, 0.033);
+	HUD_CHECK(b.has() && std::abs(b.value() - 0.8f) < 1e-6); // first observation seeds directly
+	// fast attack: one 33 ms step toward 1.0 closes most of the gap; slow decay: toward 0.0 barely moves
+	auto s2 = snap(State::Valid, 1.0f, 1);
+	b.update(&s2, 0.033);
+	HUD_CHECK(b.value() > 0.8f + 0.2f * 0.3f);
+	HudVisualActivityBallistics d;
+	auto hi = snap(State::Valid, 1.0f, 1); d.update(&hi, 0.033);
+	auto lo = snap(State::Valid, 0.0f, 1); d.update(&lo, 0.033);
+	HUD_CHECK(d.has() && d.value() > 0.9f && d.value() < 1.0f);
+	for (int i = 0; i < 300; ++i) d.update(&lo, 0.033);
+	HUD_CHECK(d.has() && d.value() < 0.001f); // valid zero decays to zero, still "has" (displays 0)
+	// generation change resets: the new scene seeds directly, no ramp from the old value
+	auto g1 = snap(State::Valid, 1.0f, 1); HudVisualActivityBallistics e; e.update(&g1, 0.033);
+	auto g2 = snap(State::Valid, 0.1f, 2); e.update(&g2, 0.033);
+	HUD_CHECK(std::abs(e.value() - 0.1f) < 1e-6);
+	// stale / transition / unavailable / null each reset
+	for (auto st : {State::Stale, State::Transition, State::Unavailable}) {
+		HudVisualActivityBallistics f; auto v = snap(State::Valid, 0.9f, 1); f.update(&v, 0.033);
+		auto bad = snap(st, 0.9f, 1); f.update(&bad, 0.033);
+		HUD_CHECK(!f.has());
+		f.update(&v, 0.033);
+		HUD_CHECK(std::abs(f.value() - 0.9f) < 1e-6); // re-seeds, no smoothing across the gap
+	}
+	HudVisualActivityBallistics h; auto v3 = snap(State::Valid, 0.9f, 1); h.update(&v3, 0.033); h.update(nullptr, 0.033);
+	HUD_CHECK(!h.has());
+}
+
 int main() {
 	test_real_v03_controls_and_playback_time();
 	test_real_scene_position();
@@ -966,7 +1065,10 @@ int main() {
 	test_real_clock_label_cache_through_resolver();
 	test_real_identity_and_health();
 	test_real_semantic_present_vs_absent();
+	test_real_visual_activity_resolution();
+	test_visual_activity_ballistics();
 	test_real_metric_lookup();
+	test_real_media_file_label();
 	test_real_media_title_fallback_chain();
 	test_real_media_title_skips_unresolvable_title_id();
 	test_real_media_selection_manual_derivation();

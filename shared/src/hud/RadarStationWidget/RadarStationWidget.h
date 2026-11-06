@@ -11,6 +11,11 @@ struct RadarStationOptions {
 	// v0.3 (additive): faint inner range rings + cross axes. Off by default
 	// so existing consumers draw exactly as before.
 	bool  rangeRings      = false;
+	// Opt-in wedge colour override (default: theme accent @ 0.32). Alpha is
+	// still scaled by the widget's motion opacity.
+	bool    wedgeOverride = false;
+	ofColor wedgeColor    = ofColor(255);
+	float   wedgeAlpha    = 0.32f;
 };
 
 // One tracked contact, supplied by the consumer from real state (never

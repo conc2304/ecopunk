@@ -55,6 +55,16 @@ struct HudWidgetColors {
 	// When the skin supplies its own button faces the renderer substitutes
 	// primary / shadow so labels follow the palette.
 	ofColor buttonShadow = ofColor(0, 0, 0, 140);
+	// System state, NOT theme: true while the system is in its DAY period (the day/night
+	// schedule's clock), false at night. The clock widget shows the sun icon by day and the
+	// moon at night whatever theme or skin is selected. The renderer owns it (setDayPeriod),
+	// so replacing the colours never changes it.
+	bool daytime = true;
+	// Navigation-button labels: 0 = text, 1 = icon only, 2 = icon above text. Renderer-owned
+	// (setButtonLabelMode), like `daytime`, so replacing the colours never changes it.
+	int buttonLabelMode = 0;
+	// Nav-button icon opacity (idle 0.8, focused 0.9, active 1.0), set per button by the renderer.
+	float iconOpacity = 0.8f;
 };
 
 // Day/night text palettes, chosen by the runtime's skin schedule

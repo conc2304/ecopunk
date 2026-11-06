@@ -2,6 +2,10 @@
 
 #include "HudWidgetBase.h"
 #include "HudTextMetricsCache.h"
+#include "ofPath.h"
+
+#include <map>
+#include <string>
 
 namespace hudpresent {
 
@@ -31,6 +35,8 @@ private:
 	// RESOLVED DATA — see HudWidgetBase.h — but a measurement cache is a
 	// pure memoization detail, not resolved-data state).
 	mutable HudTextMetricsCache textCache_;
+	// Navigation-button icon paths, built once per control region id (HudIconDraw.h).
+	mutable std::map<std::string, ofPath> iconPaths_;
 };
 
 } // namespace hudpresent

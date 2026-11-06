@@ -1,6 +1,7 @@
 #include "LabelWidget.h"
 
 #include "HudWidgetDrawUtils.h"
+#include "HudIconDraw.h"
 
 #include <cmath>
 #include <vector>
@@ -10,9 +11,20 @@ namespace hudpresent {
 
 namespace {
 constexpr float kBitmapLineHeightLog = 13.0f; // native bitmap line, activity-log variant
+
+// Faux bold: two passes 1 px apart. Their alphas compound where they overlap, which would make the
+// text brighter than other primary text, so each pass uses a' = 1 - sqrt(1 - a): the overlap lands
+// on the colour's own alpha (the mode name and the media file name share this exactly).
+void drawBoldText(const std::string& text, float x, float y, ofColor color) {
+	color.a = static_cast<unsigned char>(255.0f * (1.0f - std::sqrt(1.0f - color.a / 255.0f)) + 0.5f);
+	ofSetColor(color);
+	drawText(text, x, y);
+	drawText(text, x + 1.0f, y);
+}
 }
 
-void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const {
+void LabelWidget::draw(const ofRectangle& boundsIn, const HudWidgetColors& colors, const HudWidgetInput& input) const {
+	ofRectangle bounds = boundsIn; // icon + text mode lowers the text area below
 	// Engineering Session 2: the three-state control distinction
 	// (unsupported / supported-but-disabled / supported-and-enabled) is
 	// resolved upstream (HudRealFrameResolver.cpp's control.* handling)
@@ -57,6 +69,7 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 		const bool twoLines = bounds.height >= kBitmapTwoLineMinHeight;
 		// Title 3 px lower than the caption line (and centred, below).
 		const float titleBaseline = (twoLines ? captionBaselineY(bounds, wu(bounds, 12.0f)) : bounds.y + bounds.height * 0.65f) + 3.0f;
+		const float titleDrawBaseline = titleBaseline + 6.0f; // file title sits 6 px lower; the bar and sample keep titleBaseline
 		const float barBaseline = twoLines ? bottomBaselineY(bounds, wu(bounds, 6.0f)) : titleBaseline;
 		const float barMidY = barBaseline - kBitmapCapHeight * 0.5f;
 
@@ -65,22 +78,35 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 		const auto* suffixRole = input.findRole("suffix");
 		if (suffixRole && suffixRole->shouldRender && !suffixRole->formattedText.empty()) {
 			const auto& t = textCache_.truncateToWidth(suffixRole->formattedText, bounds.width * 0.5f);
-			const float x = right - t.widthLocal;
+			const float x = right - hudTextWidth(t.text, t.widthLocal);
 			ofSetColor(scaledAlpha(colors.caption, opacity));
 			drawText(t.text, x, barBaseline);
 			barRight = x - 12.0f;
 		}
 
+		// "[Sample XX/YY]": upper right, above the clip time (two-line layout only),
+		// 3 px smaller than the native 13 px line and 1 px lower than the title row.
+		constexpr float kSampleScale = 10.0f / 13.0f;
+		float sampleReserve = 0.0f;
+		if (const auto* sampleRole = input.findRole("sample")) {
+			if (twoLines && sampleRole->shouldRender && !sampleRole->formattedText.empty()) {
+				const auto& t = textCache_.truncateToWidth(sampleRole->formattedText, (right - left) * 0.4f / kSampleScale);
+				ofSetColor(scaledAlpha(colors.caption, opacity));
+				const float sampleW = hudTextWidth(t.text, t.widthLocal, kSampleScale);
+				drawTextScaled(t.text, right - sampleW, titleBaseline + 1.0f, kSampleScale);
+				sampleReserve = sampleW + 12.0f;
+			}
+		}
+
 		const bool hasTitle = textRole && textRole->shouldRender && !textRole->formattedText.empty();
 		if (hasTitle) {
 			// One line: the title gets at most ~45% of the line, the bar the rest.
-			const float budget = twoLines ? (right - left) : std::max(0.0f, std::min((right - left) * 0.45f, barRight - left - 12.0f));
+			const float budget = twoLines ? std::max(0.0f, right - left - sampleReserve) : std::max(0.0f, std::min((right - left) * 0.45f, barRight - left - 12.0f));
 			const auto& title = textCache_.truncateToWidth(textRole->formattedText, budget);
-			ofSetColor(scaledAlpha(colors.primary, opacity));
-			// Two lines: the media title is centred in its container.
-			const float titleX = twoLines ? std::max(left, bounds.getCenter().x - hudTextWidth(title.text, title.widthLocal) * 0.5f) : left;
-			drawText(title.text, titleX, titleBaseline);
-			if (!twoLines) barLeft = left + title.widthLocal + 12.0f;
+			// The media file label is left-aligned and bold, like the mode name above it.
+			const float titleX = left;
+			drawBoldText(title.text, titleX, titleDrawBaseline, scaledAlpha(colors.primary, opacity));
+			if (!twoLines) barLeft = left + hudTextWidth(title.text, title.widthLocal) + 12.0f;
 		}
 
 		if (progressRole->shouldRender && !progressRole->useAmbientFallback && progressRole->value.present
@@ -91,8 +117,20 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 			ofSetColor(scaledAlpha(colors.muted, opacity));
 			ofDrawRectangle(track);
 			ofFill();
-			ofSetColor(scaledAlpha(colors.accent, opacity));
+			ofSetColor(scaledAlpha(colors.primary, opacity));
 			ofDrawRectangle(track.x, track.y, track.width * ratio, track.height);
+		}
+
+		// Automatic mode: minimal bar spanning the bottom of the widget, filling
+		// toward the next scene/sample. The hold source is absent in manual mode.
+		const auto* holdRole = input.findRole("hold");
+		if (holdRole && holdRole->shouldRender && !holdRole->useAmbientFallback && holdRole->value.present) {
+			const float ratio = std::clamp(holdRole->value.numberValue, 0.0f, 1.0f);
+			constexpr float kHoldBarHeight = 2.0f;
+			ofSetColor(scaledAlpha(colors.muted, opacity * 0.5f));
+			ofDrawRectangle(bounds.x, bounds.getBottom() - kHoldBarHeight, bounds.width, kHoldBarHeight);
+			ofSetColor(scaledAlpha(colors.primary, opacity));
+			ofDrawRectangle(bounds.x, bounds.getBottom() - kHoldBarHeight, bounds.width * ratio, kHoldBarHeight);
 		}
 		ofPopStyle();
 		return;
@@ -124,25 +162,28 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 		return;
 	}
 
-	// "modeline" variant (universal.media_title): the scene mode on ONE line,
-	// "Mode: <name>   x/y" — caption + name in primary, the position in the
-	// caption colour after a three-glyph gap. Drawn through drawText so the
-	// dev typography playground restyles it like any other info text.
+	// "modeline" variant (universal.media_title): laid out like the scene title
+	// row — "<Mode name>" left-aligned in primary, "[Mode x/y]" right-aligned in
+	// the caption colour. Drawn through drawText so the dev typography playground
+	// restyles it like any other info text.
 	if (input.variantId == "modeline") {
 		const float padM = containerPad(bounds);
 		const float availM = std::max(0.0f, bounds.width - padM * 2.0f);
-		const std::string line = input.captionText.empty() ? text : input.captionText + " " + text;
 		const auto* posRole = input.findRole("suffix");
 		const bool hasPos = posRole && posRole->shouldRender && !posRole->formattedText.empty();
+		std::string word = input.captionText; // "Mode:" -> "Mode"
+		while (!word.empty() && word.back() == ':') word.pop_back();
+		const std::string posText = hasPos ? "[" + word + (word.empty() ? "" : " ") + posRole->formattedText + "]" : std::string();
 		const float gap = HudTextMetricsCache::kGlyphWidthLocal * 3.0f;
-		const float posW = hasPos ? hudTextWidth(posRole->formattedText, textCache_.truncateToWidth(posRole->formattedText, availM).widthLocal) : 0.0f;
-		const auto& lineT = textCache_.truncateToWidth(line, std::max(0.0f, availM - posW - (hasPos ? gap : 0.0f)));
-		const float baselineM = bounds.getCenter().y + kBitmapCapHeight * 0.5f;
-		ofSetColor(scaledAlpha(colors.primary, opacity));
-		drawText(lineT.text, bounds.x + padM, baselineM);
+		const float posW = hasPos ? hudTextWidth(posText, textCache_.truncateToWidth(posText, availM).widthLocal) : 0.0f;
+		const auto& nameT = textCache_.truncateToWidth(text, std::max(0.0f, availM - posW - (hasPos ? gap : 0.0f)));
+		// Centre the glyph box, but never let a larger restyled font rise above the region top.
+		const float lineH = hudLineHeight(13.0f);
+		const float baselineM = std::max(bounds.getCenter().y + kBitmapCapHeight * 0.5f, bounds.y + padM + lineH * 0.85f) + 6.0f; // lower in its panel, clear of the panel art's bottom edge
+		drawBoldText(nameT.text, bounds.x + padM, baselineM, scaledAlpha(colors.primary, opacity));
 		if (hasPos) {
 			ofSetColor(scaledAlpha(colors.caption, opacity));
-			drawText(posRole->formattedText, bounds.x + padM + hudTextWidth(lineT.text, lineT.widthLocal) + gap, baselineM);
+			drawText(posText, bounds.getRight() - padM - posW, baselineM);
 		}
 		ofPopStyle();
 		return;
@@ -181,12 +222,42 @@ void LabelWidget::draw(const ofRectangle& bounds, const HudWidgetColors& colors,
 		return;
 	}
 
+	// Navigation-button icons (Settings "Button labels"): icon only, or the icon above the
+	// text. A button without an icon keeps its text label whatever the mode.
+	if (input.variantId == "button" && colors.buttonLabelMode != 0) {
+		bool mirrored = false;
+		if (const char* d = hudicon::buttonIconPath(input.regionId, mirrored)) {
+			auto it = iconPaths_.find(input.regionId);
+			if (it == iconPaths_.end()) {
+				std::vector<hudicon::Contour> contours;
+				ofPath path;
+				if (hudicon::parse(d, contours)) {
+					if (mirrored) hudicon::mirrorX(contours);
+					buildIconPath(path, contours);
+				}
+				it = iconPaths_.emplace(input.regionId, std::move(path)).first;
+			}
+			const bool both = colors.buttonLabelMode == 2;
+			const float size = both ? 22.0f : 34.0f;
+			const float cy = both ? bounds.y + 8.0f + size * 0.5f : bounds.getCenter().y;
+			const ofRectangle box(bounds.getCenter().x - size * 0.5f, cy - size * 0.5f, size, size);
+			ofRectangle shadowBox = box;
+			shadowBox.x += 1.0f;
+			shadowBox.y += 1.0f;
+			drawIconPath(it->second, shadowBox, scaledAlpha(colors.buttonShadow, opacity * colors.iconOpacity));
+			drawIconPath(it->second, box, scaledAlpha(colors.buttonText, opacity * colors.iconOpacity));
+			if (!both) { ofPopStyle(); return; }
+			bounds.y += 18.0f; // the text block sits in the lower part of the face
+			bounds.height -= 18.0f;
+		}
+	}
+
 	// Development-only Live Typography Playground: offered first, declines
 	// for anything it doesn't target (null in production -> no change).
 	float pad = containerPad(bounds);
-	// Scene title's "[Scene X/Y]" suffix: small, no glow, right-aligned in
+	// Scene title's "[EXP X/Y]" suffix: small, no glow, right-aligned in
 	// the container (drawn by both the playground and the native paths).
-	constexpr float kSuffixScale = 1.05f; // [Scene X/Y]: +~4 px over the previous 0.75x (13 px glyph: 9.75 -> 13.7 px)
+	constexpr float kSuffixScale = 1.05f; // [EXP X/Y]: +~4 px over the previous 0.75x (13 px glyph: 9.75 -> 13.7 px)
 	const auto* titleSuffix = input.variantId == "title" ? input.findRole("suffix") : nullptr;
 	auto drawTitleSuffix = [&]() {
 		if (!titleSuffix || !titleSuffix->shouldRender || titleSuffix->formattedText.empty()) return;

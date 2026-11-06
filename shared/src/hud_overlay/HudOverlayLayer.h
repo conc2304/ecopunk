@@ -67,6 +67,8 @@ public:
 	// Radar contacts/heading from the consumer's real tracking state; see
 	// hud::RadarContact. Also enables the radar's range rings.
 	void setRadarContacts(std::vector<hud::RadarContact> contacts) { radarStation.setContacts(std::move(contacts)); radarRangeRings = true; }
+	// Draw the radar sweep wedge like ScannerWidget's sweep arc (canonical widget secondary @ 0.24).
+	void setRadarSweepMatchesScanner(bool on) { radarSweepMatchesScanner = on; }
 	void setRadarHeading(float angleDeg, float strength01) { radarStation.setHeading(angleDeg, strength01); }
 	// Radar centre and ring radius in canvas pixels (for mapping contacts).
 	ofVec2f radarCenter() const { return radarStation.getBounds().center(); }
@@ -79,6 +81,7 @@ private:
 	float canvasW = 1280.0f, canvasH = 720.0f;
 	ofRectangle safeArea; // empty = whole canvas
 	bool radarRangeRings = false;
+	bool radarSweepMatchesScanner = false;
 	void layoutRadar();
 	Palette appliedPalette = Palette::Mono; // tracks last-applied theme so setTheme() isn't called every frame
 	HudOverlayDialState currentDials; // latest dial values, set at the top of update(); read by scheduler callbacks and draw()

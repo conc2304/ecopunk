@@ -23,6 +23,7 @@ constexpr float kVitalsTextColumn = 160.0f; // 20 native 8-px glyph cells
 
 struct HudVitalsDrawData {
 	HudVitalsTrace trace;
+	sysvitals::Metric metric = sysvitals::Metric::Fps; // which dial this binding draws
 	std::vector<ofPolyline> lines;       // one per multi-point segment, slot-local px
 	std::vector<HudVitalsTrace::Vertex> dots; // single-point segments
 	float slotWidth = 0.0f;

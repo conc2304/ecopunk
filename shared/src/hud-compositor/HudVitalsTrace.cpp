@@ -56,6 +56,7 @@ void HudVitalsTrace::rebuild(const VitalsMetricSpec& spec, const VitalsSeriesVie
 
 	state_ = series.state;
 	hasLatest_ = series.hasLatest;
+	latest_ = series.hasLatest ? series.latest : 0.0f;
 	if (series.state == State::Unavailable || !series.hasLatest) {
 		std::snprintf(valueText_, sizeof(valueText_), "--");
 	} else {

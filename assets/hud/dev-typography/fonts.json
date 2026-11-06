@@ -30,6 +30,10 @@
       "file": "fonts/Fliped.otf"
     },
     {
+      "name": "Madawaska River",
+      "file": "fonts/madawaska_river/Madawaska River.otf"
+    },
+    {
       "name": "Alarm Clock",
       "file": "fonts/alarm clock.ttf"
     },

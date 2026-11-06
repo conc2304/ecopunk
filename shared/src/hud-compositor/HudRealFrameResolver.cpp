@@ -1,6 +1,8 @@
 #include "HudRealFrameResolver.h"
 
 #include <algorithm>
+
+#include <algorithm>
 #include <cstdio>
 
 namespace hudpresent {
@@ -212,6 +214,17 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 		if (!frame.video) return HudResolvedValue::missing(HudSourceValueType::Identifier, HudDataClass::Literal);
 		return resolveMediaTitle(*frame.video, vocabulary_, frame.sceneManager.activeSceneId);
 	}
+	if (sourceId == "media.file_label") {
+		if (!frame.video) return HudResolvedValue::missing(HudSourceValueType::Text, HudDataClass::Literal);
+		const std::string label = mediaFileLabel(*frame.video);
+		if (!label.empty()) return HudResolvedValue::text(label);
+		return resolveMediaTitle(*frame.video, vocabulary_, frame.sceneManager.activeSceneId); // no file identity: the title
+	}
+	if (sourceId == "media.sample_label") {
+		const std::string label = frame.video ? mediaSampleLabel(*frame.video) : std::string();
+		if (label.empty()) return HudResolvedValue::missing(HudSourceValueType::Text, HudDataClass::Literal);
+		return HudResolvedValue::text(label);
+	}
 	if (sourceId == "media.playback.progress") {
 		if (!frame.video || !frame.video->playbackProgress) return HudResolvedValue::missing(HudSourceValueType::Ratio, HudDataClass::Normalized);
 		return HudResolvedValue::number(HudSourceValueType::Ratio, *frame.video->playbackProgress, HudDataClass::Normalized);
@@ -284,6 +297,33 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 		// profile or health concept (see FakeHudSemanticTypes.h).
 		auto staticType = HudSourceResolver::staticValueTypeOf(sourceId);
 		return HudResolvedValue::missing(staticType ? *staticType : HudSourceValueType::Identifier, HudDataClass::Literal);
+	}
+
+	// -- Orbit Console v0.1: runtime.scene_color from the immutable HudFrameData::sceneColor. The scalar
+	// is the newest VALID relative luminance (0..1) and exists only while the snapshot is Valid; an absent
+	// snapshot, Unavailable or Stale state resolves MISSING (never 0). The Orbit draw path reads the whole
+	// series itself (HudWireframeRenderer::updateOrbit); this value is the binding's presence key.
+	// OC-003B: runtime.scene_color.raw - the same rules over HudFrameData::sceneColorRaw (the decoded-video
+	// reference). Never falls back to the FX snapshot.
+	if (sourceId == "runtime.scene_color" || sourceId == "runtime.scene_color.raw") {
+		const auto* snap = sourceId == "runtime.scene_color" ? frame.sceneColor.get() : frame.sceneColorRaw.get();
+		if (!snap || snap->state != scenecolor::State::Valid) return HudResolvedValue::missing(HudSourceValueType::Scalar, HudDataClass::Literal);
+		for (uint32_t i = snap->count; i > 0; --i) {
+			const auto& smp = snap->history[i - 1];
+			if (smp.valid) return HudResolvedValue::number(HudSourceValueType::Scalar, smp.luma, HudDataClass::Literal);
+		}
+		return HudResolvedValue::missing(HudSourceValueType::Scalar, HudDataClass::Literal);
+	}
+
+	// -- OC-004: scene.visual.activity from the immutable HudFrameData::sceneVisualActivity. The value is
+	// the UNSMOOTHED fixed-log level (0..1) and exists only while the snapshot is Valid. A null snapshot
+	// (sampling disabled), Unavailable, Stale or Transition resolves MISSING - never 0, never a fallback to
+	// scene.activity.overall. A genuine level of 0 is a present value ("no visual change"). Smoothing is
+	// HUD-owned (HudVisualActivityBallistics), applied by the renderer, not here.
+	if (sourceId == "scene.visual.activity") {
+		const auto* snap = frame.sceneVisualActivity.get();
+		if (!snap || snap->state != scenevisual::State::Valid) return HudResolvedValue::missing(HudSourceValueType::Ratio, HudDataClass::Normalized);
+		return HudResolvedValue::number(HudSourceValueType::Ratio, std::clamp(snap->level, 0.0f, 1.0f), HudDataClass::Normalized);
 	}
 
 	// -- System Telemetry v1: runtime.vitals.<metric>[.stale] from the
@@ -419,7 +459,7 @@ std::optional<HudResolvedValue> HudRealFrameResolver::resolveCanonical(const std
 		const int position = *manager.activeSceneIndex + 1;
 		if (sourceId == "scene.index") return HudResolvedValue::number(HudSourceValueType::Count, static_cast<float>(position));
 		if (sourceId == "scene.count") return HudResolvedValue::number(HudSourceValueType::Count, static_cast<float>(manager.availableSceneCount));
-		return HudResolvedValue::text("[Scene " + std::to_string(position) + "/" + std::to_string(manager.availableSceneCount) + "]");
+		return HudResolvedValue::text("[EXP " + std::to_string(position) + "/" + std::to_string(manager.availableSceneCount) + "]");
 	}
 	if (sourceId.rfind("scene.mode.", 0) == 0 || sourceId == "control.scene.next_mode.available") {
 		const auto staticType = HudSourceResolver::staticValueTypeOf(sourceId);

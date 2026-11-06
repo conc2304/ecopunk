@@ -34,8 +34,8 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"fading_in", "TRANSITIONING IN"},
 
 		// -- Controls -----------------------------------------------------
-		{"control.scene.previous.label", "PREV SCENE"},
-		{"control.scene.next.label", "NEXT SCENE"},
+		{"control.scene.previous.label", "PREV EXP"},
+		{"control.scene.next.label", "NEXT EXP"},
 		{"control.media.previous.label", "PREV MEDIA"},
 		{"control.media.next.label", "NEXT MEDIA"},
 		{"control.scene.reseed.label", "RESEED"},
@@ -60,6 +60,9 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 
 		// -- Scene-specific flexible-card/ring/channel-strip captions ----
 		{"scene.blob.card.label", "REGION FIELD"},
+		{"scene.blob.fragments.label", "FRAGMENTS"},
+		{"scene.fragment.preset.label", "PRESET"},
+		{"scene.temporal.metric.field_activity.label", "FIELD ACTIVITY"},
 		{"scene.fragment.card.label", "TRAIL STATUS"},
 		{"scene.quadrant.channels.label", "QUADRANTS"},
 		{"scene.contour.metric.breakup_progress.label", "BREAKUP"},
@@ -116,6 +119,7 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"time_slice", "TIME SLICE"},
 		{"effect_varied", "EFFECT VARIED"},
 		{"effect_param_variant", "EFFECT PARAM VARIANT"},
+		{"backdrop_effect", "BACKDROP EFFECT"},
 		{"ghost_layers", "GHOST LAYERS"},
 		{"perpetual", "PERPETUAL"},
 		{"natural_background", "NATURAL BACKGROUND"},

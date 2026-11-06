@@ -35,6 +35,7 @@
 namespace hudpresent {
 
 struct HudVitalsDrawData; // HudVitalsDraw.h (OF-dependent; the renderer owns it)
+struct OrbitDrawData;     // OrbitDraw.h (OF-dependent; the renderer owns it)
 
 struct HudWidgetRoleValue {
 	std::string role;
@@ -105,6 +106,11 @@ struct HudWidgetInput {
 	// HudFrameData::systemVitals, never from HudHistoryStore. Non-owning;
 	// null for every other widget. The widget only strokes it.
 	const HudVitalsDrawData* vitals = nullptr;
+
+	// Orbit Console v0.1 (variantId "orbit.upper" / "orbit.lower" on a Sparkline):
+	// the renderer's one cached, already-built orbit draw data. Non-owning; the
+	// widget only strokes it.
+	const OrbitDrawData* orbit = nullptr;
 
 	// Validation-Studio-only: populated when the orchestrator substitutes
 	// a BindingPlaceholder for a binding HudProfileCompiler marked

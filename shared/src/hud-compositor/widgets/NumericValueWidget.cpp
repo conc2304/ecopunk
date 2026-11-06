@@ -1,6 +1,7 @@
 #include "NumericValueWidget.h"
 
 #include "HudWidgetDrawUtils.h"
+#include "../HudIconPath.h"
 
 #include <utility>
 
@@ -14,6 +15,9 @@ constexpr float kClockTimeScale = 2.0f;
 constexpr float kInlineScale = 1.2f;
 // Gap between the inline caption and its value, in native glyph cells.
 constexpr float kInlineGapGlyphs = 4.0f;
+// "inline.col" variant: the value starts at a fixed glyph column so stacked status lines
+// ("TRAIL STATUS" / "PRESET") share one value column. 16 cells = the longest caption (12) + gap.
+constexpr float kInlineColumnGlyphs = 16.0f;
 constexpr float kVariantPad = 4.0f; // >= kContainerPad (3 px)
 constexpr float kBitmapLineHeight = 13.0f;
 
@@ -39,7 +43,7 @@ void NumericValueWidget::draw(const ofRectangle& bounds, const HudWidgetColors& 
 		drawClock(bounds, colors, input);
 		return;
 	}
-	if (input.variantId == "inline") {
+	if (input.variantId == "inline" || input.variantId == "inline.col") {
 		drawInline(bounds, colors, input);
 		return;
 	}
@@ -107,7 +111,7 @@ void NumericValueWidget::drawClock(const ofRectangle& bounds, const HudWidgetCol
 		const auto& time = textCache_.truncateToWidth(valueRole->formattedText, (right - left) / kClockTimeScale);
 		ofSetColor(scaledAlpha(valueRole->useAmbientFallback ? colors.muted : colors.primary, opacity));
 		drawTextScaled(time.text, left, centerY + kBitmapCapHeight * kClockTimeScale * 0.5f, kClockTimeScale, true);
-		timeRight = left + time.widthLocal * kClockTimeScale + 1.0f;
+		timeRight = left + hudTextWidth(time.text, time.widthLocal, kClockTimeScale) + 1.0f;
 	}
 
 	const auto* labelRole = input.findRole("label");
@@ -116,7 +120,46 @@ void NumericValueWidget::drawClock(const ofRectangle& bounds, const HudWidgetCol
 		const float budget = std::max(0.0f, right - timeRight - 12.0f);
 		const auto& top = textCache_.truncateToWidth(lines.first, budget);
 		const auto& bottom = textCache_.truncateToWidth(lines.second, budget);
-		const float blockX = right - std::max(top.widthLocal, bottom.widthLocal);
+		const float blockX = right - std::max(hudTextWidth(top.text, top.widthLocal), hudTextWidth(bottom.text, bottom.widthLocal));
+		// System-state icon (sun by day, moon at night; not tied to the selected theme) centred in the gap between the time and
+		// the date, in the time's colour. Drawn only when it fits with a few pixels either side.
+		{
+			const float gap = blockX - timeRight;
+			const float iconSize = std::min(18.0f, gap - 6.0f);
+			if (iconSize >= 10.0f) {
+				if (!iconsBuilt_) {
+					auto build = [](ofPath& path, const char* d) {
+						std::vector<hudicon::Contour> contours;
+						path.clear();
+						if (!hudicon::parse(d, contours)) return;
+						path.setPolyWindingMode(OF_POLY_WINDING_NONZERO);
+						for (const auto& c : contours) {
+							path.moveTo(c.pts.front().x, c.pts.front().y);
+							for (size_t i = 1; i < c.pts.size(); ++i) path.lineTo(c.pts[i].x, c.pts[i].y);
+							path.close();
+						}
+						path.setFilled(true);
+						path.setStrokeWidth(0.0f);
+					};
+					build(sunPath_, hudicon::lightModePath());
+					build(moonPath_, hudicon::darkModePath());
+					iconsBuilt_ = true;
+				}
+				ofPath& icon = colors.daytime ? sunPath_ : moonPath_;
+				// Take the current ofSetColor (exactly what the time text uses) rather than the path's own cached fill colour.
+				icon.setUseShapeColor(false);
+				ofColor iconColor = scaledAlpha(valueRole->useAmbientFallback ? colors.muted : colors.primary, opacity);
+				// Skin modes: the typography preset recolours the time text; follow it.
+				if (const auto* hook = hudpresent::devTextHook()) iconColor = hook->textColor(hudpresent::devTextRegion(), iconColor);
+				iconColor.a = static_cast<unsigned char>(iconColor.a * 0.7f + 0.5f); // the icon is a quieter 70% of the time's colour
+				ofSetColor(iconColor);
+				ofPushMatrix();
+				ofTranslate(timeRight + (gap - iconSize) * 0.5f, centerY - iconSize * 0.5f);
+				ofScale(iconSize / 24.0f, iconSize / 24.0f);
+				icon.draw();
+				ofPopMatrix();
+			}
+		}
 		// Block spans (top caps) .. (bottom baseline): centre it on centerY.
 		const float topBaseline = centerY - (kBitmapLineHeight - kBitmapCapHeight) * 0.5f;
 		ofSetColor(scaledAlpha(captionColor(colors, valueRole), opacity));
@@ -130,6 +173,9 @@ void NumericValueWidget::drawClock(const ofRectangle& bounds, const HudWidgetCol
 // "CAPTION    VALUE" on a single line at 1.2x, vertically centred.
 void NumericValueWidget::drawInline(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const {
 	const auto* valueRole = input.findRole("value");
+	// A caption with no value reads as a dead label: an inline status row with nothing
+	// to show (e.g. Temporal's never-published field_activity) draws nothing.
+	if (!valueRole || !valueRole->shouldRender || valueRole->useAmbientFallback) return;
 	ofPushStyle();
 	ofEnableAlphaBlending();
 
@@ -138,8 +184,10 @@ void NumericValueWidget::drawInline(const ofRectangle& bounds, const HudWidgetCo
 	const float availWidth = std::max(0.0f, bounds.getRight() - std::max(kVariantPad, kContainerPad) - left);
 	// Scale down from 1.2x when caption + gap + value would not fit the
 	// region (flexible.secondary_a is 192 px wide, not the 410 px it was).
+	const bool column = input.variantId == "inline.col";
 	float naturalLocal = HudTextMetricsCache::kGlyphWidthLocal * kInlineGapGlyphs;
-	if (!input.captionText.empty()) naturalLocal += textCache_.truncateToWidth(input.captionText, 1e4f).widthLocal;
+	if (column) naturalLocal = HudTextMetricsCache::kGlyphWidthLocal * kInlineColumnGlyphs; // caption + gap collapse into the fixed column
+	else if (!input.captionText.empty()) naturalLocal += textCache_.truncateToWidth(input.captionText, 1e4f).widthLocal;
 	if (valueRole && valueRole->shouldRender) naturalLocal += textCache_.truncateToWidth(valueRole->formattedText, 1e4f).widthLocal;
 	const float inlineScale = naturalLocal > 0.0f ? std::min(kInlineScale, std::max(0.6f, availWidth / naturalLocal)) : kInlineScale;
 	const float maxLocal = availWidth / inlineScale;
@@ -150,7 +198,8 @@ void NumericValueWidget::drawInline(const ofRectangle& bounds, const HudWidgetCo
 		const auto& caption = textCache_.truncateToWidth(input.captionText, maxLocal * 0.6f);
 		ofSetColor(scaledAlpha(captionColor(colors, valueRole), opacity));
 		drawTextScaled(caption.text, x, baseline, inlineScale);
-		x += (caption.widthLocal + HudTextMetricsCache::kGlyphWidthLocal * kInlineGapGlyphs) * inlineScale;
+		x += (column ? HudTextMetricsCache::kGlyphWidthLocal * kInlineColumnGlyphs
+			: caption.widthLocal + HudTextMetricsCache::kGlyphWidthLocal * kInlineGapGlyphs) * inlineScale;
 	}
 
 	if (valueRole && valueRole->shouldRender) {

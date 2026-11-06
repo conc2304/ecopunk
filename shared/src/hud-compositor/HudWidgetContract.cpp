@@ -30,7 +30,11 @@ const std::unordered_map<HudWidgetType, HudWidgetContract>& contractTable() {
 			  {"suffix", false, {T::Text}},
 			  // HUD & Scene Experience v0.3: optional progress bar; when bound,
 			  // the Label draws bar + right-aligned suffix instead of text.
-			  {"progress", false, {T::Ratio}} },
+			  {"progress", false, {T::Ratio}},
+			  // Media slot: "[Sample 04/12]" (upper right) and the automatic
+			  // advance hold progress (thin bar along the slot's bottom edge).
+			  {"sample", false, {T::Text}},
+			  {"hold", false, {T::Ratio}} },
 			false
 		};
 

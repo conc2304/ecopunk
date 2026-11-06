@@ -156,6 +156,18 @@ VITALS_SRC = \
 VITALS_CXXFLAGS = $(REAL_CXXFLAGS) -I../../../sketches/experience_runtime/src -I$(HUD_SRC_DIR) -I$(HUD_SRC_DIR)/widgets
 VITALS_BIN = hud_vitals_tests
 
+# Orbit Console v0.1 presentation core + shared SegmentedHistory (OF-free).
+ORBIT_SRC = \
+	hud_orbit_tests.cpp \
+	$(HUD_SRC_DIR)/OrbitConsoleModel.cpp
+ORBIT_BIN = hud_orbit_tests
+
+# OC-005 configurable Orbit observations: config model + editor state machine (OF-free).
+ORBITCFG_SRC = \
+	hud_orbit_config_tests.cpp \
+	$(HUD_SRC_DIR)/OrbitConsoleModel.cpp
+ORBITCFG_BIN = hud_orbit_config_tests
+
 TYPOGRAPHY_SRC = \
 	hud_typography_tests.cpp \
 	$(HUD_SRC_DIR)/widgets/HudTextMetricsCache.cpp
@@ -199,9 +211,26 @@ OF_FRAMEWORKS = -framework Accelerate -framework AppKit -framework ApplicationSe
 	-framework OpenGL -framework QuartzCore -framework Security -framework SystemConfiguration
 OF_LDFLAGS = -stdlib=libc++ -mmacosx-version-min=10.15 $(OF_FRAMEWORKS) $(OF_LIB) $(OF_XCFRAMEWORK_LIBS) -lobjc
 
-.PHONY: test test-real test-viewport test-typography test-vitals test-all clean
+# -- test-icons: HudIconPath (SVG path reader), OF-free.
+ICON_BIN = hud_icon_path_tests
+$(ICON_BIN): hud_icon_path_tests.cpp ../hud-compositor/HudIconPath.h
+	c++ -std=c++17 -Wall -o $@ hud_icon_path_tests.cpp
 
-test: $(BIN)
+test-icons: $(ICON_BIN)
+	./$(ICON_BIN)
+
+# -- test-segbar: SegmentedBarLayout (reusable segmented bar geometry), OF-free.
+SEGBAR_BIN = hud_segmented_bar_tests
+$(SEGBAR_BIN): hud_segmented_bar_tests.cpp ../hud-compositor/widgets/SegmentedBarLayout.h
+	c++ -std=c++17 -Wall -Wextra -o $@ hud_segmented_bar_tests.cpp
+
+test-segbar: $(SEGBAR_BIN)
+	./$(SEGBAR_BIN)
+
+.PHONY: test-segbar test-icons test test-real test-viewport test-typography test-vitals test-orbit test-orbit-config test-all clean
+
+test: $(BIN) $(ORBIT_BIN)
+	./$(ORBIT_BIN)
 	./$(BIN)
 
 test-real: $(REAL_BIN)
@@ -210,13 +239,19 @@ test-real: $(REAL_BIN)
 test-viewport: $(VIEWPORT_BIN)
 	./$(VIEWPORT_BIN)
 
-test-typography: $(TYPOGRAPHY_BIN)
-	./$(TYPOGRAPHY_BIN)
+test-typography: $(TYPOGRAPHY_BIN) $(ORBIT_BIN)
+	./$(TYPOGRAPHY_BIN) $(ORBIT_BIN)
 
 test-vitals: $(VITALS_BIN)
 	./$(VITALS_BIN)
 
-test-all: test test-real test-viewport test-typography test-vitals
+test-orbit: $(ORBIT_BIN)
+	./$(ORBIT_BIN)
+
+test-orbit-config: $(ORBITCFG_BIN)
+	./$(ORBITCFG_BIN)
+
+test-all: test test-real test-viewport test-typography test-vitals test-segbar
 
 $(BIN): $(SRC)
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(BIN)
@@ -230,8 +265,14 @@ $(VIEWPORT_BIN): $(VIEWPORT_SRC)
 $(VITALS_BIN): $(VITALS_SRC)
 	$(CXX) $(VITALS_CXXFLAGS) $(VITALS_SRC) -x none $(OF_LDFLAGS) -o $(VITALS_BIN)
 
+$(ORBIT_BIN): $(ORBIT_SRC) $(HUD_SRC_DIR)/OrbitConsoleModel.h $(HUD_SRC_DIR)/SegmentedHistory.h
+	$(CXX) $(CXXFLAGS) -I$(HUD_SRC_DIR) $(ORBIT_SRC) -o $(ORBIT_BIN)
+
+$(ORBITCFG_BIN): $(ORBITCFG_SRC) $(HUD_SRC_DIR)/OrbitConsoleModel.h $(HUD_SRC_DIR)/OrbitObservationConfig.h $(HUD_SRC_DIR)/SegmentedHistory.h
+	$(CXX) $(CXXFLAGS) -I$(HUD_SRC_DIR) $(ORBITCFG_SRC) -o $(ORBITCFG_BIN)
+
 $(TYPOGRAPHY_BIN): $(TYPOGRAPHY_SRC)
-	$(CXX) $(CXXFLAGS) $(TYPOGRAPHY_SRC) -o $(TYPOGRAPHY_BIN)
+	$(CXX) $(CXXFLAGS) $(TYPOGRAPHY_SRC) -o $(TYPOGRAPHY_BIN) $(ORBIT_BIN)
 
 clean:
-	rm -f $(BIN) $(REAL_BIN) $(VIEWPORT_BIN) $(TYPOGRAPHY_BIN)
+	rm -f $(SEGBAR_BIN) $(BIN) $(REAL_BIN) $(VIEWPORT_BIN) $(TYPOGRAPHY_BIN) $(ORBIT_BIN) $(ORBIT_BIN)

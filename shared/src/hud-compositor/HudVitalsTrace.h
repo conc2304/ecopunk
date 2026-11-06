@@ -95,6 +95,7 @@ public:
 
 	sysvitals::State state() const { return state_; }
 	bool hasLatest() const { return hasLatest_; }
+	float latestValue() const { return latest_; }
 	// Pre-formatted "59.8 Hz" etc.; "--" when Unavailable. Valid zeros print as zeros.
 	const char* valueText() const { return valueText_; }
 
@@ -129,6 +130,7 @@ private:
 
 	sysvitals::State state_ = sysvitals::State::Unavailable;
 	bool hasLatest_ = false;
+	float latest_ = 0.0f;
 	char valueText_[24] = "--";
 
 	// Cache key.

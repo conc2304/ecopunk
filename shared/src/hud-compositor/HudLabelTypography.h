@@ -30,6 +30,10 @@ public:
 	// to keep the native bitmap text.
 	virtual bool drawText(const std::string& /*regionId*/, const std::string& /*text*/, float /*x*/, float /*y*/,
 		float /*nativeScale*/, const ofColor& /*color*/) const { return false; }
+	// Colour drawText() would draw `color` in for this region (the preset's
+	// text colour, alpha kept), so non-text marks beside the text (clock icon)
+	// can match it. Default: unchanged.
+	virtual ofColor textColor(const std::string& /*regionId*/, const ofColor& color) const { return color; }
 	// Width drawText() would produce for `text` at `nativeScale` in this
 	// region, or < 0 when this hook leaves the text native (caller measures).
 	virtual float measureText(const std::string& /*regionId*/, const std::string& /*text*/, float /*nativeScale*/) const { return -1.0f; }

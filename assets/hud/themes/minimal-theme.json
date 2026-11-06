@@ -1,0 +1,37 @@
+{
+    "comment": "Minimal HUD themes (System Mode: MINIMAL - LIGHT / MINIMAL - DARK). Each hue's primary is the ONE colour a theme is built from; every other HUD colour is a lighter or darker version of it. Backgrounds are the selectable canvas colours (max 16 per group). Edit and restart. Colours are #RRGGBB; anything invalid keeps its built-in default.",
+    "light": {
+        "primaries": {
+            "red": "#E5484D",
+            "orange": "#F76B15",
+            "yellow": "#E5B800",
+            "green": "#30A46C",
+            "blue": "#3E63DD",
+            "indigo": "#6E56CF",
+            "violet": "#D6409F"
+        },
+        "backgrounds": [
+            {"name": "Mist", "hex": "#E0E4E2"},
+            {"name": "Paper", "hex": "#E8E8E4"},
+            {"name": "Cloud", "hex": "#DEE0E6"},
+            {"name": "Sage", "hex": "#DEE4DE"}
+        ]
+    },
+    "dark": {
+        "primaries": {
+            "red": "#E5484D",
+            "orange": "#F76B15",
+            "yellow": "#E5B800",
+            "green": "#30A46C",
+            "blue": "#3E63DD",
+            "indigo": "#6E56CF",
+            "violet": "#D6409F"
+        },
+        "backgrounds": [
+            {"name": "Ink", "hex": "#0C0C0C"},
+            {"name": "Graphite", "hex": "#181A1C"},
+            {"name": "Deep Blue", "hex": "#0A0E16"},
+            {"name": "Deep Green", "hex": "#0A120E"}
+        ]
+    }
+}

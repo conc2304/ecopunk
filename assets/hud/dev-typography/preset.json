@@ -5,7 +5,7 @@
             "colorDay": "",
             "colors": {
                 "dark-moss-experimental": "#C9D8B8",
-                "plywood-marble": "#EDE6CF"
+                "plywood-marble": "#3A3A3A"
             },
             "font": "W3$iP Regular (Jaydenlikesfonts)",
             "fontFile": "fonts/w3-ip.ttf",
@@ -68,10 +68,10 @@
             "size": 15
         },
         "universal.media_title": {
-            "size": 16
+            "size": 22
         },
         "universal.primary_state": {
-            "size": 20
+            "size": 22
         }
     },
     "version": 2

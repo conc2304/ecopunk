@@ -18,11 +18,14 @@ void EffectChipsWidget::draw(const ofRectangle& bounds, const HudWidgetColors& c
 	const auto* statusRole = input.findRole("status");
 	const bool hasStatus = statusRole && statusRole->shouldRender && !statusRole->useAmbientFallback && !statusRole->formattedText.empty();
 	float rowRight = bounds.getRight();
+	// Content that fits one native row is centred vertically in the region (no-op in a slot of
+	// kMinChipHeight + 2 px or less, so shared/short slots keep their old position).
+	const float lineOffset = std::max(0.0f, (bounds.height - (kMinChipHeight + 2.0f)) * 0.5f);
 	if (hasStatus) {
 		const auto& st = textCache_.truncateToWidth(statusRole->formattedText, bounds.width * 0.4f);
 		const float w = hudTextWidth(st.text, st.widthLocal);
 		ofSetColor(scaledAlpha(colors.accent, opacity));
-		drawText(st.text, bounds.getRight() - w - 2.0f, bounds.y + std::min(bounds.height, kMinChipHeight + 2.0f) * 0.5f + 4.0f);
+		drawText(st.text, bounds.getRight() - w - 2.0f, bounds.y + lineOffset + std::min(bounds.height, kMinChipHeight + 2.0f) * 0.5f + 4.0f);
 		rowRight = bounds.getRight() - w - wu(bounds, 8.0f);
 	}
 
@@ -36,7 +39,7 @@ void EffectChipsWidget::draw(const ofRectangle& bounds, const HudWidgetColors& c
 		// on a skin shell (muted's alpha-90 vanished on Dark Moss).
 		// Vertically centred on the same line a chip row's text uses.
 		ofSetColor(scaledAlpha(colors.primary, 0.75f * opacity));
-		drawText("NONE ACTIVE", bounds.x + wu(bounds, 4.0f), bounds.y + std::min(bounds.height, kMinChipHeight + 2.0f) * 0.5f + 4.0f, wu(bounds, 0.5f, 120.0f));
+		drawText("NONE ACTIVE", bounds.x + wu(bounds, 4.0f), bounds.y + lineOffset + std::min(bounds.height, kMinChipHeight + 2.0f) * 0.5f + 4.0f, wu(bounds, 0.5f, 120.0f));
 		ofPopStyle();
 		return;
 	}
@@ -58,6 +61,20 @@ void EffectChipsWidget::draw(const ofRectangle& bounds, const HudWidgetColors& c
 	// logic runs, so a pathologically long single effect ID can't produce
 	// a chip wider than the region itself even on its own row.
 	float maxChipTextWidth = std::max(0.0f, bounds.width - chipPad * 2.0f);
+
+	// Centre the chip block vertically (same wrapping rule as the draw loop, measured first).
+	{
+		int rows = items.empty() ? 0 : 1;
+		float mx = bounds.x;
+		for (const auto& item : items) {
+			const float cw = textCache_.truncateToWidth(item, maxChipTextWidth).widthLocal + chipPad * 2.0f;
+			if (mx + cw > rowRight && mx > bounds.x) { ++rows; mx = bounds.x; }
+			mx += cw + chipPad;
+		}
+		const float rowGap = wu(bounds, 3.0f);
+		const float blockH = rows > 0 ? rows * chipHeight + (rows - 1) * rowGap : 0.0f;
+		y = bounds.y + std::max(wu(bounds, 2.0f), (bounds.height - blockH) * 0.5f);
+	}
 
 	for (const auto& item : items) {
 		const auto& truncated = textCache_.truncateToWidth(item, maxChipTextWidth);

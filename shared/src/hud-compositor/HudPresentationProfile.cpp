@@ -56,9 +56,11 @@ ScenePresentationProfile buildUniversalProfile() {
 		// as VocabularyValue did (Identifier -> vocabulary, Text -> as-is).
 		auto b = makeBinding("universal.media_title.label", "universal.primary_state",
 			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic);
-		b.addSource({"text", "media.title", false});
+		b.addSource({"text", "media.file_label", false});
 		b.addSource({"progress", "media.playback.progress", false});
 		b.addSource({"suffix", "media.playback.time", false});
+		b.addSource({"sample", "media.sample_label", false});
+		b.addSource({"hold", "media.hold.progress", false}); // present only in automatic mode
 		p.bindings.push_back(b);
 	}
 	{
@@ -83,25 +85,30 @@ ScenePresentationProfile buildUniversalProfile() {
 		p.bindings.push_back(b);
 	}
 
-	// -- Activity (optional per §12.3; dimmed rather than hidden so the
-	// universal region doesn't visibly flicker on a momentary nullopt) --
+	// -- Activity (OC-004): the segmented meter shows the runtime-measured visual activity
+	// (scene.visual.activity: 64x36 frame difference, fixed-log level, HUD-smoothed), NOT the
+	// scene-semantic scene.activity.overall. Placeholder policy: sampling disabled, Unavailable,
+	// Stale or Transition render an explicit "--" with an empty bar - never a retained/dimmed old
+	// value, never a "0%" that could pass for real zero activity, never a fallback source. --
 	{
-		auto b = makeBinding("universal.activity.bar", "universal.effect_summary",
-			HudWidgetType::ProgressBar, HudMissingPolicy::DimLastValid, HudFormatKind::Percentage,
+		auto b = makeBinding("universal.activity.bar", "universal.timing",
+			HudWidgetType::ProgressBar, HudMissingPolicy::Placeholder, HudFormatKind::Percentage,
 			std::string("slot.scene.activity.label"));
-		b.addSource({"value", "scene.activity.overall", true});
+		b.addSource({"value", "scene.visual.activity", true});
+		b.variantId = "segmented";
 		p.bindings.push_back(b);
 	}
 
 	// -- Effect summary + timing (deferred from the first vertical slice
 	// per this task's §13, still fully defined/compiled/testable here) --
 	{
-		// Active effects in universal.timing, with the frozen
+		// Active effects in universal.effect_summary (Orbit Console v0.1
+		// reallocation: shares the region with the scene status), with the frozen
 		// EffectActivityStatus::health (DEC-015/DEC-016: never derived from
 		// slot count) as a right-aligned trailing "status" on the same row
 		// instead of the old separate stacked badge. Hide: no authoritative
 		// snapshot -> nothing; the optional status is simply not drawn.
-		auto b = makeBinding("universal.effect_summary.chips", "universal.timing",
+		auto b = makeBinding("universal.effect_summary.chips", "universal.effect_summary",
 			HudWidgetType::EffectChips, HudMissingPolicy::Hide);
 		b.addSource({"value", "effects.active", true});
 		b.addSource({"status", "effects.health", false});
@@ -144,11 +151,24 @@ ScenePresentationProfile buildUniversalProfile() {
 		b.addSource({"value", sourceId, true});
 		p.bindings.push_back(b);
 	};
-	addVital("universal.vitals.fps", "universal.activity_trace", "runtime.vitals.fps", "slot.runtime.vitals.fps.label");
-	addVital("universal.vitals.frame_time", "universal.activity_trace", "runtime.vitals.frame_time_max", "slot.runtime.vitals.frame_time.label");
-	addVital("universal.vitals.cpu", "universal.activity_trace", "runtime.vitals.cpu", "slot.runtime.vitals.cpu.label");
-	addVital("universal.vitals.gpu_temp", "universal.secondary_trace", "runtime.vitals.gpu_temp", "slot.runtime.vitals.gpu_temp.label");
-	addVital("universal.vitals.rss", "universal.secondary_trace", "runtime.vitals.rss", "slot.runtime.vitals.rss.label");
+	addVital("universal.vitals.fps", "flexible.primary", "runtime.vitals.fps", "slot.runtime.vitals.fps.label");
+	addVital("universal.vitals.frame_time", "flexible.primary", "runtime.vitals.frame_time_max", "slot.runtime.vitals.frame_time.label");
+	addVital("universal.vitals.cpu", "flexible.primary", "runtime.vitals.cpu", "slot.runtime.vitals.cpu.label");
+	addVital("universal.vitals.gpu_temp", "flexible.primary", "runtime.vitals.gpu_temp", "slot.runtime.vitals.gpu_temp.label");
+	addVital("universal.vitals.rss", "flexible.primary", "runtime.vitals.rss", "slot.runtime.vitals.rss.label");
+
+	// -- Orbit Console v0.1: one coordinated instrument over the two trace
+	// regions. Both bindings key off runtime.scene_color (the series itself is
+	// read by the renderer's orbit cache, like the vitals traces); the widget
+	// draws an honest NO DATA / STALE state, never zeros.
+	auto addOrbit = [&](const char* bindingId, const char* regionId, const char* variant) {
+		auto b = makeBinding(bindingId, regionId, HudWidgetType::Sparkline, HudMissingPolicy::Hide);
+		b.variantId = variant;
+		b.addSource({"value", "runtime.scene_color", true});
+		p.bindings.push_back(b);
+	};
+	addOrbit("universal.orbit.upper", "universal.activity_trace", "orbit.upper");
+	addOrbit("universal.orbit.lower", "universal.secondary_trace", "orbit.lower");
 
 	// -- Controls (nonfunctional visual states only — see this task's
 	// frozen constraints; "enabled" governs dim/nonfunctional rendering,
@@ -232,21 +252,31 @@ ScenePresentationProfile buildOverlayTransitionProfile() {
 ScenePresentationProfile buildBlobProfile() {
 	ScenePresentationProfile p;
 	p.profileId = "blob-region-prototype";
-	auto b = makeBinding("blob.flexible_primary.card", "flexible.primary",
-		HudWidgetType::MetadataCard, HudMissingPolicy::UseAmbientFallback,
+	// Orbit Console v0.1 reallocation: scene status lives in universal.effect_summary
+	// (compact, one line); flexible.primary now hosts System Performance.
+	auto b = makeBinding("blob.status.regions", "universal.effect_summary",
+		HudWidgetType::NumericValue, HudMissingPolicy::Hide,
 		HudFormatKind::Automatic, std::string("scene.blob.card.label"));
-	b.addSource({"title", "scene.state.primary", true});
-	b.addSource({"value", "scene.blob.metric.region_count", false});
+	b.variantId = "inline.col";
+	b.addSource({"value", "scene.blob.metric.region_count", true});
 	p.bindings.push_back(b);
+	// Second line (Option B: two visibility-aware slots in universal.effect_summary).
+	auto frag = makeBinding("blob.status.fragments", "universal.effect_summary",
+		HudWidgetType::NumericValue, HudMissingPolicy::Hide,
+		HudFormatKind::Automatic, std::string("scene.blob.fragments.label"));
+	frag.variantId = "inline.col";
+	frag.addSource({"value", "scene.blob.metric.fragment_count", true});
+	p.bindings.push_back(frag);
 	return p;
 }
 
 ScenePresentationProfile buildContourProfile() {
 	ScenePresentationProfile p;
 	p.profileId = "contour-portrait";
-	auto b = makeBinding("contour.flexible_primary.ring", "flexible.primary",
-		HudWidgetType::ProgressRing, HudMissingPolicy::UseAmbientFallback, HudFormatKind::Percentage,
+	auto b = makeBinding("contour.status.breakup", "universal.effect_summary",
+		HudWidgetType::NumericValue, HudMissingPolicy::Hide, HudFormatKind::Percentage,
 		std::string("scene.contour.metric.breakup_progress.label"));
+	b.variantId = "inline";
 	b.addSource({"value", "scene.contour.metric.breakup_progress", true});
 	p.bindings.push_back(b);
 	return p;
@@ -255,10 +285,11 @@ ScenePresentationProfile buildContourProfile() {
 ScenePresentationProfile buildTemporalProfile() {
 	ScenePresentationProfile p;
 	p.profileId = "temporal-fields";
-	auto b = makeBinding("temporal.flexible_primary.spark", "flexible.primary",
-		HudWidgetType::Sparkline, HudMissingPolicy::UseAmbientFallback);
+	auto b = makeBinding("temporal.status.field", "universal.effect_summary",
+		HudWidgetType::NumericValue, HudMissingPolicy::Hide, HudFormatKind::Automatic,
+		std::string("scene.temporal.metric.field_activity.label"));
+	b.variantId = "inline";
 	b.addSource({"value", "scene.temporal.metric.field_activity", true});
-	b.history = HudHistoryRequest{32, 8.0f};
 	p.bindings.push_back(b);
 	return p;
 }
@@ -266,22 +297,29 @@ ScenePresentationProfile buildTemporalProfile() {
 ScenePresentationProfile buildFragmentProfile() {
 	ScenePresentationProfile p;
 	p.profileId = "fragment-trail";
-	auto b = makeBinding("fragment.flexible_primary.card", "flexible.primary",
-		HudWidgetType::MetadataCard, HudMissingPolicy::UseAmbientFallback,
+	auto b = makeBinding("fragment.status.count", "universal.effect_summary",
+		HudWidgetType::NumericValue, HudMissingPolicy::Hide,
 		HudFormatKind::Automatic, std::string("scene.fragment.card.label"));
-	b.addSource({"title", "scene.state.primary", true});
-	b.addSource({"value", "scene.fragment.metric.fragment_count", false});
-	b.addSource({"meta", "scene.fragment.metric.movement_preset", false});
+	b.variantId = "inline.col";
+	b.addSource({"value", "scene.fragment.metric.fragment_count", true});
 	p.bindings.push_back(b);
+	// Second line: the movement preset (identifier -> vocabulary, e.g. HUNT).
+	auto preset = makeBinding("fragment.status.preset", "universal.effect_summary",
+		HudWidgetType::NumericValue, HudMissingPolicy::Hide,
+		HudFormatKind::Automatic, std::string("scene.fragment.preset.label"));
+	preset.variantId = "inline.col";
+	preset.addSource({"value", "scene.fragment.metric.movement_preset", true});
+	p.bindings.push_back(preset);
 	return p;
 }
 
 ScenePresentationProfile buildQuadrantProfile() {
 	ScenePresentationProfile p;
 	p.profileId = "quadrant-crosshair";
-	auto b = makeBinding("quadrant.flexible_primary.channels", "flexible.primary",
-		HudWidgetType::ChannelStrip, HudMissingPolicy::UseAmbientFallback,
+	auto b = makeBinding("quadrant.status.channels", "universal.effect_summary",
+		HudWidgetType::ChannelStrip, HudMissingPolicy::Hide,
 		HudFormatKind::Automatic, std::string("scene.quadrant.channels.label"));
+	b.variantId = "grid"; // 2x2 channel states, full #5 height
 	b.addSource({"channel0", "scene.quadrant.metric.channel_0_state", true});
 	b.addSource({"channel1", "scene.quadrant.metric.channel_1_state", false});
 	b.addSource({"channel2", "scene.quadrant.metric.channel_2_state", false});
@@ -293,8 +331,10 @@ ScenePresentationProfile buildQuadrantProfile() {
 ScenePresentationProfile buildBlueprintProfile() {
 	ScenePresentationProfile p;
 	p.profileId = "blueprint_emergence";
-	auto b = makeBinding("blueprint.flexible_primary.ring", "flexible.primary",
-		HudWidgetType::ProgressRing, HudMissingPolicy::UseAmbientFallback, HudFormatKind::Percentage,
+	// Progress text + thin bar. Placeholder (not Hide): when phase_progress is absent the
+	// slot keeps "CYCLE PROGRESS" with an explicit "-" and an empty bar instead of vanishing.
+	auto b = makeBinding("blueprint.status.cycle", "universal.effect_summary",
+		HudWidgetType::ProgressBar, HudMissingPolicy::Placeholder, HudFormatKind::Percentage,
 		std::string("scene.blueprint.metric.phase_progress.label"));
 	b.addSource({"value", "scene.blueprint.metric.phase_progress", true});
 	p.bindings.push_back(b);

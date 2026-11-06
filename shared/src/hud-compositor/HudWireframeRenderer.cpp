@@ -5,10 +5,15 @@
 #include "HudFormattingService.h"
 
 #include "ofGraphics.h"
+#include "ofImage.h"
+#include "ofPolyline.h"
 #include "ofUtils.h"
 
 #include <algorithm>
 #include <cmath>
+#include <array>
+#include <cstdlib>
+#include <string>
 #include <unordered_set>
 
 namespace hudpresent {
@@ -105,7 +110,35 @@ const std::unordered_set<std::string>& systemTelemetryRegions() {
 	return regions;
 }
 
+// Regions whose bindings reserve a slot only while they actually render (Option B,
+// Orbit Console v0.1 correction): universal.effect_summary hosts the effect chips OR the
+// scene status, which never coexist, so a Hide-d binding must not leave an empty slice.
+// A Placeholder / DimLastValid / dimmed-while-Loading binding still renders, so it still
+// occupies. Deliberately opt-in: Sparkline regions (vitals, Orbit) draw their own NO DATA
+// state and keep reserving their slots.
+const std::unordered_set<std::string>& visibilityAwareRegions() {
+	static const std::unordered_set<std::string> regions = {"universal.effect_summary"};
+	return regions;
+}
+
 } // namespace
+
+bool HudWireframeRenderer::bindingOccupiesSlot(const HudCompiledBinding& compiled) const {
+	if (visibilityAwareRegions().count(compiled.binding.regionId) == 0) return true;
+	if (!compiled.valid) return true; // studio placeholder for an invalid binding
+	const auto it = widgetInputs_.find(compiled.binding.bindingId);
+	if (it == widgetInputs_.end()) return true; // not resolved yet: reserve
+	for (const auto& role : it->second.roles) {
+		if (role.shouldRender) return true;
+	}
+	return false;
+}
+
+int HudWireframeRenderer::regionSlotCount(const std::string& regionId) const {
+	const auto counts = computeRegionSlotCounts();
+	const auto it = counts.find(regionId);
+	return it == counts.end() ? 0 : it->second;
+}
 
 HudWireframeRenderer::HudWireframeRenderer() : compiler_(regions_, vocabulary_) {
 	realResolver_.setVocabulary(&vocabulary_);
@@ -356,6 +389,9 @@ void HudWireframeRenderer::update(float dt, const HudFrameData& frame) {
 	lastGeneration_ = currentGeneration;
 	haveLastGeneration_ = haveLastGeneration_ || (semantic != nullptr);
 
+	frameLoading_ = frame.scene.health == SceneHealth::Loading;
+	updateOrbit(frame);
+	visualActivity_.update(frame.sceneVisualActivity.get(), dt); // OC-004: resets on invalid/stale/transition/generation change
 	for (const auto& compiled : compiled_.bindings) {
 		if (!compiled.valid) continue;
 		if (generationChanged && compiled.binding.history.has_value()) {
@@ -387,6 +423,11 @@ void HudWireframeRenderer::resolveBindingReal(const HudCompiledBinding& compiled
 		if (src.sourceId.empty()) continue;
 
 		auto resolvedNow = realResolver_.resolve(src.sourceId, frame);
+		// OC-004: the resolver yields the unsmoothed level only while Valid; the HUD-owned ballistics value
+		// replaces it (present exactly when the resolved value is present).
+		if (resolvedNow && resolvedNow->present && src.sourceId == "scene.visual.activity" && visualActivity_.has()) {
+			resolvedNow->numberValue = visualActivity_.value();
+		}
 		std::optional<HudResolvedValue> fallbackValue;
 		if (binding.fallbackSourceId) {
 			fallbackValue = realResolver_.resolve(*binding.fallbackSourceId, frame);
@@ -452,6 +493,10 @@ void HudWireframeRenderer::resolveBindingReal(const HudCompiledBinding& compiled
 		resolveVitalsTrace(compiled, frame, input);
 	}
 
+	if (binding.widgetType == HudWidgetType::Sparkline && binding.variantId.compare(0, 6, "orbit.") == 0) {
+		input.orbit = &orbitDraw_;
+	}
+
 	widgetInputs_[binding.bindingId] = std::move(input);
 }
 
@@ -460,6 +505,7 @@ std::unordered_map<std::string, int> HudWireframeRenderer::computeRegionSlotCoun
 	for (const auto& compiled : compiled_.bindings) {
 		if (renderScope_ == RenderScope::MinimalSlice && !regionInMinimalSlice(compiled.binding.regionId)) continue;
 		if (!compiled.valid && !studioMode_) continue;
+		if (!bindingOccupiesSlot(compiled)) continue;
 		counts[compiled.binding.regionId]++;
 	}
 	return counts;
@@ -477,11 +523,13 @@ void HudWireframeRenderer::resolveVitalsTrace(const HudCompiledBinding& compiled
 	const auto countIt = slotCounts_.find(binding.regionId);
 	const int slots = (countIt == slotCounts_.end() || countIt->second < 1) ? 1 : countIt->second;
 	HudVitalsDrawData& d = vitalsDraw_[binding.bindingId];
-	d.slotWidth = region.width;
-	d.slotHeight = region.height / static_cast<float>(slots);
-	d.plotX = kVitalsPad + kVitalsTextColumn;
+	d.metric = spec->metric;
+	// System Performance dials: the slots sit side by side (columns), not stacked.
+	d.slotWidth = region.width / static_cast<float>(slots);
+	d.slotHeight = region.height;
+	d.plotX = kVitalsPad;
 	d.plotY = 3.0f;
-	d.plotW = std::max(0.0f, d.slotWidth - d.plotX - kVitalsPad);
+	d.plotW = std::max(0.0f, d.slotWidth - 2.0f * kVitalsPad);
 	d.plotH = std::max(0.0f, d.slotHeight - 2.0f * d.plotY);
 
 	VitalsSeriesView view; // default = Unavailable, empty
@@ -521,6 +569,178 @@ void HudWireframeRenderer::resolveVitalsTrace(const HudCompiledBinding& compiled
 	input.vitals = &d;
 }
 
+
+// Orbit Console v0.1: builds the shared orbit geometry once per update. The
+// series comes from the ratified scene-colour snapshot once HudFrameData
+// carries it; until then (and whenever it is absent) the view is Unavailable,
+// never zeros.
+void HudWireframeRenderer::updateOrbit(const HudFrameData& frame) {
+	OrbitSeriesView view; // default = Unavailable, empty
+	static const char* const fx = std::getenv("EXPERIENCE_RUNTIME_ORBIT_FIXTURE"); // verification fixture (SYNTHETIC), read once
+	if (orbitOverride_) view = *orbitOverride_;
+	else if (fx) { // verification only: SYNTHETIC, not a measurement
+		static std::array<OrbitSample, kOrbitMaxSamples> fixture;
+		const std::string mode = fx;
+		const double now = elapsedSeconds_ + 70.0; // virtual start 70 s in: a full 60 s window from frame one
+		const double lag = mode == "stale" ? 6.0 : 0.0; // stale: newest sample is 6 s old
+		uint32_t n = 0;
+		for (int i = 0; i < int(kOrbitMaxSamples); ++i) {
+			const double t = std::floor((now - lag) / 0.5) * 0.5 - (kOrbitMaxSamples - 1 - i) * 0.5;
+			if (t < 0) continue;
+			OrbitSample& smp = fixture[n++];
+			const float a = float(t * 0.35), sat = 0.55f + 0.35f * std::sin(float(t) * 0.2f);
+			smp.t = t;
+			smp.r = std::clamp(0.5f + sat * 0.5f * std::cos(a), 0.0f, 1.0f);
+			smp.g = std::clamp(0.5f + sat * 0.5f * std::cos(a - 2.094f), 0.0f, 1.0f);
+			smp.b = std::clamp(0.5f + sat * 0.5f * std::cos(a + 2.094f), 0.0f, 1.0f);
+			smp.luma = 0.2126f * smp.r + 0.7152f * smp.g + 0.0722f * smp.b;
+			smp.valid = !(mode == "gap" && (i % 23) > 17); // gap: periodic invalid runs
+		}
+		view.state = (n == 0) ? OrbitState::Unavailable : (mode == "stale" ? OrbitState::Stale : OrbitState::Valid);
+		view.generation = 1;
+		view.revision = uint64_t(std::floor((now - lag) / 0.5)) + 1;
+		view.samples = fixture.data();
+		view.count = n;
+	}
+	else if (const auto* snap = frame.sceneColor.get()) { // the real, runtime-owned measurement
+		if (snap->revision != orbitBufRevision_) {
+			const uint32_t n = std::min<uint32_t>(snap->count, static_cast<uint32_t>(kOrbitMaxSamples));
+			for (uint32_t i = 0; i < n; ++i) {
+				const scenecolor::Sample& in = snap->history[i];
+				OrbitSample& out = orbitBuf_[i];
+				out.t = in.t;
+				out.valid = in.valid;
+				out.r = in.valid ? srgbEncode(in.r) : 0.0f; // swatch/ribbon/orbit/bars/chart are display-referred
+				out.g = in.valid ? srgbEncode(in.g) : 0.0f;
+				out.b = in.valid ? srgbEncode(in.b) : 0.0f;
+				out.luma = in.valid ? in.luma : 0.0f;      // relative luminance stays linear
+			}
+			orbitBufCount_ = n;
+			orbitBufRevision_ = snap->revision;
+		}
+		view.state = snap->state == scenecolor::State::Valid ? OrbitState::Valid
+			: snap->state == scenecolor::State::Stale ? OrbitState::Stale : OrbitState::Unavailable;
+		view.generation = snap->generation;
+		view.revision = snap->revision;
+		view.samples = orbitBuf_.data();
+		view.count = orbitBufCount_;
+	}
+	// RAW VIDEO series (decoded video colour before scene effects): the runtime-owned
+	// HudFrameData::sceneColorRaw (OC-003B, opt-in EXPERIENCE_RUNTIME_VIDEO_COLOR=1). Null = Unavailable
+	// (NO RAW VIDEO). The SYNTHETIC verification fixture (EXPERIENCE_RUNTIME_ORBIT_RAW_FIXTURE=valid|gap|
+	// stale|black) takes precedence only when that env var is set. Never derived from the SceneFBO series.
+	OrbitSeriesView rawView;
+	const OrbitSeriesView* rawPtr = nullptr;
+	static const char* const rawFx = std::getenv("EXPERIENCE_RUNTIME_ORBIT_RAW_FIXTURE");
+	if (orbitRawOverride_) { // verification only (OC-005 harness): deterministic RAW series
+		rawView = *orbitRawOverride_;
+		rawPtr = &rawView;
+	}
+	else if (rawFx && view.samples && view.count > 0) {
+		static std::array<OrbitSample, kOrbitMaxSamples> rawFixture;
+		const std::string mode = rawFx;
+		const double lag = mode == "stale" ? 6.0 : 0.0;
+		uint32_t rn = 0;
+		for (uint32_t i = 0; i < view.count; ++i) {
+			const OrbitSample& ps = view.samples[i];
+			if (ps.t > view.samples[view.count - 1].t - lag) continue;
+			OrbitSample& o = rawFixture[rn++];
+			const float a = float(ps.t * 0.12);
+			o.t = ps.t;
+			o.valid = !(mode == "gap" && (int(ps.t * 2.0) % 31) > 22);
+			o.r = mode == "black" ? 0.0f : 0.5f + 0.45f * std::sin(a);
+			o.g = mode == "black" ? 0.0f : 0.5f + 0.45f * std::sin(a + 1.0f);
+			o.b = mode == "black" ? 0.0f : 0.5f + 0.45f * std::sin(a + 4.0f);
+			o.luma = 0.2126f * o.r + 0.7152f * o.g + 0.0722f * o.b;
+		}
+		rawView.state = rn == 0 ? OrbitState::Unavailable : (mode == "stale" ? OrbitState::Stale : OrbitState::Valid);
+		rawView.generation = view.generation;
+		rawView.revision = view.revision;
+		rawView.samples = rawFixture.data();
+		rawView.count = rn;
+		rawPtr = &rawView;
+	}
+	else if (const auto* rsnap = frame.sceneColorRaw.get()) { // the real RAW measurement, independent of FX
+		if (rsnap->revision != orbitRawBufRevision_) {
+			const uint32_t n = std::min<uint32_t>(rsnap->count, static_cast<uint32_t>(kOrbitMaxSamples));
+			for (uint32_t i = 0; i < n; ++i) {
+				const scenecolor::Sample& in = rsnap->history[i];
+				OrbitSample& out = orbitRawBuf_[i];
+				out.t = in.t;
+				out.valid = in.valid;
+				out.r = in.valid ? srgbEncode(in.r) : 0.0f;
+				out.g = in.valid ? srgbEncode(in.g) : 0.0f;
+				out.b = in.valid ? srgbEncode(in.b) : 0.0f;
+				out.luma = in.valid ? in.luma : 0.0f;
+			}
+			orbitRawBufCount_ = n;
+			orbitRawBufRevision_ = rsnap->revision;
+		}
+		rawView.state = rsnap->state == scenecolor::State::Valid ? OrbitState::Valid
+			: rsnap->state == scenecolor::State::Stale ? OrbitState::Stale : OrbitState::Unavailable;
+		rawView.generation = rsnap->generation;
+		rawView.revision = rsnap->revision;
+		rawView.samples = orbitRawBuf_.data();
+		rawView.count = orbitRawBufCount_;
+		rawPtr = &rawView;
+	}
+	const ofRectangle upper = pixelBoundsFor("universal.activity_trace");
+	const ofRectangle lower = pixelBoundsFor("universal.secondary_trace");
+	OrbitLayout layout;
+	// Verification-only override of the in-code tuning (kOrbitHistoryTuning); read once, off by default.
+	static const float segW = [] { const char* v = std::getenv("EXPERIENCE_RUNTIME_ORBIT_SEG_WIDTH_PX"); return v ? float(std::atof(v)) : kOrbitHistoryTuning.segmentWidthPx; }();
+	static const float segGap = [] { const char* v = std::getenv("EXPERIENCE_RUNTIME_ORBIT_SEG_GAP_PX"); return v ? float(std::atof(v)) : kOrbitHistoryTuning.segmentGapPx; }();
+	layout.segmentWidthPx = segW > 0.0f ? segW : kOrbitHistoryTuning.segmentWidthPx;
+	layout.segmentGapPx = segGap >= 0.0f ? segGap : kOrbitHistoryTuning.segmentGapPx;
+	layout.w = upper.width;
+	layout.upperH = upper.height;
+	layout.lowerH = lower.height;
+	OrbitDrawData& d = orbitDraw_;
+	d.upperW = upper.width;
+	d.upperH = upper.height;
+	d.lowerH = lower.height;
+	const bool rebuilt = d.model.update(view, layout, rawPtr);
+	if (!rebuilt && d.linesBuiltAtRebuild == d.model.rebuildCount()) return;
+	const OrbitConsoleModel& m = d.model;
+	auto buildLines = [](const OrbitTrace& t, std::vector<ofPolyline>& lines, std::vector<OrbitPt>& dots) {
+		lines.clear();
+		dots.clear();
+		for (size_t i = 0; i < t.segN; ++i) {
+			const auto seg = t.seg[i];
+			if (seg.count == 1) { dots.push_back(t.v[seg.first]); continue; }
+			ofPolyline line;
+			line.getVertices().reserve(seg.count);
+			for (uint16_t k = 0; k < seg.count; ++k) line.addVertex(t.v[seg.first + k].x, t.v[seg.first + k].y);
+			lines.push_back(std::move(line));
+		}
+	};
+	// One quad per painted bin: width = segmentWidthPx, the gap to the next bin is the pitch minus width.
+	auto quad = [](ofMesh& mesh, const HistoryRect& r, const HistoryFill& f) {
+		const unsigned base = static_cast<unsigned>(mesh.getNumVertices());
+		const float x0 = r.x, x1 = r.x + r.w, y0 = r.y, y1 = r.y + r.h;
+		const ofFloatColor col(f.r, f.g, f.b, 1.0f);
+		mesh.addVertex({x0, y0, 0}); mesh.addVertex({x1, y0, 0}); mesh.addVertex({x1, y1, 0}); mesh.addVertex({x0, y1, 0});
+		for (int i = 0; i < 4; ++i) mesh.addColor(col);
+		mesh.addIndex(base); mesh.addIndex(base + 1); mesh.addIndex(base + 2);
+		mesh.addIndex(base); mesh.addIndex(base + 2); mesh.addIndex(base + 3);
+	};
+	for (int si = 0; si < 2; ++si) {
+		const OrbitSourceModel& sm = m.source(OrbitSourceId(si));
+		OrbitSourceDraw& sd = d.src[si];
+		for (int c = 0; c < 3; ++c) buildLines(sm.rgb[c], sd.rgbLines[c], sd.rgbDots[c]);
+		buildLines(sm.luma, sd.lumaLines, sd.lumaDots);
+		sd.ribbonMesh.clear();
+		sd.ribbonMesh.setMode(OF_PRIMITIVE_TRIANGLES);
+		for (size_t i = 0; i < sm.history.count(); ++i) {
+			const HistorySegment& seg = sm.history.seg(i);
+			const HistoryFill cf = sm.ribbon.fill(seg);
+			if (cf.paint) quad(sd.ribbonMesh, sm.ribbon.cell(seg), cf);
+		}
+	}
+	d.linesBuiltAtRebuild = m.rebuildCount();
+	d.polylineRebuilds++;
+}
+
 void HudWireframeRenderer::draw() const {
 	// MediaViewportMesh — drawn first (chrome/widgets layer on top),
 	// always, regardless of RenderScope (it's not a binding, so
@@ -535,7 +755,23 @@ void HudWireframeRenderer::draw() const {
 		MediaViewportGeometryParams params;
 		params.bounds = pixelBoundsFor("media_viewport");
 		mediaViewportMesh_.updateGeometry(params, currentSceneNativeSize_);
-		mediaViewportMesh_.draw(currentSceneTexture_, ofColor(20, 26, 24, 255));
+		mediaViewportMesh_.draw(currentSceneTexture_, viewportBacking_);
+		if (viewportBorderOn_) {
+			// 1 px outline along the viewport shape (mesh vertex 0 is the fan centre).
+			const auto& v = mediaViewportMesh_.mesh().getVertices();
+			if (v.size() > 3) {
+				ofPolyline line;
+				for (size_t i = 1; i < v.size(); ++i) line.addVertex(v[i].x, v[i].y);
+				line.close();
+				ofPushStyle();
+				ofEnableAlphaBlending();
+				ofNoFill();
+				ofSetLineWidth(1.0f);
+				ofSetColor(viewportBorder_);
+				line.draw();
+				ofPopStyle();
+			}
+		}
 	}
 
 	// HUD-004 shell layer — after the mesh-clipped scene, before every
@@ -633,14 +869,29 @@ void HudWireframeRenderer::draw() const {
 
 		auto it = widgetInputs_.find(compiled.binding.bindingId);
 		if (it == widgetInputs_.end()) continue; // update() never ran for this binding yet
+		if (!bindingOccupiesSlot(compiled)) continue; // hidden: reserves no slice and draws nothing
 
 		ofRectangle bounds = pixelBoundsFor(compiled.binding.regionId);
 		const auto slotIt = regionSlotCounts.find(compiled.binding.regionId);
 		const int slotCount = slotIt == regionSlotCounts.end() ? 1 : slotIt->second;
 		if (slotCount > 1) {
 			int slotIndex = regionSlotCursor[compiled.binding.regionId]++;
-			float slotHeight = bounds.height / static_cast<float>(slotCount);
-			bounds = ofRectangle(bounds.x, bounds.y + slotHeight * static_cast<float>(slotIndex), bounds.width, slotHeight);
+			if (it->second.vitals) { // System Performance dials: columns
+				const float slotWidth = bounds.width / static_cast<float>(slotCount);
+				bounds = ofRectangle(bounds.x + slotWidth * static_cast<float>(slotIndex), bounds.y, slotWidth, bounds.height);
+			} else {
+				float slotHeight = bounds.height / static_cast<float>(slotCount);
+				bounds = ofRectangle(bounds.x, bounds.y + slotHeight * static_cast<float>(slotIndex), bounds.width, slotHeight);
+			}
+		}
+		const std::string& regionId = compiled.binding.regionId;
+		const bool focusedHere = focusedControl_ && *focusedControl_ == regionId;
+		widgetColors.iconOpacity = 0.8f;
+		if (focusedHere) {
+			widgetColors.iconOpacity = 0.9f;
+			if (controlEnabled(regionId).has_value()
+				&& reactive::pressedArtworkOpacity(true, true, true, activationAccepted_, activationStart_, elapsedSeconds_, kActivationFlashSeconds) > 0.0f)
+				widgetColors.iconOpacity = 1.0f;
 		}
 		const HudWidgetColors& colors = widgetColors; // day/night palette from the skin schedule
 
@@ -712,10 +963,46 @@ void HudWireframeRenderer::draw() const {
 		ofPopStyle();
 	}
 
+	// Diagnostic (EXPERIENCE_RUNTIME_HUD_LOADING_CAPTURE_DIR=<dir>, off by default): save the complete HUD
+	// window for the first few REAL frames whose scene health is Loading. Never changes timing or state.
+	if (const char* dir = std::getenv("EXPERIENCE_RUNTIME_HUD_LOADING_CAPTURE_DIR")) {
+		if (frameLoading_ && loadingCaptures_ < 6) {
+			ofImage img;
+			img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
+			const std::string path = std::string(dir) + "/loading_" + currentSceneId_ + "_" + std::to_string(loadingCaptures_) + ".png";
+			img.save(path);
+			ofLogNotice("HudLoading") << "captured real Loading frame " << path;
+			++loadingCaptures_;
+		}
+	}
+
 	devTextHook() = nullptr;
 	devTextRegion().clear();
 	uint64_t drawEnd = ofGetElapsedTimeMicros();
 	stats_.totalDrawMicros = static_cast<double>(drawEnd - drawStart);
+	// Opt-in desktop/Pi measurement (EXPERIENCE_RUNTIME_HUD_DRAW_STATS=1): mean HUD draw cost and the
+	// two orbit widgets share (mean/p50/p95/p99/max), logged every 600 frames. Off by default.
+	static const bool statsOn = std::getenv("EXPERIENCE_RUNTIME_HUD_DRAW_STATS") != nullptr;
+	if (statsOn) {
+		static std::vector<double> totals, orbits;
+		double orbitUs = 0;
+		for (const auto& [id, us] : stats_.perWidgetMicros) if (id.compare(0, 15, "universal.orbit") == 0) orbitUs += us;
+		totals.push_back(stats_.totalDrawMicros); orbits.push_back(orbitUs);
+		if (totals.size() == 600) {
+			auto summarize = [](std::vector<double> v, double out[5]) {
+				std::sort(v.begin(), v.end());
+				double sum = 0; for (double x : v) sum += x;
+				out[0] = sum / v.size(); out[1] = v[v.size() / 2]; out[2] = v[static_cast<size_t>(v.size() * 0.95)];
+				out[3] = v[static_cast<size_t>(v.size() * 0.99)]; out[4] = v.back();
+			};
+			double t[5], o[5];
+			summarize(totals, t); summarize(orbits, o);
+			ofLogNotice("HudDrawStats") << "frames=600 meanHudDrawUs=" << t[0] << " p50=" << t[1] << " p95=" << t[2] << " p99=" << t[3] << " max=" << t[4]
+				<< " meanOrbitDrawUs=" << o[0] << " orbitP50=" << o[1] << " orbitP95=" << o[2] << " orbitP99=" << o[3] << " orbitMax=" << o[4]
+				<< " orbitPolylineRebuilds=" << orbitDraw_.polylineRebuilds;
+			totals.clear(); orbits.clear();
+		}
+	}
 }
 
 float HudWireframeRenderer::buttonActiveOpacity(const std::string& regionId) const {

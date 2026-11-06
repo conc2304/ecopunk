@@ -144,6 +144,9 @@ void HudOverlayLayer::update(float dt, const HudOverlayDialState& dials) {
 	hud::RadarStationOptions rso;
 	rso.rotationPeriod = ofLerp(9.0f, 2.5f, ofClamp(dials.intensity, 0.0f, 1.0f));
 	rso.rangeRings = radarRangeRings;
+	rso.wedgeOverride = radarSweepMatchesScanner;
+	rso.wedgeColor = hud::WidgetColors().secondary;
+	rso.wedgeAlpha = 0.24f;
 	radarStation.setOptions(rso);
 	radarStation.update(dt);
 	breathingTicks.update(dt);

@@ -42,6 +42,10 @@
 //
 // UPDATED for System Telemetry v1: adds additive `systemVitals` (see below).
 //
+// UPDATED for Orbit Console v0.1: adds additive `sceneColor` (see below).
+//
+// UPDATED for OC-004 (Architecture-confirmed contract baseline): adds additive, optional `sceneVisualActivity`.
+//
 // UPDATED for HUD Clock v0.1 (Architecture-approved): adds one additive
 // `std::optional<WallClockStatus> wallClock` field — see the member's own
 // comment and WallClockStatus.h.
@@ -65,6 +69,8 @@
 #include "WallClockStatus.h"
 #include "InstallationStatus.h"
 #include "SystemVitalsSnapshot.h"
+#include "SceneColorSnapshot.h"
+#include "SceneVisualActivitySnapshot.h"
 
 #include <memory>
 #include <optional>
@@ -112,6 +118,33 @@ struct HudFrameData {
 	// history copy. Null = no snapshot yet (never a snapshot of zeros).
 	// Sources: runtime.vitals.*. Additive field.
 	std::shared_ptr<const sysvitals::SystemVitalsSnapshot> systemVitals;
+
+	// Orbit Console v0.1 (Architecture Tier C ratified): runtime-owned, immutable, bounded
+	// scene-colour measurement of the SceneFBO (linear-light average RGB + Rec.709 relative
+	// luminance, 60 s history, scene generation) - see SceneColorSnapshot.h. A shared pointer
+	// so the per-frame HudFrameData copy is a refcount bump. Null = no snapshot yet (never a
+	// snapshot of zeros). Source: runtime.scene_color. Additive field.
+	std::shared_ptr<const scenecolor::SceneColorSnapshot> sceneColor;
+
+	// OC-003B (Architecture: opt-in publication authorized): the RAW VIDEO colour series - the canonical
+	// live decoded-video reference from VideoPlaybackService::currentTexture(), NOT necessarily the frame
+	// a specialized scene shows, and never reconstructed from `sceneColor`. Same immutable type and
+	// measurement definition as `sceneColor`; its own revision/generation/state:
+	//   generation = the RAW generation (advances on a media activation, a scene activation, and on
+	//                losing/regaining eligibility - it is NOT the scene generation),
+	//   sceneId    = the mediaId measured in this generation ("" before the first activation),
+	//   state/count/history/capturedAtSeconds = this series' own (independent of FX cadence and resets).
+	// Null = RAW sampling disabled (EXPERIENCE_RUNTIME_VIDEO_COLOR != 1) or nothing begun: the HUD shows
+	// NO RAW VIDEO. Source: runtime.scene_color.raw. Additive field.
+	std::shared_ptr<const scenecolor::SceneColorSnapshot> sceneColorRaw;
+
+	// OC-004 (Architecture-confirmed baseline: oc-004-scene-visual-activity-probe.md section 6): runtime-owned,
+	// immutable 64x36 frame-difference visual-activity observation of the SceneFBO - see
+	// SceneVisualActivitySnapshot.h. NOT scene.activity.overall. Null = sampling disabled (the production
+	// default: EXPERIENCE_RUNTIME_SCENE_VISUAL_ACTIVITY != 1); the HUD then shows an honest unavailable state,
+	// never a fallback to scene-semantic activity. Smoothing and segment mapping are HUD-owned.
+	// Source: scene.visual.activity. Additive field.
+	std::shared_ptr<const scenevisual::SceneVisualActivitySnapshot> sceneVisualActivity;
 
 	// Recent runtime activity log (the same lines the console prints, without
 	// the level tag), oldest first, newest last — runtime-owned

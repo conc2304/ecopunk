@@ -2,6 +2,7 @@
 
 #include "HudWidgetBase.h"
 #include "HudTextMetricsCache.h"
+#include "ofPath.h"
 
 namespace hudpresent {
 
@@ -19,6 +20,9 @@ private:
 	void drawInline(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const;
 
 	mutable HudTextMetricsCache textCache_;
+	// Clock icon (sun / moon) built once from the embedded SVG path data (HudIconPath.h).
+	mutable ofPath sunPath_, moonPath_;
+	mutable bool iconsBuilt_ = false;
 };
 
 } // namespace hudpresent

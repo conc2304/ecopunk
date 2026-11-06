@@ -33,6 +33,10 @@
 #include "HudPresentationProfile.h"
 #include "HudProfileCompiler.h"
 #include "HudVitalsDraw.h"
+#include "HudVisualActivityBallistics.h"
+#include "OrbitDraw.h"
+
+#include <array>
 #include "HudRealFrameResolver.h" // production path — real HudFrameData (see below)
 #include "HudRegionCatalog.h"
 #include "HudSourceResolver.h"
@@ -163,6 +167,11 @@ public:
 	// (HudCompositorBridge's skin loader) must clear or replace this pointer
 	// before releasing the texture. No skin-ID logic lives here.
 	void setShellTexture(const ofTexture* shell) { shellTexture_ = shell; }
+	// Minimal (no-artwork) look: the colour behind the scene video inside the
+	// media screen and an optional 1 px line around it (the viewport outline).
+	void setViewportStyle(const ofColor& backing, const ofColor& border, bool borderOn) {
+		viewportBacking_ = backing; viewportBorder_ = border; viewportBorderOn_ = borderOn;
+	}
 	const ofTexture* shellTexture() const { return shellTexture_; }
 
 	// Reactive Control Artwork v0.1 (HUD-004 optional extension). A non-
@@ -201,7 +210,10 @@ public:
 	// Day/night text palette for every widget, focus bracket and flash
 	// (HudWidgetColors; default = the night palette). Set by the runtime's
 	// skin schedule alongside the shell.
-	void setColors(const HudWidgetColors& colors) { colors_ = colors; }
+	void setColors(const HudWidgetColors& colors) { colors_ = colors; colors_.daytime = daytime_; colors_.buttonLabelMode = buttonLabelMode_; }
+	// Day/night system state for the clock icon; independent of the colours/skin in use.
+	void setDayPeriod(bool daytime) { daytime_ = daytime; colors_.daytime = daytime; }
+	void setButtonLabelMode(int mode) { buttonLabelMode_ = mode; colors_.buttonLabelMode = mode; }
 	const HudWidgetColors& colors() const { return colors_; }
 	// The pressed artwork's opacity for the current state (0 = not drawn).
 	float pressedArtworkOpacity() const;
@@ -214,7 +226,11 @@ public:
 	std::optional<bool> controlEnabled(const std::string& regionId) const;
 	// Region to outline as focused, or nullopt for none (the default — the
 	// HUD is unchanged until something sets focus). Drawn after all widgets.
-	void setFocusedControl(const std::optional<std::string>& regionId) { focusedControl_ = regionId; }
+	void setFocusedControl(const std::optional<std::string>& regionId) {
+		focusedControl_ = regionId;
+		orbitDraw_.focusA = regionId && *regionId == kOrbitFocusA; // OC-005: observation focus is presentation state
+		orbitDraw_.focusB = regionId && *regionId == kOrbitFocusB;
+	}
 	const std::optional<std::string>& focusedControl() const { return focusedControl_; }
 	// One short activation flash on the focused control (accepted = accent,
 	// refused = warning), fading over kActivationFlashSeconds.
@@ -246,6 +262,30 @@ public:
 
 	// System Telemetry v1 instrumentation/tests: geometry rebuild counters for
 	// a vitals binding (null if the binding has no vitals cache).
+	// Slots currently allocated in a region (hidden bindings in visibility-aware regions excluded).
+	int regionSlotCount(const std::string& regionId) const;
+	// Orbit Console v0.1: test/validation access to the cached orbit draw data.
+	const OrbitDrawData& orbitDraw() const { return orbitDraw_; }
+	// Validation Studio / tests only: replaces the series the orbit reads (non-owning;
+	// nullptr = production). Production has NO other source until HudFrameData carries
+	// the ratified scene-colour snapshot, so the orbit shows Unavailable.
+	void setOrbitSeriesOverride(const OrbitSeriesView* view) { orbitOverride_ = view; }
+	const OrbitConsoleModel& orbitModelForDiagnostics() const { return orbitDraw_.model; }
+	// OC-005: HUD-owned Orbit observation configuration + editor (presentation state only).
+	// Focus ids of the two observations (extra stops after the HUD-006 controls).
+	static constexpr const char* kOrbitFocusA = "orbit.a";
+	static constexpr const char* kOrbitFocusB = "orbit.b";
+	OrbitConfigEditor& orbitUi() { return orbitDraw_.ui; }
+	const OrbitConfigEditor& orbitUi() const { return orbitDraw_.ui; }
+	// True once the orbit regions have a built layout (the observations are drawn and may take focus).
+	bool orbitObservationsPresent() const { return orbitDraw_.upperW > 0.0f && orbitDraw_.upperH > 0.0f && orbitDraw_.lowerH > 0.0f; }
+	// Validation Studio / tests only: replaces the RAW series (non-owning; nullptr = production path).
+	void setOrbitRawSeriesOverride(const OrbitSeriesView* view) { orbitRawOverride_ = view; }
+	// OC-004 test/inspection seam: the resolved widget input of a binding after the last update() (null = none).
+	const HudWidgetInput* widgetInputFor(const std::string& bindingId) const {
+		auto it = widgetInputs_.find(bindingId);
+		return it == widgetInputs_.end() ? nullptr : &it->second;
+	}
 	const HudVitalsDrawData* vitalsDrawFor(const std::string& bindingId) const {
 		auto it = vitalsDraw_.find(bindingId);
 		return it == vitalsDraw_.end() ? nullptr : &it->second;
@@ -277,7 +317,9 @@ private:
 	// filtered) — the slot count draw() slices multi-binding regions by, and
 	// the same number update() sizes vitals traces with.
 	std::unordered_map<std::string, int> computeRegionSlotCounts() const;
+	bool bindingOccupiesSlot(const HudCompiledBinding& compiled) const;
 	void resolveVitalsTrace(const HudCompiledBinding& compiled, const HudFrameData& frame, HudWidgetInput& input);
+	void updateOrbit(const HudFrameData& frame); // once per update(), never per binding or in draw()
 
 	HudRegionCatalog regions_;
 	HudPresentationProfileRegistry profiles_;
@@ -310,12 +352,17 @@ private:
 	// stays at defaults for the fake/Studio path).
 	const ofTexture* currentSceneTexture_ = nullptr; // non-owning, valid only for the frame that supplied it — see SceneFrame's own lifetime rule
 	const ofTexture* shellTexture_ = nullptr; // non-owning — see setShellTexture()
+	ofColor viewportBacking_ = ofColor(20, 26, 24, 255);
+	ofColor viewportBorder_ = ofColor(255, 255, 255, 255);
+	bool viewportBorderOn_ = false;
 	const ofTexture* pressedTexture_ = nullptr; // non-owning — see setPressedArtwork()
 	const ofTexture* buttonIdleTexture_ = nullptr;    // non-owning — see setButtonFaces()
 	const ofTexture* buttonFocusedTexture_ = nullptr;
 	const ofTexture* buttonActiveTexture_ = nullptr;
 	const IHudLabelTypography* labelTypography_ = nullptr; // non-owning, dev-only
 	HudWidgetColors colors_;
+	bool daytime_ = true;
+	int buttonLabelMode_ = 0;
 	std::string pressedRegionId_;
 	std::optional<std::string> focusedControl_;
 	float activationStart_ = -1.0f;
@@ -325,12 +372,27 @@ private:
 	uint64_t lastObservedFrameNumber_ = 0;
 	bool haveObservedFrameNumber_ = false;
 	bool lastFrameWasFresh_ = false;
+	bool frameLoading_ = false;                 // real HudFrameData health == Loading this frame
+	mutable int loadingCaptures_ = 0;           // diagnostic only (EXPERIENCE_RUNTIME_HUD_LOADING_CAPTURE_DIR)
 
 	std::unordered_map<std::string, HudResolvedValue> lastValid_; // key: bindingId + "\x1f" + role
 	std::unordered_map<std::string, HudWidgetInput> widgetInputs_; // key: bindingId
 	// System Telemetry v1: per-binding cached trace geometry (key: bindingId).
 	// unordered_map nodes are address-stable, so widgetInputs_ can point at them.
 	std::unordered_map<std::string, HudVitalsDrawData> vitalsDraw_;
+	OrbitDrawData orbitDraw_;
+	HudVisualActivityBallistics visualActivity_; // OC-004: HUD-owned smoothing of scene.visual.activity
+	const OrbitSeriesView* orbitOverride_ = nullptr;
+	const OrbitSeriesView* orbitRawOverride_ = nullptr;
+	// Adapter buffer: the ratified scenecolor::SceneColorSnapshot mapped to the Orbit presentation sample
+	// (display-encoded RGB for colour, linear relative luminance). Refilled only on a new snapshot revision.
+	std::array<OrbitSample, kOrbitMaxSamples> orbitBuf_{};
+	uint64_t orbitBufRevision_ = 0;
+	uint32_t orbitBufCount_ = 0;
+	// Same adapter for the RAW VIDEO series (HudFrameData::sceneColorRaw), refilled only on a new RAW revision.
+	std::array<OrbitSample, kOrbitMaxSamples> orbitRawBuf_{};
+	uint64_t orbitRawBufRevision_ = 0;
+	uint32_t orbitRawBufCount_ = 0;
 	std::unordered_map<std::string, int> slotCounts_; // computeRegionSlotCounts() as of the last update()
 
 	mutable FrameStats stats_;

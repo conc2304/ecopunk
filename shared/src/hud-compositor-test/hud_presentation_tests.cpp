@@ -363,8 +363,10 @@ void test_flexible_region_occupancy_conflict() {
 	HudVocabularyResolver vocab;
 	HudProfileCompiler compiler(regions, vocab);
 
-	auto first = makeSimpleBinding("test.occ_first", "flexible.primary", HudWidgetType::AmbientField);
-	auto second = makeSimpleBinding("test.occ_second", "flexible.primary", HudWidgetType::AmbientField);
+	// flexible.primary now hosts five System Performance bindings (Orbit Console v0.1
+	// reallocation); flexible.secondary_a is a maxBindings = 1 flexible region.
+	auto first = makeSimpleBinding("test.occ_first", "flexible.secondary_a", HudWidgetType::AmbientField);
+	auto second = makeSimpleBinding("test.occ_second", "flexible.secondary_a", HudWidgetType::AmbientField);
 
 	auto compiled = compiler.compileBindings("blob-region-prototype", {first, second});
 	HUD_CHECK(compiled.hasErrors());
@@ -944,8 +946,27 @@ void test_content_relocation_bindings() {
 	HUD_CHECK(regionOf("universal.mode.line") == "universal.media_title");
 	HUD_CHECK(regionOf("universal.media_title.label") == "universal.primary_state");
 	HUD_CHECK(regionOf("universal.primary_state.badge") == "universal.activity");
-	HUD_CHECK(regionOf("universal.activity.bar") == "universal.effect_summary");
-	HUD_CHECK(regionOf("universal.effect_summary.chips") == "universal.timing");
+	// Orbit Console v0.1 reallocation: gauge -> #6, chips -> #5 (shared with the scene status),
+	// Orbit over #7/#8, System Performance (5 vitals) in flexible.primary (#15).
+	HUD_CHECK(regionOf("universal.activity.bar") == "universal.timing");
+	// OC-004: region #6's segmented gauge reads the measured scene.visual.activity (Placeholder when missing),
+	// never scene.activity.overall and with no fallback source.
+	for (const auto& c : compiled.bindings) {
+		if (c.binding.bindingId != "universal.activity.bar") continue;
+		const auto* v = c.binding.findSource("value");
+		HUD_CHECK(v && v->sourceId == "scene.visual.activity");
+		HUD_CHECK(c.binding.variantId == "segmented");
+		HUD_CHECK(c.binding.missingPolicy == HudMissingPolicy::Placeholder);
+		HUD_CHECK(!c.binding.fallbackSourceId.has_value());
+		HUD_CHECK(c.binding.findSource("fallback") == nullptr);
+		HUD_CHECK(c.valid);
+	}
+	HUD_CHECK(regionOf("universal.effect_summary.chips") == "universal.effect_summary");
+	HUD_CHECK(regionOf("universal.orbit.upper") == "universal.activity_trace");
+	HUD_CHECK(regionOf("universal.orbit.lower") == "universal.secondary_trace");
+	HUD_CHECK(regionOf("universal.vitals.fps") == "flexible.primary");
+	HUD_CHECK(regionOf("universal.vitals.rss") == "flexible.primary");
+	HUD_CHECK(regionOf("blob.status.regions") == "universal.effect_summary");
 	HUD_CHECK(regionOf("universal.timing.value") == "flexible.secondary_a");
 	HUD_CHECK(regionOf("universal.clock.value") == "flexible.secondary_b");
 	HUD_CHECK(regionOf("overlay.transition.bar") == "overlay.health");

@@ -29,6 +29,8 @@ enum class CanonicalSource : uint8_t {
 	ManagerMessage,
 	MediaId,
 	MediaTitle,
+	MediaFileLabel,
+	MediaSampleLabel,
 	MediaPlaybackProgress,
 	MediaPlaybackTime,
 	MediaHoldProgress,
@@ -58,6 +60,9 @@ enum class CanonicalSource : uint8_t {
 	RuntimeVitalsGpuTempStale,
 	RuntimeVitalsRss,
 	RuntimeVitalsRssStale,
+	RuntimeSceneColor,
+	RuntimeSceneColorRaw,
+	SceneVisualActivity,
 	RuntimeClockLocalLabel,
 	SceneIndex,
 	SceneCount,
@@ -116,6 +121,9 @@ const std::vector<CanonicalEntry>& canonicalTable() {
 		{"scene.state.secondary", CanonicalSource::SceneStateSecondary, HudSourceValueType::Identifier},
 		{"scene.state.progress", CanonicalSource::SceneStateProgress, HudSourceValueType::Ratio},
 		{"scene.activity.overall", CanonicalSource::SceneActivityOverall, HudSourceValueType::Ratio},
+		// OC-004 (Architecture-confirmed): runtime-measured visual activity (HudFrameData::sceneVisualActivity),
+		// NOT scene-semantic activity. Real-frame only; a fake frame carries no measurement.
+		{"scene.visual.activity", CanonicalSource::SceneVisualActivity, HudSourceValueType::Ratio},
 		{"scene.activity.motion", CanonicalSource::SceneActivityMotion, HudSourceValueType::Ratio},
 		{"scene.activity.density", CanonicalSource::SceneActivityDensity, HudSourceValueType::Ratio},
 		{"scene.activity.variation", CanonicalSource::SceneActivityVariation, HudSourceValueType::Ratio},
@@ -129,6 +137,8 @@ const std::vector<CanonicalEntry>& canonicalTable() {
 		{"manager.message", CanonicalSource::ManagerMessage, HudSourceValueType::Text},
 		{"media.id", CanonicalSource::MediaId, HudSourceValueType::Identifier},
 		{"media.title", CanonicalSource::MediaTitle, HudSourceValueType::Identifier},
+		{"media.file_label", CanonicalSource::MediaFileLabel, HudSourceValueType::Text},
+		{"media.sample_label", CanonicalSource::MediaSampleLabel, HudSourceValueType::Text},
 		{"media.playback.progress", CanonicalSource::MediaPlaybackProgress, HudSourceValueType::Ratio},
 		// HUD & Scene Experience v0.3: derived "current / total" display text
 		// from the same canonical VideoPlaybackStatus position/duration.
@@ -164,6 +174,12 @@ const std::vector<CanonicalEntry>& canonicalTable() {
 		{"runtime.vitals.gpu_temp.stale", CanonicalSource::RuntimeVitalsGpuTempStale, HudSourceValueType::Boolean},
 		{"runtime.vitals.rss", CanonicalSource::RuntimeVitalsRss, HudSourceValueType::Scalar},
 		{"runtime.vitals.rss.stale", CanonicalSource::RuntimeVitalsRssStale, HudSourceValueType::Boolean},
+		// Orbit Console v0.1: key of the scene-colour series binding. The bound value is a
+		// presence scalar only (always missing until HudFrameData carries the ratified snapshot);
+		// the Orbit draw path reads the series itself, like the vitals traces.
+		{"runtime.scene_color", CanonicalSource::RuntimeSceneColor, HudSourceValueType::Scalar},
+		// OC-003B: RAW VIDEO (decoded-video reference) colour series, HudFrameData::sceneColorRaw. Same presence-scalar rules.
+		{"runtime.scene_color.raw", CanonicalSource::RuntimeSceneColorRaw, HudSourceValueType::Scalar},
 		// HUD Clock v0.1 (approved): runtime-owned HudFrameData::wallClock.
 		{"runtime.clock.local_seconds", CanonicalSource::RuntimeClockLocalSeconds, HudSourceValueType::DurationSeconds},
 		{"runtime.clock.local_label", CanonicalSource::RuntimeClockLocalLabel, HudSourceValueType::Text},
@@ -399,6 +415,17 @@ std::optional<HudResolvedValue> HudSourceResolver::resolveCanonical(const std::s
 		case CanonicalSource::MediaTitle:
 			if (!frame.media) return HudResolvedValue::missing(HudSourceValueType::Identifier, HudDataClass::Literal);
 			return resolveMediaTitle(*frame.media);
+		case CanonicalSource::MediaFileLabel: {
+			if (!frame.media) return HudResolvedValue::missing(HudSourceValueType::Text, HudDataClass::Literal);
+			const std::string label = mediaFileLabel(*frame.media);
+			if (!label.empty()) return HudResolvedValue::text(label);
+			return resolveMediaTitle(*frame.media);
+		}
+		case CanonicalSource::MediaSampleLabel: {
+			const std::string label = frame.media ? mediaSampleLabel(*frame.media) : std::string();
+			if (label.empty()) return HudResolvedValue::missing(HudSourceValueType::Text, HudDataClass::Literal);
+			return HudResolvedValue::text(label);
+		}
 		case CanonicalSource::MediaPlaybackProgress:
 			if (!frame.media || !frame.media->playbackProgress) return HudResolvedValue::missing(HudSourceValueType::Ratio, HudDataClass::Normalized);
 			return HudResolvedValue::number(HudSourceValueType::Ratio, *frame.media->playbackProgress, HudDataClass::Normalized);
@@ -470,6 +497,9 @@ std::optional<HudResolvedValue> HudSourceResolver::resolveCanonical(const std::s
 		case CanonicalSource::RuntimeVitalsGpuTempStale:
 		case CanonicalSource::RuntimeVitalsRss:
 		case CanonicalSource::RuntimeVitalsRssStale:
+		case CanonicalSource::RuntimeSceneColor:
+		case CanonicalSource::RuntimeSceneColorRaw:
+		case CanonicalSource::SceneVisualActivity:
 		case CanonicalSource::RuntimeClockLocalSeconds:
 		case CanonicalSource::RuntimeClockLocalLabel:
 		case CanonicalSource::SceneIndex:

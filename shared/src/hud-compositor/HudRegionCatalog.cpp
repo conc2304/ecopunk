@@ -30,7 +30,7 @@ HudRegionCatalog::HudRegionCatalog() {
 
 	// -- Universal regions (task §3 list, in the same order) -----------
 	// Content map (HUD content relocation, 2026-10-23; geometry unchanged):
-	//   scene_title    scene title + [Scene x/y]        media_title   "Mode: <name>   x/y"
+	//   scene_title    scene title + [EXP x/y]        media_title   "Mode: <name>   x/y"
 	//   primary_state  media title + progress           activity      primary-state badge
 	//   effect_summary activity bar                     timing        active effects (+health)
 	//   flexible.secondary_a  active time               overlay.health      transition (+scene health)
@@ -56,21 +56,22 @@ HudRegionCatalog::HudRegionCatalog() {
 	// reused here rather than inventing new geometry, per the closure
 	// plan's "preserve canonical wireframe geometry" instruction.
 	regions_.push_back(makeRegion("universal.effect_summary", HudRegionRole::Universal,
-		{0.66f, 0.30f, 0.32f, 0.06f}, {W::EffectChips, W::StatusBadge, W::ProgressBar, W::NumericValue}, 2, false));
+		{0.66f, 0.30f, 0.32f, 0.06f}, {W::EffectChips, W::StatusBadge, W::ProgressBar, W::NumericValue, W::ChannelStrip, W::Label}, 3, false));
 
 	regions_.push_back(makeRegion("universal.timing", HudRegionRole::Universal,
-		{0.66f, 0.37f, 0.32f, 0.05f}, {W::NumericValue, W::Label, W::EffectChips}, 1, false));
+		{0.66f, 0.37f, 0.32f, 0.05f}, {W::NumericValue, W::Label, W::EffectChips, W::ProgressBar}, 1, false));
 
-	// System Telemetry v1: the two trace regions host the five system-vitals
-	// sparklines as stacked slots (draw-time slicing, like effect_summary):
-	// activity_trace 3 x 24 px (FPS, FRAME MAX, CPU), secondary_trace
-	// 2 x 36 px (GPU TEMP, RSS). maxBindings 1 -> 3 / 2 is the only catalog
-	// change; IDs, numbering and bounds are untouched.
+	// Orbit Console v0.1: the two trace regions are one coordinated instrument,
+	// activity_trace = orbit / swatch / RGB bars / RGB chart, secondary_trace =
+	// luminance history + colour ribbon (one Sparkline "orbit.*" binding each).
+	// System Telemetry v1's five vitals moved to flexible.primary (5 stacked
+	// slots); scene-specific status moved to universal.effect_summary. IDs,
+	// numbering and bounds are untouched.
 	regions_.push_back(makeRegion("universal.activity_trace", HudRegionRole::Universal,
-		{0.66f, 0.43f, 0.32f, 0.10f}, {W::Sparkline}, 3, true));
+		{0.66f, 0.43f, 0.32f, 0.10f}, {W::Sparkline}, 1, true));
 
 	regions_.push_back(makeRegion("universal.secondary_trace", HudRegionRole::Universal,
-		{0.66f, 0.54f, 0.32f, 0.10f}, {W::Sparkline}, 2, true));
+		{0.66f, 0.54f, 0.32f, 0.10f}, {W::Sparkline}, 1, true));
 
 	// -- Controls regions (HUD-006 v2: six 72x72 squares) -------------------
 	// Row y = 633.6..705.6 (0.88 + 0.10); gaps 12.8 px in a group, 32 px
@@ -99,7 +100,7 @@ HudRegionCatalog::HudRegionCatalog() {
 	regions_.push_back(makeRegion("flexible.primary", HudRegionRole::Flexible,
 		{0.66f, 0.64f, 0.32f, 0.16f},
 		{W::MetadataCard, W::ChannelStrip, W::EffectChips, W::ProgressRing, W::Sparkline, W::Timeline, W::AmbientField},
-		1, true));
+		5, true));
 
 	regions_.push_back(makeRegion("flexible.secondary_a", HudRegionRole::Flexible,
 		{0.66f, 0.81f, 0.15f, 0.06f},

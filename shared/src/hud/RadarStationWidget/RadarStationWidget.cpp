@@ -6,9 +6,11 @@ namespace hud {
 
 // ofDrawArc/ofPath::arc are not used in this library (see GaugeWidget.cpp) —
 // build the wedge as a manual triangle fan instead.
-static void drawWedge(const ofVec2f& c, float r, float aDeg0, float aDeg1, int steps = 12) {
+// ofPath ignores ofSetColor (it fills with its own colour, default opaque white), so the colour is set on the path.
+static void drawWedge(const ofVec2f& c, float r, float aDeg0, float aDeg1, const ofColor& color, int steps = 12) {
 	ofPath path;
 	path.setFilled(true);
+	path.setColor(color);
 	path.setCurveResolution(2);
 	path.moveTo(c.x, c.y);
 	for (int i = 0; i <= steps; ++i) {
@@ -73,8 +75,9 @@ void RadarStationWidget::draw() {
 
 	// Wedge.
 	ofFill();
-	ofSetColor(scaledAlpha(theme.colors.accent, motion.opacity * 0.32f));
-	drawWedge(center, radius, rotationDeg, rotationDeg + options.wedgeArcDeg);
+	const ofColor wedgeColor = options.wedgeOverride ? scaledAlpha(options.wedgeColor, motion.opacity * options.wedgeAlpha)
+	                                                  : scaledAlpha(theme.colors.accent, motion.opacity * 0.32f);
+	drawWedge(center, radius, rotationDeg, rotationDeg + options.wedgeArcDeg, wedgeColor);
 
 	// Heading — a short own-ship vector from the centre.
 	if (headingStrength > 0.01f) {

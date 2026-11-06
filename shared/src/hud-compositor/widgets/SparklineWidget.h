@@ -2,8 +2,11 @@
 
 #include "HudWidgetBase.h"
 #include "HudTextMetricsCache.h"
+#include "../OrbitObservationConfig.h"
 
 namespace hudpresent {
+
+struct OrbitDrawData;
 
 // Draws from input.historySamples/historyStats only — this widget never
 // touches HudHistoryStore itself (the orchestrator owns the store and
@@ -22,6 +25,8 @@ public:
 	void draw(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const override;
 
 private:
+	void drawOrbit(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const;
+	void drawOrbitEditor(const ofRectangle& bounds, const HudWidgetColors& colors, const OrbitDrawData& d, OrbitObs edited) const;
 	void drawVitals(const ofRectangle& bounds, const HudWidgetColors& colors, const HudWidgetInput& input) const;
 	mutable HudTextMetricsCache textCache_;
 };
