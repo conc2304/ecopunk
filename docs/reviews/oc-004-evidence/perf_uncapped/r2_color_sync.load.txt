@@ -1,0 +1,5 @@
+22:30  up 16 days, 11:42, 2 users, load averages: 5.82 7.18 7.49
+ 30.7 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 26.3 ./experience_runtime
+ 21.5 /System/Library/PrivateFrameworks/AXAssetLoader.framework/Support/axassetsd
+  7.9 /usr/libexec/mobileassetd

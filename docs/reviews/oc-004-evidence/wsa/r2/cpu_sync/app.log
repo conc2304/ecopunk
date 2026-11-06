@@ -1,0 +1,62 @@
+[notice ] SceneActivity: OC-004 probe ON dir=/private/tmp/claude-501/-Users-joseconchello-openFrameworks/3708143b-e35f-47d2-be0e-a27f9b54b179/scratchpad/wsa/r2/cpu_sync mode=cpu readback=sync period=0.1s segments=12 quant8=0 fixedRef=0.04 gamma=0.5
+[notice ] VideoPlaybackService: catalog built: 25 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-11-05 13:38:06.956 experience_runtime[65722:10355177] video file loaded at 960 x 540 @ 23.976025 fps
+2026-11-05 13:38:06.974 experience_runtime[65722:10355177] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/Black_Centipede.mp4
+[notice ] TFParameterPanel: new waypoint -> /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/data/presets/moss_growth.json (ecologicalsuccession)
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] TFAmbientTextureLayer: loaded 19 background texture(s) from backgrounds
+[notice ] TFAmbientTextureLayer: residency=bounded pairs=19 tintTextures=19 maskTextures=0 cpuTintMiB=0.0 cpuMaskMiB=0.0 gpuEstMiB=28.2 (rgb-padded 37.6) tintPixelsKept=0 rssBeforeMiB=53 rssAfterMiB=94 glError=0x00000000
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFImageCycler: no images found in backgrounds
+[notice ] TFComposition: pattern -> BSP seed=692635
+[notice ] HudSkin: skin schedule: day 1 skin(s) from 7:00, night 2 skin(s) from 19:00
+[notice ] HudSkin: optional controls/button faces: 3/3 loaded (idle, focused, active)
+[notice ] HudSkin: optional controls/scene_next/pressed.png: absent
+[notice ] HudSkin: activated 'plywood-marble'; peak GPU 3763200 B, steady 3763200 B
+[notice ] HudSkin: skin 'plywood-marble' (day palette) — schedule: day
+[notice ] Typography: registry /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/hud/dev-typography/fonts.json: 26 font file(s) available, 6 missing
+[notice ] Typography:   missing candidate: Rajdhani SemiBold (fonts/Rajdhani-SemiBold.ttf)
+[notice ] Typography:   missing candidate: Rajdhani Medium (fonts/Rajdhani-Medium.ttf)
+[notice ] Typography:   missing candidate: Oxanium Medium (fonts/Oxanium-Medium.ttf)
+[notice ] Typography:   missing candidate: Barlow Condensed Medium (fonts/BarlowCondensed-Medium.ttf)
+[notice ] Typography:   missing candidate: IBM Plex Mono (fonts/IBMPlexMono-Regular.ttf)
+[notice ] Typography:   missing candidate: Share Tech Mono (fonts/ShareTechMono-Regular.ttf)
+[notice ] Typography: loaded: font 'W3$iP Regular (Jaydenlikesfonts)' 13 px, spacing 1.00, color HUD teal (current), glow 0.00 (loads 6)
+[notice ] Typography: skin: plywood-marble (day): font 'W3$iP Regular (Jaydenlikesfonts)' 13 px, spacing 1.00, color Charcoal, glow 0.00 (loads 6)
+[notice ] Typography: typography preset applied from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/hud/dev-typography
+[notice ] Installation: settings loaded from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/data/installation-settings.json
+[notice ] Installation: applied: sceneAutoCycle on 300 s, mediaAutoCycle on 45 s, launchFullscreen off, energy.target 1
+[notice ] SystemMode: minimal themes loaded from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/hud/themes/minimal-theme.json (16 value(s) applied)
+[notice ] HudSkin: optional controls/button faces: 3/3 loaded (idle, focused, active)
+[notice ] HudSkin: optional controls/scene_next/pressed.png: absent
+[notice ] HudSkin: activated 'abyssal-bioluminescence' (previous skin released); peak GPU 7526400 B, steady 3763200 B
+[notice ] Typography: skin: abyssal-bioluminescence (night): font 'W3$iP Regular (Jaydenlikesfonts)' 13 px, spacing 1.00, color HUD teal (current), glow 0.00 (loads 6)
+[notice ] HudSkin: skin 'abyssal-bioluminescence' (night palette) — saved setting
+[notice ] TFAmbientTextureLayer: cycle 1 (seed 692635): underlay=moss_spore_texture overlay=fern_frond_silhouette
+[notice ] SceneActivity: GPU luminance reduction ready (RGBA32F 64x36 x2, 8x6, 1x1)
+[notice ] SceneActivity: deferred readback: syncObjects=yes strategy=fence deferFrames=2
+[notice ] SceneActivity: scene=temporal-fields gen=1 issued=1 done=1 busy=0 static=0 first=1 wide=0 maxGpuCpuDelta=0 ms[p50/p95/max] submit=25.9683/25.9683/25.9683 wait=8.56048/8.56048/8.56048 diffCpu=0.00661516/0.00661516/0.00661516 gpuLumaMs=0/0/0 gpuDiffMs=0/0/0 gpuRead=0/0/0 latency=0/0/0 notReady=0 forced=0 total=34.5955/34.5955/34.5955
+[notice ] Presentation: framebuffer 1280x720 (windowed) -> direct 1280x720
+[notice ] SceneActivity: scene=temporal-fields gen=1 issued=98 done=98 busy=0 static=0 first=1 wide=1 maxGpuCpuDelta=0 ms[p50/p95/max] submit=0.027549/0.0485611/25.9683 wait=9.01647/11.3194/11.6779 diffCpu=0.012383/0.025213/0.0379019 gpuLumaMs=0/0/0 gpuDiffMs=0/0/0 gpuRead=0/0/0 latency=0/0/0 notReady=0 forced=0 total=9.1575/11.6787/34.5955
+[notice ] SceneActivity: scene=temporal-fields gen=1 issued=198 done=198 busy=0 static=0 first=1 wide=1 maxGpuCpuDelta=0 ms[p50/p95/max] submit=0.027585/0.0426931/25.9683 wait=9.01567/11.2017/12.7681 diffCpu=0.0133269/0.02495/0.0379019 gpuLumaMs=0/0/0 gpuDiffMs=0/0/0 gpuRead=0/0/0 latency=0/0/0 notReady=0 forced=0 total=9.13414/11.4476/34.5955
+[notice ] SceneActivity: scene=temporal-fields gen=1 issued=298 done=298 busy=0 static=0 first=1 wide=1 maxGpuCpuDelta=0 ms[p50/p95/max] submit=0.027447/0.0361428/25.9683 wait=9.09719/11.5168/14.5861 diffCpu=0.014359/0.023807/0.0379019 gpuLumaMs=0/0/0 gpuDiffMs=0/0/0 gpuRead=0/0/0 latency=0/0/0 notReady=0 forced=0 total=9.22254/11.6912/34.5955
+[notice ] TFParameterPanel: new waypoint -> /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/data/presets/wind_through_grass.json (bands)

@@ -1,0 +1,5 @@
+ 9:36  up 16 days, 22:48, 2 users, load averages: 2.47 6.18 5.69
+ 29.8 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 17.7 /Applications/Spotify.app/Contents/Frameworks/Spotify Helper.app/Contents/MacOS/Spotify Helper
+  7.7 /Applications/Spotify.app/Contents/Frameworks/Spotify Helper (Renderer).app/Contents/MacOS/Spotify Helper (Renderer)
+  4.2 /usr/libexec/airportd

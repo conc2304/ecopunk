@@ -1,0 +1,5 @@
+22:26  up 16 days, 11:39, 2 users, load averages: 4.64 8.64 8.01
+234.4 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 40.9 ./experience_runtime
+ 21.6 /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc/Contents/MacOS/VTDecoderXPCService
+ 19.6 /System/Library/PrivateFrameworks/AXAssetLoader.framework/Support/axassetsd

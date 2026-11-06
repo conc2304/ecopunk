@@ -1,0 +1,340 @@
+{
+ "blob": {
+  "counts": {
+   "scenechange": 1,
+   "first": 1,
+   "wide": 6,
+   "valid": 704
+  },
+  "mirrorMaxErr": 1.977724975377182e-05,
+  "gpuCpuMaxDelta": 0.0,
+  "raw": {
+   "p05": 0.004814,
+   "p25": 0.009486,
+   "p50": 0.074833,
+   "p75": 0.090722,
+   "p95": 0.106625,
+   "p99": 0.124786,
+   "max": 0.310417
+  },
+  "rawZeroFrac": 0.0,
+  "corrEncLin": 0.982443024301046,
+  "fixed": {
+   "meanSeg": 10.15625,
+   "p10": 7,
+   "p50": 12,
+   "p90": 12,
+   "atMaxFrac": 0.6278409090909091,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 2.4995077784918562,
+   "flickerSmoothed": 0.7540414527293868
+  },
+  "rolling": {
+   "meanSeg": 5.730113636363637,
+   "p10": 3,
+   "p50": 7,
+   "p90": 8,
+   "atMaxFrac": 0.0,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 3.8679533778896324,
+   "flickerSmoothed": 1.033316064851382
+  },
+  "bounded": {
+   "meanSeg": 9.470170454545455,
+   "p10": 5,
+   "p50": 12,
+   "p90": 12,
+   "atMaxFrac": 0.6264204545454546,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 3.0022020803114478,
+   "flickerSmoothed": 0.6842227996988881
+  }
+ },
+ "temporal": {
+  "counts": {
+   "scenechange": 1,
+   "first": 1,
+   "wide": 7,
+   "valid": 701
+  },
+  "mirrorMaxErr": 6.3088290657487e-05,
+  "gpuCpuMaxDelta": 0.0,
+  "raw": {
+   "p05": 0.002469,
+   "p25": 0.004239,
+   "p50": 0.006311,
+   "p75": 0.010422,
+   "p95": 0.024986,
+   "p99": 0.062966,
+   "max": 0.518045
+  },
+  "rawZeroFrac": 0.0,
+  "corrEncLin": 0.9571604327828512,
+  "fixed": {
+   "meanSeg": 7.198288159771755,
+   "p10": 5,
+   "p50": 7,
+   "p90": 10,
+   "atMaxFrac": 0.007132667617689016,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 5.265994941325932,
+   "flickerSmoothed": 2.6399082251791417
+  },
+  "rolling": {
+   "meanSeg": 2.697574893009986,
+   "p10": 2,
+   "p50": 2,
+   "p90": 4,
+   "atMaxFrac": 0.0,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 2.211441445176244,
+   "flickerSmoothed": 1.1748282677498798
+  },
+  "bounded": {
+   "meanSeg": 5.467902995720399,
+   "p10": 4,
+   "p50": 5,
+   "p90": 8,
+   "atMaxFrac": 0.0014265335235378032,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 4.1326312006731065,
+   "flickerSmoothed": 2.1699769180791897
+  }
+ },
+ "blueprint": {
+  "counts": {
+   "scenechange": 1,
+   "first": 1,
+   "wide": 3,
+   "valid": 713
+  },
+  "mirrorMaxErr": 6.520558371174434e-05,
+  "gpuCpuMaxDelta": 0.0,
+  "raw": {
+   "p05": 0.000562,
+   "p25": 0.00101,
+   "p50": 0.00187,
+   "p75": 0.003228,
+   "p95": 0.007347,
+   "p99": 0.031302,
+   "max": 0.078146
+  },
+  "rawZeroFrac": 0.0,
+  "corrEncLin": 0.9264800963245137,
+  "fixed": {
+   "meanSeg": 4.465638148667602,
+   "p10": 3,
+   "p50": 4,
+   "p90": 7,
+   "atMaxFrac": 0.002805049088359046,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 4.422483460886344,
+   "flickerSmoothed": 1.8079334902994488
+  },
+  "rolling": {
+   "meanSeg": 4.0252454417952315,
+   "p10": 2,
+   "p50": 4,
+   "p90": 6,
+   "atMaxFrac": 0.004207573632538569,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 3.9774536786587875,
+   "flickerSmoothed": 1.6132329605748927
+  },
+  "bounded": {
+   "meanSeg": 4.0252454417952315,
+   "p10": 2,
+   "p50": 4,
+   "p90": 6,
+   "atMaxFrac": 0.004207573632538569,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 3.9774536786587875,
+   "flickerSmoothed": 1.6132329605748927
+  }
+ },
+ "fragment": {
+  "counts": {
+   "scenechange": 1,
+   "first": 1,
+   "wide": 6,
+   "valid": 707
+  },
+  "mirrorMaxErr": 2.7120603859120962e-05,
+  "gpuCpuMaxDelta": 0.0,
+  "raw": {
+   "p05": 0.004286,
+   "p25": 0.007003,
+   "p50": 0.010377,
+   "p75": 0.015654,
+   "p95": 0.025337,
+   "p99": 0.042015,
+   "max": 0.1944
+  },
+  "rawZeroFrac": 0.0,
+  "corrEncLin": 0.8283484650200047,
+  "fixed": {
+   "meanSeg": 8.27015558698727,
+   "p10": 6,
+   "p50": 8,
+   "p90": 10,
+   "atMaxFrac": 0.011315417256011316,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 7.505089777740025,
+   "flickerSmoothed": 2.6951979864812246
+  },
+  "rolling": {
+   "meanSeg": 4.43988684582744,
+   "p10": 3,
+   "p50": 4,
+   "p90": 5,
+   "atMaxFrac": 0.0014144271570014145,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 5.749755704493278,
+   "flickerSmoothed": 1.5065465668023255
+  },
+  "bounded": {
+   "meanSeg": 6.0862800565770865,
+   "p10": 5,
+   "p50": 6,
+   "p90": 7,
+   "atMaxFrac": 0.002828854314002829,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 6.689619617727757,
+   "flickerSmoothed": 2.2390875579997864
+  }
+ },
+ "quadrant": {
+  "counts": {
+   "scenechange": 1,
+   "first": 1,
+   "wide": 3,
+   "missing": 1,
+   "valid": 714
+  },
+  "mirrorMaxErr": 1.7678884296434827e-05,
+  "gpuCpuMaxDelta": 0.0,
+  "raw": {
+   "p05": 0.005777,
+   "p25": 0.008736,
+   "p50": 0.012318,
+   "p75": 0.016523,
+   "p95": 0.049192,
+   "p99": 0.107465,
+   "max": 0.227294
+  },
+  "rawZeroFrac": 0.0,
+  "corrEncLin": 0.9567993696201407,
+  "fixed": {
+   "meanSeg": 8.522408963585434,
+   "p10": 7,
+   "p50": 8,
+   "p90": 11,
+   "atMaxFrac": 0.08403361344537816,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 6.698341640399193,
+   "flickerSmoothed": 1.997021110181126
+  },
+  "rolling": {
+   "meanSeg": 3.7745098039215685,
+   "p10": 3,
+   "p50": 3,
+   "p90": 6,
+   "atMaxFrac": 0.0,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 2.8291132394232616,
+   "flickerSmoothed": 1.2620063960172392
+  },
+  "bounded": {
+   "meanSeg": 6.7100840336134455,
+   "p10": 5,
+   "p50": 6,
+   "p90": 10,
+   "atMaxFrac": 0.029411764705882353,
+   "atOrBelow1Frac": 0.0,
+   "flickerRaw": 6.51805501239673,
+   "flickerSmoothed": 2.052493918797268
+  }
+ },
+ "_synthetic": {
+  "stillness": {
+   "fixed": 0.05,
+   "rolling": 0.224,
+   "bounded": 0.071,
+   "peakSmoothedSeg": [
+    1,
+    3,
+    1
+   ]
+  },
+  "subtle": {
+   "fixed": 0.316,
+   "rolling": 1.0,
+   "bounded": 0.447,
+   "peakSmoothedSeg": [
+    4,
+    12,
+    6
+   ]
+  },
+  "continuous": {
+   "fixed": 0.707,
+   "rolling": 1.0,
+   "bounded": 1.0,
+   "peakSmoothedSeg": [
+    9,
+    12,
+    12
+   ]
+  },
+  "rapid": {
+   "fixed": 1.0,
+   "rolling": 1.0,
+   "bounded": 1.0,
+   "peakSmoothedSeg": [
+    12,
+    12,
+    12
+   ]
+  },
+  "flash": {
+   "fixed": 1.0,
+   "rolling": 1.0,
+   "bounded": 1.0,
+   "peakSmoothedSeg": [
+    12,
+    12,
+    12
+   ]
+  },
+  "post-flash-still": {
+   "fixed": 0.051,
+   "rolling": 0.016,
+   "bounded": 0.036,
+   "peakSmoothedSeg": [
+    11,
+    11,
+    11
+   ]
+  },
+  "cut": {
+   "fixed": 0.728,
+   "rolling": 0.672,
+   "bounded": 0.724,
+   "peakSmoothedSeg": [
+    9,
+    9,
+    9
+   ]
+  },
+  "post-cut-subtle": {
+   "fixed": 0.316,
+   "rolling": 0.1,
+   "bounded": 0.224,
+   "peakSmoothedSeg": [
+    9,
+    8,
+    9
+   ]
+  }
+ }
+}

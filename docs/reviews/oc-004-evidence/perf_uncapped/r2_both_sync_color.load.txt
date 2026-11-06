@@ -1,0 +1,5 @@
+22:34  up 16 days, 11:47, 2 users, load averages: 4.26 5.71 6.76
+ 30.0 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+ 26.7 ./experience_runtime
+ 18.6 /usr/libexec/mobileassetd
+ 12.7 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer

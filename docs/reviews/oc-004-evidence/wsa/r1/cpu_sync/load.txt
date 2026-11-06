@@ -1,0 +1,5 @@
+13:33  up 17 days,  2:45, 2 users, load averages: 5.36 8.29 8.26
+ 60.2 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 26.8 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+ 20.3 /Applications/Spotify.app/Contents/MacOS/Spotify
+ 18.1 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.80/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)

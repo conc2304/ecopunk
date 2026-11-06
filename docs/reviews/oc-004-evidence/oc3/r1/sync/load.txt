@@ -1,0 +1,5 @@
+ 9:28  up 16 days, 22:40, 2 users, load averages: 6.54 4.52 4.22
+194.8 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.80/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)
+  8.8 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+  4.4 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+  3.1 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.80/Helpers/Google Chrome Helper (Aperitif).app/Contents/MacOS/Google Chrome Helper (Aperitif)

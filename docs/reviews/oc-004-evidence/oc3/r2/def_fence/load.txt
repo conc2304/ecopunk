@@ -1,0 +1,5 @@
+ 9:35  up 16 days, 22:47, 2 users, load averages: 2.99 6.85 5.88
+ 25.5 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 15.6 /Applications/Spotify.app/Contents/Frameworks/Spotify Helper.app/Contents/MacOS/Spotify Helper
+  6.0 /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor
+  4.6 /System/Library/PrivateFrameworks/TCC.framework/Support/tccd

@@ -1,0 +1,5 @@
+22:25  up 16 days, 11:37, 2 users, load averages: 7.89 10.34 8.47
+ 50.0 /usr/libexec/mobileassetd
+ 48.6 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 33.3 /Applications/Spotify.app/Contents/MacOS/Spotify
+ 32.8 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome

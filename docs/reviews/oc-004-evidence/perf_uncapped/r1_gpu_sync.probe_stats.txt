@@ -1,0 +1,1 @@
+[notice ] SceneActivity: scene=temporal-fields gen=1 issued=384 done=384 busy=0 static=0 first=1 wide=12 maxGpuCpuDelta=0 ms[p50/p95/max] submit=0.0537109/0.0656121/34.6671 wait=0.075968/0.132809/0.334533 diffCpu=0/0/0 gpuLumaMs=0.2264/0.25296/0.26208 gpuDiffMs=0.19536/0.19984/0.22128 total=3.46673/4.12523/35.9339

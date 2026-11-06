@@ -1,0 +1,71 @@
+[notice ] SceneActivity: OC-004 probe ON dir=/private/tmp/claude-501/-Users-joseconchello-openFrameworks/3708143b-e35f-47d2-be0e-a27f9b54b179/scratchpad/oc3/r2/def_frames4 mode=off readback=deferred period=0.1s segments=12 quant8=0 fixedRef=0.04 gamma=0.5
+[notice ] VideoPlaybackService: catalog built: 25 playable-candidate entries from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media
+2026-11-05 09:34:33.147 experience_runtime[62930:10304444] video file loaded at 960 x 540 @ 23.976025 fps
+2026-11-05 09:34:33.165 experience_runtime[62930:10304447] video file loaded at 960 x 540 @ 23.976025 fps
+[notice ] TimeOffsetVideoBuffer: loadExplicit: loaded /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/shared/media/Black_Centipede.mp4
+[notice ] TFParameterPanel: new waypoint -> /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/data/presets/ancient_tree.json (networkgrowth)
+[notice ] ShaderLibrary: loaded: desaturate
+[notice ] ShaderLibrary: loaded: invert
+[notice ] ShaderLibrary: loaded: recolor
+[notice ] ShaderLibrary: loaded: threshold
+[notice ] ShaderLibrary: loaded: dither
+[notice ] ShaderLibrary: loaded: solarize
+[notice ] ShaderLibrary: loaded: scanlines
+[notice ] ShaderLibrary: loaded: channelshift
+[notice ] ShaderLibrary: loaded: hue_rotate
+[notice ] ShaderLibrary: loaded: ascii_solarpunk
+[notice ] ShaderLibrary: loaded: heatmap_recolor
+[notice ] ShaderLibrary: loaded: bioluminescence
+[notice ] ShaderLibrary: loaded: chromatic_aberration
+[notice ] ShaderLibrary: loaded: edge_glow
+[notice ] ShaderLibrary: loaded: ink_outlines
+[notice ] ShaderLibrary: loaded: pixel_drift
+[notice ] ShaderLibrary: loaded: pixel_sorting
+[notice ] ShaderLibrary: loaded: water_refraction
+[notice ] TFAmbientTextureLayer: loaded 19 background texture(s) from backgrounds
+[notice ] TFAmbientTextureLayer: residency=bounded pairs=19 tintTextures=19 maskTextures=0 cpuTintMiB=0.0 cpuMaskMiB=0.0 gpuEstMiB=28.2 (rgb-padded 37.6) tintPixelsKept=0 rssBeforeMiB=53 rssAfterMiB=94 glError=0x00000000
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for ascii_solarpunk
+[notice ] EffectKnowledgeBase: skipped duplicate whitelist entry for dither
+[notice ] TFImageCycler: no images found in backgrounds
+[notice ] TFComposition: pattern -> BSP seed=949680
+[notice ] HudSkin: skin schedule: day 1 skin(s) from 7:00, night 2 skin(s) from 19:00
+[notice ] HudSkin: optional controls/button faces: 3/3 loaded (idle, focused, active)
+[notice ] HudSkin: optional controls/scene_next/pressed.png: absent
+[notice ] HudSkin: activated 'plywood-marble'; peak GPU 3763200 B, steady 3763200 B
+[notice ] HudSkin: skin 'plywood-marble' (day palette) — schedule: day
+[notice ] Typography: registry /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/hud/dev-typography/fonts.json: 26 font file(s) available, 6 missing
+[notice ] Typography:   missing candidate: Rajdhani SemiBold (fonts/Rajdhani-SemiBold.ttf)
+[notice ] Typography:   missing candidate: Rajdhani Medium (fonts/Rajdhani-Medium.ttf)
+[notice ] Typography:   missing candidate: Oxanium Medium (fonts/Oxanium-Medium.ttf)
+[notice ] Typography:   missing candidate: Barlow Condensed Medium (fonts/BarlowCondensed-Medium.ttf)
+[notice ] Typography:   missing candidate: IBM Plex Mono (fonts/IBMPlexMono-Regular.ttf)
+[notice ] Typography:   missing candidate: Share Tech Mono (fonts/ShareTechMono-Regular.ttf)
+[notice ] Typography: loaded: font 'W3$iP Regular (Jaydenlikesfonts)' 13 px, spacing 1.00, color HUD teal (current), glow 0.00 (loads 6)
+[notice ] Typography: skin: plywood-marble (day): font 'W3$iP Regular (Jaydenlikesfonts)' 13 px, spacing 1.00, color Charcoal, glow 0.00 (loads 6)
+[notice ] Typography: typography preset applied from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/hud/dev-typography
+[notice ] Installation: settings loaded from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/sketches/experience_runtime/bin/data/installation-settings.json
+[notice ] Installation: applied: sceneAutoCycle on 300 s, mediaAutoCycle on 45 s, launchFullscreen off, energy.target 1
+[notice ] SystemMode: minimal themes loaded from /Users/joseconchello/openFrameworks/apps/myApps/EcopunkVideoCollage/assets/hud/themes/minimal-theme.json (16 value(s) applied)
+[notice ] HudSkin: optional controls/button faces: 3/3 loaded (idle, focused, active)
+[notice ] HudSkin: optional controls/scene_next/pressed.png: absent
+[notice ] HudSkin: activated 'abyssal-bioluminescence' (previous skin released); peak GPU 7526400 B, steady 3763200 B
+[notice ] Typography: skin: abyssal-bioluminescence (night): font 'W3$iP Regular (Jaydenlikesfonts)' 13 px, spacing 1.00, color HUD teal (current), glow 0.00 (loads 6)
+[notice ] HudSkin: skin 'abyssal-bioluminescence' (night palette) — saved setting
+[notice ] SceneColor: generation 1 begins: scene=temporal-fields (previous generation held 0 samples; cleared)
+[notice ] TFAmbientTextureLayer: cycle 1 (seed 949680): underlay=root_mycelium_network overlay=wind_current_lines
+[notice ] SceneColor: SceneFBO 1280x720 internalFormat=0x1908 framebufferSRGB=off -> validated: 8-bit display-encoded RGBA, alpha composited over black, sRGB EOTF before averaging
+[notice ] SceneColor: GPU linear-light reduction ready (RGBA16F: 160x90 -> 16x9)
+[notice ] SceneColor: deferred readback: syncObjects=yes strategy=frames deferFrames=4 flushAfterFence=no
+[notice ] SceneActivity: scene=temporal-fields gen=1 issued=0 done=0 busy=0 static=0 first=0 wide=0 maxGpuCpuDelta=0 ms[p50/p95/max] submit=0/0/0 wait=0/0/0 diffCpu=0/0/0 gpuLumaMs=0/0/0 gpuDiffMs=0/0/0 total=0/0/0
+[notice ] SceneColor: scene=temporal-fields gen=1 mode=deferred issued=1 done=0 gaps=0 busy=0 dropGen=0 issueAvgMs=17.3473 issueMaxMs=17.3473 collectMaxMs=0 unsupported=0 snapshotRebuilds=0 rebuildMsAvg=0 rebuildMsMax=0 stageMs[p50/p95/max] submit=11.7029/11.7029/11.7029 wait=0/0/0 convert=0/0/0 push=0/0/0 total=0/0/0 defer=frames/4 latencyMs[p50/p95/max]=0/0/0 notReady=0 forcedBlocking=0 rgb(linear)=-1,-1,-1 luma=-1
+[notice ] Presentation: framebuffer 1280x720 (windowed) -> direct 1280x720
+[notice ] SceneActivity: scene=temporal-fields gen=1 issued=0 done=0 busy=0 static=0 first=0 wide=0 maxGpuCpuDelta=0 ms[p50/p95/max] submit=0/0/0 wait=0/0/0 diffCpu=0/0/0 gpuLumaMs=0/0/0 gpuDiffMs=0/0/0 total=0/0/0
+[notice ] SceneColor: scene=temporal-fields gen=1 mode=deferred issued=20 done=20 gaps=0 busy=0 dropGen=0 issueAvgMs=0.901642 issueMaxMs=17.3473 collectMaxMs=0 unsupported=0 snapshotRebuilds=21 rebuildMsAvg=0.00174276 rebuildMsMax=0.002398 stageMs[p50/p95/max] submit=0.0371859/11.7029/11.7029 wait=0.232671/0.415867/0.415867 convert=0.00102687/0.00135708/0.00135708 push=0.000161886/0.000568151/0.000568151 total=0.234399/0.417547/0.417547 defer=frames/4 latencyMs[p50/p95/max]=0/0/0 notReady=0 forcedBlocking=0 rgb(linear)=0.164078,0.16603,0.158118 luma=0.165044
+[notice ] DrawCost: frames=600 meanDrawCpuUs=2516.03 maxDrawCpuUs=45775
+[notice ] SceneActivity: scene=temporal-fields gen=1 issued=0 done=0 busy=0 static=0 first=0 wide=0 maxGpuCpuDelta=0 ms[p50/p95/max] submit=0/0/0 wait=0/0/0 diffCpu=0/0/0 gpuLumaMs=0/0/0 gpuDiffMs=0/0/0 total=0/0/0
+[notice ] SceneColor: scene=temporal-fields gen=1 mode=deferred issued=39 done=39 gaps=0 busy=0 dropGen=0 issueAvgMs=0.479056 issueMaxMs=17.3473 collectMaxMs=0 unsupported=0 snapshotRebuilds=40 rebuildMsAvg=0.00191417 rebuildMsMax=0.003371 stageMs[p50/p95/max] submit=0.0335591/0.0479748/11.7029 wait=0.240436/0.300901/0.415867 convert=0.00103807/0.00153685/0.00178409 push=0.000167847/0.00027585/0.000568151 total=0.242152/0.303481/0.417547 defer=frames/4 latencyMs[p50/p95/max]=0/0/0 notReady=0 forcedBlocking=0 rgb(linear)=0.150825,0.152795,0.146428 luma=0.151916
+[notice ] SceneActivity: scene=temporal-fields gen=1 issued=0 done=0 busy=0 static=0 first=0 wide=0 maxGpuCpuDelta=0 ms[p50/p95/max] submit=0/0/0 wait=0/0/0 diffCpu=0/0/0 gpuLumaMs=0/0/0 gpuDiffMs=0/0/0 total=0/0/0
+[notice ] SceneColor: scene=temporal-fields gen=1 mode=deferred issued=58 done=58 gaps=0 busy=0 dropGen=0 issueAvgMs=0.333077 issueMaxMs=17.3473 collectMaxMs=0 unsupported=0 snapshotRebuilds=59 rebuildMsAvg=0.00198261 rebuildMsMax=0.0036 stageMs[p50/p95/max] submit=0.033227/0.0433471/11.7029 wait=0.240436/0.301166/0.415867 convert=0.001055/0.00165081/0.00189209 push=0.000170946/0.000267029/0.000568151 total=0.242152/0.303481/0.417547 defer=frames/4 latencyMs[p50/p95/max]=0/0/0 notReady=0 forcedBlocking=0 rgb(linear)=0.142245,0.145311,0.140116 luma=0.144284
+[notice ] DrawCost: frames=600 meanDrawCpuUs=2623.13 maxDrawCpuUs=5995
+[notice ] SceneActivity: scene=temporal-fields gen=1 issued=0 done=0 busy=0 static=0 first=0 wide=0 maxGpuCpuDelta=0 ms[p50/p95/max] submit=0/0/0 wait=0/0/0 diffCpu=0/0/0 gpuLumaMs=0/0/0 gpuDiffMs=0/0/0 total=0/0/0
+[notice ] SceneColor: scene=temporal-fields gen=1 mode=deferred issued=78 done=78 gaps=0 busy=0 dropGen=0 issueAvgMs=0.257045 issueMaxMs=17.3473 collectMaxMs=0 unsupported=0 snapshotRebuilds=79 rebuildMsAvg=0.00200696 rebuildMsMax=0.0036 stageMs[p50/p95/max] submit=0.033469/0.0454299/11.7029 wait=0.231444/0.301166/0.415867 convert=0.00103807/0.00153685/0.00189209 push=0.000169039/0.000263929/0.000568151 total=0.232506/0.303481/0.417547 defer=frames/4 latencyMs[p50/p95/max]=0/0/0 notReady=0 forcedBlocking=0 rgb(linear)=0.159788,0.162278,0.155688 luma=0.161273

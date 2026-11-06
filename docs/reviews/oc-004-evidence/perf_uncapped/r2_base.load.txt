@@ -1,0 +1,5 @@
+22:29  up 16 days, 11:41, 2 users, load averages: 4.66 7.21 7.52
+ 41.2 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 25.4 ./experience_runtime
+  4.7 /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc/Contents/MacOS/VTDecoderXPCService
+  3.4 /System/Library/CoreServices/ControlCenter.app/Contents/MacOS/ControlCenter

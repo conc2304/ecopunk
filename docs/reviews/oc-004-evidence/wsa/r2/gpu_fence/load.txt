@@ -1,0 +1,5 @@
+13:36  up 17 days,  2:49, 2 users, load averages: 3.44 5.56 7.07
+187.3 /Applications/Spotify.app/Contents/Frameworks/Spotify Helper (Renderer).app/Contents/MacOS/Spotify Helper (Renderer)
+ 17.2 /Applications/Spotify.app/Contents/MacOS/Spotify
+ 16.7 /Applications/Spotify.app/Contents/Frameworks/Spotify Helper.app/Contents/MacOS/Spotify Helper
+ 15.6 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.80/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)

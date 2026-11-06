@@ -1,0 +1,5 @@
+22:27  up 16 days, 11:40, 2 users, load averages: 4.30 7.98 7.80
+140.1 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 26.9 ./experience_runtime
+  9.7 /System/Library/Frameworks/VideoToolbox.framework/Versions/A/XPCServices/VTDecoderXPCService.xpc/Contents/MacOS/VTDecoderXPCService
+  5.1 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome

@@ -1,0 +1,5 @@
+22:30  up 16 days, 11:43, 2 users, load averages: 6.21 7.00 7.40
+ 27.7 ./experience_runtime
+ 26.8 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 16.2 /usr/libexec/sysmond
+  7.1 /System/Applications/Utilities/Activity Monitor.app/Contents/MacOS/Activity Monitor

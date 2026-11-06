@@ -667,6 +667,39 @@ COMMITTED (`1e5334f`, `blueprint-emergence-updates`; not pushed — push waived 
 Last Updated:
 2026-10-08
 
+### OC-004 — Scene visual-activity production integration (HUD region #6)
+
+Status: IMPLEMENTED
+Owner: HUD Runtime / Scene Observability (implementation: ExperienceRuntime + HUD Runtime)
+Architecture Gate: YES
+
+Depends On:
+- Orbit Console v0.1 `sceneColor` publication pattern (same runtime-owned immutable-snapshot seam).
+
+Current Evidence:
+- [../reviews/oc-004-visual-activity-production-integration.md](../reviews/oc-004-visual-activity-production-integration.md) — implementation report: inspection matrix, before/after data path, tests, desktop five-scene evidence, default-off verification, outstanding ROCK Pi qualification parameters.
+- [../reviews/oc-004-scene-visual-activity-probe.md](../reviews/oc-004-scene-visual-activity-probe.md) section 6 — the contract baseline. Architecture directed implementation against it ("OC-004 Contract Confirmation and Resume Authorization", delivered in the implementing session); that directive is not a filed repository document, so no Architecture acceptance record exists in the repo for the contract itself.
+- [../reviews/oc-004-desktop-transition-closure.md](../reviews/oc-004-desktop-transition-closure.md) — real five-scene transition run, generation invalidation, delayed-readback discards, gauge state consistency (CONDITIONAL PASS: completion-time generation check not reachable on the real path; one unreproduced hardening hazard reported).
+- Desktop only. Production sampling is OFF by default (`EXPERIENCE_RUNTIME_SCENE_VISUAL_ACTIVITY` unset).
+- Not established: any ROCK Pi / Pi 3B behavior; the OC-004 performance acceptance thresholds, Pi cadence and Pi stale-period constants (unspecified in the repository).
+
+Next Gate:
+Architecture supplies the Pi acceptance criteria (see the report, section 10); supervised hardware qualification; Architecture review of the implementation.
+
+Next Action:
+Architecture to specify the missing qualification parameters; none authorized for hardware yet.
+
+Blocked By:
+Pi acceptance thresholds / cadence / stale-period values (Architecture); supervised Pi session (operator).
+
+Required Durability: COMMITTED
+
+Source State:
+UNCOMMITTED (working tree, `blueprint-emergence-updates` at `03b3bb2` plus concurrent changes).
+
+Last Updated:
+2026-11-05
+
 ## HUD Art Pipeline & Skin Production
 
 ### ART-001 — Dark Moss skin production

@@ -1,0 +1,5 @@
+ 9:27  up 16 days, 22:40, 2 users, load averages: 5.34 4.09 4.07
+ 29.6 /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper (Renderer).app/Contents/MacOS/Code Helper (Renderer)
+ 18.2 /Users/joseconchello/.vscode/extensions/anthropic.claude-code-2.1.310-darwin-x64/resources/native-binary/claude
+ 16.4 /usr/libexec/runningboardd
+ 12.8 /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper (Renderer).app/Contents/MacOS/Code Helper (Renderer)

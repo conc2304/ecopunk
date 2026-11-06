@@ -1,0 +1,5 @@
+22:33  up 16 days, 11:45, 2 users, load averages: 4.31 6.17 7.03
+ 29.7 /usr/libexec/mobileassetd
+ 25.7 ./experience_runtime
+ 19.9 /Applications/Spotify.app/Contents/MacOS/Spotify
+ 12.6 /Applications/Google Chrome.app/Contents/MacOS/Google Chrome

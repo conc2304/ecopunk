@@ -1,0 +1,5 @@
+13:29  up 17 days,  2:41, 2 users, load averages: 1.98 8.36 8.29
+ 93.0 /System/Library/PrivateFrameworks/XprotectFramework.framework/Versions/A/XPCServices/XprotectService.xpc/Contents/MacOS/XprotectService
+ 69.1 /System/Library/PrivateFrameworks/IMDPersistence.framework/XPCServices/IMDPersistenceAgent.xpc/Contents/MacOS/IMDPersistenceAgent
+ 38.9 /System/Library/ExtensionKit/Extensions/AssetMetricsExtension.appex/Contents/MacOS/AssetMetricsExtension
+ 27.7 /System/Library/PrivateFrameworks/AppStoreDaemon.framework/Support/appstoreagent

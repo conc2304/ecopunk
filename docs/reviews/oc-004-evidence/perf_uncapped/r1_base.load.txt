@@ -1,0 +1,5 @@
+22:22  up 16 days, 11:34, 2 users, load averages: 11.36 10.57 8.00
+ 94.5 /System/Library/PrivateFrameworks/XprotectFramework.framework/Versions/A/XPCServices/XprotectService.xpc/Contents/MacOS/XprotectService
+ 40.6 /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper (Renderer).app/Contents/MacOS/Code Helper (Renderer)
+ 26.6 /System/Library/Frameworks/CoreServices.framework/Frameworks/Metadata.framework/Versions/A/Support/mdbulkimport
+ 24.3 ./experience_runtime

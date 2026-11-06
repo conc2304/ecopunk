@@ -199,3 +199,23 @@ There shall be exactly one canonical HUD Blueprint. All HUD skins implement the 
   - `universal.timing` inset/text-budget documentation (nonblocking).
   - An optional, separately proposed validator compatibility reconciliation.
   - HUD-004, HUD-005, image decoding, fallback, Studio loader parity, GPU residency and asset-root delivery remain open and unauthorized.
+
+---
+
+## DEC-020 — OC-004 scene visual activity is a separate runtime-measured signal (`scene.visual.activity`)
+
+- **Status:** Proposed (recorded from the Architecture directive "OC-004 Contract Confirmation and Resume Authorization" relayed in the implementing session; no filed Architecture document exists in the repository — Architecture to confirm/file)
+- **Date:** 2026-11-05
+- **Owner:** HUD Runtime / Scene Observability; ExperienceRuntime
+- **Affected domains:** ExperienceRuntime, HUD Runtime
+- **Decision:** `docs/reviews/oc-004-scene-visual-activity-probe.md` section 6 is the implementation baseline: optional `HudFrameData::sceneVisualActivity` (`SceneVisualActivitySnapshot`, states Valid/Stale/Unavailable/Transition), semantic binding `scene.visual.activity`, 64x36 frame-difference measurement, fixed-log normalization 3e-4..0.30, HUD-owned attack/decay smoothing, runtime sampling disabled by default. `scene.activity.overall` is not substituted, redefined or used as a fallback.
+- **Rationale:** `scene.activity.overall` is scene-semantic and unrelated to pixels; the measured signal is separate, additive and explicitly unavailable when not sampled.
+- **Alternatives considered:** Rolling-max and bounded-adaptive normalization (rejected in the probe report); fallback to `scene.activity.overall` when sampling is off (rejected by the directive).
+- **Consequences:**
+  - Region #6's segmented gauge renders an explicit unavailable state ("--", empty bar) whenever sampling is disabled or the observation is not Valid.
+  - Pi cadence, Pi stale-period value and performance acceptance thresholds remain unspecified; hardware qualification is pending.
+- **Source documents:**
+  - [../reviews/oc-004-scene-visual-activity-probe.md](../reviews/oc-004-scene-visual-activity-probe.md);
+  - [../reviews/oc-004-visual-activity-production-integration.md](../reviews/oc-004-visual-activity-production-integration.md).
+- **Follow-up actions:**
+  - Architecture to supply the ROCK Pi / Pi 3B acceptance parameters listed in the integration report.

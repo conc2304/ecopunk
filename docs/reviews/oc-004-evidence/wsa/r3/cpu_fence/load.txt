@@ -1,0 +1,5 @@
+13:40  up 17 days,  2:52, 2 users, load averages: 1.38 3.63 5.92
+ 30.8 /usr/sbin/coreaudiod
+ 13.9 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 10.7 /System/Library/CoreServices/ControlCenter.app/Contents/MacOS/ControlCenter
+  9.7 /Applications/Google Chrome.app/Contents/Frameworks/Google Chrome Framework.framework/Versions/155.0.8059.80/Helpers/Google Chrome Helper (Aperitif Renderer).app/Contents/MacOS/Google Chrome Helper (Aperitif Renderer)

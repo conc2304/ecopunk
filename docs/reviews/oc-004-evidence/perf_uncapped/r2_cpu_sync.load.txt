@@ -1,0 +1,5 @@
+22:32  up 16 days, 11:44, 2 users, load averages: 4.91 6.57 7.21
+133.7 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer
+ 26.8 ./experience_runtime
+ 24.3 /usr/libexec/sysmond
+ 10.2 /Applications/Visual Studio Code.app/Contents/Frameworks/Code Helper (Renderer).app/Contents/MacOS/Code Helper (Renderer)

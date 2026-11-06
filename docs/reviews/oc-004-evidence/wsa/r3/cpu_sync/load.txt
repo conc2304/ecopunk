@@ -1,0 +1,5 @@
+13:42  up 17 days,  2:55, 2 users, load averages: 4.91 3.69 5.51
+105.9 /System/Library/Frameworks/Contacts.framework/Support/contactsd
+ 62.5 /System/Library/PrivateFrameworks/StorageManagement.framework/Versions/A/XPCServices/CloudStorageHelper.xpc/Contents/MacOS/CloudStorageHelper
+ 61.2 /System/Library/Frameworks/Accounts.framework/Versions/A/Support/accountsd
+ 39.9 /System/Library/PrivateFrameworks/TCC.framework/Support/tccd
