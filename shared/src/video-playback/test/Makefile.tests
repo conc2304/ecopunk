@@ -45,7 +45,35 @@ RESUME_BIN = video_resume_window_tests
 ADVANCE_SRC = video_advance_mode_tests.cpp ../VideoSelectionPolicy.cpp
 ADVANCE_BIN = video_advance_mode_tests
 
-.PHONY: test clean
+# -- test-activation: VideoPlaybackService::activationCount() (OC-003B). The real
+# service with a fake IVideoDecoder; OF-linked (ofDirectory/ofLog) but no window
+# or GL context. Not part of `test` (which stays compiler-only); run on its own.
+OF_ROOT_REAL ?= $(or $(OF_ROOT),/Users/joseconchello/openFrameworks)
+ACT_OF_INCLUDES = $(addprefix -I$(OF_ROOT_REAL)/libs/,FreeImage/include cairo/include cairo/include/cairo curl/include \
+	fmt/include fmt/include/fmt freetype/include freetype/include/freetype glew/include glew/include/GL glfw/include \
+	glfw/include/GLFW glm/include json/include libpng/include openssl/include pixman/include pugixml/include \
+	rtAudio/include tess2/include uriparser/include utf8/include zlib/include openFrameworks openFrameworks/3d \
+	openFrameworks/video openFrameworks/types openFrameworks/app openFrameworks/utils openFrameworks/math \
+	openFrameworks/gl openFrameworks/communication openFrameworks/events openFrameworks/graphics openFrameworks/sound)
+ACT_LIBS = $(OF_ROOT_REAL)/libs/openFrameworksCompiled/lib/osx/libopenFrameworks.a \
+	$(wildcard $(OF_ROOT_REAL)/libs/*/lib/macos/*.xcframework/macos-arm64_x86_64/*.a)
+ACT_FRAMEWORKS = -framework Accelerate -framework AppKit -framework ApplicationServices -framework AVFoundation \
+	-framework AudioToolbox -framework Cocoa -framework CoreVideo -framework CoreAudio -framework CoreMedia \
+	-framework CoreFoundation -framework CoreServices -framework Metal -framework Foundation -framework IOKit \
+	-framework OpenGL -framework QuartzCore -framework Security -framework SystemConfiguration
+ACT_SRC = video_activation_count_tests.cpp ../VideoPlaybackService.cpp ../OfVideoDecoder.cpp ../MediaCatalog.cpp \
+	../MediaCatalogJsonLoader.cpp ../VideoSelectionPolicy.cpp
+ACT_BIN = video_activation_count_tests
+
+.PHONY: test test-activation clean
+
+test-activation: $(ACT_BIN)
+	./$(ACT_BIN)
+
+$(ACT_BIN): $(ACT_SRC) ../VideoPlaybackService.h
+	c++ -std=c++17 -stdlib=libc++ -DUSE_FMOD=0 -D__MACOSX_CORE__ -Wall -x objective-c++ $(ACT_OF_INCLUDES) -I.. -I../.. \
+		$(ACT_SRC) -x none -mmacosx-version-min=10.15 $(ACT_FRAMEWORKS) $(ACT_LIBS) -lobjc -o $@
+
 
 test: $(CATALOG_BIN) $(POLICY_BIN) $(RESUME_BIN) $(ADVANCE_BIN)
 	./$(CATALOG_BIN)

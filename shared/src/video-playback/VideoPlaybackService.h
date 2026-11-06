@@ -124,6 +124,15 @@ public:
 
 	VideoPlaybackStatus status() const;
 
+	// OC-003B: number of SUCCESSFUL media activations since construction. Bumps
+	// once per successful activation, including a successful reactivation of the
+	// same mediaId (a revisit, a reload, a Recovery fallback that lands on the
+	// already-active item); never on a failed load. Never reset (setup() does not
+	// reset it), never touched by update(). Read-only; not part of
+	// VideoPlaybackStatus. A consumer that must tell repeat visits of one media
+	// apart pairs it with status().mediaId.
+	uint64_t activationCount() const { return activationCount_; }
+
 	// Diagnostics/tests only — not part of VideoPlaybackStatus.
 	const VideoSelectionPolicy& selectionPolicyForTesting() const { return policy_; }
 
@@ -144,6 +153,7 @@ private:
 	// MediaSelectionOrigin.
 	bool attemptSelection(const std::function<std::optional<int>()>& firstCandidateFn, MediaSelectionOrigin baseOrigin);
 
+	uint64_t activationCount_ = 0;
 	std::string mediaRoot_;
 	std::vector<MediaMetadata> catalog_;
 	VideoSelectionPolicy policy_;

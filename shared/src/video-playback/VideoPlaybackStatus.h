@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdio>
 #include <optional>
 #include <string>
 
@@ -66,6 +67,13 @@ struct VideoPlaybackStatus {
 	std::optional<std::string> titleId;
 	std::optional<std::string> fallbackDisplayTitle;
 
+	// File identity for the HUD media label (additive, schemaVersion unchanged):
+	// the active file's NAME only (no directory), its 1-based position in the
+	// catalog's playlist order, and the catalog's total count.
+	std::optional<std::string> displayFileName;
+	std::optional<uint32_t> sampleIndex;  // 1-based
+	std::optional<uint32_t> sampleCount;
+
 	// Playback health.
 	VideoPlaybackHealth health = VideoPlaybackHealth::Unavailable;
 	std::optional<std::string> messageId;
@@ -92,3 +100,25 @@ struct VideoPlaybackStatus {
 	bool canSelectPrevious = false;
 	bool canSelectNext = false;
 };
+
+// HUD media label: "<File_Name>.<ext>" — the file stem with spaces as
+// underscores, then the extension. Empty when the status carries no file
+// identity (callers fall back to the title).
+inline std::string mediaFileLabel(const VideoPlaybackStatus& m) {
+	if (!m.displayFileName || m.displayFileName->empty()) return std::string();
+	const std::string& name = *m.displayFileName;
+	const size_t dot = name.find_last_of('.');
+	std::string stem = dot == std::string::npos || dot == 0 ? name : name.substr(0, dot);
+	const std::string ext = dot == std::string::npos || dot == 0 ? std::string() : name.substr(dot);
+	for (char& c : stem) if (c == ' ') c = '_';
+	return stem + ext;
+}
+
+// HUD sample position: "[Sample 04/12]" (two-digit position/count). Empty when
+// the status carries no sample position.
+inline std::string mediaSampleLabel(const VideoPlaybackStatus& m) {
+	if (!m.sampleIndex || !m.sampleCount) return std::string();
+	char buf[32];
+	std::snprintf(buf, sizeof(buf), "[Sample %02u/%02u]", static_cast<unsigned>(*m.sampleIndex), static_cast<unsigned>(*m.sampleCount));
+	return buf;
+}

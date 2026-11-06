@@ -185,6 +185,7 @@ bool VideoPlaybackService::attemptSelection(const std::function<std::optional<in
 			policy_.confirmActivationSucceeded(*candidate, finalOrigin);
 			rt004::Probe::get().setContext("canonicalMedia", catalog_[static_cast<size_t>(*candidate)].mediaId);
 			rt004::Probe::get().setContext("canonicalOrigin", std::to_string(static_cast<int>(finalOrigin)));
+			++activationCount_; // OC-003B: one per successful activation (same-media reactivation included)
 			health_ = VideoPlaybackHealth::Ready;
 			messageId_.reset();
 			errorCode_.reset();
@@ -285,6 +286,10 @@ VideoPlaybackStatus VideoPlaybackService::status() const {
 		s.mediaId = item.mediaId;
 		s.titleId = item.titleId;
 		s.fallbackDisplayTitle = item.fallbackDisplayTitle;
+		const size_t slash = item.relativePath.find_last_of("/\\");
+		s.displayFileName = slash == std::string::npos ? item.relativePath : item.relativePath.substr(slash + 1);
+		s.sampleIndex = static_cast<uint32_t>(policy_.activeCatalogIndex()) + 1u;
+		s.sampleCount = static_cast<uint32_t>(catalog_.size());
 	}
 
 	if (health_ == VideoPlaybackHealth::Ready || health_ == VideoPlaybackHealth::Degraded) {
