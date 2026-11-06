@@ -316,7 +316,7 @@ constexpr float MLINE_FADE_DELAY = BE_VALUES.MLINE_FADE_DELAY; // seconds before
 
 // Typography
 // constexpr char  CODE_FONT_PATH[]          = "fonts/LiberationMono-Regular.ttf";
-constexpr char CODE_FONT_PATH[] = "fonts/ArgakaFashionRegular.ttf"; // Art deco
+constexpr char CODE_FONT_PATH[] = "fonts/MadawaskaRiver.otf"; // Art deco
 constexpr int SIZE_LABEL = BE_VALUES.SIZE_LABEL;
 constexpr int SIZE_CODE = BE_VALUES.SIZE_CODE;
 constexpr int SIZE_ANNOTATION = BE_VALUES.SIZE_ANNOTATION;

@@ -329,7 +329,7 @@ std::string BlobProductionScene::sceneId() const {
 }
 
 std::string BlobProductionScene::displayName() const {
-	return "Blob Region Prototype";
+	return "SPECIMEN TRACK";
 }
 
 SceneHudStatus BlobProductionScene::hudStatus() const {

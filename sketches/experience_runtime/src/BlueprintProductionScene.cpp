@@ -72,7 +72,7 @@ std::string BlueprintProductionScene::sceneId() const {
 }
 
 std::string BlueprintProductionScene::displayName() const {
-	return "Blueprint Emergence";
+	return "SIGNAL BLUEPRINT";
 }
 
 SceneHudStatus BlueprintProductionScene::hudStatus() const {

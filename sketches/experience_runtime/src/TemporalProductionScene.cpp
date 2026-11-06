@@ -182,7 +182,7 @@ std::string TemporalProductionScene::sceneId() const {
 }
 
 std::string TemporalProductionScene::displayName() const {
-	return "Temporal Fields";
+	return "TEMPORAL FIELDS";
 }
 
 std::optional<videoeffects::EffectActivityStatus> TemporalProductionScene::currentEffectActivitySnapshot() const {

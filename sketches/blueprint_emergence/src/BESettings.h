@@ -365,7 +365,7 @@ constexpr float MLINE_FADE_DELAY = BE_VALUES.MLINE_FADE_DELAY; // seconds before
 // Typography (§02). VeraMono.ttf isn't in this repo; using LiberationMono
 // (open-license, already bundled elsewhere in this OF install) instead.
 // constexpr char  CODE_FONT_PATH[]          = "fonts/LiberationMono-Regular.ttf";
-constexpr char CODE_FONT_PATH[] = "fonts/ArgakaFashionRegular.ttf";
+constexpr char CODE_FONT_PATH[] = "fonts/MadawaskaRiver.otf";
 constexpr int SIZE_LABEL = BE_VALUES.SIZE_LABEL;
 constexpr int SIZE_CODE = BE_VALUES.SIZE_CODE;
 constexpr int SIZE_ANNOTATION = BE_VALUES.SIZE_ANNOTATION;

@@ -127,7 +127,7 @@ std::string QuadrantProductionScene::sceneId() const {
 }
 
 std::string QuadrantProductionScene::displayName() const {
-	return "Quadrant Crosshair";
+	return "FIELD SURVEY";
 }
 
 quadrantsemantics::Inputs QuadrantProductionScene::semanticInputs() const {

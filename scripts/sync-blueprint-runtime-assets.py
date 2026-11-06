@@ -6,7 +6,7 @@ Same model as scripts/sync-temporal-runtime-assets.py. Scope — exactly the
 scene-local files BlueprintSceneCore loads by relative bin/data path:
 
     codefragments.txt                 (AnnotationRenderer code-text lines)
-    fonts/ArgakaFashionRegular.ttf    (BESettings.h CODE_FONT_PATH)
+    fonts/MadawaskaRiver.otf    (BESettings.h CODE_FONT_PATH)
 
 Shared shaders (fragmentEffects, erosion, motion_*, effects/) are NOT owned
 here — they belong to shared/src/shaders, shared/assets/video-effects and
@@ -34,7 +34,7 @@ CANON_ROOT = REPO_ROOT / "sketches" / "blueprint_emergence" / "data"
 
 MANAGED_FILES = [
     "codefragments.txt",
-    "fonts/ArgakaFashionRegular.ttf",
+    "fonts/MadawaskaRiver.otf",
 ]
 
 DEFAULT_SKETCHES = [
