@@ -39,7 +39,46 @@ struct Settings {
 	bool launchFullscreen = false;
 	float energyTarget = 0.5f;
 	bool clock24Hour = true; // app-owned time display preference (Experience Settings page); never changes the OS clock
+	// System Mode (Experience Settings page): "auto" (day/night skin schedule), a skin
+	// package id, or "minimal.light.<hue>" / "minimal.dark.<hue>" (see MinimalTheme.h),
+	// plus the selected background preset for each minimal group.
+	std::string systemMode = "auto";
+	int minimalBackgroundLight = 0;
+	int minimalBackgroundDark = 0;
+	// Navigation-button labels: "text" (default), "icon" (icon only) or "both" (icon above text).
+	std::string buttonLabels = "text";
+	// OC-005 Stage 2: the two committed Orbit observations (global to the installation). Stored as the
+	// persisted tokens (source "fx"|"raw", metric "avg"|"dom"|"vib"); the HUD maps them to its own enums.
+	// Defaults reproduce the Stage 1 console: A = FX/AVG, B = RAW/AVG.
+	struct OrbitSelection {
+		std::string source;
+		std::string metric = "avg";
+		bool operator==(const OrbitSelection& o) const { return source == o.source && metric == o.metric; }
+	};
+	OrbitSelection orbitA{"fx", "avg"};
+	OrbitSelection orbitB{"raw", "avg"};
 };
+inline bool validOrbitSource(const std::string& v) { return v == "fx" || v == "raw"; }
+inline bool validOrbitMetric(const std::string& v) { return v == "avg" || v == "dom" || v == "vib"; }
+// "<source>.<metric>" (the Request payload), e.g. "raw.vib".
+inline bool parseOrbitSelection(const std::string& text, Settings::OrbitSelection& out) {
+	const size_t dot = text.find('.');
+	if (dot == std::string::npos) return false;
+	const std::string src = text.substr(0, dot), met = text.substr(dot + 1);
+	if (!validOrbitSource(src) || !validOrbitMetric(met)) return false;
+	out.source = src;
+	out.metric = met;
+	return true;
+}
+inline bool validButtonLabels(const std::string& v) { return v == "text" || v == "icon" || v == "both"; }
+
+constexpr int kMaxMinimalBackgrounds = 16;
+inline bool validSystemModeId(const std::string& id) {
+	if (id.empty() || id.size() > 64) return false;
+	for (char c : id) if (!((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '.' || c == '_')) return false;
+	return true;
+}
+inline bool validBackgroundIndex(int i) { return i >= 0 && i < kMaxMinimalBackgrounds; }
 
 constexpr float kMinSceneCycleSeconds = 10.0f;
 constexpr float kMaxSceneCycleSeconds = 3600.0f;
@@ -61,6 +100,10 @@ struct Request {
 		SetMediaAutoCycle, // flag (+ optional duration)
 		SetLaunchFullscreen,
 		SetClock24Hour,    // flag
+		SetSystemMode,     // text = mode id
+		SetMinimalBackground, // flag = dark group (else light), steps = preset index
+		SetButtonLabels,   // text = "text" | "icon" | "both"
+		SetOrbitObservation, // flag = observation B (else A), text = "<source>.<metric>" (OC-005 Stage 2)
 		ToggleFullscreen,
 		SetEnergyTarget,   // value
 		StepEnergy,        // steps (encoder detents, signed)
@@ -71,6 +114,7 @@ struct Request {
 	bool flag = false;
 	float value = 0.0f;
 	int steps = 0;
+	std::string text;
 	std::optional<float> durationSeconds;
 };
 
@@ -94,6 +138,23 @@ public:
 		else rejected.push_back("mediaAutoCycle.durationSeconds");
 		s.launchFullscreen = candidate.launchFullscreen;
 		s.clock24Hour = candidate.clock24Hour;
+		if (validSystemModeId(candidate.systemMode)) s.systemMode = candidate.systemMode;
+		else rejected.push_back("systemMode");
+		if (validButtonLabels(candidate.buttonLabels)) s.buttonLabels = candidate.buttonLabels;
+		else rejected.push_back("buttonLabels");
+		if (validBackgroundIndex(candidate.minimalBackgroundLight)) s.minimalBackgroundLight = candidate.minimalBackgroundLight;
+		else rejected.push_back("minimalBackground.light");
+		if (validBackgroundIndex(candidate.minimalBackgroundDark)) s.minimalBackgroundDark = candidate.minimalBackgroundDark;
+		else rejected.push_back("minimalBackground.dark");
+		// Each invalid orbit field falls back to its documented default on its own.
+		if (validOrbitSource(candidate.orbitA.source)) s.orbitA.source = candidate.orbitA.source;
+		else rejected.push_back("orbitObservations.a.source");
+		if (validOrbitMetric(candidate.orbitA.metric)) s.orbitA.metric = candidate.orbitA.metric;
+		else rejected.push_back("orbitObservations.a.metric");
+		if (validOrbitSource(candidate.orbitB.source)) s.orbitB.source = candidate.orbitB.source;
+		else rejected.push_back("orbitObservations.b.source");
+		if (validOrbitMetric(candidate.orbitB.metric)) s.orbitB.metric = candidate.orbitB.metric;
+		else rejected.push_back("orbitObservations.b.metric");
 		if (validEnergy(candidate.energyTarget)) s.energyTarget = candidate.energyTarget;
 		else rejected.push_back("energy.target");
 		settings_ = s;
@@ -125,6 +186,31 @@ public:
 				return {true, "ok"};
 			case K::SetClock24Hour:
 				settings_.clock24Hour = r.flag;
+				settingsChanged_ = true;
+				return {true, "ok"};
+			case K::SetSystemMode:
+				if (!validSystemModeId(r.text)) return {false, "invalid_mode"};
+				settings_.systemMode = r.text;
+				settingsChanged_ = true;
+				return {true, "ok"};
+			case K::SetButtonLabels:
+				if (!validButtonLabels(r.text)) return {false, "invalid_button_labels"};
+				settings_.buttonLabels = r.text;
+				settingsChanged_ = true;
+				return {true, "ok"};
+			case K::SetOrbitObservation: {
+				Settings::OrbitSelection sel;
+				if (!parseOrbitSelection(r.text, sel)) return {false, "invalid_orbit_selection"};
+				Settings::OrbitSelection& cur = r.flag ? settings_.orbitB : settings_.orbitA; // the other observation is untouched
+				if (!(cur == sel)) { // no change -> no write
+					cur = sel;
+					settingsChanged_ = true;
+				}
+				return {true, "ok"};
+			}
+			case K::SetMinimalBackground:
+				if (!validBackgroundIndex(r.steps)) return {false, "invalid_background"};
+				(r.flag ? settings_.minimalBackgroundDark : settings_.minimalBackgroundLight) = r.steps;
 				settingsChanged_ = true;
 				return {true, "ok"};
 			case K::ToggleFullscreen:

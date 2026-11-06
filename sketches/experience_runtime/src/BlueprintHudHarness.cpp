@@ -175,7 +175,7 @@ void BlueprintHudHarness::buildScript() {
 				sem.timing.activeSeconds < 5.0f, ofToString(sem.timing.activeSeconds, 2) + " s");
 			check("Blueprint activity = fragments / 4-fragment cap",
 				sem.activity.overall.has_value(), ofToString(sem.activity.overall.value_or(-1.0f), 2));
-			check("Blueprint HUD title", f.scene.displayName == "Blueprint Emergence");
+			check("Blueprint HUD title", f.scene.displayName == "SIGNAL BLUEPRINT");
 		}},
 		{"blueprint artwork", [composition, this] { return composition().getFragments().size() >= 2 || secondsInStep_ > 25.0f; },
 			[this, frame, composition] {

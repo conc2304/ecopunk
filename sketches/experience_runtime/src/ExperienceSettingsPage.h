@@ -24,6 +24,7 @@
 #include "DpadInput.h"
 #include "HudFocusNavigator.h"
 #include "InstallationControl.h"
+#include "MinimalTheme.h"
 #include "SystemClockService.h"
 
 #include <algorithm>
@@ -43,6 +44,9 @@ enum class RowId {
 	SceneInterval,
 	MediaAuto,
 	MediaInterval,
+	SystemMode,
+	MinimalBackground,
+	ButtonLabels,
 	ClockFormat,
 	Timezone,
 	TimeSync,
@@ -58,6 +62,9 @@ inline const char* rowKey(RowId r) {
 		case RowId::SceneInterval: return "settings.scene_interval";
 		case RowId::MediaAuto: return "settings.media_auto";
 		case RowId::MediaInterval: return "settings.media_interval";
+		case RowId::SystemMode: return "settings.system_mode";
+		case RowId::MinimalBackground: return "settings.minimal_background";
+		case RowId::ButtonLabels: return "settings.button_labels";
 		case RowId::ClockFormat: return "settings.clock_format";
 		case RowId::Timezone: return "settings.timezone";
 		case RowId::TimeSync: return "settings.time_sync";
@@ -67,7 +74,7 @@ inline const char* rowKey(RowId r) {
 	}
 	return "";
 }
-constexpr int kRowCount = 11;
+constexpr int kRowCount = 14;
 
 // Bounded selectable intervals (seconds). Every value is inside the
 // installation controller's validated range (scene 10..3600, media 5..3600).
@@ -94,6 +101,17 @@ inline std::string intervalText(float seconds) {
 	return buf;
 }
 
+// Navigation-button label modes (value stored in installation settings, label shown on the page).
+inline const std::vector<std::pair<std::string, std::string>>& buttonLabelOptions() {
+	static const std::vector<std::pair<std::string, std::string>> v = {{"text", "TEXT"}, {"icon", "ICONS"}, {"both", "ICONS + TEXT"}};
+	return v;
+}
+inline int buttonLabelIndex(const std::string& id) {
+	const auto& o = buttonLabelOptions();
+	for (size_t i = 0; i < o.size(); ++i) if (o[i].first == id) return int(i);
+	return 0;
+}
+
 // What the runtime hands the page each frame (a snapshot; the page owns no
 // settings, clock or persistence state).
 struct Context {
@@ -108,13 +126,21 @@ struct Context {
 	bool clockResultFailed = false;
 	const std::vector<std::string>* zones = nullptr;
 	size_t commonZones = 0;
+	// System Mode: the grouped option list (Auto, skins, minimal light, minimal dark)
+	// and the background preset names of each minimal group.
+	std::vector<minimaltheme::ModeOption> modeOptions;
+	std::vector<std::string> lightBackgrounds;
+	std::vector<std::string> darkBackgrounds;
 };
 
 struct Action {
-	enum class Kind { Close, SetSceneAuto, SetSceneInterval, SetMediaAuto, SetMediaInterval, SetClock24, ApplyClock };
+	enum class Kind { Close, SetSceneAuto, SetSceneInterval, SetMediaAuto, SetMediaInterval, SetClock24, ApplyClock, SetSystemMode, SetMinimalBackground, SetButtonLabels };
 	Kind kind = Kind::Close;
 	bool flag = false;
 	float seconds = 0.0f;
+	std::string text;     // SetSystemMode: mode id
+	int index = 0;        // SetMinimalBackground: preset index
+	bool dark = false;    // SetMinimalBackground: which minimal group
 	systemclock::ClockChange change;
 };
 
@@ -238,7 +264,7 @@ private:
 	bool editing_ = false;
 	bool confirming_ = false;
 	int slot_ = 0;
-	int pendingIdx_ = 0;          // interval step index
+	int pendingIdx_ = 0;          // interval step index / system-mode option index / background index
 	size_t zoneIdx_ = 0;          // timezone editor position in ctx_.zones
 	bool pendingNtp_ = false;
 	systemclock::DateTime pendingDt_;
@@ -253,13 +279,31 @@ private:
 	}
 	static Action closeAction() { Action a; a.kind = Action::Kind::Close; return a; }
 
+	// -- System Mode helpers ------------------------------------------------------
+	static std::string modeText(const minimaltheme::ModeOption& o) {
+		return o.group == "AUTOMATIC" ? std::string("AUTOMATIC - ") + o.label : o.group + " - " + o.label;
+	}
+	int currentModeIndex() const {
+		for (size_t i = 0; i < ctx_.modeOptions.size(); ++i) if (ctx_.modeOptions[i].id == ctx_.settings.systemMode) return int(i);
+		return -1;
+	}
+	bool minimalActive() const { return minimaltheme::isMinimalId(ctx_.settings.systemMode); }
+	bool minimalDark() const {
+		const auto m = minimaltheme::parseMinimalId(ctx_.settings.systemMode);
+		return m && m->group == minimaltheme::Group::Dark;
+	}
+	const std::vector<std::string>& activeBackgrounds() const { return minimalDark() ? ctx_.darkBackgrounds : ctx_.lightBackgrounds; }
+	int minimalBackgroundIndex() const { return minimalDark() ? ctx_.settings.minimalBackgroundDark : ctx_.settings.minimalBackgroundLight; }
+
 	bool currentNtpOn() const { return ctx_.clock.ntp == systemclock::NtpState::On; }
 	bool effectiveNtpOn() const { return stagedNtp_ ? *stagedNtp_ : currentNtpOn(); }
 
 	void refreshFocus() {
 		focus_.refresh([&](const std::string& id) {
-			return id == rowKey(RowId::ApplyClock) && !applyBlockedReason().empty() ? HudControlAvailability::Disabled
-			                                                                        : HudControlAvailability::Enabled;
+			return (id == rowKey(RowId::ApplyClock) && !applyBlockedReason().empty())
+					|| (id == rowKey(RowId::MinimalBackground) && (!minimalActive() || activeBackgrounds().empty()))
+				? HudControlAvailability::Disabled
+				: HudControlAvailability::Enabled;
 		});
 	}
 
@@ -303,6 +347,12 @@ private:
 				}
 				break;
 			}
+			case RowId::ButtonLabels: pendingIdx_ = buttonLabelIndex(ctx_.settings.buttonLabels); break;
+			case RowId::SystemMode: pendingIdx_ = currentModeIndex(); if (ctx_.modeOptions.empty()) editing_ = false; break;
+			case RowId::MinimalBackground:
+				if (!minimalActive() || activeBackgrounds().empty()) { editing_ = false; break; }
+				pendingIdx_ = std::clamp(minimalBackgroundIndex(), 0, int(activeBackgrounds().size()) - 1);
+				break;
 			case RowId::TimeSync: pendingNtp_ = effectiveNtpOn(); break;
 			case RowId::DateTime: pendingDt_ = stagedDt_ ? *stagedDt_ : ctx_.clock.local; break;
 			default: editing_ = false; break;
@@ -355,6 +405,15 @@ private:
 				pendingIdx_ = std::clamp(pendingIdx_ + dir, 0, int(sceneIntervalSteps().size()) - 1); break;
 			case RowId::MediaInterval:
 				pendingIdx_ = std::clamp(pendingIdx_ + dir, 0, int(mediaIntervalSteps().size()) - 1); break;
+			case RowId::ButtonLabels: { const int n = int(buttonLabelOptions().size()); pendingIdx_ = ((pendingIdx_ + dir) % n + n) % n; break; }
+			case RowId::SystemMode:
+				if (!ctx_.modeOptions.empty()) { const int n = int(ctx_.modeOptions.size()); pendingIdx_ = ((pendingIdx_ + dir) % n + n) % n; }
+				break;
+			case RowId::MinimalBackground: {
+				const int n = int(activeBackgrounds().size());
+				if (n > 0) pendingIdx_ = ((pendingIdx_ + dir) % n + n) % n;
+				break;
+			}
 			case RowId::TimeSync: pendingNtp_ = !pendingNtp_; break;
 			case RowId::Timezone: adjustZone(dir); break;
 			case RowId::DateTime: adjustDateTime(dir); break;
@@ -414,6 +473,17 @@ private:
 			case RowId::MediaInterval: {
 				Action a; a.kind = Action::Kind::SetMediaInterval; a.seconds = mediaIntervalSteps()[size_t(pendingIdx_)]; out.push_back(a); break;
 			}
+			case RowId::ButtonLabels: {
+				Action a; a.kind = Action::Kind::SetButtonLabels; a.text = buttonLabelOptions()[size_t(std::clamp(pendingIdx_, 0, int(buttonLabelOptions().size()) - 1))].first; out.push_back(a); break;
+			}
+			case RowId::SystemMode:
+				if (pendingIdx_ >= 0 && size_t(pendingIdx_) < ctx_.modeOptions.size()) {
+					Action a; a.kind = Action::Kind::SetSystemMode; a.text = ctx_.modeOptions[size_t(pendingIdx_)].id; out.push_back(a);
+				}
+				break;
+			case RowId::MinimalBackground: {
+				Action a; a.kind = Action::Kind::SetMinimalBackground; a.index = pendingIdx_; a.dark = minimalDark(); out.push_back(a); break;
+			}
 			case RowId::Timezone:
 				if (ctx_.zones && zoneIdx_ < ctx_.zones->size()) {
 					const std::string& z = (*ctx_.zones)[zoneIdx_];
@@ -470,6 +540,31 @@ private:
 				r.label = "Media interval"; r.value = intervalText(s.mediaAutoCycle.durationSeconds);
 				r.note = "Minimum time per clip (5 s - 60 min); longer clips play to their end.";
 				break;
+			case RowId::SystemMode: {
+				r.label = "System mode";
+				const int i = currentModeIndex();
+				r.value = ctx_.modeOptions.empty() || i < 0 ? s.systemMode : modeText(ctx_.modeOptions[size_t(i)]);
+				r.note = "OK to choose: Auto, a skin, or Minimal (light/dark, one colour). Applied and saved on confirm.";
+				break;
+			}
+			case RowId::MinimalBackground: {
+				r.label = "Minimal background";
+				const auto& names = activeBackgrounds();
+				if (!minimalActive() || names.empty()) {
+					r.disabled = true;
+					r.value = "(minimal modes only)";
+					r.note = "Choose a Minimal system mode first.";
+				} else {
+					r.value = names[size_t(std::clamp(minimalBackgroundIndex(), 0, int(names.size()) - 1))];
+					r.note = "OK to choose the canvas colour for this Minimal group. Saved on confirm.";
+				}
+				break;
+			}
+			case RowId::ButtonLabels:
+				r.label = "Button labels";
+				r.value = buttonLabelOptions()[size_t(buttonLabelIndex(s.buttonLabels))].second;
+				r.note = "OK to choose: text, icons, or icons above text on the navigation buttons. Saved on confirm.";
+				break;
 			case RowId::ClockFormat:
 				r.label = "Time display"; r.value = s.clock24Hour ? "24-hour" : "12-hour";
 				r.note = "App preference (saved). It does not change the OS clock.";
@@ -507,6 +602,15 @@ private:
 		switch (id) {
 			case RowId::SceneInterval: return "< " + bracket(slot_ == 0, intervalText(sceneIntervalSteps()[size_t(pendingIdx_)])) + " >" + cancel();
 			case RowId::MediaInterval: return "< " + bracket(slot_ == 0, intervalText(mediaIntervalSteps()[size_t(pendingIdx_)])) + " >" + cancel();
+			case RowId::SystemMode:
+				return ctx_.modeOptions.empty() ? std::string()
+					: "< " + bracket(slot_ == 0, modeText(ctx_.modeOptions[size_t(std::clamp(pendingIdx_, 0, int(ctx_.modeOptions.size()) - 1))])) + " >" + cancel();
+			case RowId::MinimalBackground: {
+				const auto& names = activeBackgrounds();
+				return names.empty() ? std::string() : "< " + bracket(slot_ == 0, names[size_t(std::clamp(pendingIdx_, 0, int(names.size()) - 1))]) + " >" + cancel();
+			}
+			case RowId::ButtonLabels:
+				return "< " + bracket(slot_ == 0, buttonLabelOptions()[size_t(std::clamp(pendingIdx_, 0, int(buttonLabelOptions().size()) - 1))].second) + " >" + cancel();
 			case RowId::TimeSync: return "< " + bracket(slot_ == 0, pendingNtp_ ? "AUTOMATIC" : "MANUAL") + " >" + cancel();
 			case RowId::Timezone: {
 				std::string z = ctx_.zones && zoneIdx_ < ctx_.zones->size() ? (*ctx_.zones)[zoneIdx_] : std::string("?");

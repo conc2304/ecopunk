@@ -106,6 +106,9 @@ void ExperienceRuntime::refreshSettingsContext(bool rereadOsClock) {
 	c.clockWriteNote = cap.note;
 	c.clockResult = clockResult_;
 	c.clockResultFailed = clockResultFailed_;
+	c.modeOptions = minimaltheme::modeOptions(skinSchedule_.valid() ? skinSchedule_.allSkins() : std::vector<std::string>{}, themes_);
+	for (const auto& b : themes_.light.backgrounds) c.lightBackgrounds.push_back(b.name);
+	for (const auto& b : themes_.dark.backgrounds) c.darkBackgrounds.push_back(b.name);
 	c.zones = &clockService_.zones();
 	c.commonZones = clockService_.commonCount();
 	settingsPage_.setContext(c);
@@ -123,6 +126,7 @@ void ExperienceRuntime::openSettingsPage() {
 	clockResult_.clear();
 	clockResultFailed_ = false;
 	lastOkInputAt_ = steadySeconds(); // swallow the OK (and its key-repeat) that opened the page
+	hudCompositorBridge_.orbitEditorBack(); // OC-005: an open Orbit editor yields to the Settings page (restores)
 	refreshSettingsContext(true);
 	settingsPage_.open(settingsPage_.context());
 	ofSetEscapeQuitsApp(false); // ESC returns to the experience while the page is open
@@ -154,6 +158,12 @@ void ExperienceRuntime::performSettingsAction(const settingspage::Action& a) {
 			r.kind = installation::Request::Kind::SetMediaAutoCycle; r.flag = s.mediaAutoCycle.enabled; r.durationSeconds = a.seconds; break;
 		case K::SetClock24:
 			r.kind = installation::Request::Kind::SetClock24Hour; r.flag = a.flag; break;
+		case K::SetSystemMode:
+			r.kind = installation::Request::Kind::SetSystemMode; r.text = a.text; break;
+		case K::SetMinimalBackground:
+			r.kind = installation::Request::Kind::SetMinimalBackground; r.flag = a.dark; r.steps = a.index; break;
+		case K::SetButtonLabels:
+			r.kind = installation::Request::Kind::SetButtonLabels; r.text = a.text; break;
 		case K::ApplyClock: {
 			const systemclock::ApplyResult res = clockService_.apply(a.change);
 			clockResult_ = res.message;
@@ -170,6 +180,11 @@ void ExperienceRuntime::performSettingsAction(const settingspage::Action& a) {
 		return;
 	}
 	// Confirmed edit: persist now (not on every D-pad step) and report the outcome.
+	if (a.kind == K::SetButtonLabels) applyButtonLabelMode();
+	if (a.kind == K::SetSystemMode) applySystemMode(a.text, "Settings page");
+	else if (a.kind == K::SetMinimalBackground && minimaltheme::isMinimalId(installation_.settings().systemMode)) {
+		applySystemMode(installation_.settings().systemMode, "Settings page (background)");
+	}
 	if (installation_.takeSettingsChanged()) saveInstallationSettings();
 }
 
@@ -209,7 +224,26 @@ void ExperienceRuntime::loadInstallationSettings() {
 		}
 		s.launchFullscreen = flag(j, "launchFullscreen", s.launchFullscreen);
 		s.clock24Hour = flag(j, "clock24Hour", s.clock24Hour);
+		if (j.contains("buttonLabels") && j["buttonLabels"].is_string()) s.buttonLabels = j["buttonLabels"].get<std::string>();
+		if (j.contains("systemMode") && j["systemMode"].is_string()) s.systemMode = j["systemMode"].get<std::string>();
+		if (j.contains("minimalBackground") && j["minimalBackground"].is_object()) {
+			auto idx = [](const ofJson& o, const char* k, int d) { return o.contains(k) && o[k].is_number_integer() ? o[k].get<int>() : d; };
+			s.minimalBackgroundLight = idx(j["minimalBackground"], "light", s.minimalBackgroundLight);
+			s.minimalBackgroundDark = idx(j["minimalBackground"], "dark", s.minimalBackgroundDark);
+		}
 		if (j.contains("energy") && j["energy"].is_object()) s.energyTarget = num(j["energy"], "target", s.energyTarget);
+		// OC-005 Stage 2: committed Orbit observations. A missing/mistyped value keeps the documented default
+		// (A = fx/avg, B = raw/avg) for that field; an unknown token is rejected by installation_.load() below.
+		if (j.contains("orbitObservations") && j["orbitObservations"].is_object()) {
+			auto sel = [](const ofJson& o, const char* k, installation::Settings::OrbitSelection& out) {
+				if (!o.contains(k) || !o[k].is_object()) return;
+				const ofJson& e = o[k];
+				if (e.contains("source") && e["source"].is_string()) out.source = e["source"].get<std::string>();
+				if (e.contains("metric") && e["metric"].is_string()) out.metric = e["metric"].get<std::string>();
+			};
+			sel(j["orbitObservations"], "a", s.orbitA);
+			sel(j["orbitObservations"], "b", s.orbitB);
+		}
 		ofLogNotice("Installation") << "settings loaded from " << installationSettingsPath_;
 	} else {
 		ofLogNotice("Installation") << "settings: defaults" << (installationSettingsPath_.empty() ? " (persistence off)" : " (no file yet)");
@@ -220,7 +254,30 @@ void ExperienceRuntime::loadInstallationSettings() {
 		<< applied.sceneAutoCycle.durationSeconds << " s, mediaAutoCycle " << (applied.mediaAutoCycle.enabled ? "on" : "off") << " "
 		<< applied.mediaAutoCycle.durationSeconds << " s, launchFullscreen " << (applied.launchFullscreen ? "on" : "off")
 		<< ", energy.target " << applied.energyTarget;
+	applyOrbitSettingsToHud();
 	installationLoaded_ = true;
+}
+
+// OC-005 Stage 2: the committed Orbit selection (installation settings) -> the HUD-owned configuration.
+void ExperienceRuntime::applyOrbitSettingsToHud() {
+	const installation::Settings& s = installation_.settings();
+	hudpresent::OrbitConsoleConfig c;
+	hudpresent::orbitFromTokens(s.orbitA.source.c_str(), s.orbitA.metric.c_str(), c.a); // validated at load; defaults on any miss
+	hudpresent::orbitFromTokens(s.orbitB.source.c_str(), s.orbitB.metric.c_str(), c.b);
+	hudCompositorBridge_.orbitUi().setCommitted(c);
+	ofLogNotice("Installation") << "orbit observations: A " << s.orbitA.source << "/" << s.orbitA.metric << ", B " << s.orbitB.source << "/" << s.orbitB.metric;
+}
+
+// Done on the Orbit editor: commit ONE observation to the installation settings (the other is untouched; an
+// unchanged value writes nothing). Preview and Escape never reach here.
+void ExperienceRuntime::commitOrbitObservation(hudpresent::OrbitObs which) {
+	const hudpresent::OrbitObservationConfig& c = hudCompositorBridge_.orbitUi().config().at(which);
+	installation::Request r;
+	r.kind = installation::Request::Kind::SetOrbitObservation;
+	r.flag = which == hudpresent::OrbitObs::B;
+	r.text = std::string(hudpresent::orbitSourceToken(c.source)) + "." + hudpresent::orbitMetricToken(c.metric);
+	installation_.submit(r);
+	if (installation_.takeSettingsChanged()) saveInstallationSettings();
 }
 
 void ExperienceRuntime::saveInstallationSettings() {
@@ -232,6 +289,11 @@ void ExperienceRuntime::saveInstallationSettings() {
 	j["launchFullscreen"] = s.launchFullscreen;
 	j["energy"] = {{"target", s.energyTarget}};
 	j["clock24Hour"] = s.clock24Hour;
+	j["buttonLabels"] = s.buttonLabels;
+	j["systemMode"] = s.systemMode;
+	j["minimalBackground"] = {{"light", s.minimalBackgroundLight}, {"dark", s.minimalBackgroundDark}};
+	j["orbitObservations"] = {{"a", {{"source", s.orbitA.source}, {"metric", s.orbitA.metric}}},
+		{"b", {{"source", s.orbitB.source}, {"metric", s.orbitB.metric}}}};
 	// Write a sibling temp file, then rename over the target: a crash or full
 	// disk can never leave a truncated settings file behind.
 	namespace fs = std::filesystem;
@@ -405,6 +467,25 @@ void ExperienceRuntime::setup() {
 	sceneFbo_.allocate(nativeSize.x, nativeSize.y, GL_RGBA);
 	presentationCounters_.sceneFboAllocations++;
 
+	// Orbit Console Scene Sampling v0.1 switches (read once).
+	if (const char* v = std::getenv("EXPERIENCE_RUNTIME_SCENE_COLOR")) sceneColorEnabled_ = std::string(v) != "0";
+	if (const char* v = std::getenv("EXPERIENCE_RUNTIME_SCENE_COLOR_MODE"))
+		sceneColor_.setMode(std::string(v) == "async" ? scenecolorsampling::ReadbackMode::Async
+			: std::string(v) == "deferred" ? scenecolorsampling::ReadbackMode::Deferred : scenecolorsampling::ReadbackMode::Sync);
+	if (const char* v = std::getenv("EXPERIENCE_RUNTIME_SCENE_COLOR_STATS")) sceneColorLogStats_ = std::string(v) == "1";
+	// OC-003B RAW VIDEO sampler: OFF unless exactly "1". Deferred readback by default (no GPU stall).
+	videoColorEnabled_ = rawvideo::videoColorEnabledFromEnv(std::getenv("EXPERIENCE_RUNTIME_VIDEO_COLOR"));
+	if (videoColorEnabled_) {
+		videoColor_.setSourceKind(rawvideo::SourceKind::DecodedVideo);
+		const char* m = std::getenv("EXPERIENCE_RUNTIME_VIDEO_COLOR_MODE");
+		videoColor_.setMode(m && std::string(m) == "sync" ? scenecolorsampling::ReadbackMode::Sync
+			: m && std::string(m) == "async" ? scenecolorsampling::ReadbackMode::Async : scenecolorsampling::ReadbackMode::Deferred);
+		if (const char* v = std::getenv("EXPERIENCE_RUNTIME_VIDEO_COLOR_STATS")) videoColorStats_ = std::string(v) == "1";
+		if (const char* v = std::getenv("EXPERIENCE_RUNTIME_VIDEO_COLOR_DIAG")) videoColorDiag_ = std::string(v) == "1";
+		ofLogNotice("VideoColor") << "RAW VIDEO sampling ENABLED (EXPERIENCE_RUNTIME_VIDEO_COLOR=1), mode="
+			<< (videoColor_.mode() == scenecolorsampling::ReadbackMode::Sync ? "sync" : videoColor_.mode() == scenecolorsampling::ReadbackMode::Async ? "async" : "deferred");
+	}
+
 	// Engineering Session 2: real HudCompositor bridge setup — establishes
 	// the canonical 1280x720 canvas (see HudCompositorBridge's own header
 	// comment for why the window is already sized to match this exactly).
@@ -466,6 +547,15 @@ void ExperienceRuntime::setup() {
 	// persistent launch preference. applyMediaCadence() applies the media
 	// cadence every frame from here on.
 	loadInstallationSettings();
+	// System Mode: minimal-theme colours (optional file), then the saved mode. An explicit
+	// EXPERIENCE_RUNTIME_HUD_SKIN still wins and fixes the skin for that launch.
+	applyButtonLabelMode();
+	loadMinimalThemes(ofToDataPath("../../../../assets/hud/themes/minimal-theme.json", true));
+	{
+		const char* envSkin = std::getenv("EXPERIENCE_RUNTIME_HUD_SKIN");
+		const std::string& mode = installation_.settings().systemMode;
+		if ((envSkin == nullptr || envSkin[0] == '\0') && mode != "auto") applySystemMode(mode, "saved setting");
+	}
 	// RT-007 precedence for NATIVE host fullscreen at startup (one authority
 	// per launch): an explicit EXPERIENCE_RUNTIME_FULLSCREEN=1/0 wins — main.cpp
 	// already created the window in that mode — otherwise the persisted
@@ -517,6 +607,7 @@ bool ExperienceRuntime::applySkin(const std::string& skinId, const std::string& 
 	if (skinId.empty()) return false;
 	const auto outcome = hudCompositorBridge_.requestSkin(skinId); // atomic: a failure keeps the current skin
 	if (outcome.activated) {
+		leaveMinimal(); // a skin replaces the minimal look (viewport style, typography preset)
 		currentSkin_ = skinId;
 		const std::string palette = skinSchedule_.paletteFor(skinId);
 		hudCompositorBridge_.setColors(hudpresent::hudPaletteNamed(palette));
@@ -524,6 +615,114 @@ bool ExperienceRuntime::applySkin(const std::string& skinId, const std::string& 
 		ofLogNotice("HudSkin") << "skin '" << skinId << "' (" << palette << " palette) — " << reason;
 	}
 	return outcome.activated;
+}
+
+void ExperienceRuntime::applyButtonLabelMode() {
+	const std::string& v = installation_.settings().buttonLabels;
+	hudCompositorBridge_.setButtonLabelMode(v == "icon" ? 1 : v == "both" ? 2 : 0);
+}
+
+void ExperienceRuntime::leaveMinimal() {
+	if (!minimalActive_) return;
+	minimalActive_ = false;
+	canvasBackground_ = ofColor(12, 12, 12);
+	hudCompositorBridge_.setViewportStyle(ofColor(20, 26, 24, 255), ofColor(255), false);
+	if (typography_) hudCompositorBridge_.setLabelTypography(typography_.get());
+}
+
+bool ExperienceRuntime::applySystemMode(const std::string& modeId, const std::string& reason) {
+	if (modeId == "auto") {
+		leaveMinimal();
+		if (skinSchedule_.valid()) {
+			skinAuto_ = true;
+			tickSkinSchedule(true);
+		}
+		ofLogNotice("SystemMode") << "auto (day/night skins) — " << reason;
+		return true;
+	}
+	if (const auto minimal = minimaltheme::parseMinimalId(modeId)) {
+		const installation::Settings& s = installation_.settings();
+		const int bg = minimal->group == minimaltheme::Group::Dark ? s.minimalBackgroundDark : s.minimalBackgroundLight;
+		const auto d = minimaltheme::resolve(themes_, modeId, bg);
+		if (!d) {
+			ofLogWarning("SystemMode") << "unknown minimal theme '" << modeId << "'; keeping the current look";
+			return false;
+		}
+		auto col = [](const minimaltheme::Rgba& c) { return ofColor(c.r, c.g, c.b, c.a); };
+		skinAuto_ = false;
+		hudCompositorBridge_.clearSkin();
+		currentSkin_.clear();
+		hudpresent::HudWidgetColors colors;
+		colors.primary = col(d->primary);
+		colors.secondary = col(d->secondary);
+		colors.accent = col(d->accent);
+		colors.muted = col(d->muted);
+		colors.caption = col(d->caption);
+		colors.background = col(d->panel);
+		colors.warning = col(d->warning);
+		colors.shadow = col(d->shadow);
+		colors.buttonText = col(d->buttonText);
+		colors.buttonShadow = col(d->buttonShadow);
+		hudCompositorBridge_.setColors(colors);
+		hudCompositorBridge_.setViewportStyle(ofColor(d->viewportBacking.r, d->viewportBacking.g, d->viewportBacking.b, 255), col(d->border), true);
+		canvasBackground_ = ofColor(d->background.r, d->background.g, d->background.b);
+		hudCompositorBridge_.setLabelTypography(nullptr); // native bitmap look: no typography preset
+		minimalActive_ = true;
+		ofLogNotice("SystemMode") << modeId << " (background " << bg << ") — " << reason;
+		return true;
+	}
+	// A skin package id.
+	skinAuto_ = false;
+	const bool ok = applySkin(modeId, reason);
+	if (!ok) ofLogWarning("SystemMode") << "skin '" << modeId << "' could not be applied; keeping the current look";
+	return ok;
+}
+
+void ExperienceRuntime::tickThemeFile(float dt) {
+	themeCheckSeconds_ += dt;
+	if (themeCheckSeconds_ < 1.0f || themePath_.empty()) return;
+	themeCheckSeconds_ = 0.0f;
+	std::error_code ec;
+	const auto mtime = std::filesystem::last_write_time(themePath_, ec);
+	if (ec || mtime == themeMtime_) return;
+	loadMinimalThemes(themePath_); // records the new mtime; an invalid file keeps the previous themes
+	if (minimalActive_) applySystemMode(installation_.settings().systemMode, "theme file changed");
+}
+
+void ExperienceRuntime::loadMinimalThemes(const std::string& path) {
+	themePath_ = path;
+	{
+		std::error_code ec;
+		const auto mtime = std::filesystem::last_write_time(path, ec);
+		if (!ec) themeMtime_ = mtime;
+	}
+	if (!ofFile::doesFileExist(path, false)) return;
+	ofJson j = ofLoadJson(path);
+	if (!j.is_object()) { ofLogWarning("SystemMode") << "minimal theme file is not an object; defaults kept: " << path; return; }
+	minimaltheme::ThemeSet t = minimaltheme::ThemeSet::defaults();
+	int applied = 0;
+	for (const auto g : {minimaltheme::Group::Light, minimaltheme::Group::Dark}) {
+		const char* key = minimaltheme::groupKey(g);
+		if (!j.contains(key) || !j[key].is_object()) continue;
+		const ofJson& gj = j[key];
+		if (gj.contains("primaries") && gj["primaries"].is_object()) {
+			for (auto& hue : t.group(g).hues) {
+				if (!gj["primaries"].contains(hue.id) || !gj["primaries"][hue.id].is_string()) continue;
+				if (const auto rgb = minimaltheme::parseHex(gj["primaries"][hue.id].get<std::string>())) { hue.primary = *rgb; ++applied; }
+				else ofLogWarning("SystemMode") << key << ".primaries." << hue.id << ": not a #RRGGBB colour; default kept";
+			}
+		}
+		if (gj.contains("backgrounds") && gj["backgrounds"].is_array()) {
+			std::vector<minimaltheme::Background> bgs;
+			for (const auto& b : gj["backgrounds"]) {
+				if (!b.is_object() || !b.contains("name") || !b["name"].is_string() || !b.contains("hex") || !b["hex"].is_string()) continue;
+				if (const auto rgb = minimaltheme::parseHex(b["hex"].get<std::string>())) bgs.push_back({b["name"].get<std::string>(), *rgb});
+			}
+			if (!bgs.empty() && static_cast<int>(bgs.size()) <= installation::kMaxMinimalBackgrounds) { t.group(g).backgrounds = bgs; ++applied; }
+		}
+	}
+	themes_ = t;
+	ofLogNotice("SystemMode") << "minimal themes loaded from " << path << " (" << applied << " value(s) applied)";
 }
 
 int ExperienceRuntime::localMinuteNow() {
@@ -543,7 +742,7 @@ void ExperienceRuntime::tickSkinSchedule(bool force) {
 
 void ExperienceRuntime::update(float dt) {
 	if (settingsPage_.isOpen()) refreshSettingsContext(false);
-	else if (escapeQuitSuppressed_) { // restored one frame after closing: the closing ESC must not quit
+	else if (escapeQuitSuppressed_ && !hudCompositorBridge_.orbitEditorOpen()) { // restored one frame after closing: the closing ESC must not quit
 		ofSetEscapeQuitsApp(true);
 		escapeQuitSuppressed_ = false;
 	}
@@ -555,6 +754,9 @@ void ExperienceRuntime::update(float dt) {
 		skinCheckSeconds_ = 0.0f;
 		tickSkinSchedule(false);
 	}
+	// Sun/moon clock icon follows the real day/night state (the schedule's clock), not the theme.
+	hudCompositorBridge_.setDayPeriod(skinSchedule_.periodAt(localMinuteNow()) == HudSkinSchedule::Period::Day);
+	tickThemeFile(dt);
 	tickInstallation(dt); // installation requests/automation, before the frame's scene work
 
 	// Step 1 (resolve raw input) and step 2 (dispatch accepted
@@ -634,6 +836,23 @@ bool diagSwitchOn(const char* name, const char* value, bool& last) {
 }
 
 void ExperienceRuntime::draw() {
+	// Measurement only (EXPERIENCE_RUNTIME_SCENE_COLOR_STATS=1): mean/max CPU time of the whole runtime draw()
+	// call, logged every 600 frames, so enabled-vs-disabled scene-colour cost can be compared under
+	// identical conditions (vsync-bound frame rate hides a few ms; CPU draw time does not).
+	struct DrawTimer {
+		bool on; uint64_t t0;
+		explicit DrawTimer(bool o) : on(o), t0(o ? ofGetElapsedTimeMicros() : 0) {}
+		~DrawTimer() {
+			if (!on) return;
+			static double sum = 0, mx = 0; static int n = 0;
+			const double us = static_cast<double>(ofGetElapsedTimeMicros() - t0);
+			sum += us; mx = std::max(mx, us);
+			if (++n == 600) {
+				ofLogNotice("DrawCost") << "frames=600 meanDrawCpuUs=" << sum / 600.0 << " maxDrawCpuUs=" << mx;
+				sum = mx = 0; n = 0;
+			}
+		}
+	} drawTimer(sceneColorLogStats_);
 	static bool lastSceneControlClear = false;
 	static bool lastHudOmit = false;
 	const bool diagSceneClear = diagSwitchOn("EXPERIENCE_RUNTIME_DIAG_SCENE_CONTROL", "clear", lastSceneControlClear);
@@ -644,6 +863,22 @@ void ExperienceRuntime::draw() {
 	if (sceneManager_.activationSucceededThisFrame()) {
 		RT004_SCOPE("ExperienceRuntime.reallocateSceneFbo");
 		reallocateSceneFboForActiveSceneIfNeeded();
+	}
+	// Orbit Console Scene Sampling: a new activation is a new scene
+	// generation (history cleared, in-flight readback dropped).
+	// The startup scene is activated in setup(), not through
+	// activationSucceededThisFrame(), so generation 1 is begun lazily on the
+	// first frame that has an active scene identity.
+	if (sceneManager_.activationSucceededThisFrame()
+		|| (sceneColorGeneration_ == 0 && !lastSceneManagerStatus_.activeSceneId.empty())) {
+		sceneColorGeneration_++;
+		sceneColorSceneId_ = lastSceneManagerStatus_.activeSceneId;
+		if (sceneColorLogStats_) {
+			ofLogNotice("SceneColor") << "generation " << sceneColorGeneration_ << " begins: scene=" << sceneColorSceneId_
+				<< " (previous generation held " << sceneColor_.series().size() << " samples; cleared)";
+		}
+		sceneColor_.beginGeneration(sceneColorGeneration_, steadySeconds());
+		sceneActivityProbe_.beginGeneration(sceneColorGeneration_, sceneColorSceneId_, steadySeconds()); // OC-004
 	}
 
 	if (sceneManager_.activeSceneLiveThisFrame()) {
@@ -668,6 +903,13 @@ void ExperienceRuntime::draw() {
 		// Step 11: unbind SceneFbo.
 		sceneFbo_.end();
 		presentationCounters_.liveSceneFrames++;
+		sceneActivityProbe_.onLiveFrame(sceneFbo_.getTexture(), steadySeconds()); // OC-004, inert unless opted in
+		// Sample the rendered SceneFBO before HUD composition (cadence-gated).
+		if (sceneColorEnabled_) {
+			RT004_SCOPE("ExperienceRuntime.sceneColorSample");
+			sceneColor_.onLiveFrame(sceneFbo_.getTexture(), steadySeconds());
+			sceneColor_.diagFrame(sceneFbo_.getTexture(), steadySeconds(), sceneColorSceneId_, sceneColorGeneration_); // OC-003A diagnostic, inert unless EXPERIENCE_RUNTIME_SCENE_COLOR_PREDOM is set
+		}
 	} else {
 		// RT-003 static-frame transition: no scene is asked to render. The
 		// runtime-owned scene FBO still holds the outgoing scene's last live
@@ -676,7 +918,41 @@ void ExperienceRuntime::draw() {
 		// state, never a pointer into a scene-owned texture/FBO, and never
 		// a dual-live-scene render.
 		presentationCounters_.staticSceneFrames++;
+		sceneActivityProbe_.onStaticFrame(steadySeconds()); // OC-004
+		if (sceneColorEnabled_) {
+			sceneColor_.onStaticFrame(steadySeconds());
+			sceneColor_.diagStaticFrame(steadySeconds(), sceneColorSceneId_, sceneColorGeneration_);
+		}
 	}
+	sceneActivityProbe_.poll(steadySeconds()); // OC-004
+	if (sceneColorEnabled_) {
+		sceneColor_.poll(steadySeconds());
+		if (sceneColorLogStats_ && steadySeconds() - sceneColorLastLogAt_ >= 10.0) {
+			sceneColorLastLogAt_ = steadySeconds();
+			const auto& st = sceneColor_.stats();
+			const auto* nv = sceneColor_.series().newestValid();
+			ofLogNotice("SceneColor") << "scene=" << sceneColorSceneId_ << " gen=" << sceneColorGeneration_
+				<< " mode=" << (sceneColor_.mode() == scenecolorsampling::ReadbackMode::Sync ? "sync" : sceneColor_.mode() == scenecolorsampling::ReadbackMode::Deferred ? "deferred" : "async")
+				<< " issued=" << st.issued << " done=" << st.completed << " gaps=" << st.gaps
+				<< " busy=" << st.droppedBusy << " dropGen=" << st.droppedGeneration
+				<< " issueAvgMs=" << (st.issued ? st.issueMsTotal / st.issued : 0.0) << " issueMaxMs=" << st.issueMsMax
+				<< " collectMaxMs=" << st.collectMsMax
+				<< " unsupported=" << st.unsupportedFormat << " snapshotRebuilds=" << sceneColorPublisher_.rebuilds()
+				<< " rebuildMsAvg=" << (sceneColorPublisher_.rebuilds() ? sceneColorPublisher_.rebuildMsTotal() / sceneColorPublisher_.rebuilds() : 0.0)
+				<< " rebuildMsMax=" << sceneColorPublisher_.rebuildMsMax()
+				<< " stageMs[p50/p95/max] submit=" << st.submit.pct(0.5) << "/" << st.submit.pct(0.95) << "/" << st.submit.max
+				<< " wait=" << st.wait.pct(0.5) << "/" << st.wait.pct(0.95) << "/" << st.wait.max
+				<< " convert=" << st.convert.pct(0.5) << "/" << st.convert.pct(0.95) << "/" << st.convert.max
+				<< " push=" << st.push.pct(0.5) << "/" << st.push.pct(0.95) << "/" << st.push.max
+				<< " total=" << st.total.pct(0.5) << "/" << st.total.pct(0.95) << "/" << st.total.max
+				<< " defer=" << sceneColor_.deferStrategy() << "/" << sceneColor_.deferFrames() << " latencyMs[p50/p95/max]=" << st.latency.pct(0.5) << "/" << st.latency.pct(0.95) << "/" << st.latency.max
+				<< " notReady=" << st.notReadyPolls << " discardTimeout=" << st.discardedTimeout << " discardWaitFailed=" << st.discardedWaitFailed // OC-003 / A7 (no blocking fallback)
+				<< " invalid=" << st.invalidSamples << " telemetryDisabled=" << (sceneColor_.telemetryDisabled() ? 1 : 0) << " disabledSkips=" << st.telemetryDisabledSkips
+				<< " rgb(linear)=" << (nv ? nv->r : -1.f) << "," << (nv ? nv->g : -1.f) << "," << (nv ? nv->b : -1.f)
+				<< " luma=" << (nv ? nv->luma : -1.f);
+		}
+	}
+	sampleRawVideo(); // OC-003B RAW VIDEO (borrowed decoder texture), inert unless EXPERIENCE_RUNTIME_VIDEO_COLOR=1
 	frameNumber_++; // monotonically increasing, once per presented frame
 
 	// Step 12: construct this frame's read-only SceneFrame.
@@ -699,6 +975,35 @@ void ExperienceRuntime::draw() {
 	// System Telemetry v1: shared_ptr copy only (refcount bump) — the
 	// immutable snapshot is rebuilt in RuntimeServices::update, never here.
 	currentHudFrameData_.systemVitals = runtimeServices_.systemVitalsSnapshot();
+	// Orbit Console v0.1: the runtime-owned scene-colour snapshot (sampled from the SceneFBO above,
+	// before HUD composition). Republished only when the series revision / state / scene changes, so
+	// this is a shared_ptr copy per frame. Null while disabled or before the first scene activation.
+	// OC-003B: RAW VIDEO series (null unless EXPERIENCE_RUNTIME_VIDEO_COLOR=1). Rebuilt only on a RAW sample/gap,
+	// generation, state or media change (SnapshotPublisher), otherwise the same shared_ptr: a refcount bump.
+	currentHudFrameData_.sceneColorRaw = videoColorEnabled_
+		? videoColorPublisher_.publish(videoColor_.series(), steadySeconds(), videoColorMediaId_)
+		: nullptr;
+	// OC-004: scene visual activity (scene.visual.activity). Null unless EXPERIENCE_RUNTIME_SCENE_VISUAL_ACTIVITY=1
+	// (production default OFF). Rebuilt only on a new observation / state / generation change.
+	currentHudFrameData_.sceneVisualActivity = sceneActivityProbe_.publishing()
+		? sceneVisualActivityPublisher_.publish(sceneActivityProbe_.tracker(), steadySeconds())
+		: nullptr;
+	{ // Verification only (EXPERIENCE_RUNTIME_SCENE_VISUAL_ACTIVITY_LOG=1): the published snapshot, ~4 Hz.
+		static const bool logOn = [] { const char* v = std::getenv("EXPERIENCE_RUNTIME_SCENE_VISUAL_ACTIVITY_LOG"); return v && std::string(v) == "1"; }();
+		static double nextLogAt = 0.0;
+		const auto& vs = currentHudFrameData_.sceneVisualActivity;
+		if (logOn && steadySeconds() >= nextLogAt) {
+			nextLogAt = steadySeconds() + 0.25;
+			static const char* names[] = {"unavailable", "valid", "stale", "transition"};
+			ofLogNotice("VisualActivityPub") << "t=" << steadySeconds() << " " << (vs ? "snapshot" : "null")
+				<< " scene=" << (vs ? vs->sceneId : std::string("-")) << " gen=" << (vs ? vs->generation : 0)
+				<< " state=" << (vs ? names[static_cast<int>(vs->state)] : "none") << " raw=" << (vs ? vs->raw : 0.0f)
+				<< " level=" << (vs ? vs->level : 0.0f) << " rev=" << (vs ? vs->revision : 0);
+		}
+	}
+	currentHudFrameData_.sceneColor = sceneColorEnabled_
+		? sceneColorPublisher_.publish(sceneColor_.series(), steadySeconds(), sceneColorSceneId_)
+		: nullptr;
 	// Captured once here, from RuntimeServices' already-updated (step 7)
 	// VideoPlaybackService — never polled again during the HUD draw call
 	// below, matching this same rule for every other HudFrameData field
@@ -751,6 +1056,26 @@ void ExperienceRuntime::draw() {
 	long long hudDeallocBefore = alloccounter::deleteCount();
 	if (!diagHudOmit) {
 		{ RT004_SCOPE("Hud.update"); hudCompositorBridge_.update(lastDt_, currentHudFrameData_); }
+		{ // Verification only (EXPERIENCE_RUNTIME_SCENE_VISUAL_ACTIVITY_LOG=1): snapshot + the region #6 gauge input, on change and at ~4 Hz.
+			static const bool logOn = [] { const char* v = std::getenv("EXPERIENCE_RUNTIME_SCENE_VISUAL_ACTIVITY_LOG"); return v && std::string(v) == "1"; }();
+			static std::string lastKey; static double nextAt = 0.0;
+			if (logOn) {
+				const auto& vs = currentHudFrameData_.sceneVisualActivity;
+				const auto* in = hudCompositorBridge_.renderer().widgetInputFor("universal.activity.bar");
+				const auto* gv = in ? in->findRole("value") : nullptr;
+				static const char* names[] = {"unavailable", "valid", "stale", "transition"};
+				const char* gauge = !gv || !gv->shouldRender ? "hidden" : gv->useAmbientFallback ? "ambient" : (gv->value.dataClass == hudpresent::HudDataClass::Ambient ? "placeholder" : "value");
+				const float gval = gv && gv->shouldRender && !gv->useAmbientFallback && gv->value.dataClass != hudpresent::HudDataClass::Ambient ? gv->value.numberValue : -1.0f;
+				const std::string key = std::string(vs ? names[static_cast<int>(vs->state)] : "none") + "/" + (vs ? std::to_string(vs->generation) : "0") + "/" + gauge;
+				if (key != lastKey || steadySeconds() >= nextAt) {
+					lastKey = key; nextAt = steadySeconds() + 0.25;
+					ofLogNotice("VisualActivityHud") << "t=" << steadySeconds() << " live=" << (sceneManager_.activeSceneLiveThisFrame() ? 1 : 0)
+						<< " scene=" << (vs ? vs->sceneId : std::string("-")) << " gen=" << (vs ? vs->generation : 0)
+						<< " state=" << (vs ? names[static_cast<int>(vs->state)] : "none") << " raw=" << (vs ? vs->raw : 0.0f) << " level=" << (vs ? vs->level : 0.0f)
+						<< " gauge=" << gauge << " gaugeValue=" << gval << " rev=" << (vs ? vs->revision : 0);
+				}
+			}
+		}
 		if (immersive_) {
 			// IMMERSIVE (HUD & Scene Experience v0.3): the HUD keeps updating
 			// (focus/status stay current) but is not drawn; the runtime-owned
@@ -764,7 +1089,7 @@ void ExperienceRuntime::draw() {
 			// 1280x720 framebuffer: draw the canonical composition directly,
 			// exactly as before RT-007 (no extra target, no extra pass).
 			RT004_SCOPE("Hud.draw");
-			ofBackground(12, 12, 12);
+			ofBackground(canvasBackground_);
 			drawComposition();
 			presentationCounters_.directPresentationFrames++;
 		} else {
@@ -784,19 +1109,95 @@ void ExperienceRuntime::draw() {
 				ofLogNotice("Presentation") << "canonical composition FBO allocated 1280x720 RGBA (once)";
 			}
 			presentationFbo_.begin();
-			ofClear(12, 12, 12, 255);
+			ofClear(canvasBackground_.r, canvasBackground_.g, canvasBackground_.b, 255);
 			drawComposition();
 			presentationFbo_.end();
 			presentComposedFrame();
 			presentationCounters_.composedPresentationFrames++;
 		}
 	} else {
-		ofBackground(12, 12, 12);
+		ofBackground(canvasBackground_);
 	}
 	lastHudOnlyNewCount_ = alloccounter::newCount() - hudAllocBefore;
 	lastHudOnlyDeleteCount_ = alloccounter::deleteCount() - hudDeallocBefore;
 
 	// Step 15: present — openFrameworks swaps buffers after draw() returns.
+}
+
+// OC-003B: RAW VIDEO sampling. Runs once per frame on the main GL thread, after the service update and
+// before any further playback operation, so the borrowed VideoPlaybackService::currentTexture() is the one
+// the decoder just produced. The texture is re-acquired here every frame and never cached. FX is untouched.
+void ExperienceRuntime::sampleRawVideo() {
+	if (!videoColorEnabled_) return;
+	RT004_SCOPE("ExperienceRuntime.videoColorSample");
+	const double now = steadySeconds();
+	const VideoPlaybackService& video = runtimeServices_.video();
+	const auto status = runtimeServices_.videoPlaybackStatus();
+	const ofTexture* tex = video.currentTexture();
+	const glm::ivec2 src = video.sourceSize();
+
+	rawvideo::Observation o;
+	o.healthReady = status && status->health == VideoPlaybackHealth::Ready;
+	o.hasMediaId = status && status->mediaId.has_value();
+	o.textureAllocated = tex != nullptr && tex->isAllocated();
+	if (o.textureAllocated) { o.texW = static_cast<int>(tex->getWidth()); o.texH = static_cast<int>(tex->getHeight()); }
+	o.srcW = src.x;
+	o.srcH = src.y;
+	o.frameNew = video.isFrameNew();
+	o.activationCount = video.activationCount();
+	o.sceneGeneration = sceneColorGeneration_;
+	o.nowSeconds = now;
+
+	const rawvideo::Decision d = videoColorGate_.observe(o);
+	if (d.newGeneration) {
+		videoColorMediaId_ = (status && status->mediaId) ? *status->mediaId : std::string();
+		// Half a period after FX's phase so the two reductions never land in the same frame.
+		videoColor_.beginGeneration(d.rawGeneration, now + scenecolorsampling::kPeriodSeconds * 0.5);
+		if (videoColorStats_) {
+			ofLogNotice("VideoColor") << "generation " << d.rawGeneration << " begins: media=" << (status && status->mediaId ? *status->mediaId : std::string("-"))
+				<< " activation=" << o.activationCount << " scene_gen=" << o.sceneGeneration << " verdict=" << static_cast<int>(d.verdict);
+		}
+	}
+	if (d.verdict == rawvideo::Verdict::Eligible) {
+		videoColor_.onLiveFrame(*tex, now);
+	} else if (d.verdict == rawvideo::Verdict::Gap) {
+		videoColor_.onStaticFrame(now); // a due sample becomes an explicit gap, never a guess
+	}
+	videoColor_.poll(now);
+
+	if (videoColorDiag_ && d.verdict == rawvideo::Verdict::Eligible && videoColor_.series().revision() != videoColorLastDiagRev_ && videoColor_.series().size() > 0) {
+		videoColorLastDiagRev_ = videoColor_.series().revision();
+		const auto& td = tex->getTextureData();
+		const scenecolorsampling::Sample& m = videoColor_.series().at(videoColor_.series().size() - 1);
+		float rr = 0, rg = 0, rb = 0;
+		bool haveRef = false;
+		if (const ofPixels* px = video.currentPixels()) { // CPU reference: the decoder's own pixels, independent of the GL texture
+			const size_t n = static_cast<size_t>(px->getWidth()) * px->getHeight();
+			const size_t ch = px->getNumChannels();
+			if ((ch == 3 || ch == 4) && n > 0) {
+				const auto& lut = scenecolorsampling::srgbLut();
+				double sr = 0, sg = 0, sb = 0;
+				const uint8_t* p = px->getData();
+				for (size_t i = 0; i < n; ++i) { sr += lut[p[i * ch]]; sg += lut[p[i * ch + 1]]; sb += lut[p[i * ch + 2]]; }
+				rr = static_cast<float>(sr / n); rg = static_cast<float>(sg / n); rb = static_cast<float>(sb / n);
+				haveRef = true;
+			}
+		}
+		ofLogNotice("VideoColorDiag") << "tex target=0x" << std::hex << td.textureTarget << " internalFormat=0x" << td.glInternalFormat << std::dec
+			<< " id=" << td.textureID << " " << o.texW << "x" << o.texH << " src=" << o.srcW << "x" << o.srcH
+			<< " gen=" << d.rawGeneration << " valid=" << m.valid << " Y=" << m.luma << " rgb=" << m.r << "," << m.g << "," << m.b
+			<< (haveRef ? " refY=" + ofToString(scenecolorsampling::luma709(rr, rg, rb), 5) + " dY=" + ofToString(m.luma - scenecolorsampling::luma709(rr, rg, rb), 5) : std::string(" ref=n/a"));
+	}
+	if (videoColorStats_ && now - videoColorLastLogAt_ >= 10.0) {
+		videoColorLastLogAt_ = now;
+		const auto& st = videoColor_.stats();
+		ofLogNotice("VideoColor") << "gen=" << d.rawGeneration << " gate=" << static_cast<int>(d.verdict) << " issued=" << st.issued << " completed=" << st.completed
+			<< " droppedGen=" << st.droppedGeneration << " droppedBusy=" << st.droppedBusy << " gaps=" << st.gaps << " unsupported=" << st.unsupportedFormat
+			<< " stageMs[p50/p95/max] submit=" << st.submit.pct(0.5) << "/" << st.submit.pct(0.95) << "/" << st.submit.max
+			<< " wait=" << st.wait.pct(0.5) << "/" << st.wait.pct(0.95) << "/" << st.wait.max
+			<< " convert=" << st.convert.pct(0.5) << "/" << st.convert.pct(0.95) << "/" << st.convert.max
+			<< " total=" << st.total.pct(0.5) << "/" << st.total.pct(0.95) << "/" << st.total.max;
+	}
 }
 
 void ExperienceRuntime::drawComposition() {
@@ -818,6 +1219,8 @@ void ExperienceRuntime::presentComposedFrame() {
 }
 
 void ExperienceRuntime::exit() {
+	sceneColor_.shutdown(); // release sampler fences while the GL context is alive
+	videoColor_.shutdown();
 	hudCompositorBridge_.shutdownSkins(); // release skin textures while the GL context is alive
 	sceneManager_.deactivateScene();
 	sceneManager_.shutdown(); // every registered scene that was ever set up
@@ -840,6 +1243,28 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 			<< (installation_.energyAdjusting() ? " (adjusting)" : " (adjustment closed)");
 		return;
 	}
+	// OC-005: while an Orbit observation editor is open it is the sole consumer of the device-neutral focus
+	// input (step = move the cursor, activate = select / DONE). HUD focus stays on the edited observation, so
+	// closing returns to it.
+	if (hudCompositorBridge_.orbitEditorOpen()) {
+		if (input.kind == HudFocusInput::Kind::Step) {
+			hudCompositorBridge_.orbitEditorStep(input.delta);
+			return;
+		}
+		const double now = steadySeconds();
+		if (lastOkInputAt_ >= 0.0 && now - lastOkInputAt_ < 0.25) return; // debounce activate auto-repeat
+		lastOkInputAt_ = now;
+		const hudpresent::OrbitObs editedObs = hudCompositorBridge_.orbitUi().target();
+		const bool closed = hudCompositorBridge_.orbitEditorActivate();
+		if (closed) {
+			orbitEditorClosedAt_ = now;
+			commitOrbitObservation(editedObs); // Done = commit + persist (only the edited observation)
+		}
+		const auto& oc = hudCompositorBridge_.orbitUi().config();
+		ofLogNotice("OrbitEditor") << (closed ? "done (committed)" : "selected") << ": A=" << hudpresent::orbitSourceText(oc.a.source) << "/"
+			<< hudpresent::orbitMetricText(oc.a.metric) << " B=" << hudpresent::orbitSourceText(oc.b.source) << "/" << hudpresent::orbitMetricText(oc.b.metric);
+		return;
+	}
 	if (input.kind == HudFocusInput::Kind::Step) {
 		hudCompositorBridge_.stepFocus(input.delta);
 		const auto& f = hudCompositorBridge_.focus().focused();
@@ -850,6 +1275,8 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 	// The Enter that closed Settings (or its key-repeat) must not re-activate
 	// the MENU control the HUD focus returned to.
 	if (settingsClosedAt_ >= 0.0 && steadySeconds() - settingsClosedAt_ < 0.6) return;
+	// The Enter (or its key-repeat) that closed the Orbit editor must not re-open it.
+	if (orbitEditorClosedAt_ >= 0.0 && steadySeconds() - orbitEditorClosedAt_ < 0.6) return;
 	// Activate: only an ENABLED focused control dispatches, and only through
 	// the existing command paths — the same calls the 'n'/'p'/'['/']' keys use.
 	FocusActivationRecord rec;
@@ -871,7 +1298,18 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 
 	// Control region -> existing command. Same meanings the HUD's availability
 	// sources use (HudRealFrameResolver control.* sources).
-	if (*target == "controls.fullscreen") {
+	if (HudCompositorBridge::isOrbitFocusId(*target)) {
+		// OC-005: an Orbit observation opens its editor. HUD presentation state only: no scene/media/runtime command.
+		lastOkInputAt_ = steadySeconds();
+		const bool opened = hudCompositorBridge_.openOrbitEditorForFocus();
+		if (opened) {
+			ofSetEscapeQuitsApp(false); // ESC cancels the editor, never quits
+			escapeQuitSuppressed_ = true;
+		}
+		rec.command = "HudOrbit::OpenEditor";
+		rec.accepted = opened;
+		ofLogNotice("OrbitEditor") << (opened ? "open: editing " : "refused: ") << *target;
+	} else if (*target == "controls.fullscreen") {
 		// FULLSCREEN = IMMERSIVE: the scene fills the OF window viewport (HUD
 		// hidden; any key/press exits). It never changes the window mode —
 		// native fullscreen is key 'f' / Installation Controls.
@@ -907,6 +1345,7 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 }
 
 void ExperienceRuntime::enterImmersive() {
+	hudCompositorBridge_.orbitEditorBack(); // OC-005: the HUD is hidden while immersive; an open Orbit editor is cancelled
 	immersive_ = true;
 	ofLogNotice("ExperienceRuntime") << "immersive: on (any key/press exits)";
 }
@@ -976,8 +1415,19 @@ void ExperienceRuntime::keyPressed(int key) {
 	// (all unbound elsewhere); absent in production.
 	if (typography_ && typography_->handleKey(key)) return;
 
+	// OC-005: Escape/back cancels an open Orbit editor (restoring the prior configuration) and is consumed;
+	// it never reaches the runtime exit binding while the editor is open.
+	if (hudCompositorBridge_.orbitEditorOpen()) {
+		if (auto d = inputRouter_.translateToDpad(key); d && *d == DpadInput::Back) {
+			hudCompositorBridge_.orbitEditorBack();
+			orbitEditorClosedAt_ = steadySeconds();
+			ofLogNotice("OrbitEditor") << "cancelled (prior configuration restored)";
+			return;
+		}
+	}
+
 	// -- Playable HUD Menu v0.1: focus navigation (arrows / Enter) -------
-	if (auto focusInput = inputRouter_.translateToFocusInput(key)) {
+	if (auto focusInput = inputRouter_.translateToFocusInput(key, ofGetKeyPressed(OF_KEY_SHIFT))) {
 		handleFocusInput(*focusInput);
 		return;
 	}

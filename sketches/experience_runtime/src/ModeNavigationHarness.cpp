@@ -301,11 +301,11 @@ void ModeNavigationHarness::buildScript() {
 				!restorationPending() && focused() != kModeControl, focused());
 		}},
 
-		// -- Fragment (4/5): three content modes, wraparound -----------------
+		// -- Fragment (4/5): four content modes, wraparound -----------------
 		{"fragment live", [this] { return idleOn(kFragmentId) && framesInStep_ >= kSettleFrames && modeIndex() >= 0; },
 			[this, pressM] {
 				check("Fragment: scene position 4/5", position() == "4/5", position());
-				check("Fragment: 3 content modes, starts on EFFECT_VARIED", modeCount() == 3 && modeId() == "effect_varied",
+				check("Fragment: 4 content modes, starts on EFFECT_VARIED", modeCount() == 4 && modeId() == "effect_varied",
 					modeId());
 				check("Fragment: no focus stealing — focus stayed where the user put it", focused() != kModeControl, focused());
 				capture("09_fragment_effect_varied");
@@ -321,8 +321,15 @@ void ModeNavigationHarness::buildScript() {
 			capture("10_fragment_effect_param_variant");
 			pressM();
 		}},
+		{"fragment backdrop effect", framesAtLeast(3), [this] {
+			check("Fragment: 'm' -> BACKDROP_EFFECT", modeIndex() == 3 && modeId() == "backdrop_effect", modeId());
+		}},
+		{"fragment backdrop effect settled", framesAtLeast(150), [this, pressM] {
+			capture("10b_fragment_backdrop_effect");
+			pressM();
+		}},
 		{"fragment time slice (wrapped)", framesAtLeast(3), [this] {
-			check("Fragment: 'm' wraps 3 -> 1, TIME_SLICE", modeIndex() == 0 && modeId() == "time_slice", modeId());
+			check("Fragment: 'm' wraps 4 -> 1, TIME_SLICE", modeIndex() == 0 && modeId() == "time_slice", modeId());
 		}},
 		{"fragment time slice settled", framesAtLeast(150), [this] {
 			capture("11_fragment_time_slice");

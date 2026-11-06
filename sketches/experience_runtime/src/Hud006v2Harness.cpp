@@ -107,13 +107,13 @@ void Hud006v2Harness::buildScript() {
 		{"ring walk", framesAtLeast(2), [this, &rt] {
 			std::string order = focused();
 			bool modePanel = false;
-			for (int i = 0; i < 7; ++i) {
+			for (int i = 0; i < 9; ++i) { // OC-005: the ring is the seven HUD-006 controls + the two Orbit observations
 				rt.keyPressed(OF_KEY_RIGHT);
 				order += " > " + focused();
 				modePanel = modePanel || focused() == "flexible.secondary_a";
 			}
-			check("focus ring: scene_previous > scene_next > mode > media_previous > media_next > fullscreen > menu (wraps)",
-				order == "controls.scene_previous > controls.scene_next > controls.mode > controls.media_previous > controls.media_next > controls.fullscreen > controls.menu > controls.scene_previous",
+			check("focus ring: scene_previous > scene_next > mode > media_previous > media_next > fullscreen > menu > orbit.a > orbit.b (wraps)",
+				order == "controls.scene_previous > controls.scene_next > controls.mode > controls.media_previous > controls.media_next > controls.fullscreen > controls.menu > orbit.a > orbit.b > controls.scene_previous",
 				order);
 			check("mode panel is never a focus stop", !modePanel);
 		}},

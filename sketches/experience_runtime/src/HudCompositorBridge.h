@@ -72,6 +72,9 @@ public:
 	// only what update() already resolved, per HudWireframeRenderer's own
 	// design).
 	const hudpresent::HudWireframeRenderer& renderer() const { return renderer_; }
+	// DIAGNOSTIC ONLY (OrbitInjectHarness): inject a deterministic series in place
+	// of the (not yet published) scene-colour source. nullptr restores the normal path.
+	void setOrbitSeriesOverrideForDiagnostics(const hudpresent::OrbitSeriesView* v) { renderer_.setOrbitSeriesOverride(v); }
 
 	// Architecture-Closure Session: ground-truth counter proving "exactly
 	// one production HUD draw per runtime frame" — incremented in draw(),
@@ -105,10 +108,36 @@ public:
 	// The focused control's region ID if it is enabled right now, else nullopt.
 	std::optional<std::string> focusActivationTarget() const { return focus_.activationTarget(); }
 	const HudFocusNavigator& focus() const { return focus_; }
+
+	// -- OC-005 Orbit observations: HUD-owned configuration + editor ----------------
+	// The observations are two extra focus stops after the HUD-006 row ("orbit.a" =
+	// region #7, "orbit.b" = region #8). Activating a focused one opens its editor; while
+	// the editor is open the SAME device-neutral focus input (step / activate) and the
+	// existing back event drive it. Pure presentation state: nothing is dispatched to
+	// scenes, media or the runtime.
+	static bool isOrbitFocusId(const std::string& id) {
+		return id == hudpresent::HudWireframeRenderer::kOrbitFocusA || id == hudpresent::HudWireframeRenderer::kOrbitFocusB;
+	}
+	hudpresent::OrbitConfigEditor& orbitUi() { return renderer_.orbitUi(); }
+	const hudpresent::OrbitConfigEditor& orbitUi() const { return renderer_.orbitUi(); }
+	bool orbitEditorOpen() const { return renderer_.orbitUi().isOpen(); }
+	// Opens the editor of the focused observation. False if focus is not on an observation.
+	bool openOrbitEditorForFocus();
+	// Editor input. Each returns true when the editor consumed it (always, while open).
+	bool orbitEditorStep(int delta);
+	bool orbitEditorActivate(); // select/preview an option, or commit on DONE; true if it just closed
+	bool orbitEditorBack();     // cancel and restore
+	// DIAGNOSTIC ONLY (OC-005 harness): deterministic RAW series; nullptr restores the normal path.
+	void setOrbitRawSeriesOverrideForDiagnostics(const hudpresent::OrbitSeriesView* v) { renderer_.setOrbitRawSeriesOverride(v); }
 	// Shows the activation flash for the result ExperienceRuntime got back.
 	void reportActivation(bool accepted) { renderer_.triggerActivationFeedback(accepted); }
 	// Day/night text palette (skin schedule); default = night.
 	void setColors(const hudpresent::HudWidgetColors& colors) { renderer_.setColors(colors); }
+	void setDayPeriod(bool daytime) { renderer_.setDayPeriod(daytime); }
+	void setButtonLabelMode(int mode) { renderer_.setButtonLabelMode(mode); }
+	void setViewportStyle(const ofColor& backing, const ofColor& border, bool borderOn) { renderer_.setViewportStyle(backing, border, borderOn); }
+	// Minimal look: drop the active skin (shell, button faces) — the plain wireframe HUD remains.
+	void clearSkin() { shutdownSkins(); }
 	// Development-only Live Typography Playground (null = production default).
 	void setLabelTypography(const hudpresent::IHudLabelTypography* typography) { renderer_.setLabelTypography(typography); }
 
@@ -128,7 +157,8 @@ private:
 	// HUD-006 v2: the six-button row, left to right (the mode panel is
 	// informational and no longer a focus stop).
 	HudFocusNavigator focus_{{"controls.scene_previous", "controls.scene_next", "controls.mode",
-		"controls.media_previous", "controls.media_next", "controls.fullscreen", "controls.menu"}};
+		"controls.media_previous", "controls.media_next", "controls.fullscreen", "controls.menu",
+		hudpresent::HudWireframeRenderer::kOrbitFocusA, hudpresent::HudWireframeRenderer::kOrbitFocusB}};
 
 	hudpresent::HudWireframeRenderer renderer_;
 	bool visible_ = true;

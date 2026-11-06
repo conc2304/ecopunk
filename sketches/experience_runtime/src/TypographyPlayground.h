@@ -52,6 +52,7 @@ public:
 
 	bool drawLabel(const std::string& regionId, const ofRectangle& bounds, const std::string& text, float opacity) const override;
 	bool drawText(const std::string& regionId, const std::string& text, float x, float y, float nativeScale, const ofColor& color) const override;
+	ofColor textColor(const std::string& regionId, const ofColor& color) const override;
 	float measureText(const std::string& regionId, const std::string& text, float nativeScale) const override;
 	float lineHeight(const std::string& regionId, float nativeLine) const override;
 	void drawOverlay() const; // dev info panel, canonical canvas coordinates

@@ -14,14 +14,18 @@
 #include "PresentationTransform.h"
 #include "TypographyPlayground.h"
 #include "HudSkinSchedule.h"
+#include "MinimalTheme.h"
 #include "HudLogCapture.h"
 #include "RuntimeServices.h"
 #include "SceneContract.h"
 #include "SceneManager.h"
+#include "SceneColorSampler.h"
+#include "SceneActivityProbe.h" // OC-004 diagnostic, opt-in
 #include "TemporalProductionScene.h"
 #include "WallClockSampler.h"
 
 #include "ofFbo.h"
+#include <filesystem>
 #include <memory>
 #include "ofImage.h"
 
@@ -259,6 +263,18 @@ public:
 		return img.save(path);
 	}
 
+	// Orbit Console Scene Sampling v0.1: test/measurement access to the
+	// private sampler (same class as the other ForTesting accessors).
+	const scenecolorsampling::SceneColorSampler& sceneColorForTesting() const { return sceneColor_; }
+	scenecolorsampling::SceneColorSampler& sceneColorForTesting() { return sceneColor_; }
+	const std::string& sceneColorSceneIdForTesting() const { return sceneColorSceneId_; }
+	const scenecolorsampling::SnapshotPublisher& sceneColorPublisherForTesting() const { return sceneColorPublisher_; }
+	// OC-003B RAW VIDEO sampler (EXPERIENCE_RUNTIME_VIDEO_COLOR=1; off by default): diagnostics/tests only.
+	bool videoColorEnabledForTesting() const { return videoColorEnabled_; }
+	const scenecolorsampling::SceneColorSampler& videoColorForTesting() const { return videoColor_; }
+	const rawvideo::Gate& videoColorGateForTesting() const { return videoColorGate_; }
+	const scenecolorsampling::SnapshotPublisher& videoColorPublisherForTesting() const { return videoColorPublisher_; }
+
 	// RT-003 evidence counters — test/report instrumentation only, never read
 	// by production logic.
 	struct PresentationCounters {
@@ -332,6 +348,8 @@ private:
 	void drawImmersiveScene() const;
 	void loadInstallationSettings();
 	void saveInstallationSettings();
+	void applyOrbitSettingsToHud();                     // OC-005 Stage 2: committed selection -> HUD
+	void commitOrbitObservation(hudpresent::OrbitObs which); // OC-005 Stage 2: Done -> installation settings
 	// -- Experience Settings page v0.1 -----------------------------------
 	void openSettingsPage();
 	void closeSettingsPage();
@@ -351,6 +369,32 @@ private:
 	void reallocateSceneFboForActiveSceneIfNeeded();
 
 	ofFbo sceneFbo_;
+	// Orbit Console Scene Sampling v0.1: runtime-private SceneFBO color
+	// sampler (pre-HUD). Not published through HudFrameData (pending the
+	// additive contract proposal); read only via the ForTesting accessor.
+	scenecolorsampling::SceneColorSampler sceneColor_;
+	scenecolorsampling::SnapshotPublisher sceneColorPublisher_; // immutable snapshot -> HudFrameData::sceneColor
+	uint64_t sceneColorGeneration_ = 0; // bumps on every scene activation
+	std::string sceneColorSceneId_;     // scene identity of the current generation
+	// OC-003B: independent RAW VIDEO sampler of VideoPlaybackService::currentTexture(). Disabled unless
+	// EXPERIENCE_RUNTIME_VIDEO_COLOR=1. Runtime-private (not published to the HUD in this increment); its
+	// generation follows media activations (activationCount) and scene activations, never the FX series.
+	void sampleRawVideo();
+	scenecolorsampling::SceneColorSampler videoColor_;
+	rawvideo::Gate videoColorGate_;
+	scenecolorsampling::SnapshotPublisher videoColorPublisher_; // immutable RAW snapshot -> HudFrameData::sceneColorRaw
+	std::string videoColorMediaId_;     // mediaId measured in the current RAW generation
+	bool videoColorEnabled_ = false;
+	bool videoColorStats_ = false;      // EXPERIENCE_RUNTIME_VIDEO_COLOR_STATS=1
+	bool videoColorDiag_ = false;       // EXPERIENCE_RUNTIME_VIDEO_COLOR_DIAG=1 (texture facts + CPU reference per sample)
+	double videoColorLastLogAt_ = 0.0;
+	uint64_t videoColorLastDiagRev_ = 0;
+	bool sceneColorEnabled_ = true;     // EXPERIENCE_RUNTIME_SCENE_COLOR=0 disables
+	bool sceneColorLogStats_ = false;   // EXPERIENCE_RUNTIME_SCENE_COLOR_STATS=1
+	double sceneColorLastLogAt_ = 0.0;
+	// OC-004 visual-activity probe: diagnostic only, inert unless EXPERIENCE_RUNTIME_SCENE_ACTIVITY_PROBE is set.
+	sceneactivity::SceneActivityProbe sceneActivityProbe_;
+	sceneactivity::VisualActivityPublisher sceneVisualActivityPublisher_; // OC-004: immutable snapshot -> HudFrameData::sceneVisualActivity
 	// RT-007: canonical 1280x720 composition target (scene viewport + shell +
 	// HUD), allocated lazily the first time the framebuffer is not exactly
 	// 1280x720 and never reallocated on resize; then scaled once to the
@@ -435,6 +479,7 @@ private:
 	bool escapeQuitSuppressed_ = false;   // OF quits on ESC by itself; off while the page is open
 	double settingsClosedAt_ = -1.0;      // monotonic; guards the closing Enter against re-activating MENU
 	double lastOkInputAt_ = -1.0;         // monotonic; debounces OK auto-repeat
+	double orbitEditorClosedAt_ = -1.0;   // monotonic; the closing Enter must not re-open the Orbit editor
 	// Recent console activity for the HUD log (installed in setup()).
 	std::shared_ptr<HudLogCapture> logCapture_;
 
@@ -447,6 +492,21 @@ private:
 	float skinCheckSeconds_ = 0.0f;
 	bool loadSkinSchedule(const std::string& path);
 	bool applySkin(const std::string& skinId, const std::string& reason);
+	// System Mode (Experience Settings page): "auto" | skin id | "minimal.<light|dark>.<hue>".
+	// A minimal mode drops the skin artwork (plain wireframe HUD) and recolours it from one primary.
+	bool applySystemMode(const std::string& modeId, const std::string& reason);
+	void leaveMinimal();
+	void applyButtonLabelMode();
+	void loadMinimalThemes(const std::string& path);
+	minimaltheme::ThemeSet themes_ = minimaltheme::ThemeSet::defaults();
+	bool minimalActive_ = false;
+	// Live reload: the theme file is stat()ed about once a second; a newer mtime reloads it and,
+	// while a minimal mode is showing, re-applies it so edits appear without a restart.
+	std::string themePath_;
+	std::filesystem::file_time_type themeMtime_{};
+	float themeCheckSeconds_ = 0.0f;
+	void tickThemeFile(float dt);
+	ofColor canvasBackground_ = ofColor(12, 12, 12);
 	void tickSkinSchedule(bool force);
 	static int localMinuteNow();
 	bool installationLoaded_ = false;

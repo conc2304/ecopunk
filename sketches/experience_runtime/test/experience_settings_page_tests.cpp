@@ -193,6 +193,119 @@ void test_clock_format_and_labels() {
 	check(a.size() == 1 && a[0].kind == Action::Kind::SetClock24 && !a[0].flag, "OK toggles the 24-hour preference");
 }
 
+void test_system_mode_and_minimal_theme() {
+	using namespace minimaltheme;
+	const ThemeSet themes = ThemeSet::defaults();
+	const auto options = modeOptions({"plywood-marble", "dark-moss-experimental"}, themes);
+	check(options.size() == 1 + 2 + 7 + 7, "options: auto + 2 skins + 7 light + 7 dark");
+	check(options[0].id == "auto" && options[0].group == "AUTOMATIC", "first option is Auto");
+	check(options[1].id == "plywood-marble" && options[1].label == "Wood" && options[1].group == "SKINS", "skins follow Auto with friendly labels");
+	check(options[3].id == "minimal.light.red" && options[3].group == "MINIMAL - LIGHT", "light group follows the skins");
+	check(options.back().id == "minimal.dark.violet", "dark group is last");
+
+	check(parseMinimalId("minimal.dark.blue") && parseMinimalId("minimal.dark.blue")->group == Group::Dark, "parse minimal dark id");
+	check(!parseMinimalId("plywood-marble") && !parseMinimalId("minimal.") , "skin ids and bare prefixes are not minimal ids");
+	check(parseHex("#3E63DD") && *parseHex("#3E63DD") == Rgb{0x3E, 0x63, 0xDD} && !parseHex("blue") && !parseHex("#12345"), "hex parsing");
+
+	// Derived colours: dark group = light text, light group = dark ink; both from one primary.
+	const auto dk = resolve(themes, "minimal.dark.blue", 0);
+	const auto lt = resolve(themes, "minimal.light.blue", 0);
+	check(dk && lt, "resolve both groups");
+	check(dk->primary.r + dk->primary.g + dk->primary.b > 380, "dark group: text is light");
+	check(lt->primary.r + lt->primary.g + lt->primary.b < 300, "light group: text is dark ink");
+	check(dk->background == Rgb{12, 12, 12}, "dark default background is Ink");
+	check(lt->background.r > 200 && lt->background.g > 200 && lt->background.b > 200 && !(lt->background == Rgb{255, 255, 255}), "light background is a light grey, not white");
+	check(!resolve(themes, "minimal.dark.teal", 0) && !resolve(themes, "auto", 0), "unknown hue / non-minimal id do not resolve");
+	check(resolve(themes, "minimal.dark.red", 99)->background == themes.dark.backgrounds.back().color, "background index clamps");
+
+	// Page: System mode row cycles the grouped list and emits the chosen id.
+	Context c = makeContext(false);
+	c.modeOptions = options;
+	c.lightBackgrounds = {"Mist", "Paper"};
+	c.darkBackgrounds = {"Ink", "Graphite"};
+	Page p;
+	p.open(c);
+	gotoRow(p, RowId::SystemMode);
+	check(p.focusedRow() == RowId::SystemMode, "System mode row is reachable");
+	press(p, Dpad::Ok);
+	check(p.editing(), "OK edits System mode");
+	press(p, Dpad::Right); // auto -> first skin
+	press(p, Dpad::Right); // -> second skin
+	press(p, Dpad::Right); // -> minimal light red
+	auto a = press(p, Dpad::Ok);
+	check(a.size() == 1 && a[0].kind == Action::Kind::SetSystemMode && a[0].text == "minimal.light.red", "confirming emits the selected mode id");
+	press(p, Dpad::Left);
+	Page q;
+	q.open(c);
+	gotoRow(q, RowId::SystemMode);
+	press(q, Dpad::Ok);
+	press(q, Dpad::Left); // wraps to the last option
+	auto b = press(q, Dpad::Ok);
+	check(b.size() == 1 && b[0].text == "minimal.dark.violet", "Left from the first option wraps to the last");
+
+	// Minimal background row: disabled outside minimal modes, edits the active group inside.
+	Page r;
+	r.open(c);
+	gotoRow(r, RowId::MinimalBackground);
+	press(r, Dpad::Ok);
+	check(!r.editing(), "background row does not edit outside a minimal mode");
+	Context m = c;
+	m.settings.systemMode = "minimal.dark.green";
+	Page t;
+	t.open(m);
+	gotoRow(t, RowId::MinimalBackground);
+	press(t, Dpad::Ok);
+	check(t.editing(), "background row edits inside a minimal mode");
+	press(t, Dpad::Right);
+	auto d = press(t, Dpad::Ok);
+	check(d.size() == 1 && d[0].kind == Action::Kind::SetMinimalBackground && d[0].dark && d[0].index == 1, "background edit emits the dark group's preset index");
+
+	// Controller validation + persistence fields.
+	installation::Controller ctl;
+	installation::Request req;
+	req.kind = installation::Request::Kind::SetSystemMode;
+	req.text = "minimal.dark.red";
+	check(ctl.submit(req).accepted && ctl.settings().systemMode == "minimal.dark.red", "controller accepts a valid mode id");
+	req.text = "Bad Mode!";
+	check(!ctl.submit(req).accepted && ctl.settings().systemMode == "minimal.dark.red", "controller rejects an invalid mode id");
+	installation::Request bg;
+	bg.kind = installation::Request::Kind::SetMinimalBackground;
+	bg.flag = true;
+	bg.steps = 2;
+	check(ctl.submit(bg).accepted && ctl.settings().minimalBackgroundDark == 2 && ctl.settings().minimalBackgroundLight == 0, "background index stored per group");
+	bg.steps = 99;
+	check(!ctl.submit(bg).accepted, "controller rejects an out-of-range background index");
+}
+
+void test_button_labels() {
+	Context c = makeContext(false);
+	Page p;
+	p.open(c);
+	gotoRow(p, RowId::ButtonLabels);
+	check(p.focusedRow() == RowId::ButtonLabels, "Button labels row is reachable");
+	press(p, Dpad::Ok);
+	check(p.editing(), "OK edits Button labels");
+	press(p, Dpad::Right); // text -> icon
+	auto a = press(p, Dpad::Ok);
+	check(a.size() == 1 && a[0].kind == Action::Kind::SetButtonLabels && a[0].text == "icon", "confirming emits the chosen label mode");
+	Context both = c;
+	both.settings.buttonLabels = "both";
+	Page q;
+	q.open(both);
+	gotoRow(q, RowId::ButtonLabels);
+	press(q, Dpad::Ok);
+	press(q, Dpad::Right); // both -> wraps to text
+	auto b = press(q, Dpad::Ok);
+	check(b.size() == 1 && b[0].text == "text", "options wrap");
+	installation::Controller ctl;
+	installation::Request r;
+	r.kind = installation::Request::Kind::SetButtonLabels;
+	r.text = "icon";
+	check(ctl.submit(r).accepted && ctl.settings().buttonLabels == "icon", "controller accepts a valid mode");
+	r.text = "huge";
+	check(!ctl.submit(r).accepted && ctl.settings().buttonLabels == "icon", "controller rejects an unknown mode");
+}
+
 void test_clock_service() {
 	systemclock::Snapshot s;
 	systemclock::SystemClockService::parseTimedatectlShow("Timezone=Europe/Madrid\nNTP=yes\nNTPSynchronized=no\nCanNTP=yes\n", s);
@@ -245,6 +358,8 @@ int main() {
 	test_clock_staging_and_apply();
 	test_datetime_editor_and_ntp_conflict();
 	test_clock_format_and_labels();
+	test_system_mode_and_minimal_theme();
+	test_button_labels();
 	test_clock_service();
 	std::cout << (g_total - g_failures) << "/" << g_total << " checks passed\n";
 	return g_failures == 0 ? 0 : 1;

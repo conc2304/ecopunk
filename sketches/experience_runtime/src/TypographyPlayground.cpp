@@ -404,6 +404,18 @@ int TypographyPlayground::groupOf(const std::string& regionId) {
 	return 2;
 }
 
+namespace {
+// The mode line (universal.media_title) and the media file label (universal.primary_state) have a wide panel to themselves, so its size is not capped to the bitmap layout width.
+bool growsPastLayout(const std::string& regionId) { return regionId == "universal.media_title" || regionId == "universal.primary_state"; }
+
+// Drop-shadow colour for text of colour `c`: white under dark text, black under light text.
+ofColor shadowFor(const ofColor& c, float alpha) {
+	const float lum = (0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b) / 255.0f;
+	const unsigned char a = static_cast<unsigned char>(std::clamp(alpha, 0.0f, 255.0f));
+	return lum < 0.45f ? ofColor(255, 255, 255, a) : ofColor(0, 0, 0, a);
+}
+} // namespace
+
 bool TypographyPlayground::drawLabel(const std::string& regionId, const ofRectangle& bounds, const std::string& text, float opacity) const {
 	const int g = groupOf(regionId);
 	const Style s = effective(regionId);
@@ -454,7 +466,7 @@ bool TypographyPlayground::drawLabel(const std::string& regionId, const ofRectan
 		const float y = std::round(top - box.y); // box.y is negative: top of the glyphs above the baseline
 		const ofRectangle drawn(x + box.x, y + box.y, box.width, box.height);
 		used = i == 0 ? drawn : used.getUnion(drawn);
-		ofSetColor(0, 0, 0, static_cast<unsigned char>(140.0f * opacity)); // mild drop shadow
+		ofSetColor(shadowFor(c, 140.0f * opacity)); // mild drop shadow (white under dark text)
 		font->drawString(line, x + 1.0f, y + 1.0f);
 		if (s.glow > 0.0f) {
 			for (int ring = 1; ring <= 2; ++ring) {
@@ -475,6 +487,13 @@ bool TypographyPlayground::drawLabel(const std::string& regionId, const ofRectan
 	if (active) { ofFill(); ofSetColor(244, 255, 106, 200); ofDrawRectangle(bounds.x, bounds.getBottom() - 2.0f, 10.0f, 2.0f); }
 	ofPopStyle();
 	return true;
+}
+
+ofColor TypographyPlayground::textColor(const std::string& regionId, const ofColor& color) const {
+	const Style s = effective(regionId);
+	ofColor c = colors_[std::clamp(s.color, 0, int(colors_.size()) - 1)].hudDefault ? color : colors_[s.color].color;
+	c.a = color.a;
+	return c;
 }
 
 // All non-label HUD text: group style; bitmap groups scale by size/15 (15 = native).
@@ -500,10 +519,10 @@ bool TypographyPlayground::drawText(const std::string& regionId, const std::stri
 	if (font == nullptr) {
 		if (s.size == 15) { ofPopStyle(); return false; } // native bitmap, unchanged
 		float k = nativeScale * float(s.size) / 15.0f;
-		if (fitLayout_) k = std::min(k, nativeScale); // layout reserved native width; only shrink
+		if (fitLayout_ && !growsPastLayout(regionId)) k = std::min(k, nativeScale); // layout reserved native width; only shrink
 		ofSetDrawBitmapMode(OF_BITMAPMODE_MODEL);
 		for (int pass = 0; pass < 2; ++pass) {
-			ofSetColor(pass == 0 ? ofColor(0, 0, 0, static_cast<unsigned char>(c.a * 0.55f)) : c);
+			ofSetColor(pass == 0 ? shadowFor(c, c.a * 0.55f) : c);
 			ofPushMatrix(); ofTranslate(x + (pass == 0 ? 1.0f : 0.0f), y + (pass == 0 ? 1.0f : 0.0f)); ofScale(k, k);
 			ofDrawBitmapString(text, 0, 0); ofPopMatrix();
 		}
@@ -512,7 +531,7 @@ bool TypographyPlayground::drawText(const std::string& regionId, const std::stri
 	}
 	font->setLetterSpacing(s.spacing);
 	float k = nativeScale;
-	if (fitLayout_) {
+	if (fitLayout_ && !growsPastLayout(regionId)) {
 		// The widget laid this string out for the bitmap font (8 px per
 		// character x its scale). A wider TTF string would run past the panel
 		// or into the next item, so shrink it uniformly to that width.
@@ -523,7 +542,7 @@ bool TypographyPlayground::drawText(const std::string& regionId, const std::stri
 	ofPushMatrix();
 	ofTranslate(x, y);
 	ofScale(k, k);
-	ofSetColor(0, 0, 0, static_cast<unsigned char>(c.a * 0.55f)); // mild drop shadow
+	ofSetColor(shadowFor(c, c.a * 0.55f)); // mild drop shadow (white under dark text)
 	font->drawString(text, 1.0f / k, 1.0f / k);
 	ofSetColor(c);
 	font->drawString(text, 0, 0);
@@ -545,11 +564,11 @@ float TypographyPlayground::measureText(const std::string& regionId, const std::
 	if (font == nullptr) {
 		if (s.size == 15) return -1.0f;
 		const float w = reserved * float(s.size) / 15.0f;
-		return fitLayout_ ? std::min(w, reserved) : w;
+		return (fitLayout_ && !growsPastLayout(regionId)) ? std::min(w, reserved) : w;
 	}
 	font->setLetterSpacing(s.spacing);
 	const float w = font->getStringBoundingBox(text, 0.0f, 0.0f).width * nativeScale;
-	return fitLayout_ ? std::min(w, reserved) : w;
+	return (fitLayout_ && !growsPastLayout(regionId)) ? std::min(w, reserved) : w;
 }
 
 // Multi-line text (activity log): scale the native 13 px line with the font size.

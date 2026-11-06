@@ -23,11 +23,16 @@ void HudCompositorBridge::update(float dt, const HudFrameData& frame) {
 	// respectively — see HudWireframeRenderer::update(float, const
 	// HudFrameData&)'s own comment. This bridge adds no logic of its own.
 	renderer_.update(dt, frame);
+	// A hidden HUD cannot be edited: cancel (restore) rather than leave an invisible modal consuming input.
+	if (!visible_ && renderer_.orbitUi().isOpen()) renderer_.orbitUi().cancel();
 	refreshFocus(); // availability follows this frame's resolved controls
 }
 
 void HudCompositorBridge::refreshFocus() {
 	focus_.refresh([this](const std::string& regionId) {
+		if (isOrbitFocusId(regionId)) { // observations: focusable once their regions are laid out and the HUD is shown
+			return (visible_ && renderer_.orbitObservationsPresent()) ? HudControlAvailability::Enabled : HudControlAvailability::Hidden;
+		}
 		const std::optional<bool> enabled = renderer_.controlEnabled(regionId);
 		if (!enabled) return HudControlAvailability::Hidden;
 		return *enabled ? HudControlAvailability::Enabled : HudControlAvailability::Disabled;
@@ -39,6 +44,28 @@ bool HudCompositorBridge::stepFocus(int delta) {
 	const bool moved = focus_.step(delta);
 	renderer_.setFocusedControl(focus_.focused());
 	return moved;
+}
+
+bool HudCompositorBridge::openOrbitEditorForFocus() {
+	const auto& f = focus_.focused();
+	if (!f || !isOrbitFocusId(*f) || !focus_.activationTarget()) return false;
+	renderer_.orbitUi().open(*f == hudpresent::HudWireframeRenderer::kOrbitFocusA ? hudpresent::OrbitObs::A : hudpresent::OrbitObs::B);
+	return renderer_.orbitUi().isOpen();
+}
+
+bool HudCompositorBridge::orbitEditorStep(int delta) {
+	if (!renderer_.orbitUi().isOpen()) return false;
+	renderer_.orbitUi().step(delta);
+	return true;
+}
+
+bool HudCompositorBridge::orbitEditorActivate() {
+	if (!renderer_.orbitUi().isOpen()) return false;
+	return renderer_.orbitUi().activate() == hudpresent::OrbitConfigEditor::Result::Committed;
+}
+
+bool HudCompositorBridge::orbitEditorBack() {
+	return renderer_.orbitUi().cancel() == hudpresent::OrbitConfigEditor::Result::Cancelled;
 }
 
 void HudCompositorBridge::draw() const {

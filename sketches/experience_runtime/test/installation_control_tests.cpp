@@ -171,7 +171,65 @@ void test_automation_suspension() {
 	check(!c.settings().clock24Hour, "clock24Hour survives load()");
 }
 
+// OC-005 Stage 2: committed Orbit observations in the installation settings.
+static void test_orbit_observations() {
+	Controller c;
+	check(c.settings().orbitA == Settings::OrbitSelection{"fx", "avg"} && c.settings().orbitB == Settings::OrbitSelection{"raw", "avg"}, "defaults: A = fx/avg, B = raw/avg");
+	{ // load: valid values survive; nothing rejected
+		Settings s;
+		s.orbitA = {"raw", "vib"};
+		s.orbitB = {"fx", "dom"};
+		check(c.load(s).empty() && c.settings().orbitA == Settings::OrbitSelection{"raw", "vib"} && c.settings().orbitB == Settings::OrbitSelection{"fx", "dom"}, "valid saved selection restores both observations");
+	}
+	{ // invalid saved fields fall back to the documented defaults, per field, and are reported
+		Settings s;
+		s.orbitA = {"banana", "vib"};
+		s.orbitB = {"fx", "median"};
+		const auto rejected = c.load(s);
+		check(rejected.size() == 2 && rejected[0] == "orbitObservations.a.source" && rejected[1] == "orbitObservations.b.metric", "invalid orbit fields are reported by name");
+		check(c.settings().orbitA == Settings::OrbitSelection{"fx", "vib"}, "A: bad source -> default fx, valid metric kept");
+		check(c.settings().orbitB == Settings::OrbitSelection{"fx", "avg"}, "B: valid source kept, bad metric -> default avg");
+		Settings empty; empty.orbitA = {"", ""}; empty.orbitB = {"", ""};
+		check(c.load(empty).size() == 4 && c.settings().orbitA == Settings::OrbitSelection{"fx", "avg"} && c.settings().orbitB == Settings::OrbitSelection{"raw", "avg"}, "empty values fall back to the defaults");
+	}
+	c.load(Settings{});
+	c.takeSettingsChanged();
+	{ // committing one observation leaves the other alone and marks the settings changed (one write)
+		Request r = req(Request::Kind::SetOrbitObservation);
+		r.text = "raw.vib";
+		check(c.submit(r).accepted && c.settings().orbitA == Settings::OrbitSelection{"raw", "vib"} && c.takeSettingsChanged(), "commit A");
+		check(c.settings().orbitB == Settings::OrbitSelection{"raw", "avg"}, "B untouched by an A commit");
+		r.flag = true;
+		r.text = "fx.dom";
+		check(c.submit(r).accepted && c.settings().orbitB == Settings::OrbitSelection{"fx", "dom"} && c.takeSettingsChanged(), "commit B");
+		check(c.settings().orbitA == Settings::OrbitSelection{"raw", "vib"}, "A untouched by a B commit");
+	}
+	{ // re-committing the same value is accepted but writes nothing
+		Request r = req(Request::Kind::SetOrbitObservation);
+		r.text = "raw.vib";
+		check(c.submit(r).accepted && !c.takeSettingsChanged(), "unchanged commit: no settings change, no disk write");
+	}
+	{ // invalid requests are rejected and change nothing
+		for (const char* bad : {"", "fx", "fx.", ".avg", "xx.avg", "fx.median", "FX.AVG", "fx.avg.extra"}) {
+			Request r = req(Request::Kind::SetOrbitObservation);
+			r.text = bad;
+			check(!c.submit(r).accepted && !c.takeSettingsChanged(), std::string("rejected: '") + bad + "'");
+		}
+		check(c.settings().orbitA == Settings::OrbitSelection{"raw", "vib"} && c.settings().orbitB == Settings::OrbitSelection{"fx", "dom"}, "rejected requests leave both observations as committed");
+	}
+	{ // unrelated settings are untouched by orbit commits
+		Controller d;
+		Settings s; s.clock24Hour = false; s.systemMode = "auto"; s.energyTarget = 0.75f;
+		d.load(s);
+		Request r = req(Request::Kind::SetOrbitObservation);
+		r.text = "raw.dom";
+		d.submit(r);
+		check(!d.settings().clock24Hour && d.settings().energyTarget == 0.75f && d.settings().systemMode == "auto", "orbit commit leaves unrelated installation settings unchanged");
+	}
+}
+
 int main() {
+	test_orbit_observations();
 	test_automation_suspension();
 	test_defaults_and_load_validation();
 	test_runtime_updates_validated();

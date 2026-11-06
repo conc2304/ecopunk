@@ -137,6 +137,22 @@ WALL_CLOCK_CXXFLAGS = $(CXXFLAGS) -I../../../shared/src/hud-runtime -I../../../s
 WALL_CLOCK_SRC = wall_clock_sampler_tests.cpp
 WALL_CLOCK_BIN = wall_clock_sampler_tests
 
+# Orbit Console Scene Sampling v0.1: SceneColorSeries.h (OF-free, header-only).
+SCENE_COLOR_SRC = scene_color_series_tests.cpp
+SCENE_COLOR_BIN = scene_color_series_tests
+
+# A7 deferred-readback gate (SceneColorDeferredGate.h, OF-free, header-only).
+SCENE_COLOR_GATE_SRC = scene_color_deferred_gate_tests.cpp
+SCENE_COLOR_GATE_BIN = scene_color_deferred_gate_tests
+
+# OC-004 visual-activity tracker/publisher (../src/SceneVisualActivityTracker.h) - OF-free.
+VISUAL_ACTIVITY_SRC = visual_activity_tracker_tests.cpp
+VISUAL_ACTIVITY_BIN = visual_activity_tracker_tests
+
+# OC-003B RAW VIDEO gate / format validation / flag (RawVideoGate.h, OF-free, header-only).
+RAW_VIDEO_SRC = raw_video_gate_tests.cpp
+RAW_VIDEO_BIN = raw_video_gate_tests
+
 # System Telemetry v1 (../src/SystemVitals.h/.cpp) — OF-free, standard library only.
 SYSTEM_VITALS_SRC = system_vitals_tests.cpp ../src/SystemVitals.cpp
 SYSTEM_VITALS_BIN = system_vitals_tests
@@ -152,7 +168,7 @@ SCHEDULE_BIN = hud_skin_schedule_tests
 PRESENTATION_SRC = presentation_transform_tests.cpp
 PRESENTATION_BIN = presentation_transform_tests
 
-.PHONY: test session2 skin focus wall-clock installation clean
+.PHONY: test visual-activity raw-video session2 skin focus wall-clock installation clean
 
 focus: $(FOCUS_BIN)
 	./$(FOCUS_BIN)
@@ -193,8 +209,34 @@ $(WALL_CLOCK_BIN): $(WALL_CLOCK_SRC) ../../../shared/src/hud-runtime/WallClockSa
 $(FOCUS_BIN): $(FOCUS_SRC) ../src/HudFocusNavigator.h
 	$(CXX) $(CXXFLAGS) $(FOCUS_SRC) -o $(FOCUS_BIN)
 
-test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(SYSTEM_VITALS_BIN) $(INSTALLATION_BIN) $(SETTINGS_PAGE_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN)
-	./$(LIFECYCLE_BIN)
+raw-video: $(RAW_VIDEO_BIN)
+	./$(RAW_VIDEO_BIN)
+
+$(RAW_VIDEO_BIN): $(RAW_VIDEO_SRC) ../src/RawVideoGate.h ../src/SceneColorSeries.h
+	$(CXX) $(CXXFLAGS) -I../src -I../../../shared/src/hud-runtime $(RAW_VIDEO_SRC) -o $(RAW_VIDEO_BIN)
+
+scene-color: $(SCENE_COLOR_BIN)
+	./$(SCENE_COLOR_BIN)
+
+$(SCENE_COLOR_BIN): $(SCENE_COLOR_SRC) ../src/SceneColorSeries.h ../../../shared/src/hud-runtime/SceneColorSnapshot.h
+	$(CXX) $(CXXFLAGS) -I../src -I../../../shared/src/hud-runtime $(SCENE_COLOR_SRC) -o $(SCENE_COLOR_BIN)
+
+scene-color-gate: $(SCENE_COLOR_GATE_BIN)
+	./$(SCENE_COLOR_GATE_BIN)
+
+$(SCENE_COLOR_GATE_BIN): $(SCENE_COLOR_GATE_SRC) ../src/SceneColorDeferredGate.h ../src/SceneColorSeries.h ../../../shared/src/hud-runtime/SceneColorSnapshot.h
+	$(CXX) $(CXXFLAGS) -I../src -I../../../shared/src/hud-runtime $(SCENE_COLOR_GATE_SRC) -o $(SCENE_COLOR_GATE_BIN)
+
+visual-activity: $(VISUAL_ACTIVITY_BIN)
+	./$(VISUAL_ACTIVITY_BIN)
+
+$(VISUAL_ACTIVITY_BIN): $(VISUAL_ACTIVITY_SRC) ../src/SceneVisualActivityTracker.h ../src/SceneActivityCore.h ../../../shared/src/hud-runtime/SceneVisualActivitySnapshot.h
+	$(CXX) $(CXXFLAGS) -I../src -I../../../shared/src/hud-runtime $(VISUAL_ACTIVITY_SRC) -o $(VISUAL_ACTIVITY_BIN)
+
+test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(SYSTEM_VITALS_BIN) $(INSTALLATION_BIN) $(SETTINGS_PAGE_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN) $(SCENE_COLOR_BIN) $(SCENE_COLOR_GATE_BIN) $(VISUAL_ACTIVITY_BIN)
+	./$(SCENE_COLOR_BIN)
+	./$(SCENE_COLOR_GATE_BIN)
+	./$(VISUAL_ACTIVITY_BIN)
 	./$(SESSION2_BIN)
 	./$(BLOB_SEMANTIC_BIN)
 	./$(BLOB_EFFECT_POLICY_BIN)

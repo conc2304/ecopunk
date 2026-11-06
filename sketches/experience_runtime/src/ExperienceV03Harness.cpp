@@ -189,7 +189,7 @@ void ExperienceV03Harness::buildScript() {
 		// -- Phase 1: navigation row ------------------------------------
 		{"blob live", [this] { return idleOn(kBlobId) && framesInStep_ >= kSettleFrames; },
 			[this, ctl] {
-				check("title suffix from the registry: [Scene 1/5]", resolvedText("scene.position") == "[Scene 1/5]",
+				check("title suffix from the registry: [EXP 1/5]", resolvedText("scene.position") == "[EXP 1/5]",
 					resolvedText("scene.position"));
 				const bool prevMediaVisible =
 					runtime_.hudCompositorBridgeForTesting().renderer().controlEnabled("controls.media_previous").has_value();
@@ -203,7 +203,7 @@ void ExperienceV03Harness::buildScript() {
 			runtime_.keyPressed(OF_KEY_RETURN);
 		}},
 		{"temporal via NEXT SCENE", [this] { return idleOn(kTemporalId) && framesInStep_ >= 30; }, [this] {
-			check("NEXT SCENE (focus + Enter) -> Temporal, [Scene 2/5]", resolvedText("scene.position") == "[Scene 2/5]",
+			check("NEXT SCENE (focus + Enter) -> Temporal, [EXP 2/5]", resolvedText("scene.position") == "[EXP 2/5]",
 				resolvedText("scene.position"));
 			check("focus kept on NEXT SCENE across the switch", focused() == "controls.scene_next", focused());
 		}},
@@ -211,7 +211,7 @@ void ExperienceV03Harness::buildScript() {
 			runtime_.keyPressed(OF_KEY_RETURN);
 		}},
 		{"blob via PREV SCENE", [this] { return idleOn(kBlobId) && framesInStep_ >= kSettleFrames; }, [this] {
-			check("PREV SCENE (focus + Enter) -> Blob, [Scene 1/5]", resolvedText("scene.position") == "[Scene 1/5]",
+			check("PREV SCENE (focus + Enter) -> Blob, [EXP 1/5]", resolvedText("scene.position") == "[EXP 1/5]",
 				resolvedText("scene.position"));
 		}},
 

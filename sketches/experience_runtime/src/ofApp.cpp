@@ -1,4 +1,5 @@
 #include "ofApp.h"
+#include <sstream>
 #include "BlobEffectCapacityBench.h"
 #include "BlobRenderPathAbHarness.h"
 #include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated)
@@ -153,6 +154,7 @@ void ofApp::setup() {
 		&& !presentationHarnessRequested && !v03HarnessRequested && !installationHarnessRequested && !modeHarnessRequested
 		&& !focusHarnessRequested && !skinHarnessRequested && !artExportRequested && !glHarnessRequested
 		&& SkinCycleHarness::isRequested();
+	bool orbitInjectRequested = OrbitInjectHarness::isRequested();
 	bool settingsPageHarnessRequested = !skinCycleHarnessRequested && !hud006v2HarnessRequested && !typographyHarnessRequested
 		&& !reactiveHarnessRequested && !presentationHarnessRequested && !v03HarnessRequested && !installationHarnessRequested
 		&& !modeHarnessRequested && !focusHarnessRequested && !skinHarnessRequested && !artExportRequested && !glHarnessRequested
@@ -224,10 +226,11 @@ void ofApp::setup() {
 			|| blueprintHarnessRequested || blueprintHudHarnessRequested || paritySoakRequested || resumeWindowRequested
 			|| cadenceRequested || temporalWarmRequested || threeSceneRequested || modeHarnessRequested || installationHarnessRequested
 			|| v03HarnessRequested || presentationHarnessRequested || reactiveHarnessRequested || typographyHarnessRequested
-			|| hud006v2HarnessRequested || skinCycleHarnessRequested || settingsPageHarnessRequested || Rt004StallDriver::isRequested() || BlobRenderPathAbHarness::isRequested()
+			|| hud006v2HarnessRequested || skinCycleHarnessRequested || settingsPageHarnessRequested || orbitInjectRequested || Rt004StallDriver::isRequested() || BlobRenderPathAbHarness::isRequested()
 			|| BlobEffectCapacityBench::isRequested();
 		runtime.setSkinScheduleEnabled(!anyHarnessForSkins || std::getenv("EXPERIENCE_RUNTIME_SKIN_SCHEDULE") != nullptr);
-		runtime.setTypographyPresetEnabled(!anyHarnessForSkins);
+		const char* typoEnv = std::getenv("EXPERIENCE_RUNTIME_TYPOGRAPHY");
+		runtime.setTypographyPresetEnabled(!anyHarnessForSkins || (typoEnv != nullptr && std::string(typoEnv) == "on")); // "on" = apply the preset under a harness
 	}
 	runtime.setup();
 	if (framePhaseProbe) framePhaseProbe->afterRuntimeSetup(); // limiter/vsync controls apply after the runtime's own baseline
@@ -288,6 +291,8 @@ void ofApp::setup() {
 		hud006v2Harness = std::make_unique<Hud006v2Harness>(runtime);
 	} else if (settingsPageHarnessRequested) {
 		settingsPageHarness = std::make_unique<SettingsPageHarness>(runtime);
+	} else if (orbitInjectRequested) {
+		orbitInjectHarness = std::make_unique<OrbitInjectHarness>(runtime);
 	} else if (skinCycleHarnessRequested) {
 		skinCycleHarness = std::make_unique<SkinCycleHarness>(runtime);
 	} else if (Rt004StallDriver::isRequested()) {
@@ -369,6 +374,9 @@ void ofApp::update() {
 	if (hud006v2Harness) {
 		hud006v2Harness->step(ofGetLastFrameTime());
 	}
+	if (orbitInjectHarness) {
+		orbitInjectHarness->step(ofGetLastFrameTime());
+	}
 	if (skinCycleHarness) {
 		skinCycleHarness->step(ofGetLastFrameTime());
 	}
@@ -395,8 +403,33 @@ void ofApp::update() {
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
 	if (Rt004FramePhaseProbe::presentOnlyControl()) { ofClear(0, 0, 0, 255); return; }
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness && !modeHarness && !installationHarness && !v03Harness && !presentationHarness && !reactiveHarness && !typographyHarness && !hud006v2Harness && !skinCycleHarness && !settingsPageHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness && !modeHarness && !installationHarness && !v03Harness && !presentationHarness && !reactiveHarness && !typographyHarness && !hud006v2Harness && !skinCycleHarness && !orbitInjectHarness && !settingsPageHarness) {
 		runtime.draw();
+
+		// Verification only (OC-003B): EXPERIENCE_RUNTIME_SHOT_SCHEDULE="name@seconds,name@seconds" saves the
+		// composited window (the real app, HUD included) to captures/raw_video/<name>.png once each. Off by default.
+		{
+			static const std::string schedule = [] { const char* v = std::getenv("EXPERIENCE_RUNTIME_SHOT_SCHEDULE"); return std::string(v ? v : ""); }();
+			static std::vector<std::pair<std::string, double>> shots = [] {
+				std::vector<std::pair<std::string, double>> out;
+				std::stringstream ss(schedule);
+				std::string item;
+				while (std::getline(ss, item, ',')) {
+					const auto at = item.find('@');
+					if (at != std::string::npos) out.emplace_back(item.substr(0, at), std::atof(item.c_str() + at + 1));
+				}
+				return out;
+			}();
+			for (auto it = shots.begin(); it != shots.end();) {
+				if (ofGetElapsedTimef() >= it->second) {
+					ofImage shot;
+					shot.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
+					shot.save("captures/raw_video/" + it->first + ".png");
+					ofLogNotice("ShotSchedule") << "saved captures/raw_video/" << it->first << ".png at " << ofGetElapsedTimef() << " s";
+					it = shots.erase(it);
+				} else ++it;
+			}
+		}
 
 		// Blob Experiment 2: serve the bench's capture requests (scene-only
 		// from the runtime-owned scene FBO, plus the full composited window).

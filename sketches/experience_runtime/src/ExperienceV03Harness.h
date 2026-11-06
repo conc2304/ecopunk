@@ -9,7 +9,7 @@
 // ExperienceV03Harness — HUD & Scene Experience v0.3 real-runtime check
 // (EXPERIENCE_RUNTIME_V03_HARNESS). Full five-scene roster, startup Blob.
 // Covers, through real device-neutral inputs and the real HudFrameData:
-//   - navigation row: PREV/NEXT SCENE through focus + Enter, "[Scene x/y]"
+//   - navigation row: PREV/NEXT SCENE through focus + Enter, "[EXP x/y]"
 //   - IMMERSIVE: focus + Enter enters, any key / pointer exits with the
 //     first input consumed, focus restored, scene + media continuous
 //   - media progress slot ("current / total" from Shared Video)

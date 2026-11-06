@@ -114,7 +114,7 @@ void BlueprintRosterHarness::onFirstLiveFrameOfLeg() {
 			std::string("phase ") + phaseName(comp.getPhase()) + ", cycle t=" + ofToString(comp.getCycleElapsedSeconds(), 2) +
 			" s, seed " + ofToString(seedAtLastBlueprintExit_) + " -> " + ofToString(comp.getCycleSeed()) +
 			", " + ofToString(comp.getFragments().size()) + " fragments (new cycle)");
-		check("[" + leg.label + "] HUD title is Blueprint Emergence", f.scene.displayName == "Blueprint Emergence");
+		check("[" + leg.label + "] HUD title is SIGNAL BLUEPRINT", f.scene.displayName == "SIGNAL BLUEPRINT");
 	}
 }
 

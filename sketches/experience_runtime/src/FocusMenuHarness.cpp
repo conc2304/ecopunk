@@ -137,10 +137,10 @@ void FocusMenuHarness::step(float /*dt*/) {
 		case 420:
 			check("existing 'n' key still works alongside focus", mediaId() != media0_, mediaId());
 			check("existing key did not move focus", focused() == kPrev);
-			for (int i = 0; i < 7; ++i) press(OF_KEY_RIGHT, "RIGHT");
-			// Six stops (HUD-006 v2): PREV SCENE, NEXT SCENE, MODE, PREV MEDIA,
-			// NEXT MEDIA, FULLSCREEN — the mode panel is no longer a stop.
-			check("RIGHT x7 wraps back to PREV MEDIA (PREV/NEXT SCENE, MODE, PREV/NEXT MEDIA, FULLSCREEN, MENU)",
+			for (int i = 0; i < 9; ++i) press(OF_KEY_RIGHT, "RIGHT");
+			// Nine stops: the seven HUD-006 controls (PREV/NEXT SCENE, MODE, PREV/NEXT MEDIA,
+			// FULLSCREEN, MENU) + OC-005's Orbit observations A and B — the mode panel is not a stop.
+			check("RIGHT x9 wraps back to PREV MEDIA (7 controls + Orbit A, B)",
 				focused() == kPrev, focused());
 			press(OF_KEY_DOWN, "DOWN");
 			check("DOWN steps forward like RIGHT", focused() == kNext);

@@ -24,8 +24,10 @@ std::optional<SceneCommand> InputRouter::translateToSceneCommand(int key) const 
 	}
 }
 
-std::optional<HudFocusInput> InputRouter::translateToFocusInput(int key) const {
+std::optional<HudFocusInput> InputRouter::translateToFocusInput(int key, bool shift) const {
 	switch (key) {
+		// OC-005: Tab / Shift+Tab step focus (and the Orbit editor cursor) like the arrows.
+		case '\t':          return HudFocusInput{HudFocusInput::Kind::Step, shift ? -1 : +1};
 		case OF_KEY_LEFT:
 		case OF_KEY_UP:     return HudFocusInput{HudFocusInput::Kind::Step, -1};
 		case OF_KEY_RIGHT:

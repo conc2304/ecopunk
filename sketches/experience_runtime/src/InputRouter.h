@@ -38,7 +38,7 @@ public:
 	// Enter = activate. A future rotary encoder produces the same
 	// HudFocusInput (detent = Step ±1, click = Activate) without any change
 	// to the focus or command logic.
-	std::optional<HudFocusInput> translateToFocusInput(int key) const;
+	std::optional<HudFocusInput> translateToFocusInput(int key, bool shift = false) const;
 	// Experience Settings page: the five-way D-pad (arrows = Up/Down/Left/Right,
 	// Enter = OK, Esc = Back). Used only while the page is open; the page is
 	// the sole consumer, so nothing leaks to scene/HUD controls.
