@@ -27,7 +27,7 @@ HUD Art panels should be authored for what each region now holds:
 
 | Region | Contents |
 |---|---|
-| `universal.scene_title` | scene title (left) + `[Scene x/y]` (right, small) |
+| `universal.scene_title` | scene title (left) + `[EXP x/y]` (right, small) |
 | `universal.media_title` | one line: `Mode: <mode name>   x/y` |
 | `universal.primary_state` | media title (centred) + playback progress bar and `current / total` |
 | `universal.activity` | scene primary-state badge (icon slot, phase, detail) |

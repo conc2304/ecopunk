@@ -37,6 +37,14 @@ pgrep -a Xorg                                        # should print nothing befo
 pgrep -af bin/experience_runtime                     # stop any older instance first (Esc on its keyboard, or pkill)
 ```
 
+Other useful commands
+Action Command
+Start Ecopunk `sudo systemctl start ecopunk-runtime`
+Stop Ecopunk `sudo systemctl stop ecopunk-runtime`
+Restart Ecopunk `sudo systemctl restart ecopunk-runtime`
+Check status `systemctl status ecopunk-runtime`
+Disable startup at boot `sudo systemctl disable ecopunk-runtime`
+
 **3a. No X running: start X with the experience as its only client.** This is the same pattern as FireplaceWaterfall's `deploy/x11/xinitrc.template`. First create the session script once:
 
 ```bash
@@ -81,38 +89,39 @@ nohup env EXPERIENCE_RUNTIME_HUD_SKIN=dark-moss-experimental ./bin/experience_ru
 
 ### Keys (HUD-006 v2)
 
-| Key | Action |
-| --- | --- |
-| `[` / `]` | previous / next scene |
-| `p` / `n` | previous / next media (previous wraps at the start of history) |
-| `m` | NEXT MODE (pattern / mode / strategy of the current scene) |
-| `2` | Regenerate (Blueprint) · `1` reset the current scene |
-| `e` | ENERGY adjustment: arrows adjust, Enter closes |
-| `f` / `h` / `Esc` | native fullscreen / HUD on-off / quit |
-| `i` | IMMERSIVE: the scene over the whole window, HUD hidden, no OS fullscreen. Any key or click exits, and that first input does nothing else |
-| `v` / `V` | next HUD skin (manual) / back to the day-night schedule (see below) |
-| arrows + `Enter` | HUD button row: PREV SCENE · NEXT SCENE · NEXT MODE · PREV MEDIA · NEXT MEDIA · FULL SCREEN |
+| Key               | Action                                                                                                                                   |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `[` / `]`         | previous / next scene                                                                                                                    |
+| `p` / `n`         | previous / next media (previous wraps at the start of history)                                                                           |
+| `m`               | NEXT MODE (pattern / mode / strategy of the current scene)                                                                               |
+| `2`               | Regenerate (Blueprint) · `1` reset the current scene                                                                                     |
+| `e`               | ENERGY adjustment: arrows adjust, Enter closes                                                                                           |
+| `f` / `h` / `Esc` | native fullscreen / HUD on-off / quit                                                                                                    |
+| `i`               | IMMERSIVE: the scene over the whole window, HUD hidden, no OS fullscreen. Any key or click exits, and that first input does nothing else |
+| `v` / `V`         | next HUD skin (manual) / back to the day-night schedule (see below)                                                                      |
+| arrows + `Enter`  | HUD button row: PREV SCENE · NEXT SCENE · NEXT MODE · PREV MEDIA · NEXT MEDIA · FULL SCREEN                                              |
 
 ### HUD skins: day/night schedule and switching
 
 Three Blueprint v2 skin packages are installed in `assets/hud/skins/`:
 
-| Skin ID | Look | Period | Text palette |
-| --- | --- | --- | --- |
-| `plywood-marble` | Plywood + Marble (light) | day | dark ink, with light button labels |
-| `dark-moss-experimental` | Dark Moss (dark) | night (default) | light text |
-| `abyssal-bioluminescence` | Abyssal Bioluminescence (dark) | night | light text |
+| Skin ID                   | Look                           | Period          | Text palette                       |
+| ------------------------- | ------------------------------ | --------------- | ---------------------------------- |
+| `plywood-marble`          | Plywood + Marble (light)       | day             | dark ink, with light button labels |
+| `dark-moss-experimental`  | Dark Moss (dark)               | night (default) | light text                         |
+| `abyssal-bioluminescence` | Abyssal Bioluminescence (dark) | night           | light text                         |
 
 **Automatic (normal runs).** `assets/hud/skins/skin-schedule.json` picks the skin by local time. It shows the first listed day skin from `dayStart` (07:00) and the first night skin from `nightStart` (19:00). It checks about once a second and switches only when the period changes. To change the times or the order, edit that file and restart the app.
 
 ```json
 {
-  "dayStart": "07:00", "nightStart": "19:00",
-  "day":   { "skins": ["plywood-marble"], "palette": "day" },
-  "night": { "skins": ["dark-moss-experimental", "abyssal-bioluminescence"], "palette": "night" }
-}
-```
-
+  "dayStart": "07:00",
+  "nightStart": "19:00",
+  "day": { "skins": ["plywood-marble"], "palette": "day" },
+  "night": {
+    "skins": ["dark-moss-experimental", "abyssal-bioluminescence"],
+    "palette": "night"
+ 
 **Manual.**
 
 - `v` loads the next skin: day skins first, then night skins, wrapping. This pauses the schedule.
