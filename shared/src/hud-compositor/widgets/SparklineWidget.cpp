@@ -119,7 +119,7 @@ void SparklineWidget::drawOrbit(const ofRectangle& bounds, const HudWidgetColors
 	const bool valid = metricLive && S.state == OrbitState::Valid;
 	const bool stale = metricLive && S.state == OrbitState::Stale;
 	const bool unavailable = !metricLive || S.state == OrbitState::Unavailable || !S.hasLatest;
-	const ofColor accent = upper ? ofColor(110, 210, 120) : ofColor(95, 150, 240); // observation A green, B blue (default FX / RAW)
+	const ofColor accent = upper ? colors.dataA : colors.dataB; // observation A / B series colours
 	char titleBuf[16];
 	std::snprintf(titleBuf, sizeof(titleBuf), "%s %s/%s", orbitObsText(obs), orbitSourceText(cfg.source), orbitMetricText(cfg.metric));
 	const char* title = titleBuf;
@@ -137,7 +137,7 @@ void SparklineWidget::drawOrbit(const ofRectangle& bounds, const HudWidgetColors
 	const float k = (valid || !metricLive || !S.hasLatest) ? 1.0f : 0.45f; // stale readings never look live
 	const OrbitSample L = metricLive ? S.latest : OrbitSample {};
 	char buf[32];
-	const ofColor markCol[3] = {ofColor(235, 90, 90), ofColor(100, 210, 110), ofColor(95, 150, 240)};
+	const ofColor markCol[3] = {colors.warning, colors.dataA, colors.dataB};
 
 	// -- Average swatch, labelled with the source (the label is the truthful source distinction).
 	{
@@ -214,7 +214,7 @@ void SparklineWidget::drawOrbit(const ofRectangle& bounds, const HudWidgetColors
 			if (!orbitMetricAvailable(oc.metric)) continue;
 			const OrbitSourceModel& P = m.source(orbitSourceIdOf(oc.source));
 			if (!P.hasLatest) continue; // no fabricated polygon for an unavailable source
-			const ofColor ac = oi == 0 ? ofColor(110, 210, 120) : ofColor(95, 150, 240);
+			const ofColor ac = oi == 0 ? colors.dataA : colors.dataB;
 			const float pk = P.state == OrbitState::Valid ? 1.0f : 0.45f;
 			ofFill();
 			ofSetColor(ac.r, ac.g, ac.b, static_cast<int>(48 * pk));
@@ -231,8 +231,8 @@ void SparklineWidget::drawOrbit(const ofRectangle& bounds, const HudWidgetColors
 		const OrbitConsoleConfig& cc = d.ui.config();
 		char sub[16];
 		ofFill();
-		ofSetColor(110, 210, 120); ofDrawRectangle(lx, 8.0f, 10.0f, 3.0f);
-		ofSetColor(95, 150, 240); ofDrawRectangle(lx, 33.0f, 10.0f, 3.0f);
+		ofSetColor(colors.dataA); ofDrawRectangle(lx, 8.0f, 10.0f, 3.0f);
+		ofSetColor(colors.dataB); ofDrawRectangle(lx, 33.0f, 10.0f, 3.0f);
 		ofSetColor(colors.caption);
 		drawText("A", lx + 14.0f, 12.0f);
 		drawText("B", lx + 14.0f, 37.0f);

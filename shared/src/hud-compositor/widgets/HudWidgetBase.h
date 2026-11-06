@@ -44,6 +44,10 @@ struct HudWidgetColors {
 	ofColor caption = ofColor(124, 232, 230, 165);
 	ofColor background = ofColor(0, 20, 16, 40);
 	ofColor warning = ofColor(255, 120, 90, 230);
+	// Data-series colours for charts that compare two things (Orbit observations A
+	// and B). Themes pull them to readable lightness on their panel surface.
+	ofColor dataA = ofColor(110, 210, 120);
+	ofColor dataB = ofColor(95, 150, 240);
 	// Drop-shadow colour under every text draw (alpha is scaled by the text's
 	// own alpha): dark under light "night" text, light under dark "day" ink.
 	ofColor shadow = ofColor(0, 0, 0, 140);

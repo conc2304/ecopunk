@@ -505,6 +505,9 @@ void ExperienceRuntime::setup() {
 		expected.expectedBlueprintVersion = 2u; // HUD-006 v2: v1 skins are rejected (SKIN_BLUEPRINT_VERSION_MISMATCH)
 		hudCompositorBridge_.configureSkins(hudPaths, expected);
 
+		// Shell palettes must be loaded before the first applySkin() below.
+		loadShellPalettes(ofToDataPath("../../../../assets/hud/themes/shell-palettes.json", true));
+
 		// Skin selection. EXPERIENCE_RUNTIME_HUD_SKIN (explicit) wins and fixes
 		// the skin; otherwise, on normal runs, the day/night schedule picks it
 		// by local time. Neither -> functional wireframe, as before. The 'v'
@@ -610,7 +613,28 @@ bool ExperienceRuntime::applySkin(const std::string& skinId, const std::string& 
 		leaveMinimal(); // a skin replaces the minimal look (viewport style, typography preset)
 		currentSkin_ = skinId;
 		const std::string palette = skinSchedule_.paletteFor(skinId);
-		hudCompositorBridge_.setColors(hudpresent::hudPaletteNamed(palette));
+		const auto shell = shellPalettes_.find(skinId);
+		if (shell != shellPalettes_.end()) {
+			const shelltheme::Tokens t = shelltheme::derive(shell->second);
+			auto col = [](const shelltheme::Rgba& c) { return ofColor(c.r, c.g, c.b, c.a); };
+			hudpresent::HudWidgetColors colors = hudpresent::hudPaletteNamed(palette); // keeps daytime/button settings
+			colors.primary = col(t.primary);
+			colors.secondary = col(t.secondary);
+			colors.accent = col(t.accent);
+			colors.muted = col(t.muted);
+			colors.caption = col(t.caption);
+			colors.background = col(t.panel);
+			colors.warning = col(t.warning);
+			colors.dataA = col(t.dataA);
+			colors.dataB = col(t.dataB);
+			colors.shadow = col(t.shadow);
+			if (shell->second.mode == shelltheme::Mode::Dark) colors.buttonText = col(t.primary); // light labels on the dark baked faces; day keeps its own
+			hudCompositorBridge_.setColors(colors);
+			// Under the video inside the media screen; skins draw their own frame, so the border stays off.
+			hudCompositorBridge_.setViewportStyle(ofColor(t.viewportBacking.r, t.viewportBacking.g, t.viewportBacking.b, 255), col(t.border), false);
+		} else {
+			hudCompositorBridge_.setColors(hudpresent::hudPaletteNamed(palette));
+		}
 		if (typography_) typography_->setSkin(skinId, palette);
 		ofLogNotice("HudSkin") << "skin '" << skinId << "' (" << palette << " palette) — " << reason;
 	}
@@ -723,6 +747,44 @@ void ExperienceRuntime::loadMinimalThemes(const std::string& path) {
 	}
 	themes_ = t;
 	ofLogNotice("SystemMode") << "minimal themes loaded from " << path << " (" << applied << " value(s) applied)";
+}
+
+void ExperienceRuntime::loadShellPalettes(const std::string& path) {
+	shellPalettes_.clear();
+	if (!ofFile::doesFileExist(path, false)) return;
+	ofJson j;
+	try { j = ofLoadJson(path); } catch (...) { j = ofJson(); }
+	if (!j.is_object() || !j.contains("skins") || !j["skins"].is_object()) {
+		ofLogWarning("HudSkin") << "shell palette file has no \"skins\" object; built-in palettes kept: " << path;
+		return;
+	}
+	auto hex = [](const ofJson& o, const char* key) -> std::optional<shelltheme::Rgb> {
+		if (!o.contains(key) || !o[key].is_string()) return std::nullopt;
+		return shelltheme::parseHex(o[key].get<std::string>());
+	};
+	for (auto it = j["skins"].begin(); it != j["skins"].end(); ++it) {
+		const ofJson& e = it.value();
+		const auto primary = hex(e, "primary");
+		const auto surface = hex(e, "surface");
+		if (!e.is_object() || !primary || !surface) {
+			ofLogWarning("HudSkin") << "shell palette '" << it.key() << "' needs #RRGGBB \"primary\" and \"surface\"; skipped";
+			continue;
+		}
+		shelltheme::Seeds s;
+		s.mode = e.value("mode", std::string("dark")) == "light" ? shelltheme::Mode::Light : shelltheme::Mode::Dark;
+		s.primary = *primary;
+		s.surface = *surface;
+		s.secondary = hex(e, "secondary");
+		if (e.contains("overrides") && e["overrides"].is_object()) {
+			for (auto o = e["overrides"].begin(); o != e["overrides"].end(); ++o) {
+				if (!o.value().is_string()) continue;
+				if (const auto rgb = shelltheme::parseHex(o.value().get<std::string>())) s.overrides[o.key()] = *rgb;
+				else ofLogWarning("HudSkin") << "shell palette '" << it.key() << "' override '" << o.key() << "' is not #RRGGBB; ignored";
+			}
+		}
+		shellPalettes_[it.key()] = s;
+	}
+	ofLogNotice("HudSkin") << "shell palettes loaded from " << path << " (" << shellPalettes_.size() << " skin(s))";
 }
 
 int ExperienceRuntime::localMinuteNow() {

@@ -13,8 +13,10 @@
 #include "InputRouter.h"
 #include "PresentationTransform.h"
 #include "TypographyPlayground.h"
+#include <map>
 #include "HudSkinSchedule.h"
 #include "MinimalTheme.h"
+#include "ShellTheme.h"
 #include "HudLogCapture.h"
 #include "RuntimeServices.h"
 #include "SceneContract.h"
@@ -498,6 +500,10 @@ private:
 	void leaveMinimal();
 	void applyButtonLabelMode();
 	void loadMinimalThemes(const std::string& path);
+	// Per-skin shell palettes (assets/hud/themes/shell-palettes.json), keyed by skin id. A skin
+	// without an entry keeps the built-in day/night palette.
+	void loadShellPalettes(const std::string& path);
+	std::map<std::string, shelltheme::Seeds> shellPalettes_;
 	minimaltheme::ThemeSet themes_ = minimaltheme::ThemeSet::defaults();
 	bool minimalActive_ = false;
 	// Live reload: the theme file is stat()ed about once a second; a newer mtime reloads it and,

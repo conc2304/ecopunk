@@ -1,0 +1,8 @@
+{
+    "comment": "HUD shell colours per skin. Each skin is a few seeds; every other shell colour (text, captions, accents, outlines, panel fill, Orbit series, media-screen backing) is derived from them and pulled to readable contrast (text >= 4.5:1, outlines >= 3:1) against \"surface\", the mean colour of the skin's panels. mode: \"dark\" = light text on dark panels, \"light\" = dark ink on light panels. secondary is optional (defaults to primary). overrides pins a token (primary, secondary, accent, muted, caption, warning, dataA, dataB) to an exact colour, skipping the contrast fit. Colours are #RRGGBB. A skin with no entry keeps the built-in day/night palette. Only the HUD shell reads this file; widgets inside sketch scenes are not themed yet.",
+    "skins": {
+        "dark-moss-experimental": {"mode": "dark", "primary": "#79C356", "secondary": "#D2B66A", "surface": "#201E19"},
+        "abyssal-bioluminescence": {"mode": "dark", "primary": "#4FD1C5", "secondary": "#8FB4FF", "surface": "#181C20"},
+        "plywood-marble": {"mode": "light", "primary": "#7A4B12", "secondary": "#3F6B3A", "surface": "#F3E4C9"}
+    }
+}

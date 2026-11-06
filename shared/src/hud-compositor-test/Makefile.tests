@@ -227,7 +227,15 @@ $(SEGBAR_BIN): hud_segmented_bar_tests.cpp ../hud-compositor/widgets/SegmentedBa
 test-segbar: $(SEGBAR_BIN)
 	./$(SEGBAR_BIN)
 
-.PHONY: test-segbar test-icons test test-real test-viewport test-typography test-vitals test-orbit test-orbit-config test-all clean
+# -- test-shelltheme: ShellTheme seed -> token derivation + contrast fitting, OF-free.
+SHELLTHEME_BIN = hud_shell_theme_tests
+$(SHELLTHEME_BIN): hud_shell_theme_tests.cpp ../hud-compositor/ShellTheme.h
+	c++ -std=c++17 -Wall -Wextra -o $@ hud_shell_theme_tests.cpp
+
+test-shelltheme: $(SHELLTHEME_BIN)
+	./$(SHELLTHEME_BIN)
+
+.PHONY: test-shelltheme test-segbar test-icons test test-real test-viewport test-typography test-vitals test-orbit test-orbit-config test-all clean
 
 test: $(BIN) $(ORBIT_BIN)
 	./$(ORBIT_BIN)
@@ -251,7 +259,7 @@ test-orbit: $(ORBIT_BIN)
 test-orbit-config: $(ORBITCFG_BIN)
 	./$(ORBITCFG_BIN)
 
-test-all: test test-real test-viewport test-typography test-vitals test-segbar
+test-all: test test-real test-viewport test-typography test-vitals test-segbar test-shelltheme
 
 $(BIN): $(SRC)
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(BIN)
@@ -275,4 +283,4 @@ $(TYPOGRAPHY_BIN): $(TYPOGRAPHY_SRC)
 	$(CXX) $(CXXFLAGS) $(TYPOGRAPHY_SRC) -o $(TYPOGRAPHY_BIN) $(ORBIT_BIN)
 
 clean:
-	rm -f $(SEGBAR_BIN) $(BIN) $(REAL_BIN) $(VIEWPORT_BIN) $(TYPOGRAPHY_BIN) $(ORBIT_BIN) $(ORBIT_BIN)
+	rm -f $(SHELLTHEME_BIN) $(SEGBAR_BIN) $(BIN) $(REAL_BIN) $(VIEWPORT_BIN) $(TYPOGRAPHY_BIN) $(ORBIT_BIN) $(ORBIT_BIN)
