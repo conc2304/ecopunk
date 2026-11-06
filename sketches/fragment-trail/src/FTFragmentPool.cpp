@@ -3,10 +3,7 @@
 namespace fragmenttrail {
 
 namespace {
-const std::vector<std::string> kEffectPool = {
-	"desaturate", "invert", "recolor", "threshold", "dither", "solarize", "scanlines", "channelshift",
-	"heatmap_recolor"
-};
+const std::vector<std::string>& kEffectPool = ftEffectPool();
 }
 
 void FTFragmentPool::setup(int maxFragments_, float spawnMinDistance_, float spawnMinInterval_,
@@ -71,9 +68,10 @@ std::string FTFragmentPool::makeHexLabel() {
 	return std::string(buf);
 }
 
-void FTFragmentPool::spawnOne(glm::vec2 pos, FTContentMode mode, const std::string& modeCEffectName,
-	TimeOffsetVideoBuffer& videoBuffer) {
+void FTFragmentPool::spawnOne(int trail, glm::vec2 pos, FTContentMode mode, const std::string& modeCEffectName,
+	const FTFragmentSpawnParams& trailBLook, TimeOffsetVideoBuffer& videoBuffer) {
 	FTFragmentSpawnParams p;
+	if (mode == FTContentMode::BACKDROP_EFFECT && trail == 1) p = trailBLook; // trail B's single effect (+ its params)
 	p.position = pos;
 	p.size = ofRandom(minSize, maxSize);
 	p.mode = mode;
@@ -97,6 +95,10 @@ void FTFragmentPool::spawnOne(glm::vec2 pos, FTContentMode mode, const std::stri
 			p.mode = FTContentMode::EFFECT_VARIED;
 			p.effectName = kEffectPool[static_cast<size_t>(ofRandom(kEffectPool.size()))];
 		}
+	} else if (mode == FTContentMode::BACKDROP_EFFECT) {
+		// Live undelayed feed. Trail A: no effect (effectName stays empty = raw
+		// clip). Trail B: effectName/params came from trailBLook above.
+		if (trail == 0) p.effectName.clear();
 	} else if (mode == FTContentMode::EFFECT_VARIED) {
 		p.effectName = kEffectPool[static_cast<size_t>(ofRandom(kEffectPool.size()))];
 	} else { // EFFECT_PARAM_VARIANT
@@ -124,26 +126,30 @@ void FTFragmentPool::spawnOne(glm::vec2 pos, FTContentMode mode, const std::stri
 	if (onFragmentSpawned) onFragmentSpawned(fragments.back());
 }
 
-void FTFragmentPool::update(float dt, const CrosshairState& crosshairState, TimeOffsetVideoBuffer& videoBuffer,
-	FTContentMode activeMode, const std::string& modeCEffectName,
-	float effectiveMinDistance, float effectiveMinInterval) {
+void FTFragmentPool::update(float dt, const CrosshairState& crosshairState, const CrosshairState& crosshairState2,
+	TimeOffsetVideoBuffer& videoBuffer, FTContentMode activeMode, const std::string& modeCEffectName,
+	const FTFragmentSpawnParams& trailBLook, float effectiveMinDistance, float effectiveMinInterval) {
 	for (auto& f : fragments) f.update(dt);
 
-	sinceLastSpawn += dt;
+	const CrosshairState* states[kTrailCount] = { &crosshairState, &crosshairState2 };
+	for (int t = 0; t < kTrailCount; ++t) {
+		sinceLastSpawn[t] += dt;
 
-	glm::vec2 pos(crosshairState.cx, crosshairState.cy);
-	float dist = glm::distance(pos, lastSpawnPos);
-	bool movementSpawn = dist >= effectiveMinDistance && sinceLastSpawn >= effectiveMinInterval;
-	bool idleSpawn = idlePulseEnabled && sinceLastSpawn >= idlePulseInterval;
+		glm::vec2 pos(states[t]->cx, states[t]->cy);
+		float dist = glm::distance(pos, lastSpawnPos[t]);
+		bool movementSpawn = dist >= effectiveMinDistance && sinceLastSpawn[t] >= effectiveMinInterval;
+		bool idleSpawn = idlePulseEnabled && sinceLastSpawn[t] >= idlePulseInterval;
 
-	if (movementSpawn || idleSpawn) {
-		spawnOne(pos, activeMode, modeCEffectName, videoBuffer);
-		lastSpawnPos = pos;
-		sinceLastSpawn = 0.f;
+		if (movementSpawn || idleSpawn) {
+			spawnOne(t, pos, activeMode, modeCEffectName, trailBLook, videoBuffer);
+			lastSpawnPos[t] = pos;
+			sinceLastSpawn[t] = 0.f;
+		}
 	}
 
-	// Hard cap: evict oldest immediately on overflow, independent of age-fade.
-	while (static_cast<int>(fragments.size()) > maxFragments) {
+	// Hard cap (per-trail budget x trail count): evict oldest immediately on
+	// overflow, independent of age-fade.
+	while (static_cast<int>(fragments.size()) > maxFragments * kTrailCount) {
 		FTFragment& oldest = fragments.front();
 		if (onFragmentEvicted) onFragmentEvicted(oldest);
 		if (oldest.getMode() == FTContentMode::TIME_SLICE && oldest.getPlayheadIndex() >= 0) {

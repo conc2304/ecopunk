@@ -12,6 +12,7 @@ std::string contentModeSemanticId(fragmenttrail::FTContentMode mode) {
 		case fragmenttrail::FTContentMode::TIME_SLICE: return "time_slice";
 		case fragmenttrail::FTContentMode::EFFECT_VARIED: return "effect_varied";
 		case fragmenttrail::FTContentMode::EFFECT_PARAM_VARIANT: return "effect_param_variant";
+		case fragmenttrail::FTContentMode::BACKDROP_EFFECT: return "backdrop_effect";
 	}
 	return std::string();
 }
@@ -149,7 +150,7 @@ std::string FragmentProductionScene::sceneId() const {
 }
 
 std::string FragmentProductionScene::displayName() const {
-	return "Fragment Trail";
+	return "DRIFT TRACE";
 }
 
 SceneHudStatus FragmentProductionScene::hudStatus() const {
@@ -180,7 +181,7 @@ SceneHudStatus FragmentProductionScene::hudStatus() const {
 		status.semantic = buildSemanticData();
 	}
 
-	// Scene & Pattern Navigation: FTContentMode's three content modes, in
+	// Scene & Pattern Navigation: FTContentMode's four content modes, in
 	// enum order (the controller's own rotation order); same IDs as
 	// scene.fragment.metric.content_mode.
 	if (core_.didSetup() && core_.isActive()) {

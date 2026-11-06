@@ -16,6 +16,16 @@ void FTModeController::setup() {
 void FTModeController::switchTo(FTContentMode mode) {
 	currentMode = mode;
 	dwellTimer = 0.f;
+	if (mode == FTContentMode::BACKDROP_EFFECT) {
+		const auto& pool = ftEffectPool();
+		const size_t bg = static_cast<size_t>(ofRandom(pool.size())) % pool.size();
+		// Trail B must differ from the backdrop: pick from the remaining effects.
+		size_t b = static_cast<size_t>(ofRandom(pool.size() - 1)) % (pool.size() - 1);
+		if (b >= bg) ++b;
+		backdropLook_ = ftRandomEffectLook(pool[bg]);
+		trailBLook_ = ftRandomEffectLook(pool[b]);
+		ofLogNotice("FTModeController") << "BACKDROP_EFFECT backdrop=" << pool[bg] << " trailB=" << pool[b];
+	}
 	if (mode == FTContentMode::EFFECT_PARAM_VARIANT) {
 		modeCEffectName = kModeCCandidates[static_cast<size_t>(ofRandom(kModeCCandidates.size()))];
 		ofLogNotice("FTModeController") << "EFFECT_PARAM_VARIANT locked to " << modeCEffectName;
@@ -33,7 +43,8 @@ void FTModeController::nextMode() {
 	switch (currentMode) {
 		case FTContentMode::TIME_SLICE: switchTo(FTContentMode::EFFECT_VARIED); break;
 		case FTContentMode::EFFECT_VARIED: switchTo(FTContentMode::EFFECT_PARAM_VARIANT); break;
-		case FTContentMode::EFFECT_PARAM_VARIANT: switchTo(FTContentMode::TIME_SLICE); break;
+		case FTContentMode::EFFECT_PARAM_VARIANT: switchTo(FTContentMode::BACKDROP_EFFECT); break;
+		case FTContentMode::BACKDROP_EFFECT: switchTo(FTContentMode::TIME_SLICE); break;
 	}
 }
 
@@ -43,6 +54,7 @@ void FTModeController::onKeyPressed(int key) {
 	if (key == '1') switchTo(FTContentMode::TIME_SLICE);
 	else if (key == '2') switchTo(FTContentMode::EFFECT_VARIED);
 	else if (key == '3') switchTo(FTContentMode::EFFECT_PARAM_VARIANT);
+	else if (key == '4') switchTo(FTContentMode::BACKDROP_EFFECT);
 	else if (key == 'm' || key == 'M') {
 		switch (strategy) {
 			case FTModeSwitchStrategy::MANUAL_KEY: setStrategy(FTModeSwitchStrategy::TIMER); break;

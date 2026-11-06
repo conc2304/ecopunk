@@ -4,6 +4,64 @@
 
 namespace fragmenttrail {
 
+const std::vector<std::string>& ftEffectPool() {
+	static const std::vector<std::string> pool = {
+		"desaturate", "invert", "recolor", "threshold", "dither", "solarize", "scanlines", "channelshift",
+		"heatmap_recolor"
+	};
+	return pool;
+}
+
+FTFragmentSpawnParams ftRandomEffectLook(const std::string& effectName) {
+	FTFragmentSpawnParams p;
+	p.effectName = effectName;
+	if (effectName == "channelshift") {
+		p.shiftVal = ofRandom(0.003f, 0.02f);
+	} else if (effectName == "recolor") {
+		ofColor c;
+		c.setHsb(static_cast<unsigned char>(ofRandom(0, 255)), 200, 255);
+		p.tint = glm::vec3(c.r / 255.f, c.g / 255.f, c.b / 255.f);
+	} else if (effectName == "threshold") {
+		p.thresholdVal = ofRandom(0.3f, 0.7f);
+	} else if (effectName == "dither") {
+		p.ditherPx = ofRandom(2.f, 8.f);
+	} else if (effectName == "heatmap_recolor") {
+		p.heatmapPalette = static_cast<int>(ofRandom(4.f));
+	}
+	return p;
+}
+
+void ftBindEffectUniforms(ofShader& sh, const std::string& effect, const FTFragmentSpawnParams& look, float fadeAlpha) {
+	sh.setUniform2f("resolution", canvasWidth(), canvasHeight());
+	// Every kept effect except "dither" shares one convention (confirmed
+	// against the actual shader source, see implementation plan): a
+	// single `alpha` uniform doubles as both effect-mix amount and
+	// final output alpha, which happens to line up exactly with a
+	// fragment's own age-based decay. "dither" is the exception — its
+	// `alpha` is a fixed position along a multi-phase clean/dither/
+	// pixelate arc, with fade carried by a separate `opacity` uniform
+	// instead (see dither.glsl).
+	if (effect == "dither") {
+		float wScale = canvasWidth() / 1280.f;
+		sh.setUniform1f("alpha", look.ditherArc);
+		sh.setUniform1f("opacity", fadeAlpha);
+		sh.setUniform1f("maxPixelation", look.ditherPx * wScale);
+	} else {
+		sh.setUniform1f("alpha", fadeAlpha);
+	}
+	if (effect == "recolor") sh.setUniform3f("tint", look.tint);
+	if (effect == "threshold") sh.setUniform1f("threshold", look.thresholdVal);
+	if (effect == "channelshift") sh.setUniform1f("shift", look.shiftVal);
+	if (effect == "heatmap_recolor") {
+		sh.setUniform1f("intensity", 1.0f);
+		sh.setUniform1f("gamma", look.heatmapGamma);
+		sh.setUniform1f("minLuminance", look.heatmapMinLuminance);
+		sh.setUniform1f("maxLuminance", look.heatmapMaxLuminance);
+		sh.setUniform1i("palette", look.heatmapPalette);
+		sh.setUniform1i("reverse", look.heatmapReverse);
+	}
+}
+
 void FTFragment::spawn(const FTFragmentSpawnParams& p, float sustainSeconds, float decaySeconds, const hud::HudTheme& theme) {
 	params = p;
 	age = 0.f;
@@ -86,26 +144,7 @@ void FTFragment::drawContent(const ofTexture& tex, const ofRectangle& destRect, 
 		ofShader& sh = shaderLib.get(effect);
 		sh.begin();
 		sh.setUniformTexture("tex", tex, 0);
-		sh.setUniform2f("resolution", canvasWidth(), canvasHeight());
-		if (effect == "dither") {
-			float wScale = canvasWidth() / 1280.f;
-			sh.setUniform1f("alpha", params.ditherArc);
-			sh.setUniform1f("opacity", fadeAlpha);
-			sh.setUniform1f("maxPixelation", params.ditherPx * wScale);
-		} else {
-			sh.setUniform1f("alpha", fadeAlpha);
-		}
-		if (effect == "recolor") sh.setUniform3f("tint", params.tint);
-		if (effect == "threshold") sh.setUniform1f("threshold", params.thresholdVal);
-		if (effect == "channelshift") sh.setUniform1f("shift", params.shiftVal);
-		if (effect == "heatmap_recolor") {
-			sh.setUniform1f("intensity", 1.0f);
-			sh.setUniform1f("gamma", params.heatmapGamma);
-			sh.setUniform1f("minLuminance", params.heatmapMinLuminance);
-			sh.setUniform1f("maxLuminance", params.heatmapMaxLuminance);
-			sh.setUniform1i("palette", params.heatmapPalette);
-			sh.setUniform1i("reverse", params.heatmapReverse);
-		}
+		ftBindEffectUniforms(sh, effect, params, fadeAlpha);
 
 		ofSetColor(255);
 		tex.draw(drawX, drawY, drawW, drawH);

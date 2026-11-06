@@ -2,6 +2,7 @@
 
 #include "ofMain.h"
 #include "FTVideoTypes.h"
+#include "FTFragment.h"
 #include "FTImageCycler.h"
 #include "HudElements.h"
 #include <string>
@@ -28,12 +29,20 @@ class FTBackgroundLayer {
 		void resizeCanvas(int canvasW_, int canvasH_);
 		void update(float dt);
 		void draw();
+		// BACKDROP_EFFECT mode: run the whole backdrop video through `look`'s
+		// effect (nullptrs = the normal dimmed/desaturated backdrop).
+		void setBackdropEffect(ShaderLibrary* shaders, const FTFragmentSpawnParams* look) {
+			backdropShaders = shaders;
+			backdropLook = look;
+		}
 
 	private:
 		void pickNextAltSection();
 		void drawVideoDimmed(const ofTexture& tex, const ofRectangle& destRect);
 
 		TimeOffsetVideoBuffer* videoBuffer = nullptr;
+		ShaderLibrary* backdropShaders = nullptr;
+		const FTFragmentSpawnParams* backdropLook = nullptr;
 		FTImageCycler imageCycler;
 		hud::HexGridWidget hexGrid;
 		ofShader bgShader; // desaturates + dims the background video (bg_dim.glsl) — kept
@@ -48,6 +57,7 @@ class FTBackgroundLayer {
 		// the brighter, sharper foreground layer. 0.35 base, dimmed a further
 		// 20% per user request (0.35 * 0.8 = 0.28).
 		static constexpr float kVideoAlpha = 0.28f;
+		static constexpr float kEffectBackdropAlpha = 0.75f; // BACKDROP_EFFECT mode
 		// 50% desaturated per user request — 1.0 would be original color, 0.0 fully grayscale.
 		static constexpr float kVideoSaturation = 0.5f;
 

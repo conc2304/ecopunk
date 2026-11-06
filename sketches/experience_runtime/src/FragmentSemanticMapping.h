@@ -18,7 +18,7 @@ struct Inputs {
 	float crosshairEnergy01 = 0.0f; // FragmentSceneCore::crosshairEnergy01()
 	float trailLifetimeSeconds = 0; // sustain + decay (FTFragment total lifetime)
 	float spawnsPerSecond = 0.0f;   // FragmentProductionScene's measured spawn rate
-	std::string contentModeId;      // "time_slice" / "effect_varied" / "effect_param_variant"
+	std::string contentModeId;      // "time_slice" / "effect_varied" / "effect_param_variant" / "backdrop_effect"
 	float activeSeconds = 0.0f;     // FragmentProductionScene's own elapsed-active timer
 	uint64_t generation = 0;        // FragmentProductionScene's own activation counter
 };

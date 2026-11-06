@@ -74,6 +74,7 @@ public:
 	CrosshairSystem& crosshair() { return crosshair_; }
 	FTModeController& modeController() { return modeController_; }
 	const CrosshairSystem& crosshair() const { return crosshair_; }
+	const CrosshairSystem& crosshair2() const { return crosshair2_; }
 	const FTModeController& modeController() const { return modeController_; }
 	const FTFragmentPool& pool() const { return pool_; }
 	const FTParameterPanel& parameters() const { return params_; }
@@ -97,6 +98,7 @@ private:
 	ShaderLibrary* shaders_ = nullptr;
 
 	CrosshairSystem crosshair_;
+	CrosshairSystem crosshair2_; // drives the second parallel trail
 	TriggerBus triggerBus_;
 	LFOBank lfoBank_;
 	FTFragmentPool pool_;

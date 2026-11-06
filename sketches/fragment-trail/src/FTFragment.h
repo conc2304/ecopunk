@@ -4,6 +4,7 @@
 #include "FTVideoTypes.h"
 #include "HudElements.h"
 #include <string>
+#include <vector>
 
 namespace fragmenttrail {
 
@@ -11,7 +12,8 @@ namespace fragmenttrail {
 enum class FTContentMode {
 	TIME_SLICE,          // Mode A — reuses Temporal Fields' TimeOffsetVideoBuffer playhead pool
 	EFFECT_VARIED,        // Mode B — one effect per fragment, live undelayed feed
-	EFFECT_PARAM_VARIANT   // Mode C — one shared effect, jittered per-fragment params
+	EFFECT_PARAM_VARIANT,  // Mode C — one shared effect, jittered per-fragment params
+	BACKDROP_EFFECT        // Mode D — whole backdrop runs one effect; trail A raw clip, trail B a different single effect
 };
 
 // Everything a fragment needs at spawn time. Mode/effect/jitter ASSIGNMENT
@@ -45,6 +47,14 @@ struct FTFragmentSpawnParams {
 	std::string hexLabel;
 	int spawnIndex = -1; // untruncated, unique per process lifetime — see FTFragmentPool::spawnCounter
 };
+
+// Every effect a fragment (or the backdrop) can run, ShaderLibrary keys.
+const std::vector<std::string>& ftEffectPool();
+// A fresh look for `effectName`: the effect plus jittered values for whichever
+// params it reads (same ranges Mode C uses). Position/size/mode are untouched defaults.
+FTFragmentSpawnParams ftRandomEffectLook(const std::string& effectName);
+// Binds `effect`'s uniforms (shader must already be begun) for `look` at `fadeAlpha`.
+void ftBindEffectUniforms(ofShader& sh, const std::string& effect, const FTFragmentSpawnParams& look, float fadeAlpha);
 
 // One spawned window-chrome particle: a live peephole into the current
 // media, framed by hud::WindowChrome. Owns its own age/decay and content-mode

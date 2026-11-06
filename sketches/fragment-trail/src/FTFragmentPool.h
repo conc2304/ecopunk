@@ -40,8 +40,14 @@ public:
 	// thresholds for this frame — computed by the caller (ofApp), not here;
 	// this class only consumes them (see FTParameterPanel/CrosshairSystem's
 	// HIGH_THRESH/LOW_THRESH for the normalization itself).
-	void update(float dt, const CrosshairState& crosshairState, TimeOffsetVideoBuffer& videoBuffer,
-		FTContentMode activeMode, const std::string& modeCEffectName,
+	// Two parallel trails (cascades): trail 0 follows `crosshairState`, trail 1
+	// follows `crosshairState2`; each has its own spawn throttle. In
+	// BACKDROP_EFFECT mode trail 0 spawns the raw clip and trail 1 spawns
+	// `trailBLook`'s single effect.
+	static constexpr int kTrailCount = 2;
+	void update(float dt, const CrosshairState& crosshairState, const CrosshairState& crosshairState2,
+		TimeOffsetVideoBuffer& videoBuffer,
+		FTContentMode activeMode, const std::string& modeCEffectName, const FTFragmentSpawnParams& trailBLook,
 		float effectiveMinDistance, float effectiveMinInterval);
 
 	void draw(TimeOffsetVideoBuffer& videoBuffer, ShaderLibrary& shaderLib);
@@ -78,8 +84,8 @@ private:
 	float decaySeconds = 1.6f;
 	float minSize = 90.f, maxSize = 220.f;
 
-	glm::vec2 lastSpawnPos{ -9999.f, -9999.f };
-	float sinceLastSpawn = 0.f;
+	glm::vec2 lastSpawnPos[kTrailCount] = { { -9999.f, -9999.f }, { -9999.f, -9999.f } };
+	float sinceLastSpawn[kTrailCount] = { 0.f, 0.f };
 	int spawnCounter = 0;
 
 	hud::HudTheme theme;
@@ -89,7 +95,8 @@ private:
 
 	int acquirePlayhead();
 	void releasePlayhead(int idx);
-	void spawnOne(glm::vec2 pos, FTContentMode mode, const std::string& modeCEffectName, TimeOffsetVideoBuffer& videoBuffer);
+	void spawnOne(int trail, glm::vec2 pos, FTContentMode mode, const std::string& modeCEffectName,
+		const FTFragmentSpawnParams& trailBLook, TimeOffsetVideoBuffer& videoBuffer);
 	std::string makeHexLabel();
 };
 

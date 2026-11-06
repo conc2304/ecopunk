@@ -32,12 +32,17 @@ public:
 
 	FTContentMode getCurrentMode() const { return currentMode; }
 	// Steps to the next mode in the same wrapping order TIMER rotation uses
-	// (TIME_SLICE -> EFFECT_VARIED -> EFFECT_PARAM_VARIANT -> TIME_SLICE),
+	// (TIME_SLICE -> EFFECT_VARIED -> EFFECT_PARAM_VARIANT -> BACKDROP_EFFECT -> TIME_SLICE),
 	// regardless of strategy — a host-driven step, like the '1'-'3' keys.
 	void nextMode();
-	static constexpr int kModeCount = 3; // FTContentMode values, all reachable
+	static constexpr int kModeCount = 4; // FTContentMode values, all reachable
 	int currentModeIndex() const { return static_cast<int>(currentMode); }
 	const std::string& getModeCEffectName() const { return modeCEffectName; }
+	// BACKDROP_EFFECT looks, re-rolled on EVERY switchTo() (mode change or scene
+	// activation): the effect running over the whole backdrop and the (different)
+	// single effect trail B runs. Trail A is always the raw clip.
+	const FTFragmentSpawnParams& backdropLook() const { return backdropLook_; }
+	const FTFragmentSpawnParams& trailBLook() const { return trailBLook_; }
 
 private:
 	void switchTo(FTContentMode mode);
@@ -45,6 +50,8 @@ private:
 	FTModeSwitchStrategy strategy = FTModeSwitchStrategy::MANUAL_KEY;
 	FTContentMode currentMode = FTContentMode::EFFECT_VARIED;
 	std::string modeCEffectName;
+	FTFragmentSpawnParams backdropLook_;
+	FTFragmentSpawnParams trailBLook_;
 
 	float dwellDuration = 12.0f;
 	float dwellTimer = 0.f;

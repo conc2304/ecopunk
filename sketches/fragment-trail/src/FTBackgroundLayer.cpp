@@ -46,6 +46,18 @@ void FTBackgroundLayer::drawVideoDimmed(const ofTexture& tex, const ofRectangle&
 	}
 	ofRectangle src = ftComputeCropFillSrcRect(tex.getWidth(), tex.getHeight(), destRect);
 
+	if (backdropShaders != nullptr && backdropLook != nullptr && backdropShaders->has(backdropLook->effectName)) {
+		// Effected backdrop: mostly-opaque so the effect reads, but still under the fragments.
+		ofShader& sh = backdropShaders->get(backdropLook->effectName);
+		sh.begin();
+		sh.setUniformTexture("tex", tex, 0);
+		ftBindEffectUniforms(sh, backdropLook->effectName, *backdropLook, kEffectBackdropAlpha);
+		ofSetColor(255);
+		tex.drawSubsection(destRect.x, destRect.y, destRect.width, destRect.height, src.x, src.y, src.width, src.height);
+		sh.end();
+		return;
+	}
+
 	bgShader.begin();
 	bgShader.setUniformTexture("tex", tex, 0);
 	bgShader.setUniform1f("saturation", kVideoSaturation);

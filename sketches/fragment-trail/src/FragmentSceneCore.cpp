@@ -53,6 +53,9 @@ void FragmentSceneCore::resetComposition() {
 	crosshair_ = CrosshairSystem{};
 	crosshair_.setup();
 	crosshair_.setPreset(kStartupCrosshairPreset);
+	crosshair2_ = CrosshairSystem{};
+	crosshair2_.setup();
+	crosshair2_.setPreset((kStartupCrosshairPreset + 2) % 5); // a different pattern, so the trails don't mirror
 	triggerBus_ = TriggerBus{};
 	triggerBus_.setup();
 	lfoBank_ = LFOBank{};
@@ -74,6 +77,7 @@ void FragmentSceneCore::resetComposition() {
 	hudOverlay_.setSchedulerEnabled(false); // driven by real fragment events (FTOverlayDirector), not ambient random timing
 	hudOverlay_.setFaultCascadeHalftoneEnabled(false); // tear+flash only for the eviction gesture, per the design brief
 	hudOverlay_.setSafeArea(config_.safeArea);
+	hudOverlay_.setRadarSweepMatchesScanner(true);
 	hudOverlay_.setRadarContacts({}); // range rings on; contacts filled from the live pool each update
 	overlayDirector_ = FTOverlayDirector{};
 	overlayDirector_.setup(&pool_, &hudOverlay_);
@@ -108,6 +112,11 @@ void FragmentSceneCore::update(float dt) {
 		params_.getCrosshairPattern(), params_.getCrosshairAutoCycle(),
 		params_.getCrosshairAutoCycleInterval());
 	crosshair_.update(dt, lfoBank_);
+	crosshair2_.applyLiveSettings(params_.getCrosshairSpeed(), params_.getCrosshairSmoothness(),
+		params_.getCrosshairSpeedVariance(), params_.getCrosshairVarianceRate(),
+		(params_.getCrosshairPattern() + 2) % 5, params_.getCrosshairAutoCycle(),
+		params_.getCrosshairAutoCycleInterval());
+	crosshair2_.update(dt, lfoBank_);
 	triggerBus_.update(crosshair_.getState(), dt);
 	backgroundLayer_.update(dt);
 
@@ -135,8 +144,8 @@ void FragmentSceneCore::update(float dt) {
 	float effectiveMinDistance = params_.getSpawnMinDistance() * energyScale;
 	float effectiveMinInterval = params_.getSpawnMinInterval() * energyScale;
 
-	pool_.update(dt, crosshair_.getState(), *video_, modeController_.getCurrentMode(),
-		modeController_.getModeCEffectName(), effectiveMinDistance, effectiveMinInterval);
+	pool_.update(dt, crosshair_.getState(), crosshair2_.getState(), *video_, modeController_.getCurrentMode(),
+		modeController_.getModeCEffectName(), modeController_.trailBLook(), effectiveMinDistance, effectiveMinInterval);
 	// ^ spawn/evict callbacks fire synchronously above, into overlayDirector's gates.
 
 	overlayDirector_.update(dt, dials_);
@@ -182,11 +191,17 @@ void FragmentSceneCore::draw() {
 	// Scoped to the bound target (the standalone window, or the runtime's
 	// scene FBO) — ofClear does not change OF's global background state.
 	ofClear(8, 10, 9, 255);
+	if (modeController_.getCurrentMode() == FTContentMode::BACKDROP_EFFECT) {
+		backgroundLayer_.setBackdropEffect(shaders_, &modeController_.backdropLook());
+	} else {
+		backgroundLayer_.setBackdropEffect(nullptr, nullptr);
+	}
 	backgroundLayer_.draw();
 	hudOverlay_.drawAmbient(); // BELOW: scanline, radar station, breathing ticks, telemetry -- "the room"
 	pool_.draw(*video_, *shaders_);
 	hudOverlay_.drawOrganisms(); // BETWEEN/ABOVE: tick-burst accents + the 4 organisms, anchored to live fragment bounds
 	crosshair_.draw();
+	crosshair2_.draw();
 	ofPopStyle();
 }
 
