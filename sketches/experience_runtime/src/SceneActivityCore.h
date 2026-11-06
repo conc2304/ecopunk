@@ -145,6 +145,34 @@ private:
 	double v_ = 0.0, t_ = 0.0;
 };
 
+// ---- Static/transition boundary -------------------------------------------------------------------------
+// A static interval (the retained outgoing frame is shown; nothing is being measured) must invalidate every
+// observation issued during the preceding live interval IMMEDIATELY, independent of the sampling-period rate limit.
+// `epoch` advances on entry to a static interval and on a new generation; a pending observation carries the epoch
+// it was issued under and is eligible to publish only while that epoch is current and no static interval is open.
+// `enter()` is true exactly once per static interval, so the caller performs its one-time reset (drop the pending
+// readback, forget the comparison grid) once, not on every static frame.
+class StaticBoundary {
+public:
+	// First static frame of an interval: true (caller resets once). Subsequent static frames: false.
+	bool enter() {
+		if (inStatic_) return false;
+		inStatic_ = true;
+		++epoch_;
+		return true;
+	}
+	// A live frame ends the static interval; the next sample starts a fresh baseline.
+	void exitOnLive() { inStatic_ = false; }
+	// A new generation invalidates everything issued before it, whatever the static state.
+	void resetForGeneration() { inStatic_ = false; ++epoch_; }
+	bool inStatic() const { return inStatic_; }
+	uint64_t epoch() const { return epoch_; }
+	bool eligible(uint64_t issuedEpoch) const { return !inStatic_ && issuedEpoch == epoch_; }
+private:
+	bool inStatic_ = false;
+	uint64_t epoch_ = 0;
+};
+
 // Illuminated segment count for an N-segment meter: 0 only when the level is exactly 0 (no lit segment
 // is shown for "no information"; callers decide missing/stale separately), otherwise ceil so any
 // real activity lights at least one segment.

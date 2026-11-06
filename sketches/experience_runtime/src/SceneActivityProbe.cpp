@@ -102,7 +102,7 @@ struct SceneActivityProbe::Impl {
 		int slot = 0, framesLeft = 0;
 		bool havePrev = false;
 		double t = 0.0, dt = 0.0;
-		uint64_t gen = 0;
+		uint64_t gen = 0, epoch = 0;          // generation + static-boundary epoch it was issued under
 		std::string frame;
 		double submitMs = 0.0, issueMs = 0.0; // OC-003/A: submit cost + issue time, so deferred `total` covers the whole sample
 		void* fence = nullptr;                // GLsync (fence strategy)
@@ -141,6 +141,8 @@ struct SceneActivityProbe::Impl {
 	// below also feed this tracker, which ExperienceRuntime turns into HudFrameData::sceneVisualActivity.
 	bool publish = false;
 	VisualActivityTracker tracker;
+	StaticBoundary stat;                  // static-interval boundary shared with the (pure, unit-tested) core
+	uint64_t staticEntries = 0, staticFrames = 0, discardedStaticEpoch = 0;
 
 	scenecolorsampling::StageStat submit, wait, diffCpu, total, frameDt, probeFrame, gpuLuma, gpuDiff;
 	// Workstream A attribution: `gpuRead` times the 1x1 diff readback in EVERY mode (before, verify mode left it untimed and
@@ -437,6 +439,7 @@ void SceneActivityProbe::beginGeneration(uint64_t generation, const std::string&
 	d.sceneId = sceneId;
 	if (d.pending.active) ofLogNotice("SceneActivity") << "generation " << d.gen << " -> " << generation << " begins with a readback in flight";
 	if (d.publish) d.tracker.beginGeneration(generation, sceneId);
+	d.stat.resetForGeneration();
 	d.clearStream("generation-change");
 	d.norm.reset();
 	d.lastIssueT = -1e9;
@@ -448,11 +451,18 @@ void SceneActivityProbe::beginGeneration(uint64_t generation, const std::string&
 void SceneActivityProbe::onStaticFrame(double now) {
 	Impl& d = *impl_;
 	if (!d.enabled || d.mode == Impl::Mode::Off) return;
-	if (d.publish) d.tracker.onStatic(); // every static frame, not rate-limited: a retained frame is never a measurement
+	++d.staticFrames;
+	// The first static frame of an interval invalidates immediately, independent of the sampling-period rate limit
+	// below: the snapshot goes Transition, the pending readback is dropped and the comparison grid is forgotten, ONCE.
+	// Later static frames of the same interval do no GPU/stream work (a retained frame is never a measurement).
+	if (d.stat.enter()) {
+		++d.staticEntries;
+		if (d.publish) d.tracker.onStatic();
+		d.clearStream("static-entry");
+	}
 	if (now - d.lastIssueT < d.period) return;
 	const double t0 = nowMs();
 	d.lastIssueT = now;
-	d.clearStream("static-frame"); // a retained frame is not a measurement; the next live grid has nothing to difference against
 	d.writeRow(now, State::Static, NAN, NAN, NAN, NAN, NAN, NAN, "");
 	++d.statics;
 	d.probeMsThisFrame += nowMs() - t0;
@@ -460,7 +470,9 @@ void SceneActivityProbe::onStaticFrame(double now) {
 
 void SceneActivityProbe::onLiveFrame(const ofTexture& tex, double now) {
 	Impl& d = *impl_;
-	if (!d.enabled || d.mode == Impl::Mode::Off) return;
+	if (!d.enabled) return;
+	d.stat.exitOnLive(); // a live frame ends any static interval; the next grid is a fresh baseline
+	if (d.mode == Impl::Mode::Off) return;
 	if (now - d.lastIssueT < d.period - 0.002) return; // slack so a 60 Hz frame boundary never skips a due sample
 	const double t0 = nowMs();
 	if (d.pending.active) { ++d.droppedBusy; return; }
@@ -494,6 +506,7 @@ void SceneActivityProbe::onLiveFrame(const ofTexture& tex, double now) {
 	p.t = now;
 	p.dt = dt;
 	p.gen = d.gen;
+	p.epoch = d.stat.epoch();
 	if (d.frameEvery > 0.0 && now >= d.frameNextAt) {
 		d.frameNextAt = now + d.frameEvery;
 		ofPixels full;
@@ -539,8 +552,11 @@ void SceneActivityProbe::poll(double now) {
 			d.pending.active = false;
 			d.pending.fence = nullptr;
 			d.releaseFence(p);
-			if (p.gen == d.gen) d.complete(p); // a deferred sample never crosses a scene change
-			else { ++d.discardedGenMismatch; ofLogNotice("SceneActivity") << "DISCARD completed readback issued gen=" << p.gen << " (current gen=" << d.gen << ") reason=completion-gen-mismatch"; }
+			if (p.gen != d.gen) { // a deferred sample never crosses a scene change
+				++d.discardedGenMismatch; ofLogNotice("SceneActivity") << "DISCARD completed readback issued gen=" << p.gen << " (current gen=" << d.gen << ") reason=completion-gen-mismatch";
+			} else if (!d.stat.eligible(p.epoch)) { // ... nor a static interval (defence in depth: static entry already dropped it)
+				++d.discardedStaticEpoch; ofLogNotice("SceneActivity") << "DISCARD completed readback issued gen=" << p.gen << " reason=completion-static-epoch";
+			} else d.complete(p);
 			d.total.add(p.submitMs + (nowMs() - t0));
 		}
 	}
@@ -568,7 +584,7 @@ void SceneActivityProbe::poll(double now) {
 		d.lastStatsAt = now;
 		d.framesCsv.flush();
 		ofLogNotice("SceneActivity") << "scene=" << d.sceneId << " gen=" << d.gen << " issued=" << d.issued << " done=" << d.completed
-			<< " busy=" << d.droppedBusy << " static=" << d.statics << " first=" << d.firsts << " wide=" << d.wides
+			<< " busy=" << d.droppedBusy << " static=" << d.statics << " staticFrames=" << d.staticFrames << " staticEntries=" << d.staticEntries << " first=" << d.firsts << " wide=" << d.wides
 			<< " maxGpuCpuDelta=" << d.maxGpuCpuDelta
 			<< " ms[p50/p95/max] submit=" << d.submit.pct(0.5) << "/" << d.submit.pct(0.95) << "/" << d.submit.max
 			<< " wait=" << d.wait.pct(0.5) << "/" << d.wait.pct(0.95) << "/" << d.wait.max
