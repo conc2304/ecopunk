@@ -75,14 +75,14 @@ private:
 	std::vector<FTFragment> fragments; // front = oldest; hard-cap evicts from the front
 	std::vector<bool> playheadInUse;
 
-	int maxFragments = 18;
-	float spawnMinDistance = 70.f;
-	float spawnMinInterval = 0.10f;
+	int maxFragments = 11;
+	float spawnMinDistance = 84.f;
+	float spawnMinInterval = 0.12f;
 	bool idlePulseEnabled = false;
 	float idlePulseInterval = 1.2f;
 	float sustainSeconds = 1.6f;
 	float decaySeconds = 1.6f;
-	float minSize = 90.f, maxSize = 220.f;
+	float minSize = 103.5f, maxSize = 253.f;
 
 	glm::vec2 lastSpawnPos[kTrailCount] = { { -9999.f, -9999.f }, { -9999.f, -9999.f } };
 	float sinceLastSpawn[kTrailCount] = { 0.f, 0.f };

@@ -4,8 +4,8 @@ namespace fragmenttrail {
 
 void FTParameterPanel::setup() {
 	spawnGroup.setName("Spawn");
-	spawnGroup.add(spawnMinDistance.set("Min Distance (px)", 70.f, 10.f, 300.f));
-	spawnGroup.add(spawnMinInterval.set("Min Interval (s)", 0.10f, 0.02f, 1.0f));
+	spawnGroup.add(spawnMinDistance.set("Min Distance (px)", 84.f, 10.f, 300.f));
+	spawnGroup.add(spawnMinInterval.set("Min Interval (s)", 0.12f, 0.02f, 1.0f));
 	spawnGroup.add(idlePulseEnabled.set("Idle Pulse", false));
 	spawnGroup.add(idlePulseInterval.set("Idle Pulse Interval (s)", 1.2f, 0.3f, 10.f));
 
@@ -18,9 +18,9 @@ void FTParameterPanel::setup() {
 	fragmentGroup.add(decaySeconds.set("Decay (s)", 1.6f, 0.1f, 8.f));
 	// 18 per the brief's original default — explicitly unbenchmarked on Pi
 	// 3B hardware (Section 8); this is a placeholder pending real testing.
-	fragmentGroup.add(maxFragments.set("Max Fragments", 18, 1, 40));
-	fragmentGroup.add(minSize.set("Min Size (px)", 90.f, 20.f, 300.f));
-	fragmentGroup.add(maxSize.set("Max Size (px)", 220.f, 20.f, 400.f));
+	fragmentGroup.add(maxFragments.set("Max Fragments", 11, 1, 40));
+	fragmentGroup.add(minSize.set("Min Size (px)", 103.5f, 20.f, 300.f));
+	fragmentGroup.add(maxSize.set("Max Size (px)", 253.f, 20.f, 400.f));
 
 	responseGroup.setName("Response");
 	responseGroup.add(speedResponse.set("Speed Response", 0.6f, 0.f, 1.f));
