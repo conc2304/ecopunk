@@ -24,6 +24,7 @@ private:
 		std::function<void()> act;
 		int waitFrames = 8;
 		std::function<void()> verify;
+		std::function<bool()> until;   // optional: wait (bounded) until true before counting waitFrames
 	};
 	void check(const std::string& name, bool passed, const std::string& detail = {});
 	void capture(const std::string& name);
@@ -41,7 +42,7 @@ private:
 	std::vector<Step> script_;
 	size_t at_ = 0;
 	int frame_ = 0;
-	bool acted_ = false, done_ = false;
+	bool acted_ = false, done_ = false, untilDone_ = false;
 	int roster_ = 0;
 	std::string tmp_;
 	int passes_ = 0, failures_ = 0;

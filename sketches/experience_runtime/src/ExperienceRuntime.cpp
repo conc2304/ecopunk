@@ -578,6 +578,7 @@ void ExperienceRuntime::setup() {
 
 		// Shell palettes must be loaded before the first applySkin() below.
 		loadShellPalettes(ofToDataPath("../../../../assets/hud/themes/shell-palettes.json", true));
+		loadClipActivity(ofToDataPath("../../../../assets/shared/clip-activity/clip-activity.json", true));
 
 		// Skin selection. EXPERIENCE_RUNTIME_HUD_SKIN (explicit) wins and fixes
 		// the skin; otherwise, on normal runs, the day/night schedule picks it
@@ -858,6 +859,41 @@ void ExperienceRuntime::loadShellPalettes(const std::string& path) {
 	ofLogNotice("HudSkin") << "shell palettes loaded from " << path << " (" << shellPalettes_.size() << " skin(s))";
 }
 
+void ExperienceRuntime::loadClipActivity(const std::string& path) {
+	clipActivityIndex_.clear();
+	clipActivityEnabled_ = false;
+	const char* off = std::getenv("EXPERIENCE_RUNTIME_CLIP_ACTIVITY");
+	if (off != nullptr && std::string(off) == "0") {
+		ofLogNotice("ClipActivity") << "disabled (EXPERIENCE_RUNTIME_CLIP_ACTIVITY=0)";
+		return;
+	}
+	if (!ofFile::doesFileExist(path, false)) {
+		ofLogNotice("ClipActivity") << "no clip-activity file at " << path << "; scene.visual.activity stays unavailable unless the live probe is enabled";
+		return;
+	}
+	ofJson j;
+	try { j = ofLoadJson(path); } catch (...) { j = ofJson(); }
+	if (!j.is_object() || j.value("schemaVersion", 0) != 1 || !j.contains("clips") || !j["clips"].is_object()) {
+		ofLogWarning("ClipActivity") << "unreadable or unsupported clip-activity file; ignored: " << path;
+		return;
+	}
+	const double step = j.value("stepSeconds", 0.0);
+	int skipped = 0;
+	for (auto it = j["clips"].begin(); it != j["clips"].end(); ++it) {
+		const ofJson& c = it.value();
+		clipactivity::Curve curve;
+		curve.stepSeconds = step;
+		curve.durationSeconds = c.is_object() ? c.value("durationSeconds", 0.0) : 0.0;
+		if (c.is_object() && c.contains("raw") && c["raw"].is_array()) {
+			curve.raw.reserve(c["raw"].size());
+			for (const auto& v : c["raw"]) curve.raw.push_back(v.is_number() ? v.get<float>() : -1.0f);
+		}
+		if (!clipActivityIndex_.add(it.key(), std::move(curve))) ++skipped;
+	}
+	clipActivityEnabled_ = !clipActivityIndex_.empty();
+	ofLogNotice("ClipActivity") << "loaded " << clipActivityIndex_.size() << " clip curve(s) from " << path << (skipped ? " (" + ofToString(skipped) + " invalid skipped)" : std::string());
+}
+
 int ExperienceRuntime::localMinuteNow() {
 	const std::time_t now = std::time(nullptr);
 	std::tm local{};
@@ -1015,6 +1051,7 @@ void ExperienceRuntime::draw() {
 		}
 		sceneColor_.beginGeneration(sceneColorGeneration_, steadySeconds());
 		sceneActivityProbe_.beginGeneration(sceneColorGeneration_, sceneColorSceneId_, steadySeconds()); // OC-004
+		clipActivity_.beginGeneration(sceneColorGeneration_, sceneColorSceneId_); // OC-004 clip curves
 	}
 
 	if (sceneManager_.activeSceneLiveThisFrame()) {
@@ -1153,6 +1190,25 @@ void ExperienceRuntime::draw() {
 	// below, matching this same rule for every other HudFrameData field
 	// (see this class's own header comment, step 13).
 	currentHudFrameData_.video = runtimeServices_.videoPlaybackStatus();
+	// OC-004 clip curves: only when the live probe is not publishing. Null (not zeros) when no curves are loaded.
+	if (clipActivityEnabled_ && !sceneActivityProbe_.publishing()) {
+		const auto& v = currentHudFrameData_.video;
+		const bool ready = v && v->health == VideoPlaybackHealth::Ready && v->displayFileName && v->positionSeconds;
+		clipActivity_.update(steadySeconds(), sceneManager_.activeSceneLiveThisFrame(), ready ? *v->displayFileName : std::string(),
+			ready ? std::optional<double>(*v->positionSeconds) : std::nullopt);
+		currentHudFrameData_.sceneVisualActivity = clipActivity_.publish(steadySeconds());
+		// Verification only (EXPERIENCE_RUNTIME_CLIP_ACTIVITY_LOG=1): the published clip snapshot, ~2 Hz.
+		static const bool logOn = [] { const char* l = std::getenv("EXPERIENCE_RUNTIME_CLIP_ACTIVITY_LOG"); return l && std::string(l) == "1"; }();
+		static double nextLogAt = 0.0;
+		if (logOn && steadySeconds() >= nextLogAt) {
+			nextLogAt = steadySeconds() + 0.5;
+			const auto& vs = currentHudFrameData_.sceneVisualActivity;
+			static const char* names[] = {"unavailable", "valid", "stale", "transition"};
+			ofLogNotice("ClipActivity") << "t=" << steadySeconds() << " clip=" << (ready ? *v->displayFileName : std::string("-"))
+				<< " pos=" << (ready ? *v->positionSeconds : -1.0f) << " scene=" << vs->sceneId << " state=" << names[static_cast<int>(vs->state)]
+				<< " raw=" << vs->raw << " level=" << vs->level;
+		}
+	}
 	// Captured in update() (step 9) — the authoritative Shared Effects
 	// snapshot, transported unchanged. std::nullopt here means "no
 	// snapshot available," not "zero effects" — see HudFrameData.h.

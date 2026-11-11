@@ -205,6 +205,65 @@ void FxGalleryHarness::buildScript() {
 		check("mode change while the region is not focused does not steal focus", focused() == "controls.menu", focused());
 	}});
 
+
+	// ---- Autonomous raw-video reveal ----
+	auto revealPhase = [this]() { return scene().revealForTesting().phase(); };
+	script_.push_back({"reveal: mode change resets to hidden dwell", [this] {
+		scene().setRevealTimeScaleForTesting(0.f);
+		const auto media = runtime_.currentHudFrameData().scene.mediaName.value_or("");
+		tmp_ = media;
+		goToEffect("invert"); // invert: raw + effected == 255 per channel, which makes alignment measurable
+		check("effect-mode change leaves the reveal in a mask-free hidden dwell", scene().revealForTesting().phase() == scenefx::RevealPhase::HiddenDwell && scene().revealForTesting().width() == 0.f);
+	}, 12, [this] {
+		check("mode change did not touch canonical playback (media unchanged)", runtime_.currentHudFrameData().scene.mediaName.value_or("") == tmp_);
+	}});
+	auto cyclesSeen = std::make_shared<int>(0);
+	auto hiddenFrames = std::make_shared<int>(0);
+	auto lastCycle = std::make_shared<int>(0);
+	script_.push_back({"reveal: two full cycles", [this] { scene().setRevealTimeScaleForTesting(20.f); }, 1, [this, cyclesSeen, hiddenFrames] {
+		check("observed two complete reveal cycles with mask-free hidden-dwell frames", *cyclesSeen >= 2 && *hiddenFrames >= 5, "cycles=" + ofToString(*cyclesSeen) + " hiddenFrames=" + ofToString(*hiddenFrames));
+	}, [this, cyclesSeen, hiddenFrames, lastCycle] {
+		const auto& r = scene().revealForTesting();
+		if (r.width() == 0.f) ++*hiddenFrames;
+		*cyclesSeen = r.cycleIndex();
+		return r.cycleIndex() >= 2;
+	}});
+	script_.push_back({"reveal: freeze visible", [this] { scene().setRevealTimeScaleForTesting(40.f); }, 14, [this] {
+		const auto& r = scene().revealForTesting();
+		check("frozen in the visible window: full-height rect inside the scene", r.visible() && r.left() >= 0.f && r.right() <= 1.f, ofToString(r.left(), 3) + ".." + ofToString(r.right(), 3));
+		ofLogNotice("FxGalleryHarness") << "REVEAL_GEOMETRY effect=invert left=" << r.left() << " right=" << r.right() << " widthPx=1280";
+		runtime_.saveSceneFrameCaptureForTesting("captures/fx-gallery/reveal_visible_scene.png");
+		capture("10_reveal_visible");
+	}, [this] {
+		const auto& r = scene().revealForTesting();
+		if (r.phase() == scenefx::RevealPhase::Drift && r.width() > 0.15f) { scene().setRevealTimeScaleForTesting(0.f); return true; }
+		return false;
+	}});
+	script_.push_back({"reveal: effect change while revealing", [this] {
+		tmp_ = runtime_.currentHudFrameData().scene.mediaName.value_or("");
+		runtime_.keyPressed('m'); // next effect while the window is open
+	}, 12, [this] {
+		check("effect change while revealing returns to hidden dwell; effect advanced; media untouched",
+			scene().revealForTesting().phase() == scenefx::RevealPhase::HiddenDwell && scene().revealForTesting().width() == 0.f
+			&& scene().controllerForTesting().mode().effectId != "invert" && runtime_.currentHudFrameData().scene.mediaName.value_or("") == tmp_);
+		goToEffect("invert");
+	}});
+	script_.push_back({"reveal: hidden dwell capture", [this] { scene().setRevealTimeScaleForTesting(40.f); }, 14, [this] {
+		const auto& r = scene().revealForTesting();
+		const scenefx::RevealSpan sp = scenefx::revealSpanPx(r.left(), r.right(), 1280);
+		check("hidden dwell frozen: zero width, empty pixel span (no raw strip)", r.phase() == scenefx::RevealPhase::HiddenDwell && r.width() == 0.f && sp.empty());
+		runtime_.saveSceneFrameCaptureForTesting("captures/fx-gallery/reveal_hidden_scene.png");
+		capture("11_reveal_hidden_dwell");
+	}, [this] {
+		// wait until a window has been shown and retracted back into a hidden dwell
+		static int sawVisible = 0;
+		const auto& r = scene().revealForTesting();
+		if (r.visible()) sawVisible = 1;
+		if (sawVisible && r.phase() == scenefx::RevealPhase::HiddenDwell) { scene().setRevealTimeScaleForTesting(0.f); sawVisible = 0; return true; }
+		return false;
+	}});
+	script_.push_back({"reveal: restore real time", [this] { scene().setRevealTimeScaleForTesting(1.f); }, 2, nullptr});
+
 	// Media / scene-switch hygiene.
 	script_.push_back({"media next", [this] { runtime_.keyPressed('n'); }, 20, [this] {
 		check("previous/next media still go through the canonical service (scene still the gallery, same effect)", idleOn(kFxId));
@@ -243,8 +302,13 @@ void FxGalleryHarness::step(float dt) {
 		acted_ = true; frame_ = 0;
 		return;
 	}
+	if (s.until && !untilDone_) {
+		if (s.until()) { untilDone_ = true; frame_ = 0; }
+		else if (frame_ > 12000) { check("step '" + s.name + "' condition reached", false, "timeout"); untilDone_ = true; frame_ = 0; }
+		return;
+	}
 	if (frame_ >= s.waitFrames) {
 		if (s.verify) s.verify();
-		at_++; acted_ = false; frame_ = 0;
+		at_++; acted_ = false; untilDone_ = false; frame_ = 0;
 	}
 }

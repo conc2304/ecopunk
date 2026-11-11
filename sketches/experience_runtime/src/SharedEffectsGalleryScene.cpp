@@ -110,6 +110,8 @@ void SharedEffectsGalleryScene::setup(const SceneServices& services) {
 	buildRoster();
 	srcFbo_.allocate(kNativeWidth, kNativeHeight, GL_RGBA);
 	srcFbo_.begin(); ofClear(0, 0, 0, 255); srcFbo_.end();
+	effFbo_.allocate(kNativeWidth, kNativeHeight, GL_RGBA);
+	effFbo_.begin(); ofClear(0, 0, 0, 255); effFbo_.end();
 	didSetup_ = true;
 }
 
@@ -153,6 +155,7 @@ void SharedEffectsGalleryScene::activate() {
 	active_ = true;
 	time_ = 0.f;
 	++activations_;
+	reveal_.reset(); // always start in a mask-free dwell: no raw flash at activation
 	ensureInstance();
 	paramsDirty_ = true;
 }
@@ -163,6 +166,7 @@ void SharedEffectsGalleryScene::update(float dt) {
 	if (!active_) return;
 	dt_ = dt;
 	time_ += dt;
+	reveal_.update(dt, revealTimeScale_);
 }
 
 void SharedEffectsGalleryScene::drawToCurrentTarget() {
@@ -175,7 +179,8 @@ void SharedEffectsGalleryScene::drawToCurrentTarget() {
 	ofDisableAlphaBlending();
 	ofSetColor(0);
 	ofDrawRectangle(0, 0, kNativeWidth, kNativeHeight);
-	if (tex && tex->isAllocated() && tex->getWidth() > 0 && tex->getHeight() > 0) {
+	const bool rawValid = tex && tex->isAllocated() && tex->getWidth() > 0 && tex->getHeight() > 0; // missing frame => no raw strip
+	if (rawValid) {
 		const float s = std::max(float(kNativeWidth) / tex->getWidth(), float(kNativeHeight) / tex->getHeight());
 		const float dw = tex->getWidth() * s, dh = tex->getHeight() * s;
 		ofSetColor(255);
@@ -186,6 +191,9 @@ void SharedEffectsGalleryScene::drawToCurrentTarget() {
 	ofSetColor(255);
 	const auto it = instances_.find(controller_->mode().effectId);
 	if (it != instances_.end() && it->second && it->second->isReady()) {
+		// Effected path: the SAME srcFbo_ frame, rendered into the reused effFbo_ (no per-frame allocation).
+		effFbo_.begin();
+		ofClear(0, 0, 0, 255);
 		videoeffects::VideoEffectContext ctx;
 		ctx.sourceTexture = &srcFbo_.getTexture();
 		ctx.destinationRect = ofRectangle(0, 0, kNativeWidth, kNativeHeight);
@@ -194,8 +202,36 @@ void SharedEffectsGalleryScene::drawToCurrentTarget() {
 		ctx.alpha = 1.0f;
 		it->second->update(ctx, params_);
 		it->second->render(ctx, params_);
+		effFbo_.end();
+		ofSetColor(255);
+		effFbo_.draw(0, 0, kNativeWidth, kNativeHeight);
+
+		// Autonomous raw reveal: one full-height window of the UNPROCESSED srcFbo_ frame (same frame as the
+		// effected path, same coordinates). Hidden dwell / sub-pixel width => empty span => nothing drawn.
+		const scenefx::RevealSpan span = scenefx::revealSpanPx(reveal_.left(), reveal_.right(), kNativeWidth);
+		if (rawValid && !span.empty()) {
+			const ofTexture& raw = srcFbo_.getTexture();
+			const int w = span.x1 - span.x0;
+			ofSetColor(255);
+			raw.drawSubsection(float(span.x0), 0.f, float(w), float(kNativeHeight), float(span.x0), 0.f, float(w), float(kNativeHeight));
+			// near-crisp soft edges: re-blend the first/last few effected columns over the window edge
+			const int soft = std::min(int(scenefx::RevealTuning{}.edgeSoftPx), w / 2);
+			if (soft > 0) {
+				ofEnableAlphaBlending();
+				for (int i = 0; i < soft; ++i) {
+					const float keepRaw = (float(i) + 0.5f) / float(soft);
+					const int a = int(255.f * (1.f - keepRaw) + 0.5f); // effected re-drawn with falling alpha toward the inside
+					ofSetColor(255, 255, 255, a);
+					const auto& eff = effFbo_.getTexture();
+					eff.drawSubsection(float(span.x0 + i), 0.f, 1.f, float(kNativeHeight), float(span.x0 + i), 0.f, 1.f, float(kNativeHeight));
+					eff.drawSubsection(float(span.x1 - 1 - i), 0.f, 1.f, float(kNativeHeight), float(span.x1 - 1 - i), 0.f, 1.f, float(kNativeHeight));
+				}
+				ofDisableAlphaBlending();
+				ofSetColor(255);
+			}
+		}
 	} else {
-		srcFbo_.draw(0, 0, kNativeWidth, kNativeHeight); // degraded: untreated video, still operable
+		srcFbo_.draw(0, 0, kNativeWidth, kNativeHeight); // degraded: untreated video, still operable (no reveal: nothing to compare)
 	}
 }
 
@@ -267,6 +303,7 @@ bool SharedEffectsGalleryScene::executeCommand(SceneCommand command) {
 		case SceneCommand::PreviousMedia: return video_.previous();
 		case SceneCommand::NextMode:
 			controller_->stepMode(+1); // atomic: effect, labels, controls and activity change together
+			reveal_.reset();           // a new effect is shown cleanly first (hidden dwell); playback is untouched
 			paramsDirty_ = true;
 			ensureInstance();
 			return true;
@@ -286,6 +323,7 @@ bool SharedEffectsGalleryScene::stepOption(int axisIndex, int delta) {
 
 void SharedEffectsGalleryScene::reset() {
 	if (controller_ && controller_->ok()) controller_->resetAll();
+	reveal_.reset();
 	paramsDirty_ = true;
 	time_ = 0.f;
 	ensureInstance();

@@ -21,6 +21,7 @@
 #include "HudSkinSchedule.h"
 #include "MinimalTheme.h"
 #include "ShellTheme.h"
+#include "ClipActivity.h"
 #include "HudLogCapture.h"
 #include "RuntimeServices.h"
 #include "SceneContract.h"
@@ -450,6 +451,12 @@ private:
 	// OC-004 visual-activity probe: diagnostic only, inert unless EXPERIENCE_RUNTIME_SCENE_ACTIVITY_PROBE is set.
 	sceneactivity::SceneActivityProbe sceneActivityProbe_;
 	sceneactivity::VisualActivityPublisher sceneVisualActivityPublisher_; // OC-004: immutable snapshot -> HudFrameData::sceneVisualActivity
+	// OC-004 cost-effective path: per-clip activity curves measured offline (assets/shared/clip-activity/), looked up at
+	// the shared video's playhead. Publishes scene.visual.activity with no GL work; the live probe above wins when enabled.
+	void loadClipActivity(const std::string& path);
+	clipactivity::ClipActivityIndex clipActivityIndex_;
+	clipactivity::ClipActivityFeeder clipActivity_{clipActivityIndex_};
+	bool clipActivityEnabled_ = false; // curves loaded and EXPERIENCE_RUNTIME_CLIP_ACTIVITY != 0
 	// RT-007: canonical 1280x720 composition target (scene viewport + shell +
 	// HUD), allocated lazily the first time the framebuffer is not exactly
 	// 1280x720 and never reallocated on resize; then scaled once to the

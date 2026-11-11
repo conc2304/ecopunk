@@ -3,6 +3,7 @@
 #include "../src/HudFocusNavigator.h"
 #include "../src/HudRegionInteraction.h"
 #include "../src/SceneFxModel.h"
+#include "../src/RawRevealController.h"
 #include "../../../shared/src/hud-compositor/HudFocusEmphasis.h"
 
 #include <cmath>
@@ -426,6 +427,85 @@ void test_focus_emphasis() {
 	HUD_CHECK(std::fabs(focusPulse(0.37f) - focusPulse(0.37f + period)) < 1e-3f);
 }
 
+// ---- Raw reveal controller (scene-local, effect-independent) ----
+
+void test_reveal_hidden_dwell_is_mask_free() {
+	using namespace scenefx;
+	RawRevealController r;
+	HUD_CHECK(r.phase() == RevealPhase::HiddenDwell && r.width() == 0.f && !r.visible()); // starts hidden: no flash at activation
+	bool leaked = false;
+	while (r.phase() == RevealPhase::HiddenDwell) {
+		if (r.width() != 0.f || !revealSpanPx(r.left(), r.right(), 1280).empty()) leaked = true;
+		r.update(1.f / 60.f);
+	}
+	HUD_CHECK(!leaked);                                      // exactly zero width and an EMPTY pixel span for the whole dwell
+	RawRevealController z;
+	HUD_CHECK(revealSpanPx(z.left(), z.right(), 1280).empty() && revealSpanPx(0.4f, 0.4f, 1280).empty());
+	HUD_CHECK(revealSpanPx(0.5f, 0.5f + 0.0003f, 1280).empty()); // sub-pixel width draws nothing (no one-pixel raw line)
+}
+
+void test_reveal_phases_repeat_and_geometry_bounds() {
+	using namespace scenefx;
+	RawRevealController r;
+	std::vector<RevealPhase> seq;
+	float maxW = 0.f, dwellMin = 1e9f, curDwell = 0.f;
+	bool boundsOk = true, ordered = true;
+	RevealPhase prev = r.phase();
+	seq.push_back(prev);
+	for (int i = 0; i < 60 * 400 && r.cycleIndex() < 4; ++i) {
+		r.update(1.f / 60.f);
+		const float w = r.width(), l = r.left(), rt = r.right();
+		if (l < -1e-6f || rt > 1.f + 1e-6f || rt < l - 1e-6f || w > 0.40f + 1e-5f) boundsOk = false; // whole width inside the scene
+		const RevealSpan sp = revealSpanPx(l, rt, 1280);
+		if (!sp.empty() && (sp.x0 < 0 || sp.x1 > 1280)) boundsOk = false;
+		maxW = std::max(maxW, w);
+		if (r.phase() != prev) {
+			if (prev == RevealPhase::HiddenDwell) { dwellMin = std::min(dwellMin, curDwell); }
+			curDwell = 0.f;
+			prev = r.phase(); seq.push_back(prev);
+		}
+		if (r.phase() == RevealPhase::HiddenDwell) curDwell += 1.f / 60.f;
+	}
+	HUD_CHECK(boundsOk);
+	HUD_CHECK(maxW >= 0.20f - 1e-4f && maxW <= 0.40f + 1e-5f);                  // width envelope 20..40 %
+	HUD_CHECK(r.cycleIndex() >= 4);                                               // repeats
+	for (size_t i = 1; i < seq.size(); ++i) {                                    // Hidden -> Grow -> Drift -> Retract -> Hidden ...
+		const int a = int(seq[i - 1]), b = int(seq[i]);
+		if (b != (a + 1) % 4) ordered = false;
+	}
+	HUD_CHECK(ordered && seq.size() >= 13);
+}
+
+void test_reveal_deterministic_and_time_step_independent() {
+	using namespace scenefx;
+	RawRevealController a(7u), b(7u), c(8u);
+	for (int i = 0; i < 4000; ++i) { a.update(1.f / 60.f); b.update(1.f / 60.f); c.update(1.f / 60.f); }
+	HUD_CHECK(a.phase() == b.phase() && a.width() == b.width() && a.left() == b.left());  // same seed + same steps => identical
+	bool differ = false;
+	RawRevealController d(7u), e(8u);
+	for (int i = 0; i < 6000 && !differ; ++i) { d.update(1.f / 60.f); e.update(1.f / 60.f); differ = d.left() != e.left() || d.width() != e.width() || d.phase() != e.phase(); }
+	HUD_CHECK(differ);                                                                   // different seed => different sequence
+	// Time-step independence: identical total time, 0.0625 s steps vs 0.03125 s steps (exact binary fractions).
+	for (double total : {30.0, 47.0, 64.0}) {
+		RawRevealController x, y;
+		for (double t = 0; t < total - 1e-9; t += 0.0625) x.update(0.0625f);
+		for (double t = 0; t < total - 1e-9; t += 0.03125) y.update(0.03125f);
+		HUD_CHECK(x.phase() == y.phase() && std::fabs(x.width() - y.width()) < 1e-4f && std::fabs(x.left() - y.left()) < 1e-4f);
+	}
+	RawRevealController s;
+	s.update(30.f);                                                                      // pathological dt spike
+	HUD_CHECK(s.phase() == RevealPhase::HiddenDwell && s.cycleIndex() == 0);              // clamped: no jump between states
+}
+
+void test_reveal_reset_returns_to_hidden() {
+	using namespace scenefx;
+	RawRevealController r;
+	for (int i = 0; i < 60 * 14 && r.phase() != RevealPhase::Drift; ++i) r.update(1.f / 20.f);
+	HUD_CHECK(r.visible());
+	r.reset();                                                                            // effect-mode change / activation
+	HUD_CHECK(r.phase() == RevealPhase::HiddenDwell && r.width() == 0.f && revealSpanPx(r.left(), r.right(), 1280).empty());
+}
+
 int main() {
 	test_no_focus_before_first_input();
 	test_first_step_engages_on_first_enabled();
@@ -453,6 +533,10 @@ int main() {
 	test_navigation_one_row_gallery_and_crt();
 	test_navigation_zero_rows_never_traps();
 	test_focus_emphasis();
+	test_reveal_hidden_dwell_is_mask_free();
+	test_reveal_phases_repeat_and_geometry_bounds();
+	test_reveal_deterministic_and_time_step_independent();
+	test_reveal_reset_returns_to_hidden();
 
 	std::cout << (g_total - g_failures) << "/" << g_total << " checks passed.\n";
 	if (g_failures > 0) {

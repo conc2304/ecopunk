@@ -2,6 +2,7 @@
 
 #include "EffectActivityStatus.h"
 #include "SceneContract.h"
+#include "RawRevealController.h"
 #include "SceneFxModel.h"
 #include "VideoEffectService.h"
 #include "VideoPlaybackService.h"
@@ -63,6 +64,9 @@ public:
 	const scenefx::ModeController& controllerForTesting() const { return *controller_; }
 	bool instanceReadyForTesting() const;
 	uint64_t activationCountForTesting() const { return activations_; }
+	const scenefx::RawRevealController& revealForTesting() const { return reveal_; }
+	// QA only: scales reveal time AFTER the dt clamp (0 freezes it). Not a visitor control.
+	void setRevealTimeScaleForTesting(float s) { revealTimeScale_ = s; }
 
 private:
 	void buildRoster();
@@ -78,7 +82,10 @@ private:
 	videoeffects::VideoEffectParameters params_;
 	bool paramsDirty_ = true;
 
-	ofFbo srcFbo_;
+	ofFbo srcFbo_;   // cover-fit canonical frame: the ONE source for both the raw and the effected path
+	ofFbo effFbo_;   // the active canonical effect's output (reused; never reallocated per frame)
+	scenefx::RawRevealController reveal_; // autonomous raw-video window (scene-local, effect-independent)
+	float revealTimeScale_ = 1.f;
 	float time_ = 0.f, dt_ = 1.f / 60.f;
 	bool active_ = false, didSetup_ = false, didShutdown_ = false;
 	uint64_t activations_ = 0;

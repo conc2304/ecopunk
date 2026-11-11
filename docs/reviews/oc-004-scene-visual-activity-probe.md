@@ -274,6 +274,21 @@ Reading it honestly: run-to-run noise (the baseline alone moves 0.8 ms p50 and 1
 
 ---
 
+## Addendum — precomputed clip activity (default source, no GL cost)
+
+The live sampler costs GPU time and is unproven on the Pi, so `scene.visual.activity` now has a cheaper source: each shared-media clip is measured once, offline, and the runtime looks the value up at the playhead.
+
+| Piece | Where |
+|---|---|
+| Generator (ffmpeg, stdlib Python; 64x36 luma, mean abs frame difference at 10 Hz) | `tools/clip-activity/generate-clip-activity.py` (`--force`, `--check`) |
+| Data (25 clips, ~73 KiB, keyed by file name) | `assets/shared/clip-activity/clip-activity.json` |
+| Lookup + per-frame feeder (OF-free) | `sketches/experience_runtime/src/ClipActivity.h`, tests `test/clip_activity_tests.cpp` (`make -f Makefile.tests clip-activity`) |
+| Wiring | `ExperienceRuntime::loadClipActivity`, per-frame update after the video status capture |
+
+**Behaviour.** The snapshot, states and `level` mapping are unchanged. Valid while a measured clip is Ready; Unavailable when no clip is ready, the clip was never measured, or the scene changed; Transition on static frames; Stale if feeding stalls. `EXPERIENCE_RUNTIME_SCENE_VISUAL_ACTIVITY=1` (the live sampler) takes precedence. `EXPERIENCE_RUNTIME_CLIP_ACTIVITY=0` turns the clip source off; `EXPERIENCE_RUNTIME_CLIP_ACTIVITY_LOG=1` logs the published snapshot.
+
+**Contract note for Architecture.** The frozen definition above measures the *SceneFBO*. The clip source measures the *clip*: effects, overlays and generated scene content are not included, and a scene that does not display the shared clip still reports the clip's activity while one plays. The state/level/ballistics contract is untouched, but the meaning of the source differs by provider. Re-run the generator when media changes. Check: Bonfire mean raw 0.092 and Lily_Bloom 0.005 agree with the fire (~0.075-0.12) and lotus (~0.007) observations in section 2.
+
 ## Completion report
 
 1. **Summary** — Opt-in diagnostic probe implemented, run on all five scenes and a full-ring transition run, evaluated against an independent full-res reference, benchmarked on desktop. Production HUD not touched.
