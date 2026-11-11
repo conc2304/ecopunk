@@ -2,6 +2,7 @@
 
 #include "HudFocusNavigator.h"
 #include "HudFrameData.h"
+#include "HudRegionInteraction.h"
 #include "HudSkinLoader.h"
 #include "HudSkinOfImageBackend.h"
 #include "HudWireframeRenderer.h"
@@ -129,6 +130,27 @@ public:
 	bool orbitEditorBack();     // cancel and restore
 	// DIAGNOSTIC ONLY (OC-005 harness): deterministic RAW series; nullptr restores the normal path.
 	void setOrbitRawSeriesOverrideForDiagnostics(const hudpresent::OrbitSeriesView* v) { renderer_.setOrbitRawSeriesOverride(v); }
+	// -- Generic interactive region (scene opt-in via its presentation profile) ---------------------
+	// ONE focus stop (kInteractiveFocusId) for the whole region. Presentation state only: the
+	// bridge/renderer never change a scene value. A value step is reported to ExperienceRuntime,
+	// which forwards it through its region-option port. Unavailable (no option port, region not
+	// rendering, HUD hidden, scene changed) => hidden from focus traversal and never active.
+	static bool isInteractiveFocusId(const std::string& id) { return id == hudpresent::HudWireframeRenderer::kInteractiveFocusId; }
+	// Number of option axes the active scene advertises AND the runtime can dispatch (0 = none/no port).
+	void setInteractiveOptionAxes(int n) { interactiveAxisCount_ = n; }
+	bool interactiveRegionAvailable() const {
+		const auto* d = renderer_.interactiveRegion();
+		return d != nullptr && interactiveAxisCount_ >= d->rowCount && visible_ && renderer_.interactiveRegionPresent();
+	}
+	bool interactiveActive() const { return region_.active(); }
+	int interactiveRow() const { return region_.row(); }
+	const HudRegionInteraction& interactiveState() const { return region_; }
+	bool enterInteractiveForFocus(); // false unless focus is on the available region
+	bool exitInteractive() { return region_.exit(); }
+	bool interactiveSelectRow(int delta) { return region_.selectRow(delta); }
+	bool interactiveAdvanceRowOrExit() { return region_.advanceRowOrExit(); }
+	hudpresent::HudInteractionPhase interactionPhase() const { return renderer_.interactionPhase(); }
+	const hudpresent::HudWireframeRenderer& rendererForTesting() const { return renderer_; }
 	// Shows the activation flash for the result ExperienceRuntime got back.
 	void reportActivation(bool accepted) { renderer_.triggerActivationFeedback(accepted); }
 	// Day/night text palette (skin schedule); default = night.
@@ -150,6 +172,7 @@ public:
 private:
 	void syncShellTexture();
 	void refreshFocus();
+	void refreshInteraction();
 
 	// Traversal order = the HUD-006 controls row, left to right, then the
 	// mode panel (flexible.secondary_a: Enter -> NEXT MODE). Hidden stops
@@ -158,9 +181,12 @@ private:
 	// informational and no longer a focus stop).
 	HudFocusNavigator focus_{{"controls.scene_previous", "controls.scene_next", "controls.mode",
 		"controls.media_previous", "controls.media_next", "controls.fullscreen", "controls.menu",
+		hudpresent::HudWireframeRenderer::kInteractiveFocusId, // generic interactive region: ONE stop
 		hudpresent::HudWireframeRenderer::kOrbitFocusA, hudpresent::HudWireframeRenderer::kOrbitFocusB}};
 
 	hudpresent::HudWireframeRenderer renderer_;
+	HudRegionInteraction region_;
+	int interactiveAxisCount_ = 0;
 	bool visible_ = true;
 	mutable uint64_t drawCallCount_ = 0;
 

@@ -130,6 +130,32 @@ int main() {
 		check(mono, "snapshot timestamps strictly increasing oldest->newest");
 		check(pf->colorSpace == scenecolor::ColorSpace::LinearSrgb, "colour space recorded explicitly");
 	}
+	// -- OC-003 additive DOM/VIB publication: independent validity, never invented, AVG unchanged
+	{
+		Series s; s.beginGeneration(1, 10.0);
+		Sample a = valid(10.0, 1, 0.5f); a.domValid = true; a.domR = 0.1f; a.domG = 0.2f; a.domB = 0.3f; a.vibValid = false; a.vibR = 0.9f; // stale vib rgb must not leak
+		Sample b = valid(10.5, 1, 0.4f); b.domValid = false; b.vibValid = true; b.vibR = 0.7f; b.vibG = 0.1f; b.vibB = 0.2f;
+		s.push(a); s.push(b);
+		SnapshotPublisher off, on;
+		auto po = off.publish(s, 10.5, "scene");
+		check(!po->predominantProvided && !po->history[0].domValid && !po->history[1].vibValid, "default (opt-out) snapshot carries no DOM/VIB and says so");
+		auto pn = on.publish(s, 10.5, "scene", true);
+		check(pn->predominantProvided && pn->count == 2, "opt-in snapshot flags the measurement as provided");
+		check(pn->history[0].domValid && !pn->history[0].vibValid && near(pn->history[0].domG, 0.2f), "DOM valid while VIB invalid (same frame)");
+		check(pn->history[0].vibR == 0.0f, "an invalid vibrant publishes no colour at all");
+		check(!pn->history[1].domValid && pn->history[1].vibValid && near(pn->history[1].vibR, 0.7f), "VIB valid while DOM invalid");
+		check(near(pn->history[0].r, 0.5f) && near(pn->history[1].luma, luma709(0.4f, 0.4f, 0.4f)), "AVG r,g,b,luma unchanged by DOM/VIB");
+		Sample gap; gap.t = 11.0; gap.generation = 1; gap.valid = false; gap.domValid = true; gap.vibValid = true; // inconsistent producer
+		s.push(gap);
+		auto pg = on.publish(s, 11.0, "scene", true);
+		check(!pg->history[2].domValid && !pg->history[2].vibValid, "a gap frame can never publish DOM/VIB");
+		check(on.publish(s, 11.0, "scene", true) == pg, "no change => same snapshot object");
+		check(on.publish(s, 11.0, "scene", false) != pg, "toggling provided republishes");
+		s.beginGeneration(2, 12.0);
+		auto pn2 = on.publish(s, 12.0, "scene2", true);
+		check(pn2->count == 0 && pn2->generation == 2 && pn->generation == 1 && pn->history[0].domValid, "new generation starts empty; the old snapshot is untouched");
+	}
+
 	// -- no allocation: the type is trivially a fixed array
 	static_assert(sizeof(Series) < 16 * 1024, "Series is a small fixed-size value");
 

@@ -1,0 +1,260 @@
+cond       frames    excl      p50      p95      p99     worst     mean  drawCPU   >100ms
+P0           2034     944    33.35    34.29    34.65     37.98    33.33     3.01        0
+P1           2030     943    33.33    34.42    34.86     86.64    33.33     3.05        0
+P2           2055     943    33.33    34.64    35.28     36.47    33.33     3.12        0
+P3           2055     943    33.34    34.45    34.92     35.51    33.33     3.00        0
+P4           2054     944    33.33    35.17    35.98     38.21    33.33     3.01        0
+P5           2056     942    33.26    35.09    36.20     37.37    33.33     3.23        0
+(all ms; percentiles are nearest-rank over pooled individual frames)
+
+== P0: sampling-event attribution (ms; long frame = > 40 ms; phase = p50/p95 wall unless 'cpu')
+  events (counts): fx_issue=0  fx_collect=0  raw_issue=0  raw_collect=0  fx_ifail=0  fx_cfail=0  raw_ifail=0  raw_cfail=0   frames with a failed attempt: 0
+
+  INDEPENDENT populations (a frame may be in several; counts do not sum)
+  population                  frames     p50     p95     p99    worst   long
+  with fxIssue                     0   (no frames)
+  with fxCollect                   0   (no frames)
+  with rawIssue                    0   (no frames)
+  with rawCollect                  0   (no frames)
+
+  EXCLUSIVE categories (each frame in exactly one; sums to the total: yes)
+  population                  frames     p50     p95     p99    worst   long
+  none                          2034   33.35   34.29   34.65    37.98      0   draw wall 2.94/3.73 cpu 2.94/3.73  upd 2.21/3.72  pre 27.22/29.19  post 0.73/0.83
+  multi                            0   (no frames)
+  fxIssueOnly                      0   (no frames)
+  fxCollectOnly                    0   (no frames)
+  rawIssueOnly                     0   (no frames)
+  rawCollectOnly                   0   (no frames)
+
+  long frames: 0 total; by EXCLUSIVE class (sums to total): none=0, multi=0, fxIssueOnly=0, fxCollectOnly=0, rawIssueOnly=0, rawCollectOnly=0
+               by INDEPENDENT class (overlapping): fxIssue=0, fxCollect=0, rawIssue=0, rawCollect=0
+
+  LAG (separate from the direct views; frame +k after an event frame, contiguous ids only)
+  population                  frames     p50     p95     p99    worst   long
+  fxIssue+1 all                    0   (no frames)
+  fxIssue+1 own-event-free         0   (no frames)
+  fxIssue+2 all                    0   (no frames)
+  fxIssue+2 own-event-free         0   (no frames)
+  fxCollect+1 all                  0   (no frames)
+  fxCollect+1 own-event-free       0   (no frames)
+  fxCollect+2 all                  0   (no frames)
+  fxCollect+2 own-event-free       0   (no frames)
+  rawIssue+1 all                   0   (no frames)
+  rawIssue+1 own-event-free        0   (no frames)
+  rawIssue+2 all                   0   (no frames)
+  rawIssue+2 own-event-free        0   (no frames)
+  rawCollect+1 all                 0   (no frames)
+  rawCollect+1 own-event-free       0   (no frames)
+  rawCollect+2 all                 0   (no frames)
+  rawCollect+2 own-event-free       0   (no frames)
+
+== P1: sampling-event attribution (ms; long frame = > 40 ms; phase = p50/p95 wall unless 'cpu')
+  events (counts): fx_issue=131  fx_collect=131  raw_issue=0  raw_collect=0  fx_ifail=0  fx_cfail=0  raw_ifail=0  raw_cfail=0   frames with a failed attempt: 0
+
+  INDEPENDENT populations (a frame may be in several; counts do not sum)
+  population                  frames     p50     p95     p99    worst   long
+  with fxIssue                   131   33.62   34.69   34.99    35.11      0   draw wall 3.18/3.72 cpu 3.18/3.72  upd 1.83/3.68  pre 27.72/29.14  post 0.73/0.85
+  with fxCollect                 131   33.66   34.67   35.22    35.30      0   draw wall 3.58/4.39 cpu 3.42/4.24  upd 3.02/3.83  pre 27.16/28.73  post 0.69/0.82
+  with rawIssue                    0   (no frames)
+  with rawCollect                  0   (no frames)
+
+  EXCLUSIVE categories (each frame in exactly one; sums to the total: yes)
+  population                  frames     p50     p95     p99    worst   long
+  none                          1768   33.30   34.28   34.83    86.64      5   draw wall 3.05/3.66 cpu 3.05/3.65  upd 2.14/3.79  pre 27.32/29.15  post 0.70/0.82
+  multi                            0   (no frames)
+  fxIssueOnly                    131   33.62   34.69   34.99    35.11      0   draw wall 3.18/3.72 cpu 3.18/3.72  upd 1.83/3.68  pre 27.72/29.14  post 0.73/0.85
+  fxCollectOnly                  131   33.66   34.67   35.22    35.30      0   draw wall 3.58/4.39 cpu 3.42/4.24  upd 3.02/3.83  pre 27.16/28.73  post 0.69/0.82
+  rawIssueOnly                     0   (no frames)
+  rawCollectOnly                   0   (no frames)
+
+  long frames: 5 total; by EXCLUSIVE class (sums to total): none=5, multi=0, fxIssueOnly=0, fxCollectOnly=0, rawIssueOnly=0, rawCollectOnly=0
+               by INDEPENDENT class (overlapping): fxIssue=0, fxCollect=0, rawIssue=0, rawCollect=0
+
+  LAG (separate from the direct views; frame +k after an event frame, contiguous ids only)
+  population                  frames     p50     p95     p99    worst   long
+  fxIssue+1 all                  131   33.66   34.67   35.22    35.30      0   draw wall 3.58/4.39 cpu 3.42/4.24  upd 3.02/3.83  pre 27.16/28.73  post 0.69/0.82
+  fxIssue+1 own-event-free         0   (no frames)
+  fxIssue+2 all                  131   32.87   34.26   34.74    34.80      0   draw wall 3.04/3.63 cpu 3.04/3.63  upd 1.78/3.87  pre 27.12/29.27  post 0.69/0.85
+  fxIssue+2 own-event-free       131   32.87   34.26   34.74    34.80      0   draw wall 3.04/3.63 cpu 3.04/3.63  upd 1.78/3.87  pre 27.12/29.27  post 0.69/0.85
+  fxCollect+1 all                131   32.87   34.26   34.74    34.80      0   draw wall 3.04/3.63 cpu 3.04/3.63  upd 1.78/3.87  pre 27.12/29.27  post 0.69/0.85
+  fxCollect+1 own-event-free     131   32.87   34.26   34.74    34.80      0   draw wall 3.04/3.63 cpu 3.04/3.63  upd 1.78/3.87  pre 27.12/29.27  post 0.69/0.85
+  fxCollect+2 all                131   33.29   34.37   34.77    35.24      0   draw wall 3.04/3.75 cpu 3.04/3.75  upd 2.69/3.76  pre 27.30/28.85  post 0.70/0.79
+  fxCollect+2 own-event-free     131   33.29   34.37   34.77    35.24      0   draw wall 3.04/3.75 cpu 3.04/3.75  upd 2.69/3.76  pre 27.30/28.85  post 0.70/0.79
+  rawIssue+1 all                   0   (no frames)
+  rawIssue+1 own-event-free        0   (no frames)
+  rawIssue+2 all                   0   (no frames)
+  rawIssue+2 own-event-free        0   (no frames)
+  rawCollect+1 all                 0   (no frames)
+  rawCollect+1 own-event-free       0   (no frames)
+  rawCollect+2 all                 0   (no frames)
+  rawCollect+2 own-event-free       0   (no frames)
+
+== P2: sampling-event attribution (ms; long frame = > 40 ms; phase = p50/p95 wall unless 'cpu')
+  events (counts): fx_issue=132  fx_collect=132  raw_issue=132  raw_collect=132  fx_ifail=0  fx_cfail=0  raw_ifail=0  raw_cfail=0   frames with a failed attempt: 0
+
+  INDEPENDENT populations (a frame may be in several; counts do not sum)
+  population                  frames     p50     p95     p99    worst   long
+  with fxIssue                   132   33.49   34.66   35.23    35.43      0   draw wall 3.19/3.79 cpu 3.18/3.78  upd 2.21/3.55  pre 27.44/29.12  post 0.69/0.75
+  with fxCollect                 132   34.36   35.39   35.73    36.10      0   draw wall 4.22/5.07 cpu 3.88/4.58  upd 1.95/3.65  pre 27.21/28.68  post 0.67/0.75
+  with rawIssue                  132   33.55   34.63   35.45    35.46      0   draw wall 3.18/3.91 cpu 3.16/3.77  upd 1.92/3.62  pre 27.37/29.09  post 0.69/0.77
+  with rawCollect                132   34.21   35.39   35.71    36.10      0   draw wall 4.18/4.94 cpu 3.87/4.62  upd 2.20/3.83  pre 27.22/28.36  post 0.68/0.75
+
+  EXCLUSIVE categories (each frame in exactly one; sums to the total: yes)
+  population                  frames     p50     p95     p99    worst   long
+  none                          1541   33.22   34.22   34.86    36.47      0   draw wall 3.05/3.68 cpu 3.05/3.67  upd 2.16/3.64  pre 27.19/28.85  post 0.68/0.76
+  multi                           14   34.63   36.10   36.10    36.10      0   draw wall 4.10/5.73 cpu 3.56/5.34  upd 2.43/3.69  pre 27.19/29.27  post 0.67/0.76
+  fxIssueOnly                    130   33.49   34.64   35.23    35.43      0   draw wall 3.19/3.78 cpu 3.19/3.78  upd 2.24/3.55  pre 27.42/29.01  post 0.69/0.75
+  fxCollectOnly                  120   34.31   35.26   35.63    35.73      0   draw wall 4.21/4.94 cpu 3.88/4.58  upd 1.80/3.64  pre 27.22/28.64  post 0.67/0.75
+  rawIssueOnly                   120   33.53   34.40   34.52    34.92      0   draw wall 3.15/3.70 cpu 3.15/3.70  upd 1.92/3.57  pre 27.35/29.02  post 0.70/0.77
+  rawCollectOnly                 130   34.19   35.24   35.59    35.71      0   draw wall 4.17/4.93 cpu 3.86/4.60  upd 2.18/3.83  pre 27.26/28.36  post 0.68/0.75
+  multi-event combinations: fxCollect+rawCollect: 2, fxCollect+rawIssue: 10, fxIssue+rawIssue: 2
+
+  long frames: 0 total; by EXCLUSIVE class (sums to total): none=0, multi=0, fxIssueOnly=0, fxCollectOnly=0, rawIssueOnly=0, rawCollectOnly=0
+               by INDEPENDENT class (overlapping): fxIssue=0, fxCollect=0, rawIssue=0, rawCollect=0
+
+  LAG (separate from the direct views; frame +k after an event frame, contiguous ids only)
+  population                  frames     p50     p95     p99    worst   long
+  fxIssue+1 all                  132   34.36   35.39   35.73    36.10      0   draw wall 4.22/5.07 cpu 3.88/4.58  upd 1.95/3.65  pre 27.21/28.68  post 0.67/0.75
+  fxIssue+1 own-event-free         0   (no frames)
+  fxIssue+2 all                  132   32.26   33.73   34.41    35.14      0   draw wall 3.13/4.17 cpu 3.13/3.92  upd 2.41/3.66  pre 25.95/28.01  post 0.69/0.76
+  fxIssue+2 own-event-free       114   32.18   33.42   33.84    34.01      0   draw wall 3.11/3.69 cpu 3.11/3.69  upd 2.52/3.66  pre 25.86/27.94  post 0.69/0.75
+  fxCollect+1 all                132   32.26   33.73   34.41    35.14      0   draw wall 3.13/4.17 cpu 3.13/3.92  upd 2.41/3.66  pre 25.95/28.01  post 0.69/0.76
+  fxCollect+1 own-event-free     114   32.18   33.42   33.84    34.01      0   draw wall 3.11/3.69 cpu 3.11/3.69  upd 2.52/3.66  pre 25.86/27.94  post 0.69/0.75
+  fxCollect+2 all                132   33.33   34.64   35.19    35.71      0   draw wall 3.10/4.11 cpu 3.10/3.94  upd 1.88/3.69  pre 27.32/28.56  post 0.68/0.77
+  fxCollect+2 own-event-free     118   33.24   34.31   34.68    34.85      0   draw wall 3.09/3.75 cpu 3.09/3.75  upd 1.88/3.70  pre 27.31/28.59  post 0.68/0.77
+  rawIssue+1 all                 132   34.21   35.39   35.71    36.10      0   draw wall 4.18/4.94 cpu 3.87/4.62  upd 2.20/3.83  pre 27.22/28.36  post 0.68/0.75
+  rawIssue+1 own-event-free        0   (no frames)
+  rawIssue+2 all                 132   32.24   33.40   33.95    34.07      0   draw wall 3.07/3.66 cpu 3.07/3.66  upd 1.91/3.63  pre 26.32/28.21  post 0.68/0.75
+  rawIssue+2 own-event-free      132   32.24   33.40   33.95    34.07      0   draw wall 3.07/3.66 cpu 3.07/3.66  upd 1.91/3.63  pre 26.32/28.21  post 0.68/0.75
+  rawCollect+1 all               132   32.24   33.40   33.95    34.07      0   draw wall 3.07/3.66 cpu 3.07/3.66  upd 1.91/3.63  pre 26.32/28.21  post 0.68/0.75
+  rawCollect+1 own-event-free     132   32.24   33.40   33.95    34.07      0   draw wall 3.07/3.66 cpu 3.07/3.66  upd 1.91/3.63  pre 26.32/28.21  post 0.68/0.75
+  rawCollect+2 all               132   33.32   34.22   35.08    36.47      0   draw wall 3.00/3.67 cpu 3.00/3.67  upd 2.24/3.59  pre 27.41/28.74  post 0.68/0.76
+  rawCollect+2 own-event-free     132   33.32   34.22   35.08    36.47      0   draw wall 3.00/3.67 cpu 3.00/3.67  upd 2.24/3.59  pre 27.41/28.74  post 0.68/0.76
+
+== P3: sampling-event attribution (ms; long frame = > 40 ms; phase = p50/p95 wall unless 'cpu')
+  events (counts): fx_issue=0  fx_collect=0  raw_issue=132  raw_collect=132  fx_ifail=0  fx_cfail=0  raw_ifail=0  raw_cfail=0   frames with a failed attempt: 0
+
+  INDEPENDENT populations (a frame may be in several; counts do not sum)
+  population                  frames     p50     p95     p99    worst   long
+  with fxIssue                     0   (no frames)
+  with fxCollect                   0   (no frames)
+  with rawIssue                  132   33.59   34.61   35.22    35.51      0   draw wall 3.09/3.71 cpu 3.09/3.71  upd 2.49/3.72  pre 27.30/29.14  post 0.70/0.81
+  with rawCollect                132   34.08   35.04   35.46    35.47      0   draw wall 3.85/4.80 cpu 3.58/4.43  upd 1.83/3.66  pre 27.41/28.80  post 0.68/0.76
+
+  EXCLUSIVE categories (each frame in exactly one; sums to the total: yes)
+  population                  frames     p50     p95     p99    worst   long
+  none                          1791   33.28   34.25   34.79    35.45      0   draw wall 3.00/3.65 cpu 3.00/3.65  upd 2.17/3.72  pre 27.35/28.94  post 0.69/0.77
+  multi                            0   (no frames)
+  fxIssueOnly                      0   (no frames)
+  fxCollectOnly                    0   (no frames)
+  rawIssueOnly                   132   33.59   34.61   35.22    35.51      0   draw wall 3.09/3.71 cpu 3.09/3.71  upd 2.49/3.72  pre 27.30/29.14  post 0.70/0.81
+  rawCollectOnly                 132   34.08   35.04   35.46    35.47      0   draw wall 3.85/4.80 cpu 3.58/4.43  upd 1.83/3.66  pre 27.41/28.80  post 0.68/0.76
+
+  long frames: 0 total; by EXCLUSIVE class (sums to total): none=0, multi=0, fxIssueOnly=0, fxCollectOnly=0, rawIssueOnly=0, rawCollectOnly=0
+               by INDEPENDENT class (overlapping): fxIssue=0, fxCollect=0, rawIssue=0, rawCollect=0
+
+  LAG (separate from the direct views; frame +k after an event frame, contiguous ids only)
+  population                  frames     p50     p95     p99    worst   long
+  fxIssue+1 all                    0   (no frames)
+  fxIssue+1 own-event-free         0   (no frames)
+  fxIssue+2 all                    0   (no frames)
+  fxIssue+2 own-event-free         0   (no frames)
+  fxCollect+1 all                  0   (no frames)
+  fxCollect+1 own-event-free       0   (no frames)
+  fxCollect+2 all                  0   (no frames)
+  fxCollect+2 own-event-free       0   (no frames)
+  rawIssue+1 all                 132   34.08   35.04   35.46    35.47      0   draw wall 3.85/4.80 cpu 3.58/4.43  upd 1.83/3.66  pre 27.41/28.80  post 0.68/0.76
+  rawIssue+1 own-event-free        0   (no frames)
+  rawIssue+2 all                 132   32.60   33.57   34.16    34.81      0   draw wall 3.01/3.63 cpu 3.01/3.63  upd 2.45/3.79  pre 26.37/28.27  post 0.69/0.77
+  rawIssue+2 own-event-free      132   32.60   33.57   34.16    34.81      0   draw wall 3.01/3.63 cpu 3.01/3.63  upd 2.45/3.79  pre 26.37/28.27  post 0.69/0.77
+  rawCollect+1 all               132   32.60   33.57   34.16    34.81      0   draw wall 3.01/3.63 cpu 3.01/3.63  upd 2.45/3.79  pre 26.37/28.27  post 0.69/0.77
+  rawCollect+1 own-event-free     132   32.60   33.57   34.16    34.81      0   draw wall 3.01/3.63 cpu 3.01/3.63  upd 2.45/3.79  pre 26.37/28.27  post 0.69/0.77
+  rawCollect+2 all               132   33.29   34.33   34.98    34.98      0   draw wall 3.03/3.63 cpu 3.03/3.63  upd 1.83/3.71  pre 27.37/28.87  post 0.70/0.78
+  rawCollect+2 own-event-free     132   33.29   34.33   34.98    34.98      0   draw wall 3.03/3.63 cpu 3.03/3.63  upd 1.83/3.71  pre 27.37/28.87  post 0.70/0.78
+
+== P4: sampling-event attribution (ms; long frame = > 40 ms; phase = p50/p95 wall unless 'cpu')
+  events (counts): fx_issue=0  fx_collect=0  raw_issue=0  raw_collect=0  fx_ifail=0  fx_cfail=0  raw_ifail=0  raw_cfail=0   frames with a failed attempt: 0
+
+  INDEPENDENT populations (a frame may be in several; counts do not sum)
+  population                  frames     p50     p95     p99    worst   long
+  with fxIssue                     0   (no frames)
+  with fxCollect                   0   (no frames)
+  with rawIssue                    0   (no frames)
+  with rawCollect                  0   (no frames)
+
+  EXCLUSIVE categories (each frame in exactly one; sums to the total: yes)
+  population                  frames     p50     p95     p99    worst   long
+  none                          2054   33.33   35.17   35.98    38.21      0   draw wall 2.98/4.30 cpu 2.98/4.28  upd 2.24/4.35  pre 27.22/29.38  post 0.68/0.98
+  multi                            0   (no frames)
+  fxIssueOnly                      0   (no frames)
+  fxCollectOnly                    0   (no frames)
+  rawIssueOnly                     0   (no frames)
+  rawCollectOnly                   0   (no frames)
+
+  long frames: 0 total; by EXCLUSIVE class (sums to total): none=0, multi=0, fxIssueOnly=0, fxCollectOnly=0, rawIssueOnly=0, rawCollectOnly=0
+               by INDEPENDENT class (overlapping): fxIssue=0, fxCollect=0, rawIssue=0, rawCollect=0
+
+  LAG (separate from the direct views; frame +k after an event frame, contiguous ids only)
+  population                  frames     p50     p95     p99    worst   long
+  fxIssue+1 all                    0   (no frames)
+  fxIssue+1 own-event-free         0   (no frames)
+  fxIssue+2 all                    0   (no frames)
+  fxIssue+2 own-event-free         0   (no frames)
+  fxCollect+1 all                  0   (no frames)
+  fxCollect+1 own-event-free       0   (no frames)
+  fxCollect+2 all                  0   (no frames)
+  fxCollect+2 own-event-free       0   (no frames)
+  rawIssue+1 all                   0   (no frames)
+  rawIssue+1 own-event-free        0   (no frames)
+  rawIssue+2 all                   0   (no frames)
+  rawIssue+2 own-event-free        0   (no frames)
+  rawCollect+1 all                 0   (no frames)
+  rawCollect+1 own-event-free       0   (no frames)
+  rawCollect+2 all                 0   (no frames)
+  rawCollect+2 own-event-free       0   (no frames)
+
+== P5: sampling-event attribution (ms; long frame = > 40 ms; phase = p50/p95 wall unless 'cpu')
+  events (counts): fx_issue=132  fx_collect=132  raw_issue=0  raw_collect=0  fx_ifail=0  fx_cfail=0  raw_ifail=0  raw_cfail=0   frames with a failed attempt: 0
+
+  INDEPENDENT populations (a frame may be in several; counts do not sum)
+  population                  frames     p50     p95     p99    worst   long
+  with fxIssue                   132   34.54   36.13   36.26    36.58      0   draw wall 4.12/5.43 cpu 4.12/5.43  upd 1.79/3.72  pre 27.42/29.21  post 0.68/0.82
+  with fxCollect                 132   33.37   35.70   36.31    37.27      0   draw wall 4.01/5.12 cpu 3.72/4.82  upd 2.39/3.71  pre 26.04/28.75  post 0.67/0.79
+  with rawIssue                    0   (no frames)
+  with rawCollect                  0   (no frames)
+
+  EXCLUSIVE categories (each frame in exactly one; sums to the total: yes)
+  population                  frames     p50     p95     p99    worst   long
+  none                          1792   33.20   34.90   36.00    37.37      0   draw wall 3.15/4.05 cpu 3.15/4.05  upd 2.02/3.70  pre 27.13/29.07  post 0.68/0.80
+  multi                            0   (no frames)
+  fxIssueOnly                    132   34.54   36.13   36.26    36.58      0   draw wall 4.12/5.43 cpu 4.12/5.43  upd 1.79/3.72  pre 27.42/29.21  post 0.68/0.82
+  fxCollectOnly                  132   33.37   35.70   36.31    37.27      0   draw wall 4.01/5.12 cpu 3.72/4.82  upd 2.39/3.71  pre 26.04/28.75  post 0.67/0.79
+  rawIssueOnly                     0   (no frames)
+  rawCollectOnly                   0   (no frames)
+
+  long frames: 0 total; by EXCLUSIVE class (sums to total): none=0, multi=0, fxIssueOnly=0, fxCollectOnly=0, rawIssueOnly=0, rawCollectOnly=0
+               by INDEPENDENT class (overlapping): fxIssue=0, fxCollect=0, rawIssue=0, rawCollect=0
+
+  LAG (separate from the direct views; frame +k after an event frame, contiguous ids only)
+  population                  frames     p50     p95     p99    worst   long
+  fxIssue+1 all                  132   33.37   35.70   36.31    37.27      0   draw wall 4.01/5.12 cpu 3.72/4.82  upd 2.39/3.71  pre 26.04/28.75  post 0.67/0.79
+  fxIssue+1 own-event-free         0   (no frames)
+  fxIssue+2 all                  132   32.33   34.00   34.48    34.75      0   draw wall 3.17/3.95 cpu 3.17/3.95  upd 1.88/3.77  pre 26.27/28.16  post 0.69/0.80
+  fxIssue+2 own-event-free       132   32.33   34.00   34.48    34.75      0   draw wall 3.17/3.95 cpu 3.17/3.95  upd 1.88/3.77  pre 26.27/28.16  post 0.69/0.80
+  fxCollect+1 all                132   32.33   34.00   34.48    34.75      0   draw wall 3.17/3.95 cpu 3.17/3.95  upd 1.88/3.77  pre 26.27/28.16  post 0.69/0.80
+  fxCollect+1 own-event-free     132   32.33   34.00   34.48    34.75      0   draw wall 3.17/3.95 cpu 3.17/3.95  upd 1.88/3.77  pre 26.27/28.16  post 0.69/0.80
+  fxCollect+2 all                132   33.23   35.00   35.71    37.05      0   draw wall 3.10/4.06 cpu 3.10/4.06  upd 2.39/3.68  pre 26.97/29.17  post 0.67/0.80
+  fxCollect+2 own-event-free     132   33.23   35.00   35.71    37.05      0   draw wall 3.10/4.06 cpu 3.10/4.06  upd 2.39/3.68  pre 26.97/29.17  post 0.67/0.80
+  rawIssue+1 all                   0   (no frames)
+  rawIssue+1 own-event-free        0   (no frames)
+  rawIssue+2 all                   0   (no frames)
+  rawIssue+2 own-event-free        0   (no frames)
+  rawCollect+1 all                 0   (no frames)
+  rawCollect+1 own-event-free       0   (no frames)
+  rawCollect+2 all                 0   (no frames)
+  rawCollect+2 own-event-free       0   (no frames)
+[/private/tmp/claude-501/-Users-joseconchello-openFrameworks/66e0aad9-78cc-487c-97e6-c639f119c790/scratchpad/campA6/02_P1_r1.stdout.log] last FX stats: [notice ] SceneColor: stream=FX mono=391800.513300 effMode=deferred gpuLinear=1 scene=blob-region-prototype gen=1 mode=deferred issued=175 done=175 gaps=0 busy=0 dropGen=0 issueAvgMs=0.132339 issueMaxMs=15.6021 collectMaxMs=0 unsupported=0 snapshotRebuilds=176 rebuildMsAvg=0.00365084 rebuildMsMax=0.01074 stageMs[p50/p95/max] submit=0.042321/0.071784/11.1304 wait=0.239341/0.3923/0.589309 convert=0.000743985/0.00116503/0.00470698 push=0.000194013/0.000348032/0.000660002 total=0.240978/0.393456/0.59183 defer=fence/2 latencyMs[p50/p95/max]=33.3225/33.5671/40.6951 notReady=175 discardTimeout=0 discardWaitFailed=0 readbacks=175 readbackBytes=403200 predominant=0 predCpuMs[p50/p95/max]=0/0/0 rb=float domValid=0 vibValid=0 vibInvalid=0 invalid=0 telemetryDisabled=0 disabledSkips=0 rgb(linear)=0.415176,0.424798,0.451418 luma=0.424674
+[/private/tmp/claude-501/-Users-joseconchello-openFrameworks/66e0aad9-78cc-487c-97e6-c639f119c790/scratchpad/campA6/03_P2_r1.stdout.log] last FX stats: [notice ] SceneColor: stream=FX mono=391906.230234 effMode=deferred gpuLinear=1 scene=blob-region-prototype gen=1 mode=deferred issued=174 done=174 gaps=0 busy=0 dropGen=0 issueAvgMs=0.137965 issueMaxMs=18.0904 collectMaxMs=0 unsupported=0 snapshotRebuilds=175 rebuildMsAvg=0.00308442 rebuildMsMax=0.006003 stageMs[p50/p95/max] submit=0.033585/0.050637/12.7276 wait=0.443154/0.686578/1.00181 convert=0.449754/0.680696/0.702466 push=0.00018698/0.000285029/0.000522017 total=0.890178/1.20441/1.45171 defer=fence/2 latencyMs[p50/p95/max]=33.3258/33.4944/47.526 notReady=174 discardTimeout=0 discardWaitFailed=0 readbacks=174 readbackBytes=40089600 predominant=1 predCpuMs[p50/p95/max]=0.417577/0.634463/0.656737 rb=float domValid=174 vibValid=169 vibInvalid=5 invalid=0 telemetryDisabled=0 disabledSkips=0 rgb(linear)=0.418777,0.350809,0.304362 luma=0.361906
+[/private/tmp/claude-501/-Users-joseconchello-openFrameworks/66e0aad9-78cc-487c-97e6-c639f119c790/scratchpad/campA6/03_P2_r1.stdout.log] last RAW stats: [notice ] VideoColor: stream=RAW mono=391906.330183 effMode=deferred gpuLinear=1 notReady=173 discardTimeout=0 discardWaitFailed=0 invalid=0 latencyMs[p50/p95/max]=33.3357/34.4346/34.625 gen=1 gate=3 issued=173 completed=173 droppedGen=0 droppedBusy=0 gaps=0 unsupported=0 stageMs[p50/p95/max] submit=0.0345491/0.0572/10.5036 wait=0.385229/0.579554/0.787622 convert=0.478234/0.713106/0.728602 total=0.856861/1.16651/1.31583 readbacks=173 readbackBytes=39859200 predominant=1 predCpuMs[p50/p95/max]=0.446453/0.66615/0.682474 rb=float domValid=173 vibValid=173 vibInvalid=0
+[/private/tmp/claude-501/-Users-joseconchello-openFrameworks/66e0aad9-78cc-487c-97e6-c639f119c790/scratchpad/campA6/04_P3_r1.stdout.log] last RAW stats: [notice ] VideoColor: stream=RAW mono=392011.990608 effMode=deferred gpuLinear=1 notReady=173 discardTimeout=0 discardWaitFailed=0 invalid=0 latencyMs[p50/p95/max]=33.3178/33.514/33.7089 gen=1 gate=3 issued=173 completed=173 droppedGen=0 droppedBusy=0 gaps=0 unsupported=0 stageMs[p50/p95/max] submit=0.033503/0.048884/9.74452 wait=0.378714/0.529195/2.01672 convert=0.46376/0.673228/0.719001 total=0.810115/1.11101/2.42158 readbacks=173 readbackBytes=39859200 predominant=1 predCpuMs[p50/p95/max]=0.432019/0.627196/0.673131 rb=float domValid=173 vibValid=173 vibInvalid=0
+[/private/tmp/claude-501/-Users-joseconchello-openFrameworks/66e0aad9-78cc-487c-97e6-c639f119c790/scratchpad/campA6/06_P5_r1.stdout.log] last FX stats: [notice ] SceneColor: stream=FX mono=392223.759031 effMode=deferred gpuLinear=1 scene=blob-region-prototype gen=1 mode=deferred issued=174 done=174 gaps=0 busy=0 dropGen=0 issueAvgMs=0.137346 issueMaxMs=18.3872 collectMaxMs=0 unsupported=0 snapshotRebuilds=175 rebuildMsAvg=0.00316832 rebuildMsMax=0.008442 stageMs[p50/p95/max] submit=0.029576/0.0522/11.8058 wait=0.366975/0.590574/3.68135 convert=0.361163/0.670418/0.829124 push=0.000159979/0.000254989/0.000860035 total=0.736362/1.24018/4.24617 defer=fence/2 latencyMs[p50/p95/max]=33.3237/33.6461/64.6696 notReady=174 discardTimeout=0 discardWaitFailed=0 readbacks=174 readbackBytes=40089600 predominant=1 predCpuMs[p50/p95/max]=0.336056/0.62414/0.752209 rb=float domValid=174 vibValid=163 vibInvalid=11 invalid=0 telemetryDisabled=0 disabledSkips=0 rgb(linear)=0.425822,0.449435,0.479322 luma=0.446573

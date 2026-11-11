@@ -61,6 +61,14 @@ struct Sample {
 	float r = 0.0f, g = 0.0f, b = 0.0f; // linear light, 0..1
 	float luma = 0.0f;       // relative luminance Y, 0..1
 	bool valid = false;      // false = gap
+	// OC-003 (Tier C additive, optional): dominant / vibrant representative colours of the SAME acquired frame,
+	// linear light 0..1, each with its OWN validity (independent of `valid` and of each other). A false flag
+	// means "no such colour in this frame" (vibrant: no qualifying cluster); the rgb is then meaningless and is
+	// never a substitute, a copy of the average or a held earlier colour. Meaningful only when
+	// SceneColorSnapshot::predominantProvided is true.
+	bool domValid = false, vibValid = false;
+	float domR = 0.0f, domG = 0.0f, domB = 0.0f;
+	float vibR = 0.0f, vibG = 0.0f, vibB = 0.0f;
 };
 
 struct SceneColorSnapshot {
@@ -71,6 +79,9 @@ struct SceneColorSnapshot {
 	State state = State::Unavailable;
 	ColorSpace colorSpace = ColorSpace::LinearSrgb;
 	double nominalPeriodSeconds = kNominalPeriodSeconds;
+	// OC-003: true iff this stream measures dominant/vibrant colour at all (opt-in; GPU linear path only).
+	// false => the domValid/vibValid flags are all false and DOM/VIB are NOT AVAILABLE for this source.
+	bool predominantProvided = false;
 	uint32_t count = 0;               // entries used in `history`
 	std::array<Sample, kCapacity> history{}; // chronological, oldest first, [0, count)
 

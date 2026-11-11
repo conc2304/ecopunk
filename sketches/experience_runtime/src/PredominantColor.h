@@ -188,4 +188,57 @@ inline Rgb emaStep(const Rgb& prev, bool have, const Rgb& x, float alpha) {
 	return {prev.r + alpha * (x.r - prev.r), prev.g + alpha * (x.g - prev.g), prev.b + alpha * (x.b - prev.b)};
 }
 
+// OC-003 production tracker: the temporal pipeline of ONE source (FX scene generation / RAW media
+// generation). It only COMPOSES the functions above - no selection logic of its own:
+//   dominant: winner-bin hysteresis (dominantWithHysteresis) -> EMA on the cluster's representative colour
+//   vibrant : winner-bin hysteresis (vibrantWithHysteresis)  -> EMA; NO qualifying cluster => explicitly
+//             invalid and ALL vibrant state is dropped (never held, never substituted)
+// A dominant/vibrant state also restarts when the frame itself is a gap (reset()) or a generation begins.
+// One call = one acquired 160x90 linear-light sample (AVG, DOM and VIB come from the same pixels).
+struct Measured {
+	bool valid = false;
+	Rgb rgb; // linear light
+};
+struct Result {
+	Measured dom, vib;
+};
+class Tracker {
+public:
+	void reset() { *this = Tracker{}; }
+	// `px`: n pixels of `stride` floats (R,G,B,...), linear light, all finite.
+	Result step(const float* px, std::size_t n, int stride) {
+		Result out;
+		accumulate(px, n, stride, tu_, h_);
+		domHeld_ = dominantWithHysteresis(h_, domHeld_, tu_);
+		const Cluster d = dominantOfBin(h_, domHeld_);
+		if (d.valid) {
+			dom_ = emaStep(dom_, haveDom_, d.rgb, tu_.emaAlpha);
+			haveDom_ = true;
+			out.dom = {true, dom_};
+		} else {
+			haveDom_ = false;
+			domHeld_ = -1;
+		}
+		vibHeld_ = vibrantWithHysteresis(h_, vibHeld_, tu_);
+		const Cluster v = vibrantOfBin(h_, vibHeld_, tu_);
+		if (v.valid) {
+			vib_ = emaStep(vib_, haveVib_, v.rgb, tu_.emaAlpha);
+			haveVib_ = true;
+			out.vib = {true, vib_};
+		} else {
+			haveVib_ = false;
+			vibHeld_ = -1;
+		}
+		return out;
+	}
+	const Histogram& histogram() const { return h_; }
+
+private:
+	Tuning tu_;
+	Histogram h_;
+	Rgb dom_, vib_;
+	bool haveDom_ = false, haveVib_ = false;
+	int domHeld_ = -1, vibHeld_ = -1;
+};
+
 } // namespace predominant

@@ -153,7 +153,7 @@ VITALS_SRC = \
 	$(wildcard $(HUD_SRC_DIR)/widgets/*.cpp) \
 	../../../sketches/experience_runtime/src/SystemVitals.cpp \
 	../video-effects/knowledge/EffectActivityStatus.cpp
-VITALS_CXXFLAGS = $(REAL_CXXFLAGS) -I../../../sketches/experience_runtime/src -I$(HUD_SRC_DIR) -I$(HUD_SRC_DIR)/widgets
+VITALS_CXXFLAGS = $(REAL_CXXFLAGS) -I../../../sketches/experience_runtime/src -I$(HUD_SRC_DIR) -I$(HUD_SRC_DIR)/widgets -I../crt-phosphor
 VITALS_BIN = hud_vitals_tests
 
 # Orbit Console v0.1 presentation core + shared SegmentedHistory (OF-free).
@@ -167,6 +167,12 @@ ORBITCFG_SRC = \
 	hud_orbit_config_tests.cpp \
 	$(HUD_SRC_DIR)/OrbitConsoleModel.cpp
 ORBITCFG_BIN = hud_orbit_config_tests
+
+# OC-003 DOM/VIB through the Orbit presentation core + snapshot adapter (OF-free).
+ORBITPRED_SRC = \
+	hud_orbit_predominant_tests.cpp \
+	$(HUD_SRC_DIR)/OrbitConsoleModel.cpp
+ORBITPRED_BIN = hud_orbit_predominant_tests
 
 TYPOGRAPHY_SRC = \
 	hud_typography_tests.cpp \
@@ -259,6 +265,9 @@ test-orbit: $(ORBIT_BIN)
 test-orbit-config: $(ORBITCFG_BIN)
 	./$(ORBITCFG_BIN)
 
+test-orbit-pred: $(ORBITPRED_BIN)
+	./$(ORBITPRED_BIN)
+
 test-all: test test-real test-viewport test-typography test-vitals test-segbar test-shelltheme
 
 $(BIN): $(SRC)
@@ -275,6 +284,9 @@ $(VITALS_BIN): $(VITALS_SRC)
 
 $(ORBIT_BIN): $(ORBIT_SRC) $(HUD_SRC_DIR)/OrbitConsoleModel.h $(HUD_SRC_DIR)/SegmentedHistory.h
 	$(CXX) $(CXXFLAGS) -I$(HUD_SRC_DIR) $(ORBIT_SRC) -o $(ORBIT_BIN)
+
+$(ORBITPRED_BIN): $(ORBITPRED_SRC) $(HUD_SRC_DIR)/OrbitConsoleModel.h $(HUD_SRC_DIR)/OrbitSnapshotAdapter.h $(HUD_SRC_DIR)/OrbitObservationConfig.h $(HUD_SRC_DIR)/SegmentedHistory.h
+	$(CXX) $(CXXFLAGS) -I$(HUD_SRC_DIR) $(ORBITPRED_SRC) -o $(ORBITPRED_BIN)
 
 $(ORBITCFG_BIN): $(ORBITCFG_SRC) $(HUD_SRC_DIR)/OrbitConsoleModel.h $(HUD_SRC_DIR)/OrbitObservationConfig.h $(HUD_SRC_DIR)/SegmentedHistory.h
 	$(CXX) $(CXXFLAGS) -I$(HUD_SRC_DIR) $(ORBITCFG_SRC) -o $(ORBITCFG_BIN)

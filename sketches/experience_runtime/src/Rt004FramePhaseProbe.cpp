@@ -74,6 +74,22 @@ Rt004FramePhaseProbe::Rt004FramePhaseProbe(ExperienceRuntime& runtime) : runtime
 	glFinish_ = std::getenv("EXPERIENCE_RUNTIME_FRAME_PHASE_GLFINISH") != nullptr;
 	if (const char* w = std::getenv("EXPERIENCE_RUNTIME_FRAME_PHASE_WINDOW_MS")) windowMs_ = std::max(250.0, std::atof(w));
 	startNs_ = steadyNs();
+	if (const char* w = std::getenv("EXPERIENCE_RUNTIME_FRAME_PHASE_WARMUP_S")) warmupMs_ = std::max(0.0, std::atof(w)) * 1000.0;
+	if (const char* s = std::getenv("EXPERIENCE_RUNTIME_FRAME_PHASE_SETTLE_MS")) settleMs_ = std::max(0.0, std::atof(s));
+	if (const char* p = std::getenv("EXPERIENCE_RUNTIME_FRAME_PHASE_FRAMES")) {
+		frameCsv_ = std::fopen(p, "w");
+		if (frameCsv_) {
+			static char buf[1 << 16];
+			std::setvbuf(frameCsv_, buf, _IOFBF, sizeof(buf));
+			std::fprintf(frameCsv_, "frame,mono,total_ms");
+			for (const char* s : kSegName) std::fprintf(frameCsv_, ",%s_wall,%s_cpu,%s_vcsw,%s_ivcsw", s, s, s, s);
+			std::fprintf(frameCsv_, ",scene,phase,media,ex_startup,ex_media,ex_scene,ex_transition,exclude"
+					",ev,ev_fail,fx_issue,fx_collect,raw_issue,raw_collect,fx_ifail,fx_cfail,raw_ifail,raw_cfail"
+						// OC-003-F (appended; all earlier columns unchanged): CPU RAW samples/gaps this frame, their wall microseconds (access+reduce+analyze),
+						// palette-sink microseconds (analysis + file I/O; 0 unless EXPERIENCE_RUNTIME_PALETTE_DIAG), decoder delivered a new frame
+						",cpu_raw,cpu_raw_gap,cpu_raw_us,pal_us,vid_new\n");
+		}
+	}
 	ofAddListener(ofEvents().update, this, &Rt004FramePhaseProbe::onUpdateBefore, OF_EVENT_ORDER_BEFORE_APP);
 	ofAddListener(ofEvents().update, this, &Rt004FramePhaseProbe::onUpdateAfter, OF_EVENT_ORDER_AFTER_APP);
 	ofAddListener(ofEvents().draw, this, &Rt004FramePhaseProbe::onDrawBefore, OF_EVENT_ORDER_BEFORE_APP);
@@ -86,6 +102,7 @@ Rt004FramePhaseProbe::~Rt004FramePhaseProbe() {
 	ofRemoveListener(ofEvents().draw, this, &Rt004FramePhaseProbe::onDrawBefore, OF_EVENT_ORDER_BEFORE_APP);
 	ofRemoveListener(ofEvents().draw, this, &Rt004FramePhaseProbe::onDrawAfter, OF_EVENT_ORDER_AFTER_APP);
 	writeWindowSummary((steadyNs() - startNs_) / 1e6);
+	if (frameCsv_) std::fclose(frameCsv_);
 }
 
 void Rt004FramePhaseProbe::afterRuntimeSetup() {
@@ -128,8 +145,34 @@ Rt004FramePhaseProbe::Segment Rt004FramePhaseProbe::between(const Stamp& a, cons
 	return s;
 }
 
+Rt004FramePhaseProbe::EvSnap Rt004FramePhaseProbe::readEvents(bool raw) const {
+	// Read-only view of the sampler's own monotonic counters (additive Stats fields; the sampler never reads them).
+	const scenecolorsampling::Stats& st = (raw ? runtime_.videoColorForTesting() : runtime_.sceneColorForTesting()).stats();
+	EvSnap e;
+	e.issueOk = st.issued;                                          // submission performed
+	e.issueFail = st.telemetryDisabledSkips + st.unsupportedFormat; // due, but the issue was refused
+	e.collectOk = st.collectOk;                                     // valid sample read AND accepted by the series
+	e.collectFail = st.collectFail;                                 // invalid / timeout / wait failed / generation drop / series rejected
+	return e;
+}
+
+Rt004FramePhaseProbe::EvDelta Rt004FramePhaseProbe::evDelta(EvSnap& prev, const EvSnap& cur) {
+	auto d = [](uint64_t a, uint64_t b) { return static_cast<uint32_t>(b >= a ? b - a : b); }; // a reset counter restarts from 0
+	EvDelta r;
+	r.issueOk = d(prev.issueOk, cur.issueOk);
+	r.issueFail = d(prev.issueFail, cur.issueFail);
+	r.collectOk = d(prev.collectOk, cur.collectOk);
+	r.collectFail = d(prev.collectFail, cur.collectFail);
+	prev = cur;
+	return r;
+}
+
 void Rt004FramePhaseProbe::onUpdateBefore(ofEventArgs&) {
 	const Stamp s = now();
+	if (frameCsv_ && !haveEvBase_) { // baseline = counters at the start of the first observed frame
+		for (int i = 0; i < 2; i++) evPrev_[i] = evAbs_[i] = evBase_[i] = readEvents(i == 1);
+		haveEvBase_ = true;
+	}
 	// Anything GL raised since the app's draw returned: swapBuffers,
 	// finishRender, loop event, pollEvents (only with the GL trace on).
 	rt004::Probe::get().glCheckpoint("(postDraw: swapBuffers, finishRender, loopEvent, pollEvents)");
@@ -168,7 +211,23 @@ std::string Rt004FramePhaseProbe::frameContext() const {
 }
 
 void Rt004FramePhaseProbe::closeFrame(const Stamp& nextU0) {
-	if (!haveU1_ || !haveD0_ || !haveD1_) { frame_++; return; } // partial frame (startup/exit)
+	// Events of the frame that is closing: counter deltas since the previous close (before the partial-frame early return,
+	// so no event is ever attributed to the wrong frame; partial-frame events are kept as `unattributed`).
+	EvDelta evFx, evRaw;
+	if (frameCsv_ && haveEvBase_) {
+		evAbs_[0] = readEvents(false);
+		evAbs_[1] = readEvents(true);
+		evFx = evDelta(evPrev_[0], evAbs_[0]);
+		evRaw = evDelta(evPrev_[1], evAbs_[1]);
+	}
+	if (!haveU1_ || !haveD0_ || !haveD1_) { // partial frame (startup/exit)
+		evUnattributed_[0].issueOk += evFx.issueOk; evUnattributed_[0].issueFail += evFx.issueFail;
+		evUnattributed_[0].collectOk += evFx.collectOk; evUnattributed_[0].collectFail += evFx.collectFail;
+		evUnattributed_[1].issueOk += evRaw.issueOk; evUnattributed_[1].issueFail += evRaw.issueFail;
+		evUnattributed_[1].collectOk += evRaw.collectOk; evUnattributed_[1].collectFail += evRaw.collectFail;
+		frame_++;
+		return;
+	}
 	Segment seg[SegCount] = { between(u0_, u1_), between(u1_, d0_), between(d0_, d1_), between(d1_, f1_), between(f1_, nextU0) };
 	const double totalMs = (nextU0.wallNs - u0_.wallNs) / 1e6;
 	const double atMs = (u0_.wallNs - startNs_) / 1e6;
@@ -176,6 +235,13 @@ void Rt004FramePhaseProbe::closeFrame(const Stamp& nextU0) {
 	if (windowTotal_.empty()) windowStartMs_ = atMs;
 	for (int i = 0; i < SegCount; i++) { windowWall_[i].push_back(seg[i].wallMs); windowCpuMs_[i] += seg[i].cpuMs; }
 	windowTotal_.push_back(totalMs);
+
+	if (frameCsv_) {
+		writeFrameRow(frame_, nextU0, totalMs, seg, &evFx, &evRaw);
+		evCsv_[0].issueOk += evFx.issueOk; evCsv_[0].issueFail += evFx.issueFail; evCsv_[0].collectOk += evFx.collectOk; evCsv_[0].collectFail += evFx.collectFail;
+		evCsv_[1].issueOk += evRaw.issueOk; evCsv_[1].issueFail += evRaw.issueFail; evCsv_[1].collectOk += evRaw.collectOk; evCsv_[1].collectFail += evRaw.collectFail;
+		lastCsvFrame_ = frame_;
+	}
 
 	if (totalMs >= slowMs_) {
 		windowSlow_++;
@@ -200,7 +266,56 @@ void Rt004FramePhaseProbe::closeFrame(const Stamp& nextU0) {
 	frame_++;
 }
 
+void Rt004FramePhaseProbe::writeFrameRow(uint64_t frame, const Stamp& nextU0, double totalMs, const Segment* seg, const EvDelta* fx, const EvDelta* raw) {
+	const HudFrameData& f = runtime_.currentHudFrameData();
+	const std::string& scene = f.sceneManager.activeSceneId;
+	const std::string media = (f.video && f.video->mediaId) ? *f.video->mediaId : std::string();
+	// Change detection is per-frame here (independent of checkTransitions' EVENT bookkeeping).
+	if (scene != csvScene_) { csvScene_ = scene; lastSceneChangeNs_ = u0_.wallNs; }
+	if (media != csvMedia_) { csvMedia_ = media; lastMediaChangeNs_ = u0_.wallNs; }
+	(void)nextU0;
+	const double settleNs = settleMs_ * 1e6;
+	const bool exStartup = (u0_.wallNs - startNs_) < warmupMs_ * 1e6;
+	const bool exMedia = lastMediaChangeNs_ != 0 && (u0_.wallNs - lastMediaChangeNs_) < settleNs;
+	const bool exScene = lastSceneChangeNs_ != 0 && (u0_.wallNs - lastSceneChangeNs_) < settleNs;
+	const bool exTrans = f.sceneManager.transitionPhase != SceneTransitionPhase::Idle;
+	std::fprintf(frameCsv_, "%llu,%.6f,%.4f", static_cast<unsigned long long>(frame), u0_.wallNs / 1e9, totalMs);
+	for (int i = 0; i < SegCount; i++) std::fprintf(frameCsv_, ",%.4f,%.4f,%ld,%ld", seg[i].wallMs, seg[i].cpuMs, seg[i].vcsw, seg[i].ivcsw);
+	std::fprintf(frameCsv_, ",%s,%d,%s,%d,%d,%d,%d,%d", scene.empty() ? "-" : scene.c_str(), static_cast<int>(f.sceneManager.transitionPhase),
+		media.empty() ? "-" : media.c_str(), exStartup, exMedia, exScene, exTrans, (exStartup || exMedia || exScene || exTrans) ? 1 : 0);
+	// Event columns (appended; all earlier columns unchanged). Bits: 1 fxIssue, 2 fxCollect, 4 rawIssue, 8 rawCollect.
+	const int ev = (fx->issueOk ? 1 : 0) | (fx->collectOk ? 2 : 0) | (raw->issueOk ? 4 : 0) | (raw->collectOk ? 8 : 0);
+	const int evFail = (fx->issueFail ? 1 : 0) | (fx->collectFail ? 2 : 0) | (raw->issueFail ? 4 : 0) | (raw->collectFail ? 8 : 0);
+	const ExperienceRuntime::FrameAcquisition& acq = runtime_.lastFrameAcquisition();
+	std::fprintf(frameCsv_, ",%d,%d,%u,%u,%u,%u,%u,%u,%u,%u,%u,%u,%.1f,%.1f,%d\n", ev, evFail, fx->issueOk, fx->collectOk, raw->issueOk, raw->collectOk,
+		fx->issueFail, fx->collectFail, raw->issueFail, raw->collectFail, acq.cpuRaw, acq.cpuRawGap, acq.cpuRawUs, acq.palUs, acq.videoNew ? 1 : 0);
+	if (nextU0.wallNs - lastCsvFlushNs_ > 1000000000LL) { std::fflush(frameCsv_); lastCsvFlushNs_ = nextU0.wallNs; }
+}
+
+std::string Rt004FramePhaseProbe::eventTotals() const {
+	// Cumulative sampler-event accounting for offline reconciliation (scripts/oc003/reconcile_events.py):
+	//   csv          sum of the events written to CSV rows up to csvFrame
+	//   unattributed events of partial frames (startup/exit) that have no CSV row
+	//   abs          the sampler counters themselves at the latest frame close (absolute, since process start)
+	//   base         the sampler counters at the first observed frame (abs - base == csv + unattributed when csvFrame is the latest)
+	std::ostringstream os;
+	os << "EVENTS mono=" << std::fixed << std::setprecision(3) << steadyNs() / 1e9 << " csvFrame=" << lastCsvFrame_;
+	auto group = [&](const char* tag, const EvSnap* v) {
+		os << " | " << tag << ":";
+		for (int i = 0; i < 2; i++) {
+			const char* p = i ? "raw" : "fx";
+			os << " " << p << ".issue=" << v[i].issueOk << " " << p << ".ifail=" << v[i].issueFail << " " << p << ".collect=" << v[i].collectOk << " " << p << ".cfail=" << v[i].collectFail;
+		}
+	};
+	group("csv", evCsv_);
+	group("unattributed", evUnattributed_);
+	group("abs", evAbs_);
+	group("base", evBase_);
+	return os.str();
+}
+
 void Rt004FramePhaseProbe::writeWindowSummary(double atMs) {
+	if (frameCsv_ && haveEvBase_) writeLine(eventTotals());
 	if (windowTotal_.empty()) return;
 	std::ostringstream os;
 	os.setf(std::ios::fixed);

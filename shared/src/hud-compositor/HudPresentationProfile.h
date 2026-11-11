@@ -23,14 +23,31 @@
 
 #include "HudPresentationTypes.h"
 
+#include <cstdint>
 #include <string>
 #include <vector>
 
 namespace hudpresent {
 
+// Declarative, read-only opt-in: "this region is an interactive control group". The profile only
+// SAYS the region is interactive and how many selectable rows it hosts; the renderer derives the
+// look from the active skin and the interaction phase (idle / focused / active / disabled), and
+// ExperienceRuntime owns the input + focus state. It carries no colours, no scene pointers and
+// no callbacks. Absent (the default) = passive region: never focusable, never highlighted.
+enum class HudInteractionKind : uint8_t {
+	SelectorGroup, // N stacked option rows; Up/Down picks the row, Left/Right steps its value
+};
+
+struct HudInteractiveRegionDecl {
+	std::string regionId;
+	HudInteractionKind kind = HudInteractionKind::SelectorGroup;
+	int rowCount = 0; // selectable rows, in binding order within the region
+};
+
 struct ScenePresentationProfile {
 	std::string profileId; // a sceneId for flexible profiles; "universal"/"overlay.health"/"overlay.transition" otherwise
 	std::vector<HudSlotBinding> bindings;
+	std::vector<HudInteractiveRegionDecl> interactiveRegions; // empty for every scene except those that opt in
 };
 
 class HudPresentationProfileRegistry {

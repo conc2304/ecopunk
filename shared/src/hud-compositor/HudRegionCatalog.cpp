@@ -56,7 +56,12 @@ HudRegionCatalog::HudRegionCatalog() {
 	// reused here rather than inventing new geometry, per the closure
 	// plan's "preserve canonical wireframe geometry" instruction.
 	regions_.push_back(makeRegion("universal.effect_summary", HudRegionRole::Universal,
-		{0.66f, 0.30f, 0.32f, 0.06f}, {W::EffectChips, W::StatusBadge, W::ProgressBar, W::NumericValue, W::ChannelStrip, W::Label}, 3, false));
+		{0.66f, 0.30f, 0.32f, 0.06f}, {W::EffectChips, W::StatusBadge, W::ProgressBar, W::NumericValue, W::ChannelStrip, W::Label}, 4, false));
+	// maxBindings 3 -> 4 (CRT Phosphor three-selector rows): the universal effect-chips binding
+	// always occupies one of the region's slots (hidden when a scene has no effects producer, so
+	// it reserves no slice - see HudWireframeRenderer's visibilityAwareRegions), so a scene's
+	// three stacked rows need four. Geometry, region IDs and every other scene's bindings are
+	// unchanged. HUD Runtime review item.
 
 	regions_.push_back(makeRegion("universal.timing", HudRegionRole::Universal,
 		{0.66f, 0.37f, 0.32f, 0.05f}, {W::NumericValue, W::Label, W::EffectChips, W::ProgressBar}, 1, false));

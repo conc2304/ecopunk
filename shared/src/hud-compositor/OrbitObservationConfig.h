@@ -11,9 +11,10 @@
 // (A = FX / AVG, B = RAW / AVG). Session-local only: no persistence until Architecture approves a
 // configuration lifecycle.
 //
-// Data truth: only AVG exists as a production measurement (the FX and RAW average RGB series).
-// DOM and VIB are selectable but ALWAYS present as an explicit unavailable state — nothing is
-// substituted from AVG and nothing is invented (orbitMetricAvailable()).
+// Data truth: AVG is always a production measurement (the FX and RAW average RGB series). DOM and VIB
+// (OC-003, opt-in) exist only when the runtime snapshot says it measures them (OrbitSourceModel::provided);
+// otherwise they are an explicit NOT AVAILABLE state. Nothing is ever substituted from AVG or from the other
+// source, and DOM/VIB are available independently of each other and of AVG.
 //
 // OrbitConfigEditor is the small modal state machine behind the editor overlay. It is
 // device-neutral: the existing HUD focus input (step ±1 / activate) and the existing back event
@@ -49,8 +50,8 @@ struct OrbitConsoleConfig {
 	bool operator!=(const OrbitConsoleConfig& o) const { return !(*this == o); }
 };
 
-// Only AVG is a published measurement. DOM / VIB have no production data (OC-005 restriction).
-constexpr bool orbitMetricAvailable(OrbitMetric m) { return m == OrbitMetric::Avg; }
+// AVG is unconditionally a published measurement; DOM/VIB depend on the runtime (see OrbitSourceModel::provided).
+constexpr bool orbitMetricAlwaysPublished(OrbitMetric m) { return m == OrbitMetric::Avg; }
 
 constexpr const char* orbitSourceText(OrbitSource s) { return s == OrbitSource::Fx ? "FX" : "RAW"; }
 constexpr const char* orbitMetricText(OrbitMetric m) { return m == OrbitMetric::Avg ? "AVG" : m == OrbitMetric::Dom ? "DOM" : "VIB"; }

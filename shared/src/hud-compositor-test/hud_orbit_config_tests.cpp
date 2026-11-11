@@ -20,8 +20,9 @@ static OrbitObservationConfig O(OrbitSource s, OrbitMetric m) { OrbitObservation
 // What the draw path shows for an observation, per the rules in SparklineWidget::drawOrbit.
 enum class Shown { Measurement, NoData, NotAvailable };
 static Shown shownFor(const OrbitObservationConfig& c, const OrbitConsoleModel& m) {
-	if (!orbitMetricAvailable(c.metric)) return Shown::NotAvailable;
-	const OrbitSourceModel& s = m.source(c.source == OrbitSource::Fx ? OrbitSourceId::Fx : OrbitSourceId::Raw);
+	// OC-003: AVG always published; DOM/VIB only when the model slot is provided by the runtime.
+	const OrbitSourceModel& s = m.slot(c.metric == OrbitMetric::Avg ? size_t(c.source) : size_t(2) * size_t(c.metric) + size_t(c.source));
+	if (!orbitMetricAlwaysPublished(c.metric) && !s.provided) return Shown::NotAvailable;
 	return s.hasLatest ? Shown::Measurement : Shown::NoData;
 }
 static OrbitSample S(double t, float r, float g, float b, bool v = true) {
@@ -42,7 +43,7 @@ int main() {
 	{ // labels
 		CHECK(std::string(orbitSourceText(OrbitSource::Fx)) == "FX" && std::string(orbitSourceText(OrbitSource::Raw)) == "RAW", "source labels");
 		CHECK(std::string(orbitMetricText(OrbitMetric::Avg)) == "AVG" && std::string(orbitMetricText(OrbitMetric::Dom)) == "DOM" && std::string(orbitMetricText(OrbitMetric::Vib)) == "VIB", "metric labels");
-		CHECK(orbitMetricAvailable(OrbitMetric::Avg) && !orbitMetricAvailable(OrbitMetric::Dom) && !orbitMetricAvailable(OrbitMetric::Vib), "only AVG is a published measurement");
+		CHECK(orbitMetricAlwaysPublished(OrbitMetric::Avg) && !orbitMetricAlwaysPublished(OrbitMetric::Dom) && !orbitMetricAlwaysPublished(OrbitMetric::Vib), "only AVG is unconditionally published; DOM/VIB depend on the runtime (OC-003)");
 	}
 	{ // all 36 combinations of (A, B) are representable, selectable through the editor, and independent
 		int combos = 0;

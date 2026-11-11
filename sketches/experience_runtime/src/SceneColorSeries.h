@@ -37,6 +37,10 @@ struct Sample {
 	float luma = 0.0f;     // Rec.709 relative luminance of the averaged linear RGB, 0..1
 	bool valid = false;    // false = gap (never a fake black sample)
 	uint64_t generation = 0; // scene generation the pixels came from
+	// OC-003: dominant / vibrant of the same frame (linear light), independent validity; see scenecolor::Sample.
+	bool domValid = false, vibValid = false;
+	float domR = 0.0f, domG = 0.0f, domB = 0.0f;
+	float vibR = 0.0f, vibG = 0.0f, vibB = 0.0f;
 };
 
 using State = scenecolor::State;
@@ -151,11 +155,11 @@ private:
 // per-frame HudFrameData copy is a refcount bump and nothing is allocated.
 class SnapshotPublisher {
 public:
-	std::shared_ptr<const scenecolor::SceneColorSnapshot> publish(const Series& series, double now, const std::string& sceneId) {
+	std::shared_ptr<const scenecolor::SceneColorSnapshot> publish(const Series& series, double now, const std::string& sceneId, bool predominantProvided = false) {
 		if (!series.hasGeneration()) return current_; // nothing begun yet: stay null
 		const State st = series.state(now);
 		if (current_ && series.revision() == lastSeriesRevision_ && st == lastState_
-			&& series.generation() == lastGeneration_ && sceneId == lastSceneId_) {
+			&& series.generation() == lastGeneration_ && sceneId == lastSceneId_ && predominantProvided == lastProvided_) {
 			return current_;
 		}
 		const auto t0 = std::chrono::steady_clock::now();
@@ -165,6 +169,7 @@ public:
 		snap->sceneId = sceneId;
 		snap->capturedAtSeconds = now;
 		snap->state = st;
+		snap->predominantProvided = predominantProvided;
 		snap->count = static_cast<uint32_t>(series.size());
 		for (std::size_t i = 0; i < series.size(); ++i) {
 			const Sample& in = series.at(i);
@@ -172,11 +177,17 @@ public:
 			out.t = in.t;
 			out.valid = in.valid;
 			if (in.valid) { out.r = in.r; out.g = in.g; out.b = in.b; out.luma = in.luma; }
+			if (predominantProvided && in.valid) { // DOM/VIB only ever accompany a valid frame
+				out.domValid = in.domValid; out.vibValid = in.vibValid;
+				if (in.domValid) { out.domR = in.domR; out.domG = in.domG; out.domB = in.domB; }
+				if (in.vibValid) { out.vibR = in.vibR; out.vibG = in.vibG; out.vibB = in.vibB; }
+			}
 		}
 		lastSeriesRevision_ = series.revision();
 		lastState_ = st;
 		lastGeneration_ = series.generation();
 		lastSceneId_ = sceneId;
+		lastProvided_ = predominantProvided;
 		++rebuilds_;
 		current_ = std::move(snap);
 		const double ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - t0).count();
@@ -196,6 +207,7 @@ private:
 	std::uint64_t revision_ = 0, lastSeriesRevision_ = 0, lastGeneration_ = 0, rebuilds_ = 0;
 	double rebuildMsTotal_ = 0.0, rebuildMsMax_ = 0.0;
 	State lastState_ = State::Unavailable;
+	bool lastProvided_ = false;
 	std::string lastSceneId_;
 };
 

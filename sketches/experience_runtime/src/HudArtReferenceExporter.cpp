@@ -1,4 +1,5 @@
 #include "HudArtReferenceExporter.h"
+#include <algorithm>
 #include <set>
 #include <map>
 #include "HudReactiveControlArt.h"
@@ -58,6 +59,36 @@ std::string scopeOf(const std::string& id) {
 	return p == "original" ? kScopeOriginal : p == "living_hud" ? kScopeLivingHud : p == "clock" ? kScopeClock : p == "system_telemetry" ? kScopeVitals : kScopeNavigation;
 }
 
+// Proposed display names (docs/hud-art/blueprint-v3-reference/RENAME_PROPOSAL.md).
+// Presentation only: region IDs are frozen and unchanged until the rename proposal is accepted.
+std::string displayNameOf(const std::string& id) {
+	static const std::map<std::string, std::string> names = {
+		{"universal.scene_title", "scene_title"}, {"universal.media_title", "scene_mode"},
+		{"universal.primary_state", "media_state"}, {"universal.activity", "scene_primary_state"},
+		{"universal.effect_summary", "scene_secondary_state"}, {"universal.timing", "activity_meter"},
+		{"universal.activity_trace", "frame_metrics_a"}, {"universal.secondary_trace", "frame_metrics_b"},
+		{"flexible.primary", "runtime_metrics"}, {"flexible.secondary_a", "active_time"}, {"flexible.secondary_b", "date_time"},
+		{"overlay.health", "transition_state"}, {"overlay.transition", "runtime_log"},
+	};
+	const auto it = names.find(id);
+	return it == names.end() ? id : it->second;
+}
+
+// Reading order of the shipped HUD (operator-specified 2026-11-10): right column top-down,
+// then the navigation row left-to-right, then the two overlays, then the media viewport.
+int readingOrderOf(const std::string& id) {
+	static const std::vector<std::string> order = {
+		"universal.scene_title", "universal.media_title", "universal.primary_state", "universal.activity",
+		"universal.effect_summary", "universal.timing", "universal.activity_trace", "universal.secondary_trace",
+		"flexible.primary", "flexible.secondary_a", "flexible.secondary_b",
+		"controls.scene_previous", "controls.scene_next", "controls.mode", "controls.media_previous",
+		"controls.media_next", "controls.fullscreen", "controls.menu",
+		"overlay.health", "overlay.transition", "media_viewport",
+	};
+	const auto it = std::find(order.begin(), order.end(), id);
+	return it == order.end() ? int(order.size()) : int(it - order.begin());
+}
+
 ofColor scopeColor(const std::string& scope, HudRegionRole role, int alpha) {
 	if (scope == kScopeFullOnly) return ofColor(230, 150, 40, alpha);
 	if (scope == kScopeLivingHud) return ofColor(150, 200, 60, alpha);
@@ -111,7 +142,7 @@ bool HudArtReferenceExporter::isRequested() {
 
 HudArtReferenceExporter::HudArtReferenceExporter(ExperienceRuntime& runtime) : runtime_(runtime) {
 	const char* dir = std::getenv("EXPERIENCE_RUNTIME_HUD_ART_EXPORT_DIR");
-	outDir_ = (dir && dir[0]) ? std::string(dir) : ofToDataPath("../../../../docs/hud-art/blueprint-v2-reference", true);
+	outDir_ = (dir && dir[0]) ? std::string(dir) : ofToDataPath("../../../../docs/hud-art/blueprint-v3-reference", true);
 	std::error_code ec;
 	fs::create_directories(outDir_, ec);
 	note("HudArtReferenceExporter: output " + outDir_);
@@ -142,7 +173,11 @@ void HudArtReferenceExporter::step(float /*dt*/) {
 void HudArtReferenceExporter::exportAll() {
 	const auto& bridge = runtime_.hudCompositorBridgeForTesting();
 	const HudWireframeRenderer& r = bridge.renderer();
-	const auto& regions = r.regionCatalog().all();
+	// Export order = HUD reading order (see readingOrderOf), not catalog order.
+	auto regions = r.regionCatalog().all();
+	std::stable_sort(regions.begin(), regions.end(), [&](const auto& a, const auto& b) {
+		return readingOrderOf(a.regionId) < readingOrderOf(b.regionId);
+	});
 
 	check("no skin active (comparison frame is the plain wireframe)", !bridge.skinLoader().active().has_value());
 	check("catalog has 21 regions (HUD-006 v2 + MENU)", regions.size() == 21, ofToString(regions.size()));
@@ -294,10 +329,11 @@ void HudArtReferenceExporter::exportAll() {
 		ofSetColor(235, 240, 235, 255);
 		if (reg.regionId == "media_viewport") drawOutline(outline); else ofDrawRectangle(b);
 		const std::string tag = "#" + ofToString(index);
-		const std::string label = (b.width >= 8 * (reg.regionId.size() + tag.size() + 2)) ? tag + " " + reg.regionId : tag;
+		const std::string named = tag + " " + displayNameOf(reg.regionId);
+		const std::string label = (b.width >= 8.0f * named.size() + 6.0f) ? named : tag;
 		if (reg.regionId != "media_viewport") ofDrawBitmapString(label, b.x + 3, b.y + 13);
 		legend.push_back(ofToString(index) + (index < 10 ? "  " : " ") + reg.regionId +
-			std::string(std::max<size_t>(1, 26 - reg.regionId.size()), ' ') + rectText(b) + "  " + roleName(reg.role));
+			std::string(std::max<size_t>(1, 26 - reg.regionId.size()), ' ') + rectText(b) + "  " + displayNameOf(reg.regionId));
 		index++;
 	}
 	ofSetColor(235, 240, 235, 255);
@@ -374,13 +410,17 @@ void HudArtReferenceExporter::exportAll() {
 	fbo.begin();
 	ofClear(16, 18, 20, 255);
 	ofPushStyle();
+	int pIndex = 0;
 	for (const auto& reg : regions) {
+		pIndex++;
 		const ofRectangle b = r.pixelBoundsFor(reg.regionId);
 		const std::string scope = scopeOf(reg.regionId);
+		const std::string tag = "#" + ofToString(pIndex);
 		beginOverBlend();
 		if (reg.regionId == "media_viewport") {
 			ofFill(); ofSetColor(70, 80, 95, 255); mesh.draw();
 			ofNoFill(); ofSetColor(235, 240, 235, 255); drawOutline(outline);
+			ofDrawBitmapString(tag + " " + displayNameOf(reg.regionId), vp.x + 10, vp.getBottom() - 12);
 			continue;
 		}
 		const bool production = scope != kScopeFullOnly;
@@ -390,19 +430,18 @@ void HudArtReferenceExporter::exportAll() {
 		ofNoFill();
 		ofSetColor(production ? ofColor(235, 240, 235, 255) : ofColor(130, 130, 130, 255));
 		ofDrawRectangle(b);
-		const std::string label = production ? reg.regionId : reg.regionId + " (not drawn)";
-		if (b.width >= 8.0f * label.size() + 6.0f) ofDrawBitmapString(label, b.x + 3, b.y + 13);
+		std::string label = tag + " " + displayNameOf(reg.regionId);
+		if (!production) label += " (not drawn)";
+		if (b.width < 8.0f * label.size() + 6.0f) label = tag; // narrow squares: number only
+		ofDrawBitmapString(label, b.x + 3, b.y + 13);
 	}
 	ofSetColor(235, 240, 235, 255);
 	float py = vp.y + 22;
-	ofDrawBitmapString("CURRENT PRODUCTION PRESENTATION — " + ofToString(productionCount) + " of " + ofToString(regions.size())
+	ofDrawBitmapString("CURRENT PRODUCTION PRESENTATION - " + ofToString(productionCount) + " of " + ofToString(regions.size())
 		+ " regions (from the live allowlist)", vp.x + 10, py); py += 18;
-	ofDrawBitmapString("= historical MinimalSlice " + ofToString(originalCount) + " + Living HUD " + ofToString(livingCount)
-		+ " + Clock " + ofToString(clockCount) + " + Mode " + ofToString(navCount) + " + Vitals " + ofToString(vitalsCount), vp.x + 10, py); py += 18;
+	ofDrawBitmapString("numbered in HUD reading order: right column top-down (1-11), nav row (12-18),", vp.x + 10, py); py += 15;
+	ofDrawBitmapString("overlays (19-20), media viewport (21). Names are PROPOSED; region IDs are unchanged.", vp.x + 10, py); py += 18;
 	ofDrawBitmapString("grey = FullProfile only, NOT drawn in production (" + ofToString(fullOnlyCount) + ")", vp.x + 10, py); py += 24;
-	ofDrawBitmapString("flexible.secondary_a: active time (the mode line moved to universal.media_title)", vp.x + 10, py); py += 15;
-	ofDrawBitmapString("flexible.secondary_b: clock       local date + zone / HH:MM", vp.x + 10, py); py += 15;
-	ofDrawBitmapString("universal.scene_title: scene name + '  i/n' (SceneManager registry)", vp.x + 10, py); py += 15;
 	ofDrawBitmapString("All text is live runtime output: never bake it into skin art.", vp.x + 10, py);
 	ofPopStyle();
 	fbo.end();
@@ -466,7 +505,7 @@ void HudArtReferenceExporter::exportAll() {
 	int n = 1;
 	for (const auto& reg : regions) {
 		const ofRectangle b = r.pixelBoundsFor(reg.regionId);
-		j["regions"].push_back({{"index", n++}, {"id", reg.regionId}, {"role", roleName(reg.role)},
+		j["regions"].push_back({{"index", n++}, {"id", reg.regionId}, {"displayName", displayNameOf(reg.regionId)}, {"role", roleName(reg.role)},
 			{"normalized", {reg.bounds.x, reg.bounds.y, reg.bounds.width, reg.bounds.height}},
 			{"px", {b.x, b.y, b.width, b.height}}, {"scope", scopeOf(reg.regionId)},
 			{"production", scopeOf(reg.regionId) != kScopeFullOnly}});
@@ -502,12 +541,12 @@ void HudArtReferenceExporter::exportAll() {
 	// Production membership table.
 	{
 		std::ofstream md(fs::path(outDir_) / "production_membership.md");
-		md << "# HUD-006 v2 production membership (generated from HudRegionCatalog)\n\n";
-		md << "| # | Region | Role | px (x, y, w, h) | Scope |\n|---|---|---|---|---|\n";
+		md << "# HUD-006 v2 production membership (generated from HudRegionCatalog; numbered in HUD reading order)\n\n";
+		md << "| # | Region | Proposed name | Role | px (x, y, w, h) | Scope |\n|---|---|---|---|---|---|\n";
 		int k = 1;
 		for (const auto& reg : regions) {
 			const ofRectangle b = r.pixelBoundsFor(reg.regionId);
-			md << "| " << k++ << " | `" << reg.regionId << "` | " << roleName(reg.role) << " | " << rectText(b) << " | " << scopeOf(reg.regionId) << " |\n";
+			md << "| " << k++ << " | `" << reg.regionId << "` | `" << displayNameOf(reg.regionId) << "` | " << roleName(reg.role) << " | " << rectText(b) << " | " << scopeOf(reg.regionId) << " |\n";
 		}
 		md << "\nCanonical " << regions.size() << ", production " << productionCount << ", FullProfile only " << fullOnlyCount << ".\n";
 		note("wrote production_membership.md");

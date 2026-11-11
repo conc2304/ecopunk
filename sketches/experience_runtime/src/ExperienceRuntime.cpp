@@ -1,4 +1,5 @@
 #include <chrono>
+#include <sstream>
 #include <filesystem>
 #include <fstream>
 #include "ExperienceRuntime.h"
@@ -22,7 +23,9 @@ ExperienceRuntime::ExperienceRuntime()
 	, temporalScene_(runtimeServices_.video())
 	, blueprintScene_(runtimeServices_.video())
 	, fragmentScene_(runtimeServices_.video())
-	, quadrantScene_(runtimeServices_.video()) {
+	, quadrantScene_(runtimeServices_.video())
+	, crtPhosphorScene_(runtimeServices_.video()) {
+	regionOptionSink_ = [this](int row, int delta) { return sceneManager_.dispatchSceneOption(row, delta); };
 	// See ExperienceRuntime.h's constructor comment and blobScene_'s own
 	// declaration comment: runtimeServices_.video() is a valid, stable
 	// reference from the moment runtimeServices_ itself is constructed
@@ -33,7 +36,7 @@ ExperienceRuntime::ExperienceRuntime()
 
 void ExperienceRuntime::installProductionScenes(const std::string& startupSceneId, ProductionRoster roster) {
 	if (!productionScenesInstalled_) {
-		// Fixed registry order = NextScene ring order: Blob, Temporal, Blueprint, Fragment, Quadrant.
+		// Fixed registry order = NextScene ring order: Blob, Temporal, Blueprint, Fragment, Quadrant, (Production roster only) CrtPhosphor.
 		sceneManager_.registerProductionScene(&blobScene_); // no canonical effect producer -> effects = nullopt
 		sceneManager_.registerProductionScene(
 			&temporalScene_, [this] { return temporalScene_.currentEffectActivitySnapshot(); });
@@ -43,12 +46,17 @@ void ExperienceRuntime::installProductionScenes(const std::string& startupSceneI
 				boundaryDrivenMediaScenes_.push_back(BlueprintProductionScene::kSceneId);
 			}
 		}
-		if (roster == ProductionRoster::Full) {
+		if (roster == ProductionRoster::Full || roster == ProductionRoster::Production) {
 			// Neither has a canonical effect producer -> effects = nullopt.
 			// Both use timer-driven Shared Video cadence (not boundary-driven),
 			// like Blob/Temporal.
 			sceneManager_.registerProductionScene(&fragmentScene_);
 			sceneManager_.registerProductionScene(&quadrantScene_);
+		}
+		if (roster == ProductionRoster::Production) {
+			// Sixth scene, normal run only (harness rosters unchanged). No canonical
+			// effect producer -> effects = nullopt; timer-driven Shared Video cadence.
+			sceneManager_.registerProductionScene(&crtPhosphorScene_);
 		}
 		productionScenesInstalled_ = true;
 	}
@@ -127,6 +135,7 @@ void ExperienceRuntime::openSettingsPage() {
 	clockResultFailed_ = false;
 	lastOkInputAt_ = steadySeconds(); // swallow the OK (and its key-repeat) that opened the page
 	hudCompositorBridge_.orbitEditorBack(); // OC-005: an open Orbit editor yields to the Settings page (restores)
+	hudCompositorBridge_.exitInteractive(); // an active interactive region yields to the Settings page
 	refreshSettingsContext(true);
 	settingsPage_.open(settingsPage_.context());
 	ofSetEscapeQuitsApp(false); // ESC returns to the experience while the page is open
@@ -407,6 +416,15 @@ void ExperienceRuntime::setup() {
 			ofLogWarning("ExperienceRuntime") << "verification dwell override: min " << minDwell << " s, max " << maxDwell << " s";
 		}
 	}
+	// Verification only (OC-003 attribution): EXPERIENCE_RUNTIME_VIDEO_STARTUP_MEDIA_ID=<canonical mediaId> selects the
+	// startup item through the normal selection policy; an unknown/unplayable id is rejected visibly (no fallback).
+	// Unset = unchanged random startup. Never set in a normal run.
+	if (const char* id = std::getenv("EXPERIENCE_RUNTIME_VIDEO_STARTUP_MEDIA_ID")) {
+		if (*id) {
+			videoConfig.verificationStartupMediaId = id;
+			ofLogWarning("ExperienceRuntime") << "verification startup media override: " << id;
+		}
+	}
 	runtimeServices_.setup(videoConfig);
 
 	// Whether the production scene pair (vs. the tooling-only FakeScene) is
@@ -473,10 +491,28 @@ void ExperienceRuntime::setup() {
 		sceneColor_.setMode(std::string(v) == "async" ? scenecolorsampling::ReadbackMode::Async
 			: std::string(v) == "deferred" ? scenecolorsampling::ReadbackMode::Deferred : scenecolorsampling::ReadbackMode::Sync);
 	if (const char* v = std::getenv("EXPERIENCE_RUNTIME_SCENE_COLOR_STATS")) sceneColorLogStats_ = std::string(v) == "1";
+	// OC-003 dominant/vibrant colour (Tier C additive): OFF unless exactly "1". Applies to the FX sampler and, when RAW
+	// sampling is itself enabled, to the RAW sampler. Needs the GPU linear path; otherwise DOM/VIB stay NOT AVAILABLE.
+	const bool predominantRequested = rawvideo::videoColorEnabledFromEnv(std::getenv("EXPERIENCE_RUNTIME_PREDOMINANT_COLOR"));
+	sceneColor_.setPredominantEnabled(predominantRequested);
+	// OC-003 EXPERIMENTAL readback format for BOTH samplers: EXPERIENCE_RUNTIME_SCENE_COLOR_READBACK=float (default)|half|half-verify.
+	// Anything else is reported and the baseline float path is used (stated in the log, never silent).
+	scenecolorsampling::ReadbackFormat readbackFormat = scenecolorsampling::ReadbackFormat::Float;
+	if (const char* v = std::getenv("EXPERIENCE_RUNTIME_SCENE_COLOR_READBACK")) {
+		const std::string s = v;
+		if (s == "half") readbackFormat = scenecolorsampling::ReadbackFormat::Half;
+		else if (s == "half-verify") readbackFormat = scenecolorsampling::ReadbackFormat::HalfVerify;
+		else if (s != "float") ofLogError("SceneColor") << "EXPERIENCE_RUNTIME_SCENE_COLOR_READBACK='" << s << "' is not float|half|half-verify: using the float baseline";
+	}
+	sceneColor_.setReadbackFormat(readbackFormat);
+	videoColor_.setReadbackFormat(readbackFormat);
+	if (readbackFormat != scenecolorsampling::ReadbackFormat::Float) ofLogWarning("SceneColor") << "EXPERIMENTAL readback format: " << sceneColor_.readbackName();
+	if (predominantRequested) ofLogNotice("SceneColor") << "DOMINANT/VIBRANT colour sampling REQUESTED (EXPERIENCE_RUNTIME_PREDOMINANT_COLOR=1)";
 	// OC-003B RAW VIDEO sampler: OFF unless exactly "1". Deferred readback by default (no GPU stall).
 	videoColorEnabled_ = rawvideo::videoColorEnabledFromEnv(std::getenv("EXPERIENCE_RUNTIME_VIDEO_COLOR"));
 	if (videoColorEnabled_) {
 		videoColor_.setSourceKind(rawvideo::SourceKind::DecodedVideo);
+		videoColor_.setPredominantEnabled(predominantRequested);
 		const char* m = std::getenv("EXPERIENCE_RUNTIME_VIDEO_COLOR_MODE");
 		videoColor_.setMode(m && std::string(m) == "sync" ? scenecolorsampling::ReadbackMode::Sync
 			: m && std::string(m) == "async" ? scenecolorsampling::ReadbackMode::Async : scenecolorsampling::ReadbackMode::Deferred);
@@ -484,6 +520,37 @@ void ExperienceRuntime::setup() {
 		if (const char* v = std::getenv("EXPERIENCE_RUNTIME_VIDEO_COLOR_DIAG")) videoColorDiag_ = std::string(v) == "1";
 		ofLogNotice("VideoColor") << "RAW VIDEO sampling ENABLED (EXPERIENCE_RUNTIME_VIDEO_COLOR=1), mode="
 			<< (videoColor_.mode() == scenecolorsampling::ReadbackMode::Sync ? "sync" : videoColor_.mode() == scenecolorsampling::ReadbackMode::Async ? "async" : "deferred");
+	}
+
+	// OC-003-F acquisition-isolation diagnostics. EVERY control below is off unless set; with none of them set nothing here changes behaviour.
+	//   EXPERIENCE_RUNTIME_CPU_RAW=1            CPU RAW prototype: reduces the decoder's existing CPU-resident frame (no GPU work, no second decoder)
+	//   EXPERIENCE_RUNTIME_CPU_RAW_STATS=1      10 s `stream=CPURAW` stat line
+	//   EXPERIENCE_RUNTIME_PALETTE_DIAG=<dir>   palette analyzer sink on the grids the active samplers already acquired
+	//   EXPERIENCE_RUNTIME_PALETTE_DIAG_GRIDS=N / _EVERY=seconds   bounded grid snapshots (defaults 48 per stream / 10 s)
+	cpuRawEnabled_ = rawvideo::videoColorEnabledFromEnv(std::getenv("EXPERIENCE_RUNTIME_CPU_RAW"));
+	if (cpuRawEnabled_) {
+		cpuRaw_.setPredominant(predominantRequested);
+		cpuRawStats_ = rawvideo::videoColorEnabledFromEnv(std::getenv("EXPERIENCE_RUNTIME_CPU_RAW_STATS"));
+	}
+	if (const char* dir = std::getenv("EXPERIENCE_RUNTIME_PALETTE_DIAG")) {
+		if (*dir) {
+			int cap = 48; double every = 10.0;
+			if (const char* g = std::getenv("EXPERIENCE_RUNTIME_PALETTE_DIAG_GRIDS")) cap = std::max(0, std::atoi(g));
+			if (const char* e = std::getenv("EXPERIENCE_RUNTIME_PALETTE_DIAG_EVERY")) every = std::max(0.5, std::atof(e));
+			if (paletteSink_.open(dir, cap, every)) {
+				paletteOn_ = true;
+				sceneColor_.setPaletteSink(&paletteSink_, palette::kFx);
+				videoColor_.setPaletteSink(&paletteSink_, palette::kRawGpu);
+			} else {
+				ofLogError("AcquisitionMode") << "EXPERIENCE_RUNTIME_PALETTE_DIAG='" << dir << "' could not be created: palette analysis NOT active";
+			}
+		}
+	}
+	if (cpuRawEnabled_ || paletteOn_ || std::getenv("EXPERIENCE_RUNTIME_FRAME_PHASE_PROBE")) {
+		// One machine-readable line per process: which acquisition paths this run really has (checked by scripts/oc003/verify_run.py).
+		ofLogNotice("AcquisitionMode") << "fxGpu=" << (sceneColorEnabled_ ? "on" : "off") << " rawGpu=" << (videoColorEnabled_ ? "on" : "off")
+			<< " cpuRaw=" << (cpuRawEnabled_ ? "on" : "off") << " palette=" << (paletteOn_ ? "on" : "off")
+			<< " predominant=" << (predominantRequested ? "on" : "off") << " contract=oc003f-1";
 	}
 
 	// Engineering Session 2: real HudCompositor bridge setup — establishes
@@ -803,8 +870,10 @@ void ExperienceRuntime::tickSkinSchedule(bool force) {
 }
 
 void ExperienceRuntime::update(float dt) {
+	// Interactive HUD region: available only while a port exists and the active scene advertises option axes.
+	hudCompositorBridge_.setInteractiveOptionAxes(regionOptionSink_ ? sceneManager_.activeOptionAxisCount() : 0);
 	if (settingsPage_.isOpen()) refreshSettingsContext(false);
-	else if (escapeQuitSuppressed_ && !hudCompositorBridge_.orbitEditorOpen()) { // restored one frame after closing: the closing ESC must not quit
+	else if (escapeQuitSuppressed_ && !hudCompositorBridge_.orbitEditorOpen() && !hudCompositorBridge_.interactiveActive()) { // restored one frame after closing: the closing ESC must not quit
 		ofSetEscapeQuitsApp(true);
 		escapeQuitSuppressed_ = false;
 	}
@@ -915,6 +984,7 @@ void ExperienceRuntime::draw() {
 			}
 		}
 	} drawTimer(sceneColorLogStats_);
+	frameAcq_ = FrameAcquisition{}; // OC-003-F: per-frame accounting for the frame stream (observation only)
 	static bool lastSceneControlClear = false;
 	static bool lastHudOmit = false;
 	const bool diagSceneClear = diagSwitchOn("EXPERIENCE_RUNTIME_DIAG_SCENE_CONTROL", "clear", lastSceneControlClear);
@@ -993,7 +1063,9 @@ void ExperienceRuntime::draw() {
 			sceneColorLastLogAt_ = steadySeconds();
 			const auto& st = sceneColor_.stats();
 			const auto* nv = sceneColor_.series().newestValid();
-			ofLogNotice("SceneColor") << "scene=" << sceneColorSceneId_ << " gen=" << sceneColorGeneration_
+			ofLogNotice("SceneColor") << "stream=FX mono=" << std::fixed << std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count() << std::defaultfloat // OC-003 attribution: aligns with the frame CSV
+				<< " effMode=" << (sceneColor_.effectiveMode() == scenecolorsampling::ReadbackMode::Sync ? "sync" : sceneColor_.effectiveMode() == scenecolorsampling::ReadbackMode::Deferred ? "deferred" : "async") << " gpuLinear=" << (sceneColor_.gpuLinearPath() ? 1 : 0)
+				<< " scene=" << sceneColorSceneId_ << " gen=" << sceneColorGeneration_
 				<< " mode=" << (sceneColor_.mode() == scenecolorsampling::ReadbackMode::Sync ? "sync" : sceneColor_.mode() == scenecolorsampling::ReadbackMode::Deferred ? "deferred" : "async")
 				<< " issued=" << st.issued << " done=" << st.completed << " gaps=" << st.gaps
 				<< " busy=" << st.droppedBusy << " dropGen=" << st.droppedGeneration
@@ -1009,12 +1081,18 @@ void ExperienceRuntime::draw() {
 				<< " total=" << st.total.pct(0.5) << "/" << st.total.pct(0.95) << "/" << st.total.max
 				<< " defer=" << sceneColor_.deferStrategy() << "/" << sceneColor_.deferFrames() << " latencyMs[p50/p95/max]=" << st.latency.pct(0.5) << "/" << st.latency.pct(0.95) << "/" << st.latency.max
 				<< " notReady=" << st.notReadyPolls << " discardTimeout=" << st.discardedTimeout << " discardWaitFailed=" << st.discardedWaitFailed // OC-003 / A7 (no blocking fallback)
+				<< " readbacks=" << st.gpuReadbacks << " readbackBytes=" << st.gpuReadbackBytes << " predominant=" << (sceneColor_.predominantActive() ? 1 : 0)
+				<< " predCpuMs[p50/p95/max]=" << st.predominantCpu.pct(0.5) << "/" << st.predominantCpu.pct(0.95) << "/" << st.predominantCpu.max
+				<< " " << sceneColor_.readbackSummary() << " domValid=" << st.domValid << " vibValid=" << st.vibValid << " vibInvalid=" << st.vibInvalid
 				<< " invalid=" << st.invalidSamples << " telemetryDisabled=" << (sceneColor_.telemetryDisabled() ? 1 : 0) << " disabledSkips=" << st.telemetryDisabledSkips
 				<< " rgb(linear)=" << (nv ? nv->r : -1.f) << "," << (nv ? nv->g : -1.f) << "," << (nv ? nv->b : -1.f)
 				<< " luma=" << (nv ? nv->luma : -1.f);
 		}
 	}
 	sampleRawVideo(); // OC-003B RAW VIDEO (borrowed decoder texture), inert unless EXPERIENCE_RUNTIME_VIDEO_COLOR=1
+	sampleCpuRaw(); // OC-003-F CPU RAW prototype (borrowed decoder pixels), inert unless EXPERIENCE_RUNTIME_CPU_RAW=1
+	if (paletteOn_) frameAcq_.palUs += sceneColor_.takePaletteUs() + videoColor_.takePaletteUs();
+	frameAcq_.videoNew = runtimeServices_.video().isFrameNew();
 	frameNumber_++; // monotonically increasing, once per presented frame
 
 	// Step 12: construct this frame's read-only SceneFrame.
@@ -1043,7 +1121,7 @@ void ExperienceRuntime::draw() {
 	// OC-003B: RAW VIDEO series (null unless EXPERIENCE_RUNTIME_VIDEO_COLOR=1). Rebuilt only on a RAW sample/gap,
 	// generation, state or media change (SnapshotPublisher), otherwise the same shared_ptr: a refcount bump.
 	currentHudFrameData_.sceneColorRaw = videoColorEnabled_
-		? videoColorPublisher_.publish(videoColor_.series(), steadySeconds(), videoColorMediaId_)
+		? videoColorPublisher_.publish(videoColor_.series(), steadySeconds(), videoColorMediaId_, videoColor_.predominantActive())
 		: nullptr;
 	// OC-004: scene visual activity (scene.visual.activity). Null unless EXPERIENCE_RUNTIME_SCENE_VISUAL_ACTIVITY=1
 	// (production default OFF). Rebuilt only on a new observation / state / generation change.
@@ -1064,7 +1142,7 @@ void ExperienceRuntime::draw() {
 		}
 	}
 	currentHudFrameData_.sceneColor = sceneColorEnabled_
-		? sceneColorPublisher_.publish(sceneColor_.series(), steadySeconds(), sceneColorSceneId_)
+		? sceneColorPublisher_.publish(sceneColor_.series(), steadySeconds(), sceneColorSceneId_, sceneColor_.predominantActive())
 		: nullptr;
 	// Captured once here, from RuntimeServices' already-updated (step 7)
 	// VideoPlaybackService — never polled again during the HUD draw call
@@ -1253,12 +1331,98 @@ void ExperienceRuntime::sampleRawVideo() {
 	if (videoColorStats_ && now - videoColorLastLogAt_ >= 10.0) {
 		videoColorLastLogAt_ = now;
 		const auto& st = videoColor_.stats();
-		ofLogNotice("VideoColor") << "gen=" << d.rawGeneration << " gate=" << static_cast<int>(d.verdict) << " issued=" << st.issued << " completed=" << st.completed
+		ofLogNotice("VideoColor") << "stream=RAW mono=" << std::fixed << std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count() << std::defaultfloat // OC-003 attribution
+			<< " effMode=" << (videoColor_.effectiveMode() == scenecolorsampling::ReadbackMode::Sync ? "sync" : videoColor_.effectiveMode() == scenecolorsampling::ReadbackMode::Deferred ? "deferred" : "async") << " gpuLinear=" << (videoColor_.gpuLinearPath() ? 1 : 0)
+			<< " notReady=" << st.notReadyPolls << " discardTimeout=" << st.discardedTimeout << " discardWaitFailed=" << st.discardedWaitFailed << " invalid=" << st.invalidSamples
+			<< " latencyMs[p50/p95/max]=" << st.latency.pct(0.5) << "/" << st.latency.pct(0.95) << "/" << st.latency.max
+			<< " gen=" << d.rawGeneration << " gate=" << static_cast<int>(d.verdict) << " issued=" << st.issued << " completed=" << st.completed
 			<< " droppedGen=" << st.droppedGeneration << " droppedBusy=" << st.droppedBusy << " gaps=" << st.gaps << " unsupported=" << st.unsupportedFormat
 			<< " stageMs[p50/p95/max] submit=" << st.submit.pct(0.5) << "/" << st.submit.pct(0.95) << "/" << st.submit.max
 			<< " wait=" << st.wait.pct(0.5) << "/" << st.wait.pct(0.95) << "/" << st.wait.max
 			<< " convert=" << st.convert.pct(0.5) << "/" << st.convert.pct(0.95) << "/" << st.convert.max
-			<< " total=" << st.total.pct(0.5) << "/" << st.total.pct(0.95) << "/" << st.total.max;
+			<< " total=" << st.total.pct(0.5) << "/" << st.total.pct(0.95) << "/" << st.total.max
+			<< " readbacks=" << st.gpuReadbacks << " readbackBytes=" << st.gpuReadbackBytes << " predominant=" << (videoColor_.predominantActive() ? 1 : 0)
+			<< " predCpuMs[p50/p95/max]=" << st.predominantCpu.pct(0.5) << "/" << st.predominantCpu.pct(0.95) << "/" << st.predominantCpu.max
+			<< " " << videoColor_.readbackSummary() << " domValid=" << st.domValid << " vibValid=" << st.vibValid << " vibInvalid=" << st.vibInvalid;
+	}
+}
+
+// OC-003-F: CPU RAW prototype. Consumes VideoPlaybackService::currentPixels() -- the decoder's existing CPU-resident frame -- on the
+// main thread in the same frame as the decoder update, reduces it to the 160x90 linear-light grid (cpuraw::reduceToGrid, same arithmetic
+// as the GPU RAW shader) and derives AVG/DOM/VIB with the production code. No GPU work, no second decoder, nothing published to the HUD.
+// Eligibility / generations use a SEPARATE rawvideo::Gate with the same rules as the GPU RAW gate. Pixels are only requested when a
+// sample is due (on macOS ofAVFoundationPlayer::getPixels converts lazily, so asking every frame would add cost that is not acquisition).
+void ExperienceRuntime::sampleCpuRaw() {
+	if (!cpuRawEnabled_) return;
+	RT004_SCOPE("ExperienceRuntime.cpuRawSample");
+	const double now = steadySeconds();
+	const VideoPlaybackService& video = runtimeServices_.video();
+	const auto status = runtimeServices_.videoPlaybackStatus();
+	const ofTexture* tex = video.currentTexture(); // eligibility only (cheap, identical rule to the GPU RAW gate); pixels are read below
+	const glm::ivec2 src = video.sourceSize();
+
+	rawvideo::Observation o;
+	o.healthReady = status && status->health == VideoPlaybackHealth::Ready;
+	o.hasMediaId = status && status->mediaId.has_value();
+	o.textureAllocated = tex != nullptr && tex->isAllocated();
+	if (o.textureAllocated) { o.texW = static_cast<int>(tex->getWidth()); o.texH = static_cast<int>(tex->getHeight()); }
+	o.srcW = src.x;
+	o.srcH = src.y;
+	o.frameNew = video.isFrameNew();
+	o.activationCount = video.activationCount();
+	o.sceneGeneration = sceneColorGeneration_;
+	o.nowSeconds = now;
+
+	const rawvideo::Decision d = cpuRawGate_.observe(o);
+	if (d.newGeneration) {
+		// Half a period after the FX phase, exactly like the GPU RAW sampler; history, tracker and palette temporal state restart.
+		cpuRaw_.beginGeneration(d.rawGeneration, now + scenecolorsampling::kPeriodSeconds * 0.5);
+		if (paletteOn_) paletteSink_.gap(palette::kRawCpu);
+		if (cpuRawStats_) ofLogNotice("CpuRaw") << "generation " << d.rawGeneration << " begins: media=" << (status && status->mediaId ? *status->mediaId : std::string("-"))
+			<< " activation=" << o.activationCount << " scene_gen=" << o.sceneGeneration << " verdict=" << static_cast<int>(d.verdict);
+	}
+	if (d.verdict == rawvideo::Verdict::Eligible && cpuRaw_.due(now)) {
+		const double a0 = cpuraw::wallMs(), ac0 = cpuraw::threadCpuMs();
+		const ofPixels* px = video.currentPixels();
+		const double accessWall = cpuraw::wallMs() - a0;
+		const double ac1 = cpuraw::threadCpuMs();
+		const double accessCpu = (ac0 >= 0 && ac1 >= 0) ? ac1 - ac0 : -1.0;
+		cpuraw::PixelView v;
+		if (px) {
+			v.data = px->getData();
+			v.w = static_cast<int>(px->getWidth());
+			v.h = static_cast<int>(px->getHeight());
+			const auto fmt = px->getPixelFormat();
+			// Only packed 8-bit RGB / RGBA are accepted; anything else (BGR, planar, 16-bit) is refused and counted, never reinterpreted.
+			v.channels = (px->getBytesPerChannel() == 1 && (fmt == OF_PIXELS_RGB || fmt == OF_PIXELS_RGBA)) ? static_cast<int>(px->getNumChannels()) : 0;
+			v.rowBytes = static_cast<std::size_t>(v.w) * static_cast<std::size_t>(px->getNumChannels());
+		}
+		const auto out = cpuRaw_.onFrame(v, src.x, src.y, now, accessWall, accessCpu);
+		if (out == cpuraw::Sampler::Outcome::Sampled) {
+			frameAcq_.cpuRaw++;
+			frameAcq_.cpuRawUs = cpuRaw_.lastTotalWallMs() * 1000.0;
+			if (paletteOn_) frameAcq_.palUs += paletteSink_.add(palette::kRawCpu, cpuRaw_.series().generation(), now, cpuRaw_.grid(), cpuRaw_.last());
+		} else if (out == cpuraw::Sampler::Outcome::Gap) {
+			frameAcq_.cpuRawGap++;
+			frameAcq_.cpuRawUs = cpuRaw_.lastTotalWallMs() * 1000.0;
+			if (paletteOn_) paletteSink_.gap(palette::kRawCpu);
+		}
+	} else if (d.verdict == rawvideo::Verdict::Gap) {
+		if (cpuRaw_.recordGap(now) == cpuraw::Sampler::Outcome::Gap) { frameAcq_.cpuRawGap++; if (paletteOn_) paletteSink_.gap(palette::kRawCpu); }
+	}
+
+	if (cpuRawStats_ && now - cpuRawLastLogAt_ >= 10.0) {
+		cpuRawLastLogAt_ = now;
+		const cpuraw::Stats& st = cpuRaw_.stats();
+		auto tri = [](const cpuraw::Dist& x) { std::ostringstream os; os << x.pct(0.5) << "/" << x.pct(0.95) << "/" << x.max(); return os.str(); };
+		ofLogNotice("CpuRaw") << "stream=CPURAW mono=" << std::fixed << std::chrono::duration<double>(std::chrono::steady_clock::now().time_since_epoch()).count() << std::defaultfloat
+			<< " gen=" << d.rawGeneration << " gate=" << static_cast<int>(d.verdict) << " due=" << st.due << " samples=" << st.samples << " gaps=" << st.gaps
+			<< " noPixels=" << st.noPixels << " badFormat=" << st.badFormat << " dimMismatch=" << st.dimMismatch << " droppedGen=" << st.droppedGeneration
+			<< " domValid=" << st.domValid << " vibValid=" << st.vibValid << " vibInvalid=" << st.vibInvalid
+			<< " accessWallMs[p50/p95/max]=" << tri(st.accessWall) << " accessCpuMs[p50/p95/max]=" << tri(st.accessCpu)
+			<< " reduceWallMs[p50/p95/max]=" << tri(st.reduceWall) << " reduceCpuMs[p50/p95/max]=" << tri(st.reduceCpu)
+			<< " analyzeWallMs[p50/p95/max]=" << tri(st.analyzeWall) << " analyzeCpuMs[p50/p95/max]=" << tri(st.analyzeCpu)
+			<< " totalWallMs[p50/p95/max]=" << tri(st.totalWall) << " totalCpuMs[p50/p95/max]=" << tri(st.totalCpu);
 	}
 }
 
@@ -1282,6 +1446,7 @@ void ExperienceRuntime::presentComposedFrame() {
 
 void ExperienceRuntime::exit() {
 	sceneColor_.shutdown(); // release sampler fences while the GL context is alive
+	paletteSink_.close(); // OC-003-F: flush CSVs + palette_summary.json (no-op when closed)
 	videoColor_.shutdown();
 	hudCompositorBridge_.shutdownSkins(); // release skin textures while the GL context is alive
 	sceneManager_.deactivateScene();
@@ -1327,6 +1492,16 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 			<< hudpresent::orbitMetricText(oc.a.metric) << " B=" << hudpresent::orbitSourceText(oc.b.source) << "/" << hudpresent::orbitMetricText(oc.b.metric);
 		return;
 	}
+	// Interactive region (encoder path): rotation = step the selected row's value; click = next row,
+	// then leave (so a one-axis encoder is never trapped). Keyboard Enter is handled earlier in keyPressed().
+	if (hudCompositorBridge_.interactiveActive()) {
+		if (input.kind == HudFocusInput::Kind::Step) {
+			stepInteractiveOption(input.delta);
+		} else if (hudCompositorBridge_.interactiveAdvanceRowOrExit()) {
+			interactiveClosedAt_ = steadySeconds();
+		}
+		return;
+	}
 	if (input.kind == HudFocusInput::Kind::Step) {
 		hudCompositorBridge_.stepFocus(input.delta);
 		const auto& f = hudCompositorBridge_.focus().focused();
@@ -1339,6 +1514,8 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 	if (settingsClosedAt_ >= 0.0 && steadySeconds() - settingsClosedAt_ < 0.6) return;
 	// The Enter (or its key-repeat) that closed the Orbit editor must not re-open it.
 	if (orbitEditorClosedAt_ >= 0.0 && steadySeconds() - orbitEditorClosedAt_ < 0.6) return;
+	// The Enter that closed the interactive region must not re-enter it.
+	if (interactiveClosedAt_ >= 0.0 && steadySeconds() - interactiveClosedAt_ < 0.6) return;
 	// Activate: only an ENABLED focused control dispatches, and only through
 	// the existing command paths — the same calls the 'n'/'p'/'['/']' keys use.
 	FocusActivationRecord rec;
@@ -1360,7 +1537,18 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 
 	// Control region -> existing command. Same meanings the HUD's availability
 	// sources use (HudRealFrameResolver control.* sources).
-	if (HudCompositorBridge::isOrbitFocusId(*target)) {
+	if (HudCompositorBridge::isInteractiveFocusId(*target)) {
+		// Generic interactive region: Enter captures the arrows (Up/Down = row, Left/Right = value).
+		// HUD presentation state only: no scene/media/runtime command until a value step.
+		const bool entered = hudCompositorBridge_.enterInteractiveForFocus();
+		if (entered) {
+			ofSetEscapeQuitsApp(false); // ESC leaves the region, never quits
+			escapeQuitSuppressed_ = true;
+		}
+		rec.command = "HudInteractive::Enter";
+		rec.accepted = entered;
+		ofLogNotice("HudInteractive") << (entered ? "active (Up/Down = row, Left/Right = value, Enter/Esc = done)" : "refused: region unavailable");
+	} else if (HudCompositorBridge::isOrbitFocusId(*target)) {
 		// OC-005: an Orbit observation opens its editor. HUD presentation state only: no scene/media/runtime command.
 		lastOkInputAt_ = steadySeconds();
 		const bool opened = hudCompositorBridge_.openOrbitEditorForFocus();
@@ -1406,8 +1594,33 @@ void ExperienceRuntime::handleFocusInput(const HudFocusInput& input) {
 	lastFocusActivation_ = rec;
 }
 
+void ExperienceRuntime::stepInteractiveOption(int delta) {
+	const int row = hudCompositorBridge_.interactiveRow();
+	const bool applied = regionOptionSink_ ? regionOptionSink_(row, delta) : false; // sole exit of a value step
+	ofLogNotice("HudInteractive") << "row " << row << " step " << delta << (applied ? " applied" : " refused (no option port)");
+}
+
+// Active interactive region keys. Returns true when consumed. Up/Down select the row (clamped),
+// Left/Right step the selected row's value (the callee wraps), Enter/Esc leave (applied values stay).
+bool ExperienceRuntime::handleInteractiveKey(int key) {
+	switch (key) {
+		case OF_KEY_UP:    hudCompositorBridge_.interactiveSelectRow(-1); return true;
+		case OF_KEY_DOWN:  hudCompositorBridge_.interactiveSelectRow(+1); return true;
+		case OF_KEY_LEFT:  stepInteractiveOption(-1); return true;
+		case OF_KEY_RIGHT: stepInteractiveOption(+1); return true;
+		case OF_KEY_RETURN:
+		case OF_KEY_ESC:
+			hudCompositorBridge_.exitInteractive();
+			interactiveClosedAt_ = steadySeconds();
+			ofLogNotice("HudInteractive") << "done (applied values kept)";
+			return true;
+		default: return false;
+	}
+}
+
 void ExperienceRuntime::enterImmersive() {
 	hudCompositorBridge_.orbitEditorBack(); // OC-005: the HUD is hidden while immersive; an open Orbit editor is cancelled
+	hudCompositorBridge_.exitInteractive();
 	immersive_ = true;
 	ofLogNotice("ExperienceRuntime") << "immersive: on (any key/press exits)";
 }
@@ -1487,6 +1700,10 @@ void ExperienceRuntime::keyPressed(int key) {
 			return;
 		}
 	}
+
+	// Interactive region: while active it captures ONLY the arrows + Enter/Esc; every other key
+	// (media, scene, mode ...) still reaches its normal route below.
+	if (hudCompositorBridge_.interactiveActive() && handleInteractiveKey(key)) return;
 
 	// -- Playable HUD Menu v0.1: focus navigation (arrows / Enter) -------
 	if (auto focusInput = inputRouter_.translateToFocusInput(key, ofGetKeyPressed(OF_KEY_SHIFT))) {

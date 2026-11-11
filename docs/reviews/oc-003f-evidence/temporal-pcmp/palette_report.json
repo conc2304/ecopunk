@@ -1,0 +1,90 @@
+{
+  "dir": "/private/tmp/claude-501/-Users-joseconchello-openFrameworks/66e0aad9-78cc-487c-97e6-c639f119c790/scratchpad/campT1/01_PCMP_r1.palette",
+  "checks": {
+    "determinism": "PASS",
+    "replay": "PASS",
+    "cpu_vs_gpu": "INCONCLUSIVE (only 2 same-frame pairs, need 5; the all-pairs figures include a ~1-frame temporal offset; run PCMP longer)"
+  },
+  "summary": null,
+  "clean_close": false,
+  "rows": {
+    "fx": 0,
+    "raw_gpu": 200,
+    "raw_cpu": 200
+  },
+  "replay": {
+    "grids": 400,
+    "mismatching_rows": 0,
+    "worst_abs_diff": 0.0
+  },
+  "cpu_vs_gpu": {
+    "cpu_rows": 200,
+    "gpu_rows": 200,
+    "pairs": 151,
+    "grid_pairs": 151,
+    "dt_s": {
+      "median": 0.03599999996367842,
+      "max": 0.0530000000144355
+    },
+    "all_pairs_incl_frame_offset": {
+      "pairs": 151,
+      "mean_abs_encoded_diff": {
+        "median": 0.016069221959781436,
+        "p95": 0.025886522831042025,
+        "max": 0.029816377031630495
+      },
+      "cell_max_abs_encoded_diff": {
+        "median": 0.3167530472325047,
+        "max": 0.6656280153408385
+      },
+      "cell_p99_abs_encoded_diff_median": 0.10246649757223125,
+      "avg_linear_max_channel_diff": {
+        "median": 0.0015399999999999858,
+        "p95": 0.0043999999999999595,
+        "max": 0.005839999999999956
+      },
+      "metric_abs_diff_median": {
+        "chromaticFraction": 0.0011800000000000144,
+        "chromaticEnergy": 0.0002600000000000102,
+        "complexity": 0.0017199999999999993,
+        "familiesActive": 0.0,
+        "highlightOcc": 0.000899999999999998,
+        "shadowOcc": 0.0
+      }
+    },
+    "same_frame_pairs": {
+      "pairs": 2,
+      "mean_abs_encoded_diff": {
+        "median": 0.00010198453666157831,
+        "p95": 0.00010216148720616235,
+        "max": 0.00010216148720616235
+      },
+      "cell_max_abs_encoded_diff": {
+        "median": 0.00032025000016511207,
+        "max": 0.0003213485856826681
+      },
+      "cell_p99_abs_encoded_diff_median": 0.000279036002661881,
+      "avg_linear_max_channel_diff": {
+        "median": 0.00016499999999999848,
+        "p95": 0.00017000000000000348,
+        "max": 0.00017000000000000348
+      },
+      "metric_abs_diff_median": {
+        "chromaticFraction": 0.00021000000000004349,
+        "chromaticEnergy": 4.999999999991123e-06,
+        "complexity": 0.00017500000000000848,
+        "familiesActive": 0.0,
+        "highlightOcc": 0.00017000000000000348,
+        "shadowOcc": 0.0
+      }
+    },
+    "limits": {
+      "median_mean_abs_encoded": 0.02,
+      "median_avg": 0.01,
+      "same_frame_dt_s": 0.017,
+      "min_same_frame_pairs": 5,
+      "status": "informational engineering bounds, not a product contract"
+    }
+  },
+  "failed": []
+}

@@ -1,0 +1,53 @@
+{
+  "media_id": "media.auto.7021ad87",
+  "scene": "blob-region-prototype",
+  "resolution": "1280x720",
+  "binary": "/private/tmp/claude-501/-Users-joseconchello-openFrameworks/66e0aad9-78cc-487c-97e6-c639f119c790/scratchpad/frozen2/sketches/experience_runtime/bin/experience_runtime.app/Contents/MacOS/experience_runtime",
+  "binary_sha256": "89ec0f6e022ddfa741c79a6409602c54ba486219738efefd01b5d955cf11702d",
+  "binary_size": 22618640,
+  "installation_settings_source": "/private/tmp/claude-501/-Users-joseconchello-openFrameworks/66e0aad9-78cc-487c-97e6-c639f119c790/scratchpad/frozen2/sketches/experience_runtime/bin/data/installation-settings.json",
+  "installation_settings_source_sha256": "5d4ea2b8ff704f2e95ac467713b6e883cf6f712dc92e10d55a491bc447bcf177",
+  "installation_settings_used": "/private/tmp/claude-501/-Users-joseconchello-openFrameworks/28ee5b02-9a2d-4ec2-b9f4-b2b68517d5aa/scratchpad/oc003f/corr1/campaign-installation-settings.json",
+  "installation_settings_used_sha256": "d6f6a5ff8b69347325599fa4457039b779c63e2f364b0bae3493881b86679226",
+  "duration_s": 75,
+  "rounds": 1,
+  "conditions": [
+    "PCMP"
+  ],
+  "order": "fixed",
+  "round_orders": {
+    "1": [
+      "PCMP"
+    ]
+  },
+  "defer_flush": false,
+  "runs": [
+    {
+      "tag": "01_PCMP_r1",
+      "condition": "PCMP",
+      "round": 1,
+      "position": 1,
+      "command": "env -u EXPERIENCE_RUNTIME_SCENE_COLOR_MODE -u EXPERIENCE_RUNTIME_SCENE_COLOR_DEFER -u EXPERIENCE_RUNTIME_SCENE_COLOR_DEFER_FLUSH -u EXPERIENCE_RUNTIME_SCENE_COLOR_STATS -u EXPERIENCE_RUNTIME_SCENE_COLOR_READBACK -u EXPERIENCE_RUNTIME_SCENE_COLOR_PROBE -u EXPERIENCE_RUNTIME_SCENE_COLOR_FALLBACK -u EXPERIENCE_RUNTIME_SCENE_COLOR_FAULT -u EXPERIENCE_RUNTIME_SCENE_COLOR_SELFTEST -u EXPERIENCE_RUNTIME_SCENE_COLOR_PREDOM -u EXPERIENCE_RUNTIME_VIDEO_COLOR_DIAG -u EXPERIENCE_RUNTIME_PREDOMINANT_HARNESS -u EXPERIENCE_RUNTIME_SCENE_VISUAL_ACTIVITY -u EXPERIENCE_RUNTIME_SCENE_ACTIVITY_PROBE -u EXPERIENCE_RUNTIME_TEMPORAL_SCENE -u EXPERIENCE_RUNTIME_BLUEPRINT_SCENE -u EXPERIENCE_RUNTIME_FRAGMENT_SCENE -u EXPERIENCE_RUNTIME_QUADRANT_SCENE -u EXPERIENCE_RUNTIME_FRAME_PHASE_GLFINISH -u EXPERIENCE_RUNTIME_FRAME_PHASE_CONTROL -u EXPERIENCE_RUNTIME_FRAME_PHASE_MS -u EXPERIENCE_RUNTIME_FRAME_LIMITER -u EXPERIENCE_RUNTIME_VSYNC EXPERIENCE_RUNTIME_FRAME_PHASE_PROBE=1 EXPERIENCE_RUNTIME_FRAME_PHASE_WINDOW_MS=10000 EXPERIENCE_RUNTIME_FRAME_PHASE_WARMUP_S=30 EXPERIENCE_RUNTIME_FRAME_PHASE_SETTLE_MS=3000 EXPERIENCE_RUNTIME_VIDEO_DWELL=100000,100000 EXPERIENCE_RUNTIME_SCENE_COLOR=0 EXPERIENCE_RUNTIME_PREDOMINANT_COLOR=1 EXPERIENCE_RUNTIME_VIDEO_COLOR=1 EXPERIENCE_RUNTIME_VIDEO_COLOR_MODE=deferred EXPERIENCE_RUNTIME_VIDEO_COLOR_STATS=1 EXPERIENCE_RUNTIME_CPU_RAW=1 EXPERIENCE_RUNTIME_CPU_RAW_STATS=1 EXPERIENCE_RUNTIME_PALETTE_DIAG=/private/tmp/claude-501/-Users-joseconchello-openFrameworks/28ee5b02-9a2d-4ec2-b9f4-b2b68517d5aa/scratchpad/oc003f/corr1/01_PCMP_r1.palette EXPERIENCE_RUNTIME_PALETTE_DIAG_GRIDS=48 EXPERIENCE_RUNTIME_PALETTE_DIAG_EVERY=5.0 EXPERIENCE_RUNTIME_VIDEO_STARTUP_MEDIA_ID=media.auto.7021ad87 EXPERIENCE_RUNTIME_INSTALLATION_SETTINGS=/private/tmp/claude-501/-Users-joseconchello-openFrameworks/28ee5b02-9a2d-4ec2-b9f4-b2b68517d5aa/scratchpad/oc003f/corr1/campaign-installation-settings.json EXPERIENCE_RUNTIME_FRAME_PHASE_FRAMES=/private/tmp/claude-501/-Users-joseconchello-openFrameworks/28ee5b02-9a2d-4ec2-b9f4-b2b68517d5aa/scratchpad/oc003f/corr1/01_PCMP_r1.frames.csv EXPERIENCE_RUNTIME_FRAME_PHASE_LOG=/private/tmp/claude-501/-Users-joseconchello-openFrameworks/28ee5b02-9a2d-4ec2-b9f4-b2b68517d5aa/scratchpad/oc003f/corr1/01_PCMP_r1.phase.log timeout -s INT 75 /private/tmp/claude-501/-Users-joseconchello-openFrameworks/66e0aad9-78cc-487c-97e6-c639f119c790/scratchpad/frozen2/sketches/experience_runtime/bin/experience_runtime.app/Contents/MacOS/experience_runtime > /private/tmp/claude-501/-Users-joseconchello-openFrameworks/28ee5b02-9a2d-4ec2-b9f4-b2b68517d5aa/scratchpad/oc003f/corr1/01_PCMP_r1.stdout.log 2>&1",
+      "expect_flush_after_fence": null,
+      "expect_fx_events": false,
+      "expect_raw_events": true,
+      "expect_fx_gpu": false,
+      "expect_raw_gpu": true,
+      "expect_cpu_raw": true,
+      "expect_palette": true,
+      "expect_glfinish": "off",
+      "expect_vsync": "on",
+      "expect_limiter": "on"
+    }
+  ],
+  "kind": "correctness",
+  "scene_cycle_seconds": 10.0,
+  "expected_scenes": [
+    "blob-region-prototype",
+    "blueprint_emergence",
+    "fragment-trail",
+    "quadrant-crosshair",
+    "temporal-fields"
+  ],
+  "min_events": 20
+}

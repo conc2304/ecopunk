@@ -18,7 +18,7 @@ To launch the app directly instead: `cd bin && EXPERIENCE_RUNTIME_HUD_SKIN=dark-
 
 ### Rock Pi 4B (manual run over SSH)
 
-The values below match `scripts/deploy.local.env` and the FireplaceWaterfall Rock Pi setup on the same board: user `conc`, host `rockpi-4b`, X display `:0` on `vt7`, HDMI output `HDMI-1`. Check `HDMI-1` with `xrandr` on the device. The app needs a real X11 display, and it has no keyboard unless one is plugged into the Rock Pi.
+The values below are for this board: user `conc`, host `rockpi-4b`, X display `:0` on `vt7`, HDMI output `HDMI-1`. Check `HDMI-1` with `xrandr` on the device. The app needs a real X11 display, and it has no keyboard unless one is plugged into the Rock Pi.
 
 **1. Connect and build.** Build on the device. `scripts/deploy.sh` can also sync the tree and build it remotely.
 
@@ -28,24 +28,18 @@ cd ~/of_v0.12.1_linuxaarch64_release/apps/myApps/EcopunkVideoCollage/sketches/ex
 make Release -j4
 ```
 
-**2. Free the display.** Only one GL app can own the screen. If the FireplaceWaterfall kiosk service is running, it owns X on `:0`. Stopping it also stops its X server. This is an operator decision:
+**2. Free the display.** Only one GL app can own the screen. Check what owns it, and stop it first. Stopping a service that owns X also stops its X server. This is an operator decision:
 
 ```bash
-systemctl is-active fireplace-waterfall.service      # "active" means it owns the display
-sudo systemctl stop fireplace-waterfall.service      # operator only; `start` puts the kiosk back afterwards
-pgrep -a Xorg                                        # should print nothing before step 3a
+pgrep -a Xorg                                        # prints a line if an X server is running
+systemctl is-active ecopunk-runtime                  # "active" means the service owns the display (see step 5)
+sudo systemctl stop ecopunk-runtime                  # operator only; stop whatever else owns the display the same way
 pgrep -af bin/experience_runtime                     # stop any older instance first (Esc on its keyboard, or pkill)
 ```
 
-Other useful commands
-Action Command
-Start Ecopunk `sudo systemctl start ecopunk-runtime`
-Stop Ecopunk `sudo systemctl stop ecopunk-runtime`
-Restart Ecopunk `sudo systemctl restart ecopunk-runtime`
-Check status `systemctl status ecopunk-runtime`
-Disable startup at boot `sudo systemctl disable ecopunk-runtime`
+**3. Start the app.** Pick 3a if no X server is running, or 3b if one is.
 
-**3a. No X running: start X with the experience as its only client.** This is the same pattern as FireplaceWaterfall's `deploy/x11/xinitrc.template`. First create the session script once:
+**3a. No X running: start X with the experience as its only client.** First create the session script once:
 
 ```bash
 cat > ~/.xinitrc-ecopunk <<'EOF'
@@ -84,8 +78,18 @@ nohup env EXPERIENCE_RUNTIME_HUD_SKIN=dark-moss-experimental ./bin/experience_ru
 
 - The window opens at 1280×720. Press `f` on the Rock Pi keyboard for fullscreen. Or turn on _launch fullscreen_ in the installation settings, which persists in `bin/data/installation-settings.json`.
 - To stop: `Esc` on the Rock Pi keyboard, or over SSH `pkill -f bin/experience_runtime`. In 3a, X exits with the app.
-- To put the kiosk back: `sudo systemctl start fireplace-waterfall.service` (operator).
+- To restore whatever you stopped in step 2, start it again with `sudo systemctl start <service>` (operator).
 - With no keyboard attached, keys can be sent with `xdotool`; see §1 _Sending keys to a running instance_.
+
+**5. Run as a service (optional).** If the device has an `ecopunk-runtime` systemd service installed, these are the commands to manage it. The unit file is not in this repository, so check it on the device before relying on it.
+
+| Action                  | Command                                           |
+| ----------------------- | ------------------------------------------------- |
+| Start                   | `sudo systemctl start ecopunk-runtime`            |
+| Stop                    | `sudo systemctl stop ecopunk-runtime`             |
+| Restart                 | `sudo systemctl restart ecopunk-runtime`          |
+| Check status            | `systemctl status ecopunk-runtime`                |
+| Disable startup at boot | `sudo systemctl disable ecopunk-runtime`          |
 
 ### Keys (HUD-006 v2)
 
@@ -121,7 +125,10 @@ Three Blueprint v2 skin packages are installed in `assets/hud/skins/`:
   "night": {
     "skins": ["dark-moss-experimental", "abyssal-bioluminescence"],
     "palette": "night"
- 
+  }
+}
+```
+
 **Manual.**
 
 - `v` loads the next skin: day skins first, then night skins, wrapping. This pauses the schedule.
@@ -148,7 +155,9 @@ Each skin may also ship shared button faces: `controls/button/idle.png`, `focuse
 
 v1 skins are rejected (`SKIN_BLUEPRINT_VERSION_MISMATCH`), and an optional `controls/scene_next/pressed.png` must be 81×81 (see `docs/hud-art/blueprint-v2-reference/HUD_ART_HANDOFF.md`).
 
-## Summary
+## Summary (three-scene baseline, 2026-10-13)
+
+This summary and sections 1–5 describe the three-scene build. For the current five-scene roster and skins, see the quick start above.
 
 - The binary registers **three production scenes**: `blob-region-prototype` (Blob), `temporal-fields` (Temporal), `blueprint_emergence` (Blueprint) — ring order Blob → Temporal → Blueprint (`ExperienceRuntime.cpp:27-38`). Fragment Trail (RT-006) is **not** in this tree.
 - Scene switching **is implemented**: `]` next scene, `[` previous scene (`InputRouter.cpp:41-42`). The running instance was launched over SSH, so it has no keyboard unless one is attached to the Rock Pi.
@@ -188,7 +197,7 @@ WIN=$(xdotool search --sync --onlyvisible --pid "$(pgrep -f bin/experience_runti
 xdotool windowactivate --sync "$WIN" key --clearmodifiers n
 ```
 
-`DISPLAY=:0 xdotool key bracketright`
+For example, `DISPLAY=:0 xdotool key bracketright` sends `]`. Key names:
 
 | Key                                 | xdotool name                       |
 | ----------------------------------- | ---------------------------------- |
@@ -264,7 +273,7 @@ All commands below run on the **Rock Pi**, from `<repo>/sketches/experience_runt
 | Display           | Harnesses need X11 (`DISPLAY=:0`) and a real context; nothing is headless. Window size is 1280×720.                                                                                                                                                                                                                                                                 |
 | Media / fixtures  | Canonical media from `assets/shared/media/` (26 .mp4); ambient `bin/data/backgrounds/`; synced shaders, knowledge pack and Blueprint assets via the `config.make` sync targets; skin fixtures in `test/skin_fixtures/`. GStreamer decode path on RK3399 has not been tested (HW decoder vs software).                                                               |
 | RT-004 Pi tooling | `memattr_supervisor.py` thresholds are VC4 CMA-specific (preflight CmaFree > 96 MiB, floor 40 MiB). `pi_validation.py` preflight requires `vcgencmd` and **fails closed** on the Rock Pi. VC4 `bo_stats` paths do not exist under Panfrost. **Not valid on the Rock Pi** without an Architecture-reviewed profile. Use plain `timeout` caps and the probes instead. |
-| Deploy            | `scripts/deploy.sh` reads the git-ignored `scripts/deploy.local.env` (currently `pi-3b`) and builds `sketches/experience_runtime` remotely. A Rock Pi needs its own host/path values (operator); see also the FireplaceWaterfall Rock Pi pattern referenced in `docs/hud-layout-integration-probe.md:57`.                                                           |
+| Deploy            | `scripts/deploy.sh` reads the git-ignored `scripts/deploy.local.env` (currently `pi-3b`) and builds `sketches/experience_runtime` remotely. A Rock Pi needs its own host/path values (operator).                                                           |
 
 ## 4. Ordered Rock Pi runbook
 
@@ -428,5 +437,3 @@ Where to read results:
 | Decoders                     | 22 v4l2 dma-buf buffers ≈21.5 MiB each; pause-then-close 97.7 ms (vs ~5 s EOS wait when closed while playing)                           | S1 stall-probe, Priority A      |
 | Temporal inactive release    | dma-buf ≈47.5 → ≈26.0 MiB after deactivation (TRV run)                                                                                  | TRV markers                     |
 | Open Pi issues               | SIGSEGV after first Blueprint activation (TRV, unresolved); GL_INVALID_ENUM 0x0500 after ambient preload; CMA margin at Blueprint setup | SIGSEGV and attribution reports |
-
-No code changed. No stage, commit or push.

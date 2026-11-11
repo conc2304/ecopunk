@@ -77,6 +77,7 @@ ScenePresentationProfile buildUniversalProfile() {
 		}
 		auto b = makeBinding("universal.primary_state.badge", "universal.activity",
 			HudWidgetType::StatusBadge, HudMissingPolicy::Placeholder);
+		b.variantId = "frameless"; // region 4: no widget-drawn outline (Blueprint v3 reference review)
 		b.addSource({"value", "scene.state.primary", true});
 		// v0.3: the scene's secondary state (e.g. Quadrant's active
 		// strategy/effect) and a phase icon keyed by the primary state ID.
@@ -328,6 +329,28 @@ ScenePresentationProfile buildQuadrantProfile() {
 	return p;
 }
 
+ScenePresentationProfile buildCrtProfile() {
+	ScenePresentationProfile p;
+	p.profileId = "crt-phosphor";
+	// One interactive selector group in universal.effect_summary: two compact option rows
+	// (PIXELS / PALETTE), 21.6 px each while the effect chips are hidden. The composition MODE is
+	// NOT repeated here: universal.media_title already presents it (scene.mode.*) and
+	// controls.mode already steps it. Rows read scene metrics; the < > chevrons and the row
+	// cursor are drawn from the interaction phase, not from this profile.
+	auto row = [&p](const char* bindingId, const char* caption, const char* textSource, const char* positionSource) {
+		auto b = makeBinding(bindingId, "universal.effect_summary",
+			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic, std::string(caption));
+		b.variantId = "selector";
+		b.addSource({"text", textSource, true});
+		b.addSource({"suffix", positionSource, false});
+		p.bindings.push_back(b);
+	};
+	row("crt.selector.pixels", "scene.crt.row.pixels.label", "scene.crt.metric.structure", "scene.crt.metric.structure_pos");
+	row("crt.selector.palette", "scene.crt.row.palette.label", "scene.crt.metric.palette", "scene.crt.metric.palette_pos");
+	p.interactiveRegions.push_back({"universal.effect_summary", HudInteractionKind::SelectorGroup, 2});
+	return p;
+}
+
 ScenePresentationProfile buildBlueprintProfile() {
 	ScenePresentationProfile p;
 	p.profileId = "blueprint_emergence";
@@ -354,6 +377,7 @@ HudPresentationProfileRegistry::HudPresentationProfileRegistry() {
 	flexibleProfiles_.push_back(buildFragmentProfile());
 	flexibleProfiles_.push_back(buildQuadrantProfile());
 	flexibleProfiles_.push_back(buildBlueprintProfile());
+	flexibleProfiles_.push_back(buildCrtProfile());
 }
 
 const ScenePresentationProfile* HudPresentationProfileRegistry::flexibleProfileForScene(const std::string& sceneId) const {

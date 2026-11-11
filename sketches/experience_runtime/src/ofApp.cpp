@@ -178,10 +178,24 @@ void ofApp::setup() {
 		&& !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
 		&& std::getenv("EXPERIENCE_RUNTIME_QUADRANT_SCENE") != nullptr;
 
+	// EXPERIENCE_RUNTIME_CRT_SCENE starts a normal run in CRT Phosphor (same opt-in
+	// pattern as the other scenes; the scene itself is in the Production roster).
+	bool wantCrtScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !wantQuadrantScene
+		&& !switchHarnessRequested && !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& std::getenv("EXPERIENCE_RUNTIME_CRT_SCENE") != nullptr;
+
+	// Normal (non-harness) run -> six-scene Production roster incl. CRT Phosphor.
+	const bool normalRun = !(glHarnessRequested || blobLifecycleRequested || blobSoakRequested || temporalLifecycleRequested
+			|| switchHarnessRequested || acceptanceRequested || skinHarnessRequested || artExportRequested || focusHarnessRequested
+			|| blueprintHarnessRequested || blueprintHudHarnessRequested || paritySoakRequested || resumeWindowRequested
+			|| cadenceRequested || temporalWarmRequested || threeSceneRequested || modeHarnessRequested || installationHarnessRequested || v03HarnessRequested || presentationHarnessRequested || reactiveHarnessRequested || typographyHarnessRequested || hud006v2HarnessRequested || settingsPageHarnessRequested
+			|| Rt004StallDriver::isRequested() || BlobRenderPathAbHarness::isRequested() || BlobEffectCapacityBench::isRequested());
+
 	// Roster: every harness keeps the ring it was accepted against — RT-002/
 	// RT-003 the two-scene ring, every other existing harness (and the RT-004
-	// stall driver's scripted key sequences) the three-scene ring. The normal
-	// run, and the full-ring circuit proof, get the full five-scene roster.
+	// stall driver's scripted key sequences) the three-scene ring. The full-ring
+	// circuit proof keeps the five-scene Full roster; the normal run gets the
+	// six-scene Production roster (adds CRT Phosphor).
 	using Roster = ExperienceRuntime::ProductionRoster;
 	const bool anyThreeSceneHarness = blobLifecycleRequested || blobSoakRequested || temporalLifecycleRequested
 		|| skinHarnessRequested || artExportRequested || focusHarnessRequested || blueprintHarnessRequested
@@ -189,17 +203,19 @@ void ofApp::setup() {
 		|| temporalWarmRequested || (threeSceneRequested && !ThreeSceneCircuitHarness::isFullRingRequested())
 		|| Rt004StallDriver::isRequested();
 	const Roster roster = (switchHarnessRequested || acceptanceRequested) ? Roster::BlobTemporal
-		: anyThreeSceneHarness ? Roster::ThreeScene : Roster::Full;
+		: anyThreeSceneHarness ? Roster::ThreeScene : normalRun ? Roster::Production : Roster::Full;
 
 	if (!glHarnessRequested) {
 		if (wantTemporalScene) {
 			runtime.installTemporalProductionScene(roster);
 		} else if (wantBlueprintScene) {
 			runtime.installBlueprintProductionScene(roster);
-		} else if (wantFragmentScene && roster == Roster::Full) {
+		} else if (wantFragmentScene && (roster == Roster::Full || roster == Roster::Production)) {
 			runtime.installFragmentProductionScene();
-		} else if (wantQuadrantScene && roster == Roster::Full) {
+		} else if (wantQuadrantScene && (roster == Roster::Full || roster == Roster::Production)) {
 			runtime.installQuadrantProductionScene();
+		} else if (wantCrtScene && roster == Roster::Production) {
+			runtime.installCrtPhosphorProductionScene();
 		} else {
 			runtime.installBlobProductionScene(roster);
 		}
@@ -233,6 +249,8 @@ void ofApp::setup() {
 		runtime.setTypographyPresetEnabled(!anyHarnessForSkins || (typoEnv != nullptr && std::string(typoEnv) == "on")); // "on" = apply the preset under a harness
 	}
 	runtime.setup();
+	if (CrtInteractiveHarness::isRequested()) crtInteractiveHarness = std::make_unique<CrtInteractiveHarness>(runtime);
+	if (CrtSelectorHarness::isRequested()) crtSelectorHarness = std::make_unique<CrtSelectorHarness>(runtime); // normal-run Production roster + opt-in env
 	if (framePhaseProbe) framePhaseProbe->afterRuntimeSetup(); // limiter/vsync controls apply after the runtime's own baseline
 
 	// Blob render-path A/B pixel check: self-contained, runs once here
@@ -291,6 +309,8 @@ void ofApp::setup() {
 		hud006v2Harness = std::make_unique<Hud006v2Harness>(runtime);
 	} else if (settingsPageHarnessRequested) {
 		settingsPageHarness = std::make_unique<SettingsPageHarness>(runtime);
+	} else if (PredominantHarness::isRequested()) {
+		predominantHarness = std::make_unique<PredominantHarness>(runtime);
 	} else if (orbitInjectRequested) {
 		orbitInjectHarness = std::make_unique<OrbitInjectHarness>(runtime);
 	} else if (skinCycleHarnessRequested) {
@@ -353,6 +373,8 @@ void ofApp::update() {
 	if (threeSceneHarness) {
 		threeSceneHarness->step(ofGetLastFrameTime());
 	}
+	if (crtInteractiveHarness) crtInteractiveHarness->step(ofGetLastFrameTime());
+	if (crtSelectorHarness) crtSelectorHarness->step(ofGetLastFrameTime());
 	if (modeHarness) {
 		modeHarness->step(ofGetLastFrameTime());
 	}
@@ -376,6 +398,9 @@ void ofApp::update() {
 	}
 	if (orbitInjectHarness) {
 		orbitInjectHarness->step(ofGetLastFrameTime());
+	}
+	if (predominantHarness) {
+		predominantHarness->step(ofGetLastFrameTime());
 	}
 	if (skinCycleHarness) {
 		skinCycleHarness->step(ofGetLastFrameTime());
@@ -403,7 +428,7 @@ void ofApp::update() {
 void ofApp::draw() {
 	RT004_SCOPE("ofApp.draw");
 	if (Rt004FramePhaseProbe::presentOnlyControl()) { ofClear(0, 0, 0, 255); return; }
-	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness && !modeHarness && !installationHarness && !v03Harness && !presentationHarness && !reactiveHarness && !typographyHarness && !hud006v2Harness && !skinCycleHarness && !orbitInjectHarness && !settingsPageHarness) {
+	if (!harness && !blobHarness && !temporalHarness && !switchHarness && !acceptanceHarness && !skinHarness && !artExporter && !focusHarness && !blueprintHarness && !blueprintHudHarness && !paritySoakHarness && !resumeWindowHarness && !cadenceHarness && !temporalWarmHarness && !threeSceneHarness && !modeHarness && !installationHarness && !v03Harness && !presentationHarness && !reactiveHarness && !typographyHarness && !hud006v2Harness && !skinCycleHarness && !orbitInjectHarness && !predominantHarness && !settingsPageHarness) {
 		runtime.draw();
 
 		// Verification only (OC-003B): EXPERIENCE_RUNTIME_SHOT_SCHEDULE="name@seconds,name@seconds" saves the

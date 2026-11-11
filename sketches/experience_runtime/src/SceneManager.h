@@ -138,6 +138,10 @@ public:
 	// false is sufficient". Rejected (false) whenever there is no live owner —
 	// during FadingOut, Loading, Failed, or after shutdown().
 	bool dispatchSceneCommand(SceneCommand command);
+	// Additive Tier C: typed option step for the owner scene (same gating as dispatchSceneCommand).
+	bool dispatchSceneOption(int axisIndex, int delta);
+	// Option axes the current owner advertised at activation (cached; empty on the tooling path / none).
+	int activeOptionAxisCount() const { return static_cast<int>(cachedCapabilities_.optionAxes.size()); }
 
 	// NextScene/PreviousScene (RuntimeCommand). Only accepted while Idle with
 	// a registered pair; requests during any non-Idle phase (including

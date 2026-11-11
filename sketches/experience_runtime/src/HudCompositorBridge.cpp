@@ -26,6 +26,33 @@ void HudCompositorBridge::update(float dt, const HudFrameData& frame) {
 	// A hidden HUD cannot be edited: cancel (restore) rather than leave an invisible modal consuming input.
 	if (!visible_ && renderer_.orbitUi().isOpen()) renderer_.orbitUi().cancel();
 	refreshFocus(); // availability follows this frame's resolved controls
+	refreshInteraction();
+}
+
+void HudCompositorBridge::refreshInteraction() {
+	using hudpresent::HudInteractionPhase;
+	const auto* decl = renderer_.interactiveRegion();
+	const bool available = decl != nullptr && interactiveRegionAvailable();
+	const bool focusHere = focus_.focused() && isInteractiveFocusId(*focus_.focused());
+	if (decl) region_.configure(decl->rowCount);
+	// The region's focus is scene-specific context: once it is unavailable (scene switched away, option
+	// port gone) the navigator's usual "restore the intended control" must NOT bring focus back to it later.
+	if (!available && focus_.intended() && isInteractiveFocusId(*focus_.intended())) focus_.confirmFocus();
+	// No stale editing: scene without the region, region unavailable or focus moved away.
+	if (region_.active() && (!available || !focusHere)) region_.forceExit();
+	HudInteractionPhase phase = HudInteractionPhase::Passive;
+	if (decl) phase = !available ? HudInteractionPhase::Disabled
+		: region_.active() ? HudInteractionPhase::Active
+		: focusHere ? HudInteractionPhase::Focused : HudInteractionPhase::Idle;
+	renderer_.setInteraction(phase, region_.row());
+}
+
+bool HudCompositorBridge::enterInteractiveForFocus() {
+	const auto& f = focus_.focused();
+	if (!f || !isInteractiveFocusId(*f) || !focus_.activationTarget() || !interactiveRegionAvailable()) return false;
+	region_.enter();
+	refreshInteraction();
+	return region_.active();
 }
 
 void HudCompositorBridge::refreshFocus() {
@@ -33,6 +60,7 @@ void HudCompositorBridge::refreshFocus() {
 		if (isOrbitFocusId(regionId)) { // observations: focusable once their regions are laid out and the HUD is shown
 			return (visible_ && renderer_.orbitObservationsPresent()) ? HudControlAvailability::Enabled : HudControlAvailability::Hidden;
 		}
+		if (isInteractiveFocusId(regionId)) return interactiveRegionAvailable() ? HudControlAvailability::Enabled : HudControlAvailability::Hidden;
 		const std::optional<bool> enabled = renderer_.controlEnabled(regionId);
 		if (!enabled) return HudControlAvailability::Hidden;
 		return *enabled ? HudControlAvailability::Enabled : HudControlAvailability::Disabled;

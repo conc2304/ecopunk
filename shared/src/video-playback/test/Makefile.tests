@@ -65,7 +65,13 @@ ACT_SRC = video_activation_count_tests.cpp ../VideoPlaybackService.cpp ../OfVide
 	../MediaCatalogJsonLoader.cpp ../VideoSelectionPolicy.cpp
 ACT_BIN = video_activation_count_tests
 
-.PHONY: test test-activation clean
+# -- test-startup-media: OC-003 verification control (deterministic startup media, rejection, unchanged default). Same
+# OF-linked fake-decoder harness as test-activation; not part of `test`.
+STM_SRC = video_startup_media_tests.cpp ../VideoPlaybackService.cpp ../OfVideoDecoder.cpp ../MediaCatalog.cpp \
+	../MediaCatalogJsonLoader.cpp ../VideoSelectionPolicy.cpp
+STM_BIN = video_startup_media_tests
+
+.PHONY: test test-activation test-startup-media clean
 
 test-activation: $(ACT_BIN)
 	./$(ACT_BIN)
@@ -74,6 +80,13 @@ $(ACT_BIN): $(ACT_SRC) ../VideoPlaybackService.h
 	c++ -std=c++17 -stdlib=libc++ -DUSE_FMOD=0 -D__MACOSX_CORE__ -Wall -x objective-c++ $(ACT_OF_INCLUDES) -I.. -I../.. \
 		$(ACT_SRC) -x none -mmacosx-version-min=10.15 $(ACT_FRAMEWORKS) $(ACT_LIBS) -lobjc -o $@
 
+
+test-startup-media: $(STM_BIN)
+	./$(STM_BIN)
+
+$(STM_BIN): $(STM_SRC) ../VideoPlaybackService.h ../VideoSelectionPolicy.h
+	c++ -std=c++17 -stdlib=libc++ -DUSE_FMOD=0 -D__MACOSX_CORE__ -Wall -x objective-c++ $(ACT_OF_INCLUDES) -I.. -I../.. \
+		$(STM_SRC) -x none -mmacosx-version-min=10.15 $(ACT_FRAMEWORKS) $(ACT_LIBS) -lobjc -o $@
 
 test: $(CATALOG_BIN) $(POLICY_BIN) $(RESUME_BIN) $(ADVANCE_BIN)
 	./$(CATALOG_BIN)

@@ -104,6 +104,14 @@ std::optional<int> VideoSelectionPolicy::requestInitialCandidate() {
 	return nextFreshPick(-1);
 }
 
+std::optional<int> VideoSelectionPolicy::requestSpecificCandidate(const std::string& mediaId) const {
+	if (mediaId.empty()) return std::nullopt;
+	for (int i : playableIndices_) {
+		if (catalog_[static_cast<size_t>(i)].mediaId == mediaId) return i;
+	}
+	return std::nullopt;
+}
+
 std::optional<int> VideoSelectionPolicy::requestManualPreviousCandidate() const {
 	if (cursor_ > 0) return history_[static_cast<size_t>(cursor_ - 1)];
 	// At the oldest history entry Previous WRAPS: the previous playable clip

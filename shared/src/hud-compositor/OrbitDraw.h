@@ -28,7 +28,7 @@ struct OrbitSourceDraw {
 
 struct OrbitDrawData {
 	OrbitConsoleModel model;
-	OrbitSourceDraw src[2];
+	OrbitSourceDraw src[kOrbitSlotCount]; // slot order: see orbitSlotOf()
 	// OC-005: HUD-owned observation configuration + editor state (presentation state, never telemetry).
 	// Observation A draws in the upper region, B in the lower; the draw path reads it only.
 	OrbitConfigEditor ui;
@@ -42,9 +42,13 @@ struct OrbitDrawData {
 // production data (DOM/VIB): such an observation is an explicit unavailable state, never AVG, never the other
 // source. Shared by the draw path and the verification harness so both resolve identically.
 inline OrbitSourceId orbitSourceIdOf(OrbitSource s) { return s == OrbitSource::Fx ? OrbitSourceId::Fx : OrbitSourceId::Raw; }
+// OC-003: model slot of a (source, metric): 0/1 AVG, 2/3 DOM, 4/5 VIB (FX first in each pair).
+inline size_t orbitSlotOf(OrbitSource s, OrbitMetric m) { return m == OrbitMetric::Avg ? size_t(s) : size_t(2) * size_t(m) + size_t(s); }
+// The model for an observation's (source, metric), or nullptr when the runtime does not measure it (NOT AVAILABLE).
 inline const OrbitSourceModel* orbitBoundSource(const OrbitDrawData& d, OrbitObs o) {
 	const OrbitObservationConfig& c = d.ui.config().at(o);
-	return orbitMetricAvailable(c.metric) ? &d.model.source(orbitSourceIdOf(c.source)) : nullptr;
+	const OrbitSourceModel& m = d.model.slot(orbitSlotOf(c.source, c.metric));
+	return (orbitMetricAlwaysPublished(c.metric) || m.provided) ? &m : nullptr;
 }
 
 } // namespace hudpresent

@@ -1,0 +1,14 @@
+09:41:26 STATE PREFLIGHT
+09:41:26 pre-flight: binary sha256=89ec0f6e022ddfa741c79a6409602c54ba486219738efefd01b5d955cf11702d  installed DEFER_FLUSH=unknown (the campaign never changes it)  scope=None  unit_active=False
+09:41:26 1 runs x 300 s, sequential, about 5 min; order: 01_PCMP_r1
+09:41:26 scrubbed inherited variables: none
+09:41:26 STATE RUNNING:01_PCMP_r1
+09:41:26 === 01_PCMP_r1 (PCMP, round 1) flushAfterFence expected=None
+09:46:26 STATE CHECKING:01_PCMP_r1
+09:46:27 01_PCMP_r1: ok (300.1 s, verify ok)
+09:46:32 STATE RESTORING
+09:46:32 restoration MATCHES the pre-flight record
+09:46:32 STATE ANALYSING
+09:46:35 analysis written to /private/tmp/claude-501/-Users-joseconchello-openFrameworks/66e0aad9-78cc-487c-97e6-c639f119c790/scratchpad/campP5/analysis
+09:46:35 STATE DONE
+09:46:35 CAMPAIGN COMPLETE: verified, reconciled, restored

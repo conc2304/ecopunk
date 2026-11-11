@@ -1,0 +1,37 @@
+oc005_01_default: bin/data/captures/orbit-inject/oc005_01_default.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+PASS defaults A=FX/AVG B=RAW/AVG
+PASS no focus before input
+oc005_02_raw_unavailable: bin/data/captures/orbit-inject/oc005_02_raw_unavailable.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+PASS unavailable RAW draws no RAW data
+oc005_03_focus_a: bin/data/captures/orbit-inject/oc005_03_focus_a.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+PASS arrows reach observation A as the 8th stop — orbit.a
+PASS A focus flag set, B not
+oc005_04_edit_a: bin/data/captures/orbit-inject/oc005_04_edit_a.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+PASS Enter opens the editor for A
+PASS overlay is region B
+PASS focus stays on A while editing — orbit.a
+oc005_05_edit_a_preview_raw: bin/data/captures/orbit-inject/oc005_05_edit_a_preview_raw.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+PASS selection previews immediately: A=RAW/AVG (identical to B) — A=RAW/AVG B=RAW/AVG
+oc005_06_edit_a_dom_unavailable: bin/data/captures/orbit-inject/oc005_06_edit_a_dom_unavailable.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+PASS A=RAW/DOM previews (explicit unavailable) — A=RAW/DOM B=RAW/AVG
+PASS Tab moved the cursor (DOM)
+oc005_07_cancel_restored: bin/data/captures/orbit-inject/oc005_07_cancel_restored.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+PASS Esc cancelled: prior configuration restored — A=FX/AVG B=RAW/AVG
+PASS editor closed, runtime still running
+PASS focus returned to the edited observation A — orbit.a
+oc005_08_mixed_committed: bin/data/captures/orbit-inject/oc005_08_mixed_committed.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+PASS DONE commits: A=RAW/VIB B=RAW/AVG — A=RAW/VIB B=RAW/AVG
+PASS editor closed; focus on A — orbit.a
+oc005_09_edit_b: bin/data/captures/orbit-inject/oc005_09_edit_b.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+PASS Enter opens the editor for B; overlay in region A
+oc005_10_edit_b_preview_fx: bin/data/captures/orbit-inject/oc005_10_edit_b_preview_fx.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+PASS B previews FX/AVG while A keeps RAW/VIB — A=RAW/VIB B=FX/AVG
+oc005_11_scene_change_while_editing: bin/data/captures/orbit-inject/oc005_11_scene_change_while_editing.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+PASS editor survives a scene change; configuration unchanged — A=RAW/VIB B=FX/AVG
+PASS Esc restores B to its committed RAW/AVG — A=RAW/VIB B=RAW/AVG
+PASS entering IMMERSIVE cancelled the editor — A=RAW/VIB B=RAW/AVG
+PASS hiding the HUD cancelled the editor
+PASS Tab = step +1, Shift+Tab = step -1
+PASS Esc maps to the device-neutral Back
+oc005_12_final: bin/data/captures/orbit-inject/oc005_12_final.png window 1280x720 skin=dark-moss-experimental gen=1 state=1 segments valid=10 gap=0 missing=2 chartSegs(R)=1
+passes=24 failures=0

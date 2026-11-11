@@ -1,4 +1,5 @@
 #include "HudWireframeRenderer.h"
+#include "OrbitSnapshotAdapter.h"
 #include "HudReactiveControlArt.h"
 #include "widgets/HudWidgetDrawUtils.h" // hudTextShadowColor()
 
@@ -142,6 +143,94 @@ int HudWireframeRenderer::regionSlotCount(const std::string& regionId) const {
 
 HudWireframeRenderer::HudWireframeRenderer() : compiler_(regions_, vocabulary_) {
 	realResolver_.setVocabulary(&vocabulary_);
+	resolveInteractionStyleFromColors();
+}
+
+void HudWireframeRenderer::resolveInteractionStyleFromColors() {
+	auto c = [](const ofColor& o) { return HudRgba8{o.r, o.g, o.b, o.a}; };
+	interactionStyle_ = resolveInteractionStyle(c(colors_.accent), c(colors_.secondary), c(colors_.muted));
+}
+
+// Pushes the interaction phase into the selector rows' widget inputs (chevron state) and reports
+// whether the declared region is actually rendering. Update path / setter only — never draw().
+void HudWireframeRenderer::refreshInteractionInputs() {
+	interactivePresent_ = false;
+	if (!interactive_) return;
+	int row = 0;
+	for (const auto& cb : compiled_.bindings) {
+		if (!cb.valid || cb.binding.regionId != interactive_->regionId || cb.binding.variantId != "selector") continue;
+		const auto it = widgetInputs_.find(cb.binding.bindingId);
+		if (it == widgetInputs_.end()) continue;
+		bool renders = false;
+		for (const auto& role : it->second.roles) renders = renders || role.shouldRender;
+		if (!renders) { it->second.selectorState = 0; continue; }
+		it->second.selectorState = interactionPhase_ == HudInteractionPhase::Active ? (row == interactionRow_ ? 2 : 1) : 0;
+		++row;
+	}
+	interactivePresent_ = interactive_->rowCount > 0 && row >= interactive_->rowCount;
+}
+
+// Generic interactive-region affordance, drawn inside the region's own bounds (the canonical
+// geometry and the skin's baked frames are untouched). State is conveyed by stroke weight,
+// frame vs ticks and the selected-row bar as well as colour.
+void HudWireframeRenderer::drawInteractionAffordance() const {
+	if (!interactive_) return;
+	const HudInteractionPhase ph = interactionPhase_;
+	if (ph == HudInteractionPhase::Passive || ph == HudInteractionPhase::Disabled) return; // hidden when unavailable
+	const ofRectangle b = pixelBoundsFor(interactive_->regionId);
+	if (b.width <= 0.0f || b.height <= 0.0f) return;
+	const auto g = HudInteractionStyle::geometry();
+	const HudInteractionStyle& st = interactionStyle_;
+	auto col = [](const HudRgba8& c) { return ofColor(c.r, c.g, c.b, c.a); };
+	ofPushStyle();
+	ofEnableAlphaBlending();
+	ofNoFill();
+	auto corners = [&](const ofRectangle& r, float arm, float stroke) {
+		ofSetLineWidth(stroke);
+		auto corner = [&](float x, float y, float dx, float dy) {
+			ofDrawLine(x, y, x + dx * arm, y);
+			ofDrawLine(x, y, x, y + dy * arm);
+		};
+		corner(r.x, r.y, 1, 1);
+		corner(r.getRight(), r.y, -1, 1);
+		corner(r.x, r.getBottom(), 1, -1);
+		corner(r.getRight(), r.getBottom(), -1, -1);
+	};
+	const ofRectangle in(b.x + 0.5f, b.y + 0.5f, b.width - 1.0f, b.height - 1.0f);
+	HudRgba8 markerCol = st.idle;
+	if (ph == HudInteractionPhase::Idle) {
+		ofSetColor(col(st.idle));
+		corners(in, g.idleArm, g.idleStroke);
+	} else if (ph == HudInteractionPhase::Focused) {
+		markerCol = st.focus;
+		HudRgba8 faint = st.focus; faint.a = static_cast<uint8_t>(faint.a * 0.55f);
+		ofSetColor(col(faint));
+		ofSetLineWidth(g.focusStroke);
+		ofDrawRectangle(in);
+		ofSetColor(col(st.focus));
+		// A 2 px stroke is centred on its path: inset by half the stroke so it stays inside the region
+		// (measured against the Dark Moss shell rails: a 0.5 px inset spilled 1 px onto them).
+		const float h = g.focusCornerStroke * 0.5f;
+		corners(ofRectangle(b.x + h, b.y + h, b.width - 2.0f * h, b.height - 2.0f * h), g.focusArm, g.focusCornerStroke);
+	} else { // Active
+		markerCol = st.active;
+		const int rows = std::max(1, interactive_->rowCount);
+		const float rowH = b.height / float(rows);
+		const int sel = std::clamp(interactionRow_, 0, rows - 1);
+		ofFill();
+		ofSetColor(col(st.rowFill)); // tint only: 8x13 text keeps its contrast
+		ofDrawRectangle(b.x + g.rowBarWidth, b.y + rowH * float(sel) + 1.0f, b.width - g.rowBarWidth - 1.0f, rowH - 2.0f);
+		ofSetColor(col(st.active));
+		ofDrawRectangle(b.x + 1.0f, b.y + rowH * float(sel) + 2.0f, g.rowBarWidth, rowH - 4.0f); // selected-row bar
+		ofNoFill();
+		ofSetLineWidth(g.activeStroke);
+		ofDrawRectangle(b.x + 1.0f, b.y + 1.0f, b.width - 2.0f, b.height - 2.0f);
+	}
+	// Small "controls" marker (top-right, inside the region): present in every interactive phase.
+	ofFill();
+	ofSetColor(col(markerCol));
+	ofDrawRectangle(b.getRight() - 6.0f, b.y + 3.0f, 3.0f, 3.0f);
+	ofPopStyle();
 }
 
 void HudWireframeRenderer::setup(float canvasWidth, float canvasHeight) {
@@ -158,6 +247,13 @@ void HudWireframeRenderer::setScene(const std::string& sceneId) {
 	if (sceneId == currentSceneId_ && !compiled_.bindings.empty()) return; // already compiled for this scene
 	currentSceneId_ = sceneId;
 	compiled_ = compiler_.compile(sceneId, profiles_);
+	interactive_.reset(); // the new scene's declaration (if any); nothing carries over from the previous scene
+	interactivePresent_ = false;
+	interactionPhase_ = HudInteractionPhase::Passive;
+	interactionRow_ = 0;
+	if (const auto* prof = profiles_.flexibleProfileForScene(sceneId)) {
+		if (!prof->interactiveRegions.empty()) interactive_ = prof->interactiveRegions.front();
+	}
 	lastValid_.clear();
 	widgetInputs_.clear();
 	haveLastGeneration_ = false;
@@ -401,6 +497,7 @@ void HudWireframeRenderer::update(float dt, const HudFrameData& frame) {
 		}
 		resolveBindingReal(compiled, frame);
 	}
+	refreshInteractionInputs(); // after every binding re-resolved (they rebuild widgetInputs_ each frame)
 }
 
 void HudWireframeRenderer::resolveBindingReal(const HudCompiledBinding& compiled, const HudFrameData& frame) {
@@ -699,7 +796,38 @@ void HudWireframeRenderer::updateOrbit(const HudFrameData& frame) {
 	d.upperW = upper.width;
 	d.upperH = upper.height;
 	d.lowerH = lower.height;
-	const bool rebuilt = d.model.update(view, layout, rawPtr);
+	// OC-003: DOM / VIB series for FX and RAW from the SAME snapshots as AVG (never from another slot). A snapshot
+	// that does not measure them (predominantProvided == false, or no snapshot) leaves the slot NOT AVAILABLE.
+	OrbitSeriesView predViews[kOrbitPredSlotCount]; // {FX-DOM, RAW-DOM, FX-VIB, RAW-VIB}
+	{
+		const scenecolor::SceneColorSnapshot* snaps[2] = {orbitOverride_ ? nullptr : frame.sceneColor.get(), orbitRawOverride_ ? nullptr : frame.sceneColorRaw.get()};
+		static const bool fixtureActive = std::getenv("EXPERIENCE_RUNTIME_ORBIT_FIXTURE") != nullptr;
+		static const bool rawFixtureActive = std::getenv("EXPERIENCE_RUNTIME_ORBIT_RAW_FIXTURE") != nullptr;
+		if (fixtureActive) snaps[0] = nullptr; // synthetic fixtures carry no DOM/VIB
+		if (rawFixtureActive) snaps[1] = nullptr;
+		for (int mi = 0; mi < 2; ++mi) {          // 0 = DOM, 1 = VIB
+			for (int si = 0; si < 2; ++si) {      // 0 = FX, 1 = RAW
+				const size_t k = size_t(mi) * 2 + size_t(si);
+				const scenecolor::SceneColorSnapshot* snap = snaps[si];
+				OrbitPredBuf& pb = orbitPredBuf_[k];
+				OrbitSeriesView& pv = predViews[k];
+				if (!snap || !snap->predominantProvided) continue;
+				const OrbitMetric metric = mi == 0 ? OrbitMetric::Dom : OrbitMetric::Vib;
+				if (snap->revision != pb.revision || snap->generation != pb.generation) {
+					pb.count = orbitFillSamples(*snap, metric, pb.samples.data());
+					pb.revision = snap->revision;
+					pb.generation = snap->generation;
+				}
+				pv.provided = true;
+				pv.state = orbitMetricState(*snap, metric);
+				pv.generation = snap->generation;
+				pv.revision = snap->revision;
+				pv.samples = pb.samples.data();
+				pv.count = pb.count;
+			}
+		}
+	}
+	const bool rebuilt = d.model.update(view, layout, rawPtr, predViews);
 	if (!rebuilt && d.linesBuiltAtRebuild == d.model.rebuildCount()) return;
 	const OrbitConsoleModel& m = d.model;
 	auto buildLines = [](const OrbitTrace& t, std::vector<ofPolyline>& lines, std::vector<OrbitPt>& dots) {
@@ -724,8 +852,8 @@ void HudWireframeRenderer::updateOrbit(const HudFrameData& frame) {
 		mesh.addIndex(base); mesh.addIndex(base + 1); mesh.addIndex(base + 2);
 		mesh.addIndex(base); mesh.addIndex(base + 2); mesh.addIndex(base + 3);
 	};
-	for (int si = 0; si < 2; ++si) {
-		const OrbitSourceModel& sm = m.source(OrbitSourceId(si));
+	for (size_t si = 0; si < kOrbitSlotCount; ++si) {
+		const OrbitSourceModel& sm = m.slot(si);
 		OrbitSourceDraw& sd = d.src[si];
 		for (int c = 0; c < 3; ++c) buildLines(sm.rgb[c], sd.rgbLines[c], sd.rgbDots[c]);
 		buildLines(sm.luma, sd.lumaLines, sd.lumaDots);
@@ -962,6 +1090,8 @@ void HudWireframeRenderer::draw() const {
 		corner(o.getRight(), o.getBottom(), -1, -1);
 		ofPopStyle();
 	}
+
+	drawInteractionAffordance(); // generic interactive-region overlay (no-op for passive scenes)
 
 	// Diagnostic (EXPERIENCE_RUNTIME_HUD_LOADING_CAPTURE_DIR=<dir>, off by default): save the complete HUD
 	// window for the first few REAL frames whose scene health is Loading. Never changes timing or state.

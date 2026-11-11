@@ -21,10 +21,15 @@ void StatusBadgeWidget::draw(const ofRectangle& bounds, const HudWidgetColors& c
 
 	float opacity = (valueRole && valueRole->dimmed) ? 0.5f : 1.0f;
 
-	ofSetColor(scaledAlpha(colors.background, opacity));
-	ofFill();
-	ofDrawRectangle(bounds);
-	drawOutline(bounds, scaledAlpha(colors.muted, opacity));
+	// "frameless" (profile-declared, e.g. the scene primary-state badge in universal.activity): no
+	// widget-drawn backing or outline - the skin's own panel is the only frame, so a passive
+	// status readout never looks like a focus/interactive border.
+	if (input.variantId != "frameless") {
+		ofSetColor(scaledAlpha(colors.background, opacity));
+		ofFill();
+		ofDrawRectangle(bounds);
+		drawOutline(bounds, scaledAlpha(colors.muted, opacity));
+	}
 
 	float pad = containerPad(bounds);
 	// Fixed native pixel-space budget (see HudWidgetDrawUtils.h's v1

@@ -56,6 +56,10 @@ public:
 		float maxDwellSeconds = 120.0f;     // long-clip viewing window (see VideoSelectionPolicy.h)
 		float longClipThresholdSeconds = 0.0f; // <= 0: 2 x maxDwellSeconds
 		bool automaticAdvance = true;
+		// OC-003 verification only (EXPERIENCE_RUNTIME_VIDEO_STARTUP_MEDIA_ID; empty = normal random startup).
+		// The startup item is this canonical mediaId, still activated through VideoSelectionPolicy. An unknown,
+		// disabled or unloadable id is REJECTED visibly (Failed health, error log): no Recovery fallback.
+		std::string verificationStartupMediaId;
 	};
 
 	// decoder: injectable for tests/DI. Null (the production default)
@@ -151,7 +155,7 @@ private:
 	// activation is reported with origin `Recovery` if any prior attempt
 	// this call failed, else `baseOrigin` — see VideoPlaybackStatus.h's
 	// MediaSelectionOrigin.
-	bool attemptSelection(const std::function<std::optional<int>()>& firstCandidateFn, MediaSelectionOrigin baseOrigin);
+	bool attemptSelection(const std::function<std::optional<int>()>& firstCandidateFn, MediaSelectionOrigin baseOrigin, bool allowRecovery = true);
 
 	uint64_t activationCount_ = 0;
 	std::string mediaRoot_;

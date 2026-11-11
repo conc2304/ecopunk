@@ -20,23 +20,35 @@ void tracePush(OrbitTrace& t, bool& open, float x, float y) {
 }
 } // namespace
 
-bool OrbitConsoleModel::update(const OrbitSeriesView& fx, const OrbitLayout& layout, const OrbitSeriesView* raw) {
+bool OrbitConsoleModel::update(const OrbitSeriesView& fx, const OrbitLayout& layout, const OrbitSeriesView* raw, const OrbitSeriesView* pred) {
 	// Cheap state is refreshed every call; geometry only on a new key.
 	src_[0].state = fx.state;
 	const bool haveRaw = raw && raw->samples && raw->count > 0;
 	src_[1].state = haveRaw ? raw->state : OrbitState::Unavailable;
 	const uint64_t rawRev = haveRaw ? raw->revision : 0, rawGen = haveRaw ? raw->generation : 0;
-	const bool key = built_ && fx.revision == builtFxRevision_ && fx.generation == builtFxGeneration_ && layout == builtLayout_
+	// OC-003: DOM/VIB slots. State and availability refresh every call; geometry only on a new key.
+	std::array<PredKey, kOrbitPredSlotCount> pk {};
+	for (size_t i = 0; i < kOrbitPredSlotCount; ++i) {
+		const OrbitSeriesView* v = pred ? &pred[i] : nullptr;
+		const bool prov = v && v->provided;
+		const bool has = prov && v->samples && v->count > 0;
+		pk[i] = {prov, has, has ? v->revision : 0, has ? v->generation : 0};
+		OrbitSourceModel& m = src_[2 + i];
+		m.provided = prov;
+		m.state = has ? v->state : OrbitState::Unavailable;
+	}
+	const bool key = built_ && pk == builtPred_ && fx.revision == builtFxRevision_ && fx.generation == builtFxGeneration_ && layout == builtLayout_
 		&& haveRaw == builtHadRaw_ && rawRev == builtRawRevision_ && rawGen == builtRawGeneration_;
 	if (key) return false;
 	builtHadRaw_ = haveRaw;
 	builtRawRevision_ = rawRev;
 	builtRawGeneration_ = rawGen;
-	rebuild(fx, layout, haveRaw ? raw : nullptr);
+	builtPred_ = pk;
+	rebuild(fx, layout, haveRaw ? raw : nullptr, pred);
 	return true;
 }
 
-void OrbitConsoleModel::rebuild(const OrbitSeriesView& fx, const OrbitLayout& L0, const OrbitSeriesView* raw) {
+void OrbitConsoleModel::rebuild(const OrbitSeriesView& fx, const OrbitLayout& L0, const OrbitSeriesView* raw, const OrbitSeriesView* pred) {
 	rebuildCount_++;
 	built_ = true;
 	builtFxRevision_ = fx.revision;
@@ -88,6 +100,16 @@ void OrbitConsoleModel::rebuild(const OrbitSeriesView& fx, const OrbitLayout& L0
 	const double anchor = fxHas ? fx.samples[fn - 1].t : 0.0;
 	if (fxHas) buildSource(src_[0], fx, L, false, 0.0);
 	if (raw) buildSource(src_[1], *raw, L, fxHas, anchor);
+	// DOM/VIB slots follow the same shared time axis (FX anchor; own newest only when FX has no samples).
+	for (size_t i = 0; i < kOrbitPredSlotCount; ++i) {
+		OrbitSourceModel& m = src_[2 + i];
+		const OrbitSeriesView* v = pred ? &pred[i] : nullptr;
+		m.provided = v && v->provided;
+		m.state = (m.provided && v->samples && v->count > 0) ? v->state : OrbitState::Unavailable;
+		m.generation = (m.provided && v->samples) ? v->generation : 0;
+		m.revision = (m.provided && v->samples) ? v->revision : 0;
+		if (m.provided) buildSource(m, *v, L, fxHas, anchor);
+	}
 }
 
 void OrbitConsoleModel::buildSource(OrbitSourceModel& m, const OrbitSeriesView& s, const OrbitLayout& L, bool haveAnchor, double anchorT) {

@@ -1,10 +1,13 @@
 #pragma once
 
+#include <functional>
+
 #include "AllocationCounter.h"
 #include "BlobProductionScene.h"
 #include "BlueprintProductionScene.h"
 #include "FragmentProductionScene.h"
 #include "QuadrantProductionScene.h"
+#include "CrtPhosphorScene.h"
 #include "HudCompositorBridge.h"
 #include "HudFrameData.h"
 #include "ExperienceSettingsPage.h"
@@ -22,6 +25,8 @@
 #include "SceneContract.h"
 #include "SceneManager.h"
 #include "SceneColorSampler.h"
+#include "CpuRawAcquisition.h" // OC-003-F diagnostic (header-only, off by default)
+#include "PaletteSink.h"
 #include "SceneActivityProbe.h" // OC-004 diagnostic, opt-in
 #include "TemporalProductionScene.h"
 #include "WallClockSampler.h"
@@ -105,7 +110,7 @@ public:
 	// installBlueprintProductionScene() starts in Blueprint.
 	//
 	// Roster (NextScene ring order), fixed registry order Blob, Temporal,
-	// Blueprint, Fragment, Quadrant:
+	// Blueprint, Fragment, Quadrant, CrtPhosphor:
 	//   Full         — [Blob, Temporal, Blueprint, Fragment, Quadrant]: the
 	//                  normal run and the full-ring circuit proof.
 	//   ThreeScene   — [Blob, Temporal, Blueprint] (BLUE-001): the ring the
@@ -115,7 +120,10 @@ public:
 	//                  TwoSceneAcceptanceHarness and RT-003's
 	//                  SceneSwitchHarness were accepted against (both assert
 	//                  exactly that registry and step '['/']' assuming it).
-	enum class ProductionRoster { BlobTemporal, ThreeScene, Full };
+	//   Production   — [Blob, Temporal, Blueprint, Fragment, Quadrant, CrtPhosphor]:
+	//                  the NORMAL (non-harness) run only. Every accepted harness keeps
+	//                  the ring it was accepted against (Full stays five scenes).
+	enum class ProductionRoster { BlobTemporal, ThreeScene, Full, Production };
 
 	void installBlobProductionScene(ProductionRoster roster = ProductionRoster::Full) {
 		installProductionScenes(BlobProductionScene::kSceneId, roster);
@@ -134,6 +142,12 @@ public:
 		installProductionScenes(QuadrantProductionScene::kSceneId, ProductionRoster::Full);
 	}
 	QuadrantProductionScene& quadrantSceneForTesting() { return quadrantScene_; }
+	// CRT Phosphor, sixth scene of the normal-run (Production) roster, appended
+	// after Quadrant. Starting here is opt-in (EXPERIENCE_RUNTIME_CRT_SCENE).
+	void installCrtPhosphorProductionScene() {
+		installProductionScenes(CrtPhosphorScene::kSceneId, ProductionRoster::Production);
+	}
+	CrtPhosphorScene& crtPhosphorSceneForTesting() { return crtPhosphorScene_; }
 
 	BlueprintProductionScene& blueprintSceneForTesting() { return blueprintScene_; }
 	// Read-only: the one canonical VideoPlaybackService (resume-window verification).
@@ -275,6 +289,18 @@ public:
 	bool videoColorEnabledForTesting() const { return videoColorEnabled_; }
 	const scenecolorsampling::SceneColorSampler& videoColorForTesting() const { return videoColor_; }
 	const rawvideo::Gate& videoColorGateForTesting() const { return videoColorGate_; }
+	// OC-003-F diagnostics (all off by default): CPU RAW acquisition, palette sink, per-frame acquisition accounting for the frame stream.
+	bool cpuRawEnabledForTesting() const { return cpuRawEnabled_; }
+	const cpuraw::Sampler& cpuRawForTesting() const { return cpuRaw_; }
+	const rawvideo::Gate& cpuRawGateForTesting() const { return cpuRawGate_; }
+	struct FrameAcquisition {   // what THIS frame's draw() did, read by Rt004FramePhaseProbe when the frame closes
+		uint32_t cpuRaw = 0;     // CPU RAW samples taken (valid)
+		uint32_t cpuRawGap = 0;  // CPU RAW gaps recorded
+		double cpuRawUs = 0.0;   // wall microseconds: access + reduce + analyze (excludes the palette sink)
+		double palUs = 0.0;      // wall microseconds spent in the palette sink (analysis + file I/O), any stream
+		bool videoNew = false;   // the decoder delivered a new frame this frame
+	};
+	const FrameAcquisition& lastFrameAcquisition() const { return frameAcq_; }
 	const scenecolorsampling::SnapshotPublisher& videoColorPublisherForTesting() const { return videoColorPublisher_; }
 
 	// RT-003 evidence counters — test/report instrumentation only, never read
@@ -317,6 +343,16 @@ public:
 	// development; the real target is Roadmap Phase 9 (Raspberry Pi
 	// Build, Deployment, and Baseline Profiling) work, not decided here.
 	static constexpr float kProvisionalDevelopmentFrameRateFps = 30.0f;
+
+	// -- Interactive HUD region: option port ---------------------------------------------------
+	// The ONE place a Left/Right value step leaves the HUD. `row` = the selected row of the
+	// scene's declared selector group, `delta` = +/-1 (the scene wraps). The constructor installs
+	// the production port: SceneManager::dispatchSceneOption (the approved Tier C extension,
+	// docs/reviews/crt-selectors-tier-c-proposal.md). The region is available only while the
+	// active scene ADVERTISES enough option axes; clearing the port makes it unavailable. Never a
+	// concrete-scene cast.
+	void setRegionOptionSink(std::function<bool(int row, int delta)> sink) { regionOptionSink_ = std::move(sink); }
+	const HudCompositorBridge& hudBridgeForTesting() const { return hudCompositorBridge_; }
 
 private:
 	void establishGlobalRenderingBaseline();
@@ -387,6 +423,16 @@ private:
 	scenecolorsampling::SnapshotPublisher videoColorPublisher_; // immutable RAW snapshot -> HudFrameData::sceneColorRaw
 	std::string videoColorMediaId_;     // mediaId measured in the current RAW generation
 	bool videoColorEnabled_ = false;
+	// OC-003-F: CPU RAW acquisition prototype (EXPERIENCE_RUNTIME_CPU_RAW=1) and palette sink (EXPERIENCE_RUNTIME_PALETTE_DIAG=<dir>).
+	cpuraw::Sampler cpuRaw_;
+	rawvideo::Gate cpuRawGate_;       // its OWN gate: eligibility / generations never depend on whether the GPU RAW sampler is on
+	bool cpuRawEnabled_ = false;
+	bool cpuRawStats_ = false;
+	double cpuRawLastLogAt_ = 0.0;
+	palette::Sink paletteSink_;
+	bool paletteOn_ = false;
+	FrameAcquisition frameAcq_;
+	void sampleCpuRaw();
 	bool videoColorStats_ = false;      // EXPERIENCE_RUNTIME_VIDEO_COLOR_STATS=1
 	bool videoColorDiag_ = false;       // EXPERIENCE_RUNTIME_VIDEO_COLOR_DIAG=1 (texture facts + CPU reference per sample)
 	double videoColorLastLogAt_ = 0.0;
@@ -451,6 +497,10 @@ private:
 	// on first switch.
 	QuadrantProductionScene quadrantScene_;
 
+	// CRT Phosphor: sixth scene of the Production roster, same construction-order
+	// rule (declared after runtimeServices_); set up lazily on first switch.
+	CrtPhosphorScene crtPhosphorScene_;
+
 	bool productionScenesInstalled_ = false;
 
 	// The one current aggregate — replaced once per completed runtime
@@ -482,6 +532,10 @@ private:
 	double settingsClosedAt_ = -1.0;      // monotonic; guards the closing Enter against re-activating MENU
 	double lastOkInputAt_ = -1.0;         // monotonic; debounces OK auto-repeat
 	double orbitEditorClosedAt_ = -1.0;   // monotonic; the closing Enter must not re-open the Orbit editor
+	double interactiveClosedAt_ = -1.0;   // monotonic; the closing Enter must not re-enter the interactive region
+	std::function<bool(int row, int delta)> regionOptionSink_; // see setRegionOptionSink()
+	bool handleInteractiveKey(int key);
+	void stepInteractiveOption(int delta);
 	// Recent console activity for the HUD log (installed in setup()).
 	std::shared_ptr<HudLogCapture> logCapture_;
 

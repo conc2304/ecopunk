@@ -1,0 +1,131 @@
+{
+  "bin": "/private/tmp/claude-501/-Users-joseconchello-openFrameworks/66e0aad9-78cc-487c-97e6-c639f119c790/scratchpad/frozen2/sketches/experience_runtime/bin/experience_runtime.app/Contents/MacOS/experience_runtime",
+  "media_id": "media.auto.7021ad87",
+  "seconds": 75,
+  "scenes": {
+    "blob": {
+      "rc": 124,
+      "acquisition_mode": "fxGpu=off rawGpu=off cpuRaw=on palette=off predominant=on contract=oc003f-1",
+      "scene_ids_seen": [
+        "blob-region-prototype"
+      ],
+      "cpu_raw": {
+        "due": 135,
+        "samples": 135,
+        "gaps": 0,
+        "noPixels": 0,
+        "badFormat": 0,
+        "dimMismatch": 0,
+        "droppedGen": 0,
+        "accessWallMs": {
+          "p50": 0.00253999,
+          "p95": 0.00307798,
+          "max": 0.017857
+        },
+        "accessCpuMs": {
+          "p50": 0.002102,
+          "p95": 0.002514,
+          "max": 0.017197
+        },
+        "reduceWallMs": {
+          "p50": 1.10024,
+          "p95": 1.53642,
+          "max": 1.59405
+        },
+        "reduceCpuMs": {
+          "p50": 1.0982,
+          "p95": 1.53683,
+          "max": 1.59448
+        },
+        "analyzeWallMs": {
+          "p50": 0.424922,
+          "p95": 0.540697,
+          "max": 0.557363
+        },
+        "analyzeCpuMs": {
+          "p50": 0.424672,
+          "p95": 0.540537,
+          "max": 0.556783
+        },
+        "totalWallMs": {
+          "p50": 1.53051,
+          "p95": 2.07505,
+          "max": 2.13833
+        },
+        "totalCpuMs": {
+          "p50": 1.52986,
+          "p95": 2.07462,
+          "max": 2.13764
+        }
+      },
+      "frames": {
+        "frames": 1747,
+        "frame_ms_p50": 33.3205,
+        "frame_ms_p95": 34.7064,
+        "draw_cpu_ms_mean": 2.7905523755008566
+      }
+    },
+    "temporal": {
+      "rc": 124,
+      "acquisition_mode": "fxGpu=off rawGpu=off cpuRaw=on palette=off predominant=on contract=oc003f-1",
+      "scene_ids_seen": [
+        "temporal-fields"
+      ],
+      "cpu_raw": {
+        "due": 134,
+        "samples": 134,
+        "gaps": 0,
+        "noPixels": 0,
+        "badFormat": 0,
+        "dimMismatch": 0,
+        "droppedGen": 0,
+        "accessWallMs": {
+          "p50": 0.003326,
+          "p95": 0.00661504,
+          "max": 0.0111009
+        },
+        "accessCpuMs": {
+          "p50": 0.001646,
+          "p95": 0.002826,
+          "max": 0.004005
+        },
+        "reduceWallMs": {
+          "p50": 1.03288,
+          "p95": 1.32496,
+          "max": 1.56651
+        },
+        "reduceCpuMs": {
+          "p50": 1.03259,
+          "p95": 1.31691,
+          "max": 1.56695
+        },
+        "analyzeWallMs": {
+          "p50": 0.383337,
+          "p95": 0.521237,
+          "max": 0.618962
+        },
+        "analyzeCpuMs": {
+          "p50": 0.378217,
+          "p95": 0.520506,
+          "max": 0.58201
+        },
+        "totalWallMs": {
+          "p50": 1.45833,
+          "p95": 1.81731,
+          "max": 2.06464
+        },
+        "totalCpuMs": {
+          "p50": 1.45754,
+          "p95": 1.81551,
+          "max": 2.0631
+        }
+      },
+      "frames": {
+        "frames": 1747,
+        "frame_ms_p50": 33.3215,
+        "frame_ms_p95": 35.6584,
+        "draw_cpu_ms_mean": 3.7726659988551816
+      }
+    }
+  }
+}

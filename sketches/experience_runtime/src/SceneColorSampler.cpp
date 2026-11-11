@@ -13,6 +13,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <chrono>
+#include <sstream>
 
 namespace scenecolorsampling {
 
@@ -82,6 +83,7 @@ void SceneColorSampler::recordGap(double t, uint64_t gen) {
 	gap.t = t;
 	gap.generation = gen;
 	gap.valid = false;
+	tracker_.reset(); // smoothing never bridges a gap
 	if (!series_.push(gap)) stats_.droppedGeneration++;
 	stats_.gaps++;
 }
@@ -91,6 +93,7 @@ void SceneColorSampler::beginGeneration(uint64_t generation, double now) {
 	releaseLinFence();
 	if (gate_.cancelPending()) stats_.droppedGeneration++; // a deferred sample never crosses a scene change
 	series_.beginGeneration(generation, now);
+	tracker_.reset(); // DOM/VIB history and smoothing never cross a scene / media generation
 }
 
 void SceneColorSampler::ensureChain(int w, int h) {
@@ -226,7 +229,7 @@ bool SceneColorSampler::setupLinearPath() {
 #endif
 }
 
-void SceneColorSampler::submitLinear(const ofTexture& scene, int slot) {
+void SceneColorSampler::submitLinear(const ofTexture& scene, int slot, bool coarse) {
 	const float sw = scene.getWidth(), sh = scene.getHeight();
 	const bool rect = scene.getTextureData().textureTarget == GL_TEXTURE_RECTANGLE;
 	ofPushStyle();
@@ -246,19 +249,115 @@ void SceneColorSampler::submitLinear(const ofTexture& scene, int slot) {
 		dst.end();
 	};
 	pass(linA_, scene, sw, sh, rect, true);                      // composite over black + EOTF + box
-	pass(linBs_[slot], linA_.getTexture(), linA_.getWidth(), linA_.getHeight(), false, false); // already linear: plain box
+	if (coarse) pass(linBs_[slot], linA_.getTexture(), linA_.getWidth(), linA_.getHeight(), false, false); // already linear: plain box
 	ofPopStyle();
+}
+
+bool SceneColorSampler::readHalfTarget(const ofTexture& tex, bool publish) {
+#ifdef TARGET_OPENGLES
+	(void)tex; (void)publish;
+	if (halfLogged_++ < 3) ofLogError("SceneColor") << "half-float readback (glGetTexImage GL_HALF_FLOAT) is not available on GLES builds: reported, not substituted";
+	stats_.halfFailures++;
+	return false;
+#else
+	const ofTextureData& td = tex.getTextureData();
+	const int w = static_cast<int>(tex.getWidth()), h = static_cast<int>(tex.getHeight());
+	const std::size_t words = static_cast<std::size_t>(w) * h * 4;
+	if (halfInfo_.empty()) { // once: what the driver will actually transfer
+		GLint ifmt = 0, redBits = 0, redType = 0;
+		glBindTexture(td.textureTarget, td.textureID);
+		glGetTexLevelParameteriv(td.textureTarget, 0, GL_TEXTURE_INTERNAL_FORMAT, &ifmt);
+		glGetTexLevelParameteriv(td.textureTarget, 0, GL_TEXTURE_RED_SIZE, &redBits);
+		glGetTexLevelParameteriv(td.textureTarget, 0, GL_TEXTURE_RED_TYPE, &redType);
+		glBindTexture(td.textureTarget, 0);
+		while (glGetError() != GL_NO_ERROR) {} // the parameter queries above are not part of the transfer under test
+		std::ostringstream os;
+		os << "texture internalFormat=0x" << std::hex << ifmt << " redBits=" << std::dec << redBits << " redType=0x" << std::hex << redType << std::dec
+		   << " transfer=GL_RGBA/GL_HALF_FLOAT bytesPerReadback=" << words * sizeof(uint16_t) << " (float baseline " << words * sizeof(float) << ")";
+		halfInfo_ = os.str();
+		const GLubyte* rd = glGetString(GL_RENDERER);
+		const GLubyte* ver = glGetString(GL_VERSION);
+		ofLogNotice("SceneColor") << "experimental half-float readback: " << halfInfo_ << " glRenderer=\"" << (rd ? reinterpret_cast<const char*>(rd) : "?")
+			<< "\" glVersion=\"" << (ver ? reinterpret_cast<const char*>(ver) : "?") << "\"";
+	}
+	halfBuf_.resize(words);
+	while (glGetError() != GL_NO_ERROR) {} // attribute any error below to this transfer
+	ofSetPixelStoreiAlignment(GL_PACK_ALIGNMENT, w, 2, 4);
+	glBindTexture(td.textureTarget, td.textureID);
+	glGetTexImage(td.textureTarget, 0, GL_RGBA, GL_HALF_FLOAT, halfBuf_.data());
+	glBindTexture(td.textureTarget, 0);
+	const GLenum err = glGetError();
+	if (err != GL_NO_ERROR) {
+		stats_.glErrors++;
+		stats_.halfFailures++;
+		if (halfLogged_++ < 5) ofLogError("SceneColor") << "half-float readback FAILED: glGetTexImage(GL_RGBA, GL_HALF_FLOAT) raised GL error 0x" << std::hex << err << std::dec
+			<< " (no fallback to the float path; the sample is " << (publish ? "recorded as a gap)" : "skipped)");
+		return false;
+	}
+	stats_.halfReadbacks++;
+	stats_.gpuReadbacks++;
+	stats_.gpuReadbackBytes += static_cast<uint64_t>(words) * sizeof(uint16_t);
+	const double x0 = nowMs();
+	if (publish) {
+		pxBuf_.allocate(w, h, OF_IMAGE_COLOR_ALPHA); // same layout the float baseline allocates for RGBA16F
+		halffloat::widen(halfBuf_.data(), pxBuf_.getData(), words);
+	} else {
+		verifyBuf_.resize(words);
+		halffloat::widen(halfBuf_.data(), verifyBuf_.data(), words);
+	}
+	stats_.widen.add(nowMs() - x0);
+	return true;
+#endif
+}
+
+std::string SceneColorSampler::readbackSummary() const {
+	std::ostringstream os;
+	os << "rb=" << readbackName();
+	if (readbackFormat_ != ReadbackFormat::Float) {
+		os << " widenMs[p50/p95/max]=" << stats_.widen.pct(0.5) << "/" << stats_.widen.pct(0.95) << "/" << stats_.widen.max
+		   << " halfReadbacks=" << stats_.halfReadbacks << " halfFailures=" << stats_.halfFailures << " glErrors=" << stats_.glErrors;
+		if (readbackFormat_ == ReadbackFormat::HalfVerify)
+			os << " verifySamples=" << stats_.verifySamples << " verifyMismatchSamples=" << stats_.verifyMismatchSamples << " verifyMismatchWords=" << stats_.verifyMismatchWords
+			   << " verifyFirst=" << stats_.verifyFirstIndex << "(" << stats_.verifyFirstBase << " vs " << stats_.verifyFirstHalf << ")";
+		if (!halfInfo_.empty()) os << " [" << halfInfo_ << "]";
+	}
+	return os.str();
 }
 
 bool SceneColorSampler::collectLinear(int slot, double t, uint64_t gen) {
 	const double w0 = nowMs();
-	linBs_[slot].readToPixels(pxBuf_); // GPU completion wait (Sync) / near-free (Deferred) + 16x9 transfer
+	// OC-003: with predominant sampling the ONE readback is the 160x90 target (AVG, DOM and VIB all come from it).
+	const bool pred = predominantActive();
+	ofFbo& target = pred ? linA_ : linBs_[slot];
+	bool readOk = true;
+	if (readbackFormat_ != ReadbackFormat::Half) { // Float baseline (and the HalfVerify reference): UNCHANGED
+		target.readToPixels(pxBuf_); // GPU completion wait (Sync) / near-free (Deferred) + transfer
+		stats_.gpuReadbacks++;
+		stats_.gpuReadbackBytes += static_cast<uint64_t>(pxBuf_.getWidth()) * pxBuf_.getHeight() * pxBuf_.getNumChannels() * sizeof(float);
+	}
+	if (readbackFormat_ == ReadbackFormat::Half) readOk = readHalfTarget(target.getTexture(), true);
+	else if (readbackFormat_ == ReadbackFormat::HalfVerify && readHalfTarget(target.getTexture(), false)) {
+		stats_.verifySamples++;
+		const std::size_t words = verifyBuf_.size();
+		const bool sameLayout = words == static_cast<std::size_t>(pxBuf_.getWidth()) * pxBuf_.getHeight() * pxBuf_.getNumChannels();
+		std::size_t bad = sameLayout ? 0 : words;
+		const float* a = pxBuf_.getData();
+		for (std::size_t i = 0; sameLayout && i < words; ++i) {
+			uint32_t x, y;
+			std::memcpy(&x, a + i, 4); std::memcpy(&y, verifyBuf_.data() + i, 4);
+			if (x != y && !(std::isnan(a[i]) && std::isnan(verifyBuf_[i]))) {
+				if (bad++ == 0 && stats_.verifyFirstIndex < 0) { stats_.verifyFirstIndex = static_cast<long long>(i); stats_.verifyFirstBase = a[i]; stats_.verifyFirstHalf = verifyBuf_[i]; }
+			}
+		}
+		if (bad) { stats_.verifyMismatchSamples++; stats_.verifyMismatchWords += bad; }
+	}
 	const double w1 = nowMs();
 	stats_.wait.add(w1 - w0);
-	const std::size_t n = static_cast<std::size_t>(pxBuf_.getWidth()) * pxBuf_.getHeight();
+	const std::size_t n = readOk ? static_cast<std::size_t>(pxBuf_.getWidth()) * pxBuf_.getHeight() : 0; // a failed half transfer is a gap, never stale pixels
 	Sample s;
 	s.t = t;
 	s.generation = gen;
+	const float* paletteGrid = nullptr; // OC-003-F: the grid this readback already produced (only with a sink attached)
 	if (n > 0) {
 		double r = 0, g = 0, b = 0;
 		const float* d = pxBuf_.getData();
@@ -267,13 +366,30 @@ bool SceneColorSampler::collectLinear(int slot, double t, uint64_t gen) {
 		s.r = static_cast<float>(r / n); s.g = static_cast<float>(g / n); s.b = static_cast<float>(b / n);
 		s.luma = luma709(s.r, s.g, s.b);
 		s.valid = std::isfinite(s.r) && std::isfinite(s.g) && std::isfinite(s.b) && std::isfinite(s.luma); // never publish NaN/inf as a colour
+		if (pred && s.valid && gen == series_.generation()) {
+			const double p0 = nowMs();
+			const predominant::Result pr = tracker_.step(d, n, ch);
+			s.domValid = pr.dom.valid; s.vibValid = pr.vib.valid;
+			if (pr.dom.valid) { s.domR = pr.dom.rgb.r; s.domG = pr.dom.rgb.g; s.domB = pr.dom.rgb.b; stats_.domValid++; }
+			if (pr.vib.valid) { s.vibR = pr.vib.rgb.r; s.vibG = pr.vib.rgb.g; s.vibB = pr.vib.rgb.b; stats_.vibValid++; }
+			else stats_.vibInvalid++;
+			stats_.predominantCpu.add(nowMs() - p0);
+			if (paletteSink_ && ch == 4 && static_cast<int>(pxBuf_.getWidth()) == palette::Sink::kGridW && static_cast<int>(pxBuf_.getHeight()) == palette::Sink::kGridH) paletteGrid = d; // OC-003-F
+		}
 	}
+	if (!s.valid) tracker_.reset();
 	const double c1 = nowMs();
 	stats_.convert.add(c1 - w1);
 	if (!s.valid) stats_.gaps++;
-	if (!series_.push(s)) stats_.droppedGeneration++;
+	const bool pushed = series_.push(s);
+	if (!pushed) stats_.droppedGeneration++;
 	stats_.completed++;
+	(s.valid && pushed ? stats_.collectOk : stats_.collectFail)++; // OC-003 attribution: observation only
 	stats_.push.add(nowMs() - c1);
+	if (paletteSink_) { // OC-003-F diagnostic, after every production step; its cost is kept out of convert/push
+		if (s.valid && pushed && paletteGrid) framePaletteUs_ += paletteSink_->add(paletteStream_, gen, t, paletteGrid, s);
+		else if (!s.valid || !pushed) paletteSink_->gap(paletteStream_);
+	}
 	return s.valid;
 }
 
@@ -281,7 +397,7 @@ bool SceneColorSampler::sampleLinearGpu(const ofTexture& scene, double now) {
 	const double t0 = nowMs();
 	const int slot = nextSlot_;
 	nextSlot_ = (nextSlot_ + 1) % 2;
-	submitLinear(scene, slot);
+	submitLinear(scene, slot, !predominantActive());
 	if (mode_ == ReadbackMode::Deferred && defer_ == Defer::Fence) {
 		releaseLinFence();
 		linFence_ = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
@@ -308,8 +424,10 @@ void SceneColorSampler::finishSample(const uint8_t* px, double t, uint64_t gen) 
 	} else {
 		stats_.gaps++;
 	}
-	if (!series_.push(s)) stats_.droppedGeneration++;
+	const bool pushed = series_.push(s);
+	if (!pushed) stats_.droppedGeneration++;
 	stats_.completed++;
+	(s.valid && pushed ? stats_.collectOk : stats_.collectFail)++; // OC-003 attribution: observation only
 }
 
 void SceneColorSampler::onLiveFrame(const ofTexture& sceneTexture, double now) {
@@ -324,6 +442,7 @@ void SceneColorSampler::onLiveFrame(const ofTexture& sceneTexture, double now) {
 		Sample gap;
 		gap.t = now;
 		gap.generation = series_.generation();
+		tracker_.reset();
 		series_.push(gap);
 		stats_.gaps++;
 		stats_.unsupportedFormat++;
@@ -375,6 +494,8 @@ void SceneColorSampler::onLiveFrame(const ofTexture& sceneTexture, double now) {
 	if (effectiveMode() == ReadbackMode::Sync) {
 		ofPixels pixels;
 		chain_[chainStages_ - 1].getTexture().readToPixels(pixels);
+		stats_.gpuReadbacks++;
+		stats_.gpuReadbackBytes += static_cast<uint64_t>(pixels.getWidth()) * pixels.getHeight() * pixels.getNumChannels();
 		finishSample(pixels.getData(), now, series_.generation());
 		// Accuracy self-test (EXPERIENCE_RUNTIME_SCENE_COLOR_SELFTEST=1, measurement only, sync mode): also read the
 		// FULL-resolution frame and log the exact linear-light average beside the probe's value.
@@ -398,6 +519,8 @@ void SceneColorSampler::onLiveFrame(const ofTexture& sceneTexture, double now) {
 	}
 
 	chain_[chainStages_ - 1].getTexture().copyTo(pbo_);
+	stats_.gpuReadbacks++;
+	stats_.gpuReadbackBytes += static_cast<uint64_t>(probeW_) * probeH_ * 4;
 	fence_ = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 	glFlush();
 	inflightT_ = now;
@@ -415,6 +538,7 @@ void SceneColorSampler::onStaticFrame(double now) {
 	gap.t = now;
 	gap.generation = series_.generation();
 	gap.valid = false;
+	tracker_.reset();
 	series_.push(gap);
 	stats_.gaps++;
 }
@@ -463,18 +587,21 @@ void SceneColorSampler::poll(double) {
 		case PollAction::DiscardWaitFailed:
 			releaseLinFence();
 			stats_.discardedWaitFailed++;
+			stats_.collectFail++; // OC-003 attribution: observation only
 			recordGap(sampleT, gen);
 			ofLogWarning("SceneColor") << "deferred readback discarded: fence wait failed (gen=" << gen << ")";
 			break;
 		case PollAction::DiscardTimeout:
 			releaseLinFence();
 			stats_.discardedTimeout++;
+			stats_.collectFail++; // OC-003 attribution: observation only
 			recordGap(sampleT, gen);
 			ofLogWarning("SceneColor") << "deferred readback discarded: fence not signalled after " << kFenceTimeoutMs << " ms (gen=" << gen << ")";
 			break;
 		case PollAction::DiscardGeneration:
 			releaseLinFence();
 			stats_.droppedGeneration++;
+			stats_.collectFail++; // OC-003 attribution: observation only
 			return;
 		}
 		if (!wasDisabled && gate_.disabled())

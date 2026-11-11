@@ -3,6 +3,7 @@
 #include "ofEvents.h"
 
 #include <cstdint>
+#include <cstdio>
 #include <deque>
 #include <memory>
 #include <string>
@@ -55,6 +56,17 @@ class ExperienceRuntime;
 // history full). EXPERIENCE_RUNTIME_FRAME_PHASE_WINDOW_MS sets the summary
 // period (default 10000, min 250).
 //
+// OC-003 per-frame stream (EXPERIENCE_RUNTIME_FRAME_PHASE_FRAMES=<csv path>, needs the probe on): one CSV row per
+// frame, STREAMED through a buffered FILE* (flushed about once a second; nothing is retained in memory). Columns:
+// frame,mono,total_ms, <seg>_wall/_cpu/_vcsw/_ivcsw for update/preDraw/draw/glFinish/postDraw, scene,phase,media,
+// ex_startup,ex_media,ex_scene,ex_transition,exclude. Exclusion markers (offline script drops exclude=1 rows):
+//   ex_startup    frame starts < EXPERIENCE_RUNTIME_FRAME_PHASE_WARMUP_S (default 30) after probe creation
+//   ex_media      within EXPERIENCE_RUNTIME_FRAME_PHASE_SETTLE_MS (default 3000) after a canonical-media change
+//   ex_scene      within the settle time after a scene-owner change
+//   ex_transition scene transition phase != Idle
+// Sampling-event columns (appended after `exclude`; only with the CSV on): ev, ev_fail (bitmasks 1 fxIssue, 2 fxCollect, 4 rawIssue,
+// 8 rawCollect), fx_issue fx_collect raw_issue raw_collect, fx_ifail fx_cfail raw_ifail raw_cfail. See the EvSnap block below and
+// docs/reviews/OC-003-sampling-frame-attribution-procedure.md. The probe only READS the samplers' counters.
 // Diagnostic controls (only with the probe enabled; never in a normal run):
 //   EXPERIENCE_RUNTIME_FRAME_LIMITER=off   ofSetFrameRate(0) after runtime setup
 //   EXPERIENCE_RUNTIME_VSYNC=off           ofSetVerticalSync(false) after runtime setup
@@ -84,6 +96,12 @@ private:
 		double wallMs = 0, cpuMs = 0;
 		long vcsw = -1, ivcsw = -1;
 	};
+	struct EvSnap {
+		uint64_t issueOk = 0, issueFail = 0, collectOk = 0, collectFail = 0;
+	};
+	struct EvDelta {
+		uint32_t issueOk = 0, issueFail = 0, collectOk = 0, collectFail = 0;
+	};
 	enum Seg { Update, PreDraw, Draw, Finish, PostDraw, SegCount };
 
 	static Stamp now();
@@ -97,6 +115,8 @@ private:
 	void closeFrame(const Stamp& nextU0);
 	void writeWindowSummary(double atMs);
 	void writeLine(const std::string& line);
+	void writeFrameRow(uint64_t frame, const Stamp& nextU0, double totalMs, const Segment* seg, const EvDelta* fx, const EvDelta* raw);
+	std::string eventTotals() const;
 	std::string temporalResidency() const;
 	void checkTransitions(const Stamp& at);
 	std::string frameContext() const;
@@ -115,6 +135,28 @@ private:
 	bool haveFrame_ = false;
 	Stamp u0_, u1_, d0_, d1_, f1_;
 	bool haveU1_ = false, haveD0_ = false, haveD1_ = false;
+
+	// OC-003 per-frame CSV stream (null = off).
+	FILE* frameCsv_ = nullptr;
+	double warmupMs_ = 30000.0, settleMs_ = 3000.0;
+	int64_t lastMediaChangeNs_ = 0, lastSceneChangeNs_ = 0, lastCsvFlushNs_ = 0;
+	std::string csvScene_, csvMedia_;
+
+	// OC-003 sampling-frame attribution (only with the per-frame CSV on; observation of the samplers' own counters, nothing
+	// is called into the sampler lifecycle). Per frame, event = delta of a monotonic counter between two consecutive
+	// frame closes, so an event is attributed to the frame (update+draw) that performed it and several events in one frame
+	// stay individually counted. Event schema (CSV columns appended after `exclude`):
+	//   ev        bitmask of SUCCESSFUL events: 1 fxIssue, 2 fxCollect, 4 rawIssue, 8 rawCollect  (0 = no-event frame)
+	//   ev_fail   bitmask of FAILED attempts, same bit order (issue refused / collection without a published valid sample)
+	//   fx_issue fx_collect raw_issue raw_collect   successful event counts in the frame
+	//   fx_ifail fx_cfail raw_ifail raw_cfail       failed attempt counts in the frame
+	EvSnap readEvents(bool raw) const;
+	EvDelta evDelta(EvSnap& prev, const EvSnap& cur);
+	bool haveEvBase_ = false;
+	EvSnap evPrev_[2], evAbs_[2], evBase_[2]; // [0]=FX [1]=RAW: previous snapshot, latest absolute, absolute at the first snapshot
+	EvSnap evCsv_[2];                          // sum of events written to CSV rows
+	EvSnap evUnattributed_[2];                 // events of partial frames (startup/exit) that have no CSV row
+	uint64_t lastCsvFrame_ = 0;
 
 	size_t slowLines_ = 0;
 	static constexpr size_t kMaxSlowLines = 5000;

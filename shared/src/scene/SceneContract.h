@@ -143,8 +143,19 @@ struct SceneCommandDescriptor {
 	bool prominent = false;
 };
 
+// APPROVED ADDITIVE EXTENSION (Tier C; docs/reviews/crt-selectors-tier-c-proposal.md; approved by the
+// project owner 2026-11-10, Architecture ratification pending): scene-advertised, typed option axes
+// (e.g. CRT PIXELS / PALETTE). SceneCommand is untouched. Empty by default; existing scenes compile
+// and behave unchanged.
+struct SceneOptionAxis {
+	std::string id;    // stable axis id
+	std::string label; // short human label
+	int count = 0;     // selectable values currently offered
+};
+
 struct SceneCapabilities {
 	std::vector<SceneCommandDescriptor> commands;
+	std::vector<SceneOptionAxis> optionAxes; // additive: see SceneOptionAxis
 };
 
 // ---------------------------------------------------------------------------
@@ -184,6 +195,10 @@ public:
 	virtual SceneHudStatus hudStatus() const = 0;
 	virtual SceneCapabilities capabilities() const = 0;
 	virtual bool executeCommand(SceneCommand command) = 0;
+	// Additive (see SceneOptionAxis): step option axis `axisIndex` (index into capabilities().optionAxes)
+	// by `delta` (+/-1; the scene wraps). Default: unsupported. Dispatched only via
+	// SceneManager::dispatchSceneOption, with the same Idle/FadingIn gating as executeCommand.
+	virtual bool stepOption(int axisIndex, int delta) { (void)axisIndex; (void)delta; return false; }
 
 	virtual void reset() = 0;
 	virtual void shutdown() = 0;

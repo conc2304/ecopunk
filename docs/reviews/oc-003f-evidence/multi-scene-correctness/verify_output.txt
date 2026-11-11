@@ -1,0 +1,4 @@
+OK   01_PCMP_r1 rows=852 media_file/size/duration=('Rainfall.mp4', '960x540', '28.366s') start_offset=0s
+VERIFIED
+OK   01_PCMP_r1 scenes=5 changes=12 generations={'fx': 0, 'raw_gpu': 7, 'raw_cpu': 7} mode={'fxGpu': 'off', 'rawGpu': 'on', 'cpuRaw': 'on', 'palette': 'on'}
+VERIFIED

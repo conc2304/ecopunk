@@ -49,6 +49,10 @@ struct OrbitSeriesView {
 	uint64_t revision = 0;
 	const OrbitSample * samples = nullptr; // oldest -> newest
 	uint32_t count = 0;
+	// OC-003: whether the runtime measures this metric for this source at all (opt-in DOM/VIB). false => the
+	// observation is NOT AVAILABLE, which is different from "provided but currently no measurement". AVG
+	// slots ignore it (always provided). Set only by the DOM/VIB adapters.
+	bool provided = false;
 };
 
 // ---- Orbit history tuning (code-only; no user setting, no persistence) --------------------------
@@ -126,7 +130,13 @@ struct OrbitSourceModel {
 	OrbitTrace luma; // relative-luminance polyline over the ribbon (linear 0..1)
 	OrbitPt radarPt[3] {}; // radar vertices (R, G, B) in section-local px; valid iff hasLatest
 	uint64_t generation = 0, revision = 0;
+	bool provided = true; // OC-003: false for a DOM/VIB slot the runtime does not measure (NOT AVAILABLE)
 };
+
+// OC-003: six series slots. 0/1 = FX/RAW AVG (the historic fx()/raw() models), 2/3 = FX/RAW DOM, 4/5 = FX/RAW VIB.
+// Slot index = metric == AVG ? source : 2 * metric + source (OrbitDraw.h orbitSlotOf()).
+constexpr size_t kOrbitSlotCount = 6;
+constexpr size_t kOrbitPredSlotCount = 4; // DOM/VIB slots, in the order FX-DOM, RAW-DOM, FX-VIB, RAW-VIB
 
 class OrbitConsoleModel {
 public:
@@ -136,9 +146,12 @@ public:
 	// Returns true iff geometry was rebuilt. raw: optional RAW VIDEO series (decoded video colour
 	// BEFORE scene effects), owned and sampled by the media/runtime owner. nullptr / empty =
 	// RAW VIDEO unavailable: nothing is drawn for it and it never borrows the FX colours.
-	bool update(const OrbitSeriesView & fx, const OrbitLayout & layout, const OrbitSeriesView * raw = nullptr);
+	// pred (OC-003, optional): array of kOrbitPredSlotCount views {FX-DOM, RAW-DOM, FX-VIB, RAW-VIB}; nullptr or a
+	// view with provided == false leaves that slot NOT AVAILABLE. A slot never borrows any other slot's samples.
+	bool update(const OrbitSeriesView & fx, const OrbitLayout & layout, const OrbitSeriesView * raw = nullptr, const OrbitSeriesView * pred = nullptr);
 
 	const OrbitSourceModel & source(OrbitSourceId id) const { return src_[size_t(id)]; }
+	const OrbitSourceModel & slot(size_t i) const { return src_[i]; }
 	const OrbitSourceModel & fx() const { return src_[0]; }
 	const OrbitSourceModel & raw() const { return src_[1]; }
 	const OrbitSectionLayout & section() const { return sec_; }
@@ -164,14 +177,20 @@ public:
 	}
 
 private:
-	void rebuild(const OrbitSeriesView & fx, const OrbitLayout & layout, const OrbitSeriesView * raw);
+	void rebuild(const OrbitSeriesView & fx, const OrbitLayout & layout, const OrbitSeriesView * raw, const OrbitSeriesView * pred);
 	void buildSource(OrbitSourceModel & m, const OrbitSeriesView & s, const OrbitLayout & L, bool haveAnchor, double anchorT);
 
 	OrbitSectionLayout sec_;
 	OrbitPt radarCenter_ {};
 	float radarR_ = 0;
 	OrbitPt axis_[3] {};
-	std::array<OrbitSourceModel, 2> src_ {};
+	std::array<OrbitSourceModel, kOrbitSlotCount> src_ {};
+	struct PredKey {
+		bool provided = false, has = false;
+		uint64_t revision = 0, generation = 0;
+		bool operator==(const PredKey & o) const { return provided == o.provided && has == o.has && revision == o.revision && generation == o.generation; }
+	};
+	std::array<PredKey, kOrbitPredSlotCount> builtPred_ {};
 	bool built_ = false, builtHadRaw_ = false;
 	uint64_t builtFxRevision_ = 0, builtFxGeneration_ = 0, builtRawRevision_ = 0, builtRawGeneration_ = 0, rebuildCount_ = 0;
 	OrbitLayout builtLayout_ {};

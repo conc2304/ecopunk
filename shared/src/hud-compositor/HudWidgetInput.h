@@ -68,6 +68,12 @@ struct HudWidgetInput {
 	// labels to it before drawing its own bitmap text.
 	const class IHudLabelTypography* labelTypography = nullptr;
 
+	// Interactive selector rows ("selector" Label variant): 0 = no chevrons (passive / idle /
+	// focused), 1 = chevrons dim (row available while the group is being edited), 2 = chevrons
+	// emphasised (the selected row of the group being edited). Renderer-set from the generic
+	// interaction phase; the widget never knows which scene it is showing.
+	uint8_t selectorState = 0;
+
 	// Already resolved via HudVocabularyResolver at compile time
 	// (HudCompiledBinding::resolvedLabelText) — a static caption, not a
 	// live value.

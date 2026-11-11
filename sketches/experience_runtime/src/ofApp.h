@@ -13,6 +13,8 @@
 #include "BlueprintRosterHarness.h"
 #include "BlueprintHudHarness.h"
 #include "ModeNavigationHarness.h"
+#include "CrtSelectorHarness.h"
+#include "CrtInteractiveHarness.h"
 #include "InstallationHarness.h"
 #include "ExperienceV03Harness.h"
 #include "PresentationHarness.h"
@@ -22,6 +24,7 @@
 #include "SettingsPageHarness.h"
 #include "SkinCycleHarness.h"
 #include "OrbitInjectHarness.h"
+#include "PredominantHarness.h"
 #include "ParitySoakHarness.h"
 #include "ResumeWindowHarness.h"
 #include "CadenceHarness.h"
@@ -78,6 +81,8 @@ private:
 	std::unique_ptr<TemporalWarmHarness> temporalWarmHarness; // Temporal first-activation stall
 	std::unique_ptr<ThreeSceneCircuitHarness> threeSceneHarness; // RT-005 three-scene circuits
 	std::unique_ptr<ModeNavigationHarness> modeHarness; // Scene & Pattern Navigation, full roster
+	std::unique_ptr<CrtInteractiveHarness> crtInteractiveHarness; // generic interactive region on CRT (opt-in env)
+	std::unique_ptr<CrtSelectorHarness> crtSelectorHarness; // CRT three-selector rows (production roster; opt-in env)
 	std::unique_ptr<InstallationHarness> installationHarness; // Installation Controls & ENERGY, full roster
 	std::unique_ptr<ExperienceV03Harness> v03Harness; // HUD & Scene Experience v0.3, full roster
 	std::unique_ptr<PresentationHarness> presentationHarness; // RT-007 fullscreen presentation, full roster
@@ -86,6 +91,7 @@ private:
 	std::unique_ptr<Hud006v2Harness> hud006v2Harness; // HUD-006 v2 six-button navigation, full roster
 	std::unique_ptr<SettingsPageHarness> settingsPageHarness; // Experience Settings page, keyboard-only
 	std::unique_ptr<OrbitInjectHarness> orbitInjectHarness; // dev-only injected Orbit series
+	std::unique_ptr<PredominantHarness> predominantHarness; // OC-003 dev-only: real-runtime DOM/VIB verification
 	std::unique_ptr<SkinCycleHarness> skinCycleHarness; // day/night skin schedule + 'v' switching
 	std::unique_ptr<Rt004StallDriver> stallDriver; // RT-004 diagnostic, normal path only
 	std::unique_ptr<Rt004FramePhaseProbe> framePhaseProbe; // RT-004 frame-phase diagnostic (EXPERIENCE_RUNTIME_FRAME_PHASE_PROBE)

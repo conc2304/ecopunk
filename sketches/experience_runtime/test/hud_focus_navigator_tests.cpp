@@ -1,6 +1,7 @@
 // Playable HUD Menu v0.1 — OF-free tests for ../src/HudFocusNavigator.
 
 #include "../src/HudFocusNavigator.h"
+#include "../src/HudRegionInteraction.h"
 
 #include <iostream>
 #include <map>
@@ -254,6 +255,50 @@ void test_whole_ring_hidden_then_restored() {
 
 } // namespace
 
+// ---- Generic interactive region: state machine + focus-stop integration ----
+
+void test_region_interaction_state_machine() {
+	HudRegionInteraction r(2);
+	HUD_CHECK(!r.active() && r.row() == 0);
+	HUD_CHECK(!r.selectRow(+1) && r.row() == 0);          // not active: row keys do nothing
+	HUD_CHECK(r.enter() && r.active() && r.row() == 0);   // defaults to PIXELS
+	HUD_CHECK(!r.selectRow(-1) && r.row() == 0);          // Up on the first row: clamp
+	HUD_CHECK(r.selectRow(+1) && r.row() == 1);           // Down -> PALETTE
+	HUD_CHECK(!r.selectRow(+1) && r.row() == 1);          // Down on the last row: clamp
+	HUD_CHECK(r.exit() && !r.active() && r.row() == 1);   // exit keeps the row
+	HUD_CHECK(r.enter() && r.row() == 1);                 // re-entry resumes the prior row
+	r.forceExit();
+	HUD_CHECK(!r.active() && r.row() == 0);               // scene change / unavailable: no stale state
+}
+
+void test_region_interaction_encoder_never_traps() {
+	HudRegionInteraction r(2);
+	r.enter();
+	HUD_CHECK(!r.advanceRowOrExit() && r.active() && r.row() == 1); // click: PIXELS -> PALETTE
+	HUD_CHECK(r.advanceRowOrExit() && !r.active());                 // click: leaves
+	HUD_CHECK(!r.advanceRowOrExit());                               // idle click does nothing here
+}
+
+void test_interactive_focus_stop_is_single_and_hidden_when_unavailable() {
+	using A = HudControlAvailability;
+	const std::string kStop = "interactive.region";
+	HudFocusNavigator nav({"controls.menu", kStop, "orbit.a"});
+	bool available = true;
+	auto avail = [&](const std::string& id) { return id == kStop ? (available ? A::Enabled : A::Hidden) : A::Enabled; };
+	nav.refresh(avail);
+	nav.step(+1); nav.step(+1); // engage, then next
+	HUD_CHECK(nav.focused() == kStop && nav.activationTarget() == kStop); // exactly one stop for the whole region
+	nav.step(+1);
+	HUD_CHECK(nav.focused() == std::string("orbit.a"));                  // rows are NOT separate outer stops
+	nav.step(-1);
+	HUD_CHECK(nav.focused() == kStop);
+	available = false;                                                    // option port gone / scene changed
+	nav.refresh(avail);
+	HUD_CHECK(nav.focused() != kStop);                                    // never a stale focus on an unavailable region
+	nav.step(+1); nav.step(+1); nav.step(+1);
+	HUD_CHECK(nav.focused() != kStop);                                    // absent from traversal
+}
+
 int main() {
 	test_no_focus_before_first_input();
 	test_first_step_engages_on_first_enabled();
@@ -270,6 +315,9 @@ int main() {
 	test_activation_of_fallback_cancels_restoration();
 	test_absent_target_keeps_predictable_fallback();
 	test_whole_ring_hidden_then_restored();
+	test_region_interaction_state_machine();
+	test_region_interaction_encoder_never_traps();
+	test_interactive_focus_stop_is_single_and_hidden_when_unavailable();
 
 	std::cout << (g_total - g_failures) << "/" << g_total << " checks passed.\n";
 	if (g_failures > 0) {

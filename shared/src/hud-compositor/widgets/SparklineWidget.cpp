@@ -111,11 +111,12 @@ void SparklineWidget::drawOrbit(const ofRectangle& bounds, const HudWidgetColors
 
 	const OrbitObservationConfig cfg = d.ui.config().at(obs);
 	const OrbitSectionLayout& Ls = m.section();
-	const OrbitSourceId sid = orbitSourceIdOf(cfg.source);
-	const OrbitSourceModel& S = m.source(sid);
-	const OrbitSourceDraw& D = d.src[size_t(sid)];
-	// Only AVG is published. A DOM/VIB selection is an explicit unavailable state: never AVG, never the other source.
-	const bool metricLive = orbitMetricAvailable(cfg.metric);
+	const size_t slot = orbitSlotOf(cfg.source, cfg.metric); // OC-003: one model + draw slot per (source, metric)
+	const OrbitSourceModel& S = m.slot(slot);
+	const OrbitSourceDraw& D = d.src[slot];
+	// AVG is always published; DOM/VIB only when the runtime measures them for this source (opt-in). Otherwise an
+	// explicit NOT AVAILABLE state: never AVG, never the other source, never another metric.
+	const bool metricLive = orbitMetricAlwaysPublished(cfg.metric) || S.provided;
 	const bool valid = metricLive && S.state == OrbitState::Valid;
 	const bool stale = metricLive && S.state == OrbitState::Stale;
 	const bool unavailable = !metricLive || S.state == OrbitState::Unavailable || !S.hasLatest;
@@ -126,6 +127,7 @@ void SparklineWidget::drawOrbit(const ofRectangle& bounds, const HudWidgetColors
 	char noDataBuf[24];
 	const char* noData = noDataBuf;
 	if (!metricLive) std::snprintf(noDataBuf, sizeof(noDataBuf), "%s NOT AVAILABLE", orbitMetricText(cfg.metric));
+	else if (cfg.metric != OrbitMetric::Avg) std::snprintf(noDataBuf, sizeof(noDataBuf), "NO %s COLOR", orbitMetricText(cfg.metric)); // measured, but no such colour right now
 	else std::snprintf(noDataBuf, sizeof(noDataBuf), "%s", cfg.source == OrbitSource::Fx ? "NO DATA" : "NO RAW VIDEO");
 
 	ofPushStyle();
@@ -206,14 +208,13 @@ void SparklineWidget::drawOrbit(const ofRectangle& bounds, const HudWidgetColors
 		drawText("R", m.radarAxisEnd(0).x + 4.0f, m.radarAxisEnd(0).y + 5.0f);
 		drawText("G", m.radarAxisEnd(1).x - 10.0f, m.radarAxisEnd(1).y + 11.0f);
 		drawText("B", m.radarAxisEnd(2).x + 3.0f, m.radarAxisEnd(2).y + 11.0f);
-		// OC-005: the radar compares observation A and B, each with ITS selected source's RGB (AVG is the only
-		// published metric). The two polygons are independent measurements, not frame-synchronised and not
+		// OC-005: the radar compares observation A and B, each with ITS selected source's RGB . The two polygons are independent measurements, not frame-synchronised and not
 		// necessarily the same algorithm. An unavailable observation (no data, DOM/VIB) draws no polygon.
 		for (int oi = 1; oi >= 0; --oi) { // B first so A reads on top
 			const OrbitObservationConfig oc = d.ui.config().at(OrbitObs(oi));
-			if (!orbitMetricAvailable(oc.metric)) continue;
-			const OrbitSourceModel& P = m.source(orbitSourceIdOf(oc.source));
-			if (!P.hasLatest) continue; // no fabricated polygon for an unavailable source
+			const OrbitSourceModel& P = m.slot(orbitSlotOf(oc.source, oc.metric));
+			if (!orbitMetricAlwaysPublished(oc.metric) && !P.provided) continue;
+			if (!P.hasLatest || P.state == OrbitState::Unavailable) continue; // no fabricated / held polygon for an unavailable observation
 			const ofColor ac = oi == 0 ? colors.dataA : colors.dataB;
 			const float pk = P.state == OrbitState::Valid ? 1.0f : 0.45f;
 			ofFill();

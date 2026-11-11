@@ -162,6 +162,54 @@ void LabelWidget::draw(const ofRectangle& boundsIn, const HudWidgetColors& color
 		return;
 	}
 
+	// "selector" variant (a compact one-line option row, drawn at native 8 px glyphs / one
+	// scale so two of them fit a 43.2 px region):
+	//   CAPTION  < VALUE                     > x/y
+	// caption = the binding's static label (left, caption colour), VALUE = "text" role
+	// (primary colour, truncated to the remaining budget), x/y = "suffix" role (right-aligned,
+	// caption colour). The < > chevrons follow input.selectorState (0 none, 1 dim, 2 emphasised);
+	// the columns are always reserved so the row never shifts when the group becomes active.
+	// Scene-agnostic: it knows nothing about which scene or axis it shows.
+	if (input.variantId == "selector") {
+		const float padS = containerPad(bounds);
+		const float gw = HudTextMetricsCache::kGlyphWidthLocal;
+		const float left = bounds.x + padS;
+		const float right = bounds.getRight() - padS;
+		const float baselineS = bounds.getCenter().y + kBitmapCapHeight * 0.5f;
+		constexpr float kCaptionCols = 8.0f; // "PALETTE " is the longest caption
+		const auto* posRole = input.findRole("suffix");
+		const std::string posText = (posRole && posRole->shouldRender) ? posRole->formattedText : std::string();
+		const float posW = posText.empty() ? 0.0f : hudTextWidth(posText, textCache_.truncateToWidth(posText, bounds.width).widthLocal);
+		if (!input.captionText.empty()) {
+			const auto& cap = textCache_.truncateToWidth(input.captionText, gw * kCaptionCols);
+			ofSetColor(scaledAlpha(colors.caption, opacity));
+			drawText(cap.text, left, baselineS);
+		}
+		const float arrowW = gw * 2.0f;
+		const float valueX = left + gw * kCaptionCols + arrowW;
+		const float posX = right - posW;
+		const float valueRight = posX - gw * 1.0f - arrowW; // " > " + gap before the position
+		const auto& val = textCache_.truncateToWidth(text, std::max(0.0f, valueRight - valueX));
+		ofSetColor(scaledAlpha(colors.primary, opacity));
+		drawText(val.text, valueX, baselineS);
+		if (input.selectorState != 0) {
+			const bool strong = input.selectorState >= 2;
+			ofSetColor(scaledAlpha(strong ? colors.accent : colors.muted, opacity));
+			drawText("<", valueX - arrowW, baselineS);
+			drawText(">", posX - gw * 1.0f - arrowW + gw, baselineS);
+			if (strong) { // non-colour cue: emphasised chevrons are drawn twice, 1 px apart (heavier stroke)
+				drawText("<", valueX - arrowW + 1.0f, baselineS);
+				drawText(">", posX - gw * 1.0f - arrowW + gw + 1.0f, baselineS);
+			}
+		}
+		if (!posText.empty()) {
+			ofSetColor(scaledAlpha(colors.caption, opacity));
+			drawText(posText, posX, baselineS);
+		}
+		ofPopStyle();
+		return;
+	}
+
 	// "modeline" variant (universal.media_title): laid out like the scene title
 	// row — "<Mode name>" left-aligned in primary, "[Mode x/y]" right-aligned in
 	// the caption colour. Drawn through drawText so the dev typography playground

@@ -123,6 +123,10 @@ public:
 
 	// ---- Candidate requests — read-only, never mutate state below ----
 	std::optional<int> requestInitialCandidate();
+	// OC-003 verification only: the playable catalog index whose mediaId equals `mediaId`, else nullopt (unknown or
+	// disabled). Read-only: no shuffle advance, no history change. Activation still goes through
+	// confirmActivationSucceeded() like every other candidate.
+	std::optional<int> requestSpecificCandidate(const std::string& mediaId) const;
 	std::optional<int> requestManualPreviousCandidate() const;
 	std::optional<int> requestManualNextCandidate();
 	std::optional<int> requestAutomaticAdvanceCandidate();

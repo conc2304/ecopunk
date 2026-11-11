@@ -17,6 +17,8 @@
 #include "../hud-compositor/HudVocabularyResolver.h"
 #include "../hud-runtime/HudFrameData.h"
 #include "SystemVitals.h"
+#include "CrtRegistries.h"
+#include "HudInteractionStyle.h"
 
 #include <algorithm>
 #include <cmath>
@@ -420,6 +422,125 @@ void testStatusColumnVariants() {
 	CHECK(variantOf("quadrant-crosshair", "quadrant.status.channels") == "grid", "Quadrant keeps the 2x2 grid");
 }
 
+
+// ---- CRT Phosphor three-selector rows (universal.effect_summary) --------------
+void testCrtSelectorRows() {
+	using T = HudMetricValueType;
+	crt::Selection sel;
+
+	// Counts are the REAL selectable options: 4 implemented modes (2 planned hidden),
+	// 6 structures, 8 palettes (theme_primary_secondary hidden: no scene-accessible theme API).
+	CHECK(sel.count(crt::Axis::Composition) == 4, "CRT: composition axis counts only implemented modes");
+	CHECK(sel.count(crt::Axis::Structure) == 6, "CRT: six pixel structures");
+	CHECK(sel.count(crt::Axis::Palette) == 8, "CRT: eight palettes (theme hidden)");
+	for (const auto& id : sel.ids(crt::Axis::Composition)) CHECK(id != "contour_emission" && id != "signal_collapse", "CRT: planned modes are not selectable");
+	for (const auto& id : sel.ids(crt::Axis::Palette)) CHECK(id != "theme_primary_secondary", "CRT: theme palette is hidden in the runtime");
+
+	// Wrap in both directions; axes independent.
+	crt::Selection w;
+	w.step(crt::Axis::Structure, 2); w.step(crt::Axis::Palette, 3);
+	w.step(crt::Axis::Composition, -1);
+	CHECK(w.position(crt::Axis::Composition) == 4 && w.position(crt::Axis::Structure) == 3 && w.position(crt::Axis::Palette) == 4, "CRT: first->last wrap on one axis leaves the others untouched");
+	w.step(crt::Axis::Composition, +1);
+	CHECK(w.position(crt::Axis::Composition) == 1, "CRT: last->first wrap");
+	CHECK(w.position(crt::Axis::Structure) == 3 && w.position(crt::Axis::Palette) == 4, "CRT: stepping composition never changes structure/palette");
+	CHECK(!w.setById(crt::Axis::Palette, "theme_primary_secondary") && w.position(crt::Axis::Palette) == 4, "CRT: unknown/hidden id rejected, state unchanged");
+
+	// Every visible name resolves through the HUD vocabulary (no raw-id leak) and fits a row.
+	HudVocabularyResolver vocab;
+	for (const auto& id : sel.ids(crt::Axis::Structure)) {
+		crt::Selection t; t.setById(crt::Axis::Structure, id);
+		const std::string key = "scene.crt.metric.structure." + id;
+		CHECK(vocab.resolvedThroughVocabulary("crt-phosphor", key) && vocab.resolve("crt-phosphor", key) == t.label(crt::Axis::Structure), "CRT: structure '" + id + "' resolves to its HUD label");
+		CHECK(std::string(t.label(crt::Axis::Structure)).size() <= 24, "CRT: structure label fits the row budget");
+	}
+	for (const auto& id : sel.ids(crt::Axis::Palette)) {
+		crt::Selection t; t.setById(crt::Axis::Palette, id);
+		const std::string key = "scene.crt.metric.palette." + id;
+		CHECK(vocab.resolvedThroughVocabulary("crt-phosphor", key) && vocab.resolve("crt-phosphor", key) == t.label(crt::Axis::Palette), "CRT: palette '" + id + "' resolves to its HUD label");
+		CHECK(std::string(t.label(crt::Axis::Palette)).size() <= 24, "CRT: palette label fits the row budget");
+	}
+	for (const char* k : {"scene.crt.row.pixels.label", "scene.crt.row.palette.label"})
+		CHECK(vocab.resolvedThroughVocabulary("crt-phosphor", k), "CRT: row caption resolves through the vocabulary");
+	// Position strings ride as Identifier values; the vocabulary's stable-ID fallback returns them verbatim.
+	CHECK(vocab.resolve("crt-phosphor", "2/6") == "2/6" && !vocab.resolvedThroughVocabulary("crt-phosphor", "2/6"), "CRT: 'x/y' position text passes through the vocabulary fallback unchanged");
+
+	auto frameWith = [&](bool metrics, bool mode, bool effects) {
+		std::vector<SceneMetric> m;
+		if (metrics) m = { idMetric("scene.crt.metric.structure", "scene.crt.metric.structure.rgb_triad"), idMetric("scene.crt.metric.structure_pos", "2/6"),
+			idMetric("scene.crt.metric.palette", "scene.crt.metric.palette.biolum"), idMetric("scene.crt.metric.palette_pos", "5/8") };
+		HudFrameData f = statusFrame("crt-phosphor", m, effects);
+		if (mode) { SceneModeStatus ms; ms.modeId = "phosphor_memory"; ms.displayName = "PHOSPHOR MEMORY"; ms.index = 2; ms.count = 4; f.scene.mode = ms; }
+		return f;
+	};
+	CHECK(slots("crt", frameWith(true, true, false)) == 2, "CRT: PIXELS + PALETTE take two slices (chips hidden); MODE is not repeated here");
+	CHECK(slots("crt", frameWith(true, false, false)) == 2, "CRT: the rows do not depend on the mode status (MODE lives in media_title)");
+	CHECK(slots("crt", frameWith(true, true, true)) == 3, "CRT: with an effects snapshot the chips + two rows fit (cap 4)");
+	CHECK(slots("crt", frameWith(false, true, false)) == 0, "CRT: no semantic payload -> both rows hide, nothing reserved");
+	CHECK(slots("crt", frameWith(false, false, false)) == 0, "CRT: unavailable scene -> nothing reserved (neutral, non-interactive)");
+
+	// Profile compiles clean: all three bindings valid, ids stable, readonly selector variant.
+	HudRegionCatalog catalog; HudProfileCompiler compiler(catalog, vocab); HudPresentationProfileRegistry registry;
+	const auto compiled = compiler.compile("crt-phosphor", registry);
+	int rows = 0;
+	for (const auto& b : compiled.bindings) {
+		if (b.binding.regionId == "universal.effect_summary" && b.binding.bindingId.rfind("crt.selector.", 0) == 0) {
+			rows++;
+			CHECK(b.valid && b.binding.variantId == "selector", "CRT: selector binding compiles valid with the selector variant");
+			CHECK(b.binding.bindingId != "crt.selector.mode", "CRT: no MODE row (primary mode is presented once, in media_title)");
+		}
+	}
+	CHECK(rows == 2, "CRT: exactly two selector bindings (PIXELS, PALETTE) in universal.effect_summary");
+	{ // declarative opt-in: exactly one interactive SelectorGroup, and only CRT declares one
+		const auto* crtProfile = registry.flexibleProfileForScene("crt-phosphor");
+		CHECK(crtProfile && crtProfile->interactiveRegions.size() == 1, "CRT: declares exactly one interactive region");
+		if (crtProfile && !crtProfile->interactiveRegions.empty()) {
+			const auto& d = crtProfile->interactiveRegions[0];
+			CHECK(d.regionId == "universal.effect_summary" && d.kind == HudInteractionKind::SelectorGroup && d.rowCount == 2, "CRT: interactive region is effect_summary, SelectorGroup, 2 rows");
+		}
+		for (const auto& id : registry.knownSceneIds()) {
+			if (id == "crt-phosphor") continue;
+			CHECK(registry.flexibleProfileForScene(id)->interactiveRegions.empty(), "passive: scene '" + id + "' declares no interactive region");
+		}
+		CHECK(registry.universalProfile().interactiveRegions.empty(), "passive: the universal profile declares no interactive region");
+	}
+	for (const char* scene : {"blob-region-prototype", "fragment-trail", "quadrant-crosshair"}) {
+		int n = 0;
+		for (const auto& b : compiler.compile(scene, registry).bindings) if (b.binding.regionId == "universal.effect_summary") { n++; CHECK(b.valid, "parity: other scenes' effect_summary bindings stay valid"); }
+		CHECK(n <= 3, "parity: other scenes never exceed their previous three effect_summary bindings");
+	}
+	(void)T::Count;
+}
+
+// ---- Interactive-region style: resolved from the ACTIVE SKIN's tokens, never fixed colours ----
+void testInteractionStyle() {
+	using hudpresent::HudRgba8;
+	using hudpresent::resolveInteractionStyle;
+	auto sep = [](const HudRgba8& a, const HudRgba8& b) { float dr = float(a.r) - b.r, dg = float(a.g) - b.g, db = float(a.b) - b.b; return dr * dr + dg * dg + db * db; };
+	// Dark Moss-like (light green accent, distinct secondary), a pale/light skin, and a skin whose secondary == accent.
+	const HudRgba8 mossAcc{210, 240, 180, 240}, mossSec{120, 200, 120, 215}, muted{150, 190, 150, 90};
+	const auto a = resolveInteractionStyle(mossAcc, mossSec, muted);
+	CHECK(a.secondaryDistinct && a.active.r == mossSec.r && a.active.g == mossSec.g, "style: a distinct skin secondary becomes the ACTIVE colour");
+	CHECK(a.focus.r == mossAcc.r && a.focus.g == mossAcc.g && a.focus.a >= 220, "style: FOCUS follows the skin accent");
+	CHECK(a.idle.a < a.focus.a && a.idle.r == mossAcc.r, "style: IDLE is the accent at reduced strength");
+	CHECK(a.disabled.r == muted.r && a.disabled.a <= 90, "style: DISABLED follows the skin muted token");
+	const auto b = resolveInteractionStyle(mossAcc, mossAcc, muted); // secondary == accent (or undefined)
+	CHECK(!b.secondaryDistinct && sep(b.active, b.focus) >= 25.0f * 25.0f, "style: missing/equal secondary -> derived ACTIVE is still clearly different from FOCUS");
+	const HudRgba8 paleAcc{250, 245, 225, 240}; // light accent: deepened, not lifted
+	const auto c = resolveInteractionStyle(paleAcc, paleAcc, muted);
+	CHECK(c.active.r < paleAcc.r && c.active.g < paleAcc.g, "style: a light accent is DEEPENED for the active state");
+	const HudRgba8 darkAcc{30, 60, 40, 240};
+	const auto d = resolveInteractionStyle(darkAcc, darkAcc, muted);
+	CHECK(d.active.g > darkAcc.g, "style: a dark accent is LIFTED for the active state");
+	// Not hard-coded: two different skins give different, token-derived results.
+	const auto e = resolveInteractionStyle(HudRgba8{240, 160, 60, 240}, HudRgba8{90, 120, 220, 220}, muted);
+	CHECK(e.focus.r != a.focus.r && e.active.b != a.active.b, "style: changing the skin changes every state colour");
+	// Non-colour cues are constants shared by all skins and must differ per state.
+	const auto g = hudpresent::HudInteractionStyle::geometry();
+	CHECK(g.activeStroke > g.focusStroke && g.focusCornerStroke > g.idleStroke && g.focusArm > g.idleArm, "style: stroke weight / corner size distinguish idle < focused < active without colour");
+	CHECK(a.rowFill.a < 80, "style: the selected-row fill is a tint, never a flood fill");
+}
+
 void testVisibilityAwareEffectSummary() {
 	using T = HudMetricValueType;
 	// Blob: chips hidden (no effects snapshot) -> two status lines share the region.
@@ -656,8 +777,10 @@ int main() {
 	testAxes();
 	testCacheInvalidation();
 	testProfileAndRegions();
+	testInteractionStyle();
 	testRendererSnapshotIntegration();
 	testVisibilityAwareEffectSummary();
+	testCrtSelectorRows();
 	testStatusColumnVariants();
 	testSceneColorSnapshotReachesOrbit();
 	testVisualActivityGauge();

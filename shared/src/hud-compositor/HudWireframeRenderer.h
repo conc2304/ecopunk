@@ -46,6 +46,7 @@
 #include "widgets/HudWidgetBase.h"
 #include "widgets/HudWidgetRegistry.h"
 
+#include "HudInteractionStyle.h"
 #include "ofRectangle.h"
 
 #include <optional>
@@ -210,7 +211,10 @@ public:
 	// Day/night text palette for every widget, focus bracket and flash
 	// (HudWidgetColors; default = the night palette). Set by the runtime's
 	// skin schedule alongside the shell.
-	void setColors(const HudWidgetColors& colors) { colors_ = colors; colors_.daytime = daytime_; colors_.buttonLabelMode = buttonLabelMode_; }
+	void setColors(const HudWidgetColors& colors) {
+		colors_ = colors; colors_.daytime = daytime_; colors_.buttonLabelMode = buttonLabelMode_;
+		resolveInteractionStyleFromColors(); // once per palette change, never per frame
+	}
 	// Day/night system state for the clock icon; independent of the colours/skin in use.
 	void setDayPeriod(bool daytime) { daytime_ = daytime; colors_.daytime = daytime; }
 	void setButtonLabelMode(int mode) { buttonLabelMode_ = mode; colors_.buttonLabelMode = mode; }
@@ -232,6 +236,26 @@ public:
 		orbitDraw_.focusB = regionId && *regionId == kOrbitFocusB;
 	}
 	const std::optional<std::string>& focusedControl() const { return focusedControl_; }
+
+	// -- Interactive regions (generic, opt-in) -----------------------------------------------------
+	// A scene profile may DECLARE one region interactive (ScenePresentationProfile::interactiveRegions).
+	// The runtime owns focus/input; it hands the renderer only a phase + the selected row. The
+	// look is derived from the active skin's palette (HudInteractionStyle), never per scene.
+	// One focus stop for the whole region (not one per row).
+	static constexpr const char* kInteractiveFocusId = "interactive.region";
+	// The current scene's declaration, nullptr when its region is passive (the default).
+	const HudInteractiveRegionDecl* interactiveRegion() const { return interactive_ ? &*interactive_ : nullptr; }
+	// True while every declared row is actually rendering (data present) — otherwise the region is
+	// unavailable and must not hold focus or capture input.
+	bool interactiveRegionPresent() const { return interactivePresent_; }
+	void setInteraction(HudInteractionPhase phase, int selectedRow) {
+		interactionPhase_ = phase;
+		interactionRow_ = selectedRow;
+		refreshInteractionInputs();
+	}
+	HudInteractionPhase interactionPhase() const { return interactionPhase_; }
+	int interactionRow() const { return interactionRow_; }
+	const HudInteractionStyle& interactionStyle() const { return interactionStyle_; }
 	// One short activation flash on the focused control (accepted = accent,
 	// refused = warning), fading over kActivationFlashSeconds.
 	// The interval starts at the NEXT update() — the frame that first shows
@@ -361,6 +385,14 @@ private:
 	const ofTexture* buttonActiveTexture_ = nullptr;
 	const IHudLabelTypography* labelTypography_ = nullptr; // non-owning, dev-only
 	HudWidgetColors colors_;
+	std::optional<HudInteractiveRegionDecl> interactive_; // current scene's declaration (set in setScene)
+	bool interactivePresent_ = false;
+	HudInteractionPhase interactionPhase_ = HudInteractionPhase::Passive;
+	int interactionRow_ = 0;
+	HudInteractionStyle interactionStyle_;
+	void resolveInteractionStyleFromColors();
+	void refreshInteractionInputs();
+	void drawInteractionAffordance() const;
 	bool daytime_ = true;
 	int buttonLabelMode_ = 0;
 	std::string pressedRegionId_;
@@ -393,6 +425,13 @@ private:
 	std::array<OrbitSample, kOrbitMaxSamples> orbitRawBuf_{};
 	uint64_t orbitRawBufRevision_ = 0;
 	uint32_t orbitRawBufCount_ = 0;
+	// OC-003: DOM/VIB adapter buffers, {FX-DOM, RAW-DOM, FX-VIB, RAW-VIB}; refilled only on a new snapshot revision.
+	struct OrbitPredBuf {
+		std::array<OrbitSample, kOrbitMaxSamples> samples {};
+		uint64_t revision = 0, generation = 0;
+		uint32_t count = 0;
+	};
+	std::array<OrbitPredBuf, kOrbitPredSlotCount> orbitPredBuf_ {};
 	std::unordered_map<std::string, int> slotCounts_; // computeRegionSlotCounts() as of the last update()
 
 	mutable FrameStats stats_;

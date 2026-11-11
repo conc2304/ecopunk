@@ -348,6 +348,15 @@ bool SceneManager::dispatchSceneCommand(SceneCommand command) {
 	return e != nullptr && e->scene->executeCommand(command);
 }
 
+bool SceneManager::dispatchSceneOption(int axisIndex, int delta) {
+	if (entries_.empty() || didShutdown_) return false; // tooling FakeScene advertises no option axes
+	if (axisIndex < 0 || axisIndex >= activeOptionAxisCount() || (delta != 1 && delta != -1)) return false;
+	sceneswitch::Phase phase = controller_.phase();
+	if (phase != sceneswitch::Phase::Idle && phase != sceneswitch::Phase::FadingIn) return false;
+	Entry* e = ownerEntry();
+	return e != nullptr && e->scene->stepOption(axisIndex, delta);
+}
+
 sceneswitch::RequestResult SceneManager::handleSceneSwitchCommand(RuntimeCommand command) {
 	if (command != RuntimeCommand::NextScene && command != RuntimeCommand::PreviousScene) {
 		ofLogWarning("SceneManager") << "handleSceneSwitchCommand() called with a non-switch "

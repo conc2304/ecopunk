@@ -1,0 +1,7 @@
+OK   01_P0_r1 rows=2034 media_file/size/duration=('Stormy_Waves.mp4', '960x540', '100.375s') start_offset=0s
+OK   02_P1_r1 rows=2030 media_file/size/duration=('Stormy_Waves.mp4', '960x540', '100.375s') start_offset=0s
+OK   03_P2_r1 rows=2055 media_file/size/duration=('Stormy_Waves.mp4', '960x540', '100.375s') start_offset=0s
+OK   04_P3_r1 rows=2055 media_file/size/duration=('Stormy_Waves.mp4', '960x540', '100.375s') start_offset=0s
+OK   05_P4_r1 rows=2054 media_file/size/duration=('Stormy_Waves.mp4', '960x540', '100.375s') start_offset=0s
+OK   06_P5_r1 rows=2056 media_file/size/duration=('Stormy_Waves.mp4', '960x540', '100.375s') start_offset=0s
+VERIFIED

@@ -77,10 +77,32 @@ bool VideoPlaybackService::setup(const Config& config) {
 
 	setupComplete_ = true;
 
+	const bool verificationMedia = !config.verificationStartupMediaId.empty();
+	if (verificationMedia) resumeTrace_ = true; // verification run: always record the start offset (see beginPlaybackIfReady)
+
 	if (catalog_.empty()) {
 		health_ = VideoPlaybackHealth::Unavailable;
 		messageId_ = "media.error.empty_catalog";
+		if (verificationMedia) ofLogError("VideoVerification") << "startup media REJECTED id=" << config.verificationStartupMediaId << ": catalog is empty";
 		return true;  // structurally successful setup — see header comment
+	}
+
+	if (verificationMedia) {
+		const std::string& wanted = config.verificationStartupMediaId;
+		const std::optional<int> idx = policy_.requestSpecificCandidate(wanted);
+		auto reject = [&](const std::string& why) {
+			health_ = VideoPlaybackHealth::Failed;
+			messageId_ = "media.error.verification_media_unavailable";
+			errorCode_ = "media.error.verification_media_unavailable";
+			ofLogError("VideoVerification") << "startup media REJECTED id=" << wanted << ": " << why << " (no fallback; available:";
+			for (const auto& e : catalog_) ofLogError("VideoVerification") << "  " << e.mediaId << " " << e.relativePath << (e.enabled ? "" : " (disabled)");
+			ofLogError("VideoVerification") << ")";
+		};
+		if (!idx) { reject("not an enabled catalog item"); return true; }
+		if (!attemptSelection([idx] { return idx; }, MediaSelectionOrigin::Startup, /*allowRecovery=*/false)) { reject("load failed"); return true; }
+		ofLogNotice("VideoVerification") << "startup media ACTIVE id=" << wanted << " file=" << catalog_[static_cast<size_t>(*idx)].relativePath
+			<< " size=" << decoder_->getSize().x << "x" << decoder_->getSize().y << " duration=" << decoder_->getDuration() << "s";
+		return true;
 	}
 
 	attemptSelection([this] { return policy_.requestInitialCandidate(); }, MediaSelectionOrigin::Startup);
@@ -156,7 +178,7 @@ void VideoPlaybackService::beginPlaybackIfReady() {
 	}
 }
 
-bool VideoPlaybackService::attemptSelection(const std::function<std::optional<int>()>& firstCandidateFn, MediaSelectionOrigin baseOrigin) {
+bool VideoPlaybackService::attemptSelection(const std::function<std::optional<int>()>& firstCandidateFn, MediaSelectionOrigin baseOrigin, bool allowRecovery) {
 	// Save the outgoing item's resume position before anything else touches
 	// the decoder (load() below closes it) — every origin, manual included.
 	if (policy_.hasActiveItem()) {
@@ -194,7 +216,7 @@ bool VideoPlaybackService::attemptSelection(const std::function<std::optional<in
 		}
 		anyFailure = true;
 		errorCode_ = "media.error.load_failed";
-		candidate = policy_.requestRecoveryCandidate(tried);
+		candidate = allowRecovery ? policy_.requestRecoveryCandidate(tried) : std::nullopt;
 	}
 
 	// Every playable candidate (bounded by playableCount(), §12) has now

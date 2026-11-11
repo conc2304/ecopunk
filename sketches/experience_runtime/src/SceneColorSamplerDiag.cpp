@@ -109,7 +109,7 @@ void SceneColorSampler::diagFrame(const ofTexture& sceneTexture, double now, con
 	}
 
 	const double a = nowMs();
-	submitLinear(sceneTexture, 0);
+	submitLinear(sceneTexture, 0, true);
 	const double b = nowMs();
 	linBs_[0].readToPixels(d.px16);   // GPU completion wait + 16x9 transfer (same cost the series pays)
 	const double c = nowMs();

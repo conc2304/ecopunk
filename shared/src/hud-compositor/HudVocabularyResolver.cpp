@@ -149,6 +149,25 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"scene.quadrant.state.expanding", "EXPANDING"},
 		{"scene.quadrant.state.reconfiguring", "RECONFIGURING"},
 
+		// -- CRT Phosphor (selector rows; ids mirror crt::Selection's stable ids) ----
+		{"scene.crt.state.online", "ONLINE"},
+		{"scene.crt.row.pixels.label", "PIXELS"},
+		{"scene.crt.row.palette.label", "PALETTE"},
+		{"scene.crt.metric.structure.original_phosphor", "ORIGINAL PHOSPHOR"},
+		{"scene.crt.metric.structure.rgb_triad", "RGB PHOSPHOR TRIADS"},
+		{"scene.crt.metric.structure.aperture_grille", "APERTURE GRILLE"},
+		{"scene.crt.metric.structure.round_matrix", "ROUND PHOSPHOR MATRIX"},
+		{"scene.crt.metric.structure.ascii_matrix", "ASCII CHARACTER MATRIX"},
+		{"scene.crt.metric.structure.vector_beam", "VECTOR BEAM DISPLAY"},
+		{"scene.crt.metric.palette.classic_mono", "CLASSIC MONO"},
+		{"scene.crt.metric.palette.source_rgb", "SOURCE COLOR"},
+		{"scene.crt.metric.palette.ega16", "EGA 16-COLOR"},
+		{"scene.crt.metric.palette.sunset", "SUNSET SPECTRUM"},
+		{"scene.crt.metric.palette.biolum", "BIOLUMINESCENT SPECTRUM"},
+		{"scene.crt.metric.palette.thermal", "THERMAL FALSE COLOR"},
+		{"scene.crt.metric.palette.four_tone", "FOUR-TONE LCD"},
+		{"scene.crt.metric.palette.dual_phosphor", "DUAL PHOSPHOR"},
+
 		// -- Blueprint state IDs (§18.6) -----------------------------------
 		{"scene.blueprint.state.blank", "BLANK"},
 		{"scene.blueprint.state.placing", "PLACING"},

@@ -1,0 +1,12 @@
+# Palette report: 01_PCMP_r1.palette
+
+| check | result |
+|---|---|
+| determinism | PASS |
+| replay | PASS |
+| cpu_vs_gpu | PASS |
+
+rows per stream: {'fx': 0, 'raw_gpu': 568, 'raw_cpu': 568}
+clean sink close (palette_summary.json present): False -- run ended by SIGINT; up to 7 trailing CSV rows per stream may be missing
+replay: {'grids': 1136, 'mismatching_rows': 0, 'worst_abs_diff': 0.0}
+cpu_vs_gpu: {'cpu_rows': 568, 'gpu_rows': 568, 'pairs': 237, 'grid_pairs': 237, 'dt_s': {'median': 0.03599999996367842, 'max': 0.0530000000144355}, 'all_pairs_incl_frame_offset': {'pairs': 237, 'mean_abs_encoded_diff': {'median': 0.00011799242274967135, 'p95': 0.023820300232880096, 'max': 0.028557165968971628}, 'cell_max_abs_encoded_diff': {'median': 0.0003210223995564476, 'max': 0.5755946937870569}, 'cell_p99_abs_encoded_diff_median': 0.00028500346030324586, 'avg_linear_max_channel_diff': {'median': 0.00021999999999999797, 'p95': 0.004139999999999977, 'max': 0.006680000000000019}, 'metric_abs_diff_median': {'chromaticFraction': 0.00041999999999997595, 'chromaticEnergy': 2.0000000000006124e-05, 'complexity': 0.0004699999999999982, 'familiesActive': 0.0, 'highlightOcc': 0.0005499999999999949, 'shadowOcc': 0.0}}, 'same_frame_pairs': {'pairs': 104, 'mean_abs_encoded_diff': {'median': 0.00011041291263136268, 'p95': 0.00011852257908054446, 'max': 0.00012008040770845118}, 'cell_max_abs_encoded_diff': {'median': 0.00032011410453891553, 'max': 0.0003213485856826681}, 'cell_p99_abs_encoded_diff_median': 0.00028134410017177647, 'avg_linear_max_channel_diff': {'median': 0.00019000000000002348, 'p95': 0.00021999999999999797, 'max': 0.000220000000000109}, 'metric_abs_diff_median': {'chromaticFraction': 0.00020999999999993246, 'chromaticEnergy': 1.0000000000010001e-05, 'complexity': 0.00021500000000001032, 'familiesActive': 0.0, 'highlightOcc': 0.00040999999999996595, 'shadowOcc': 0.0}}, 'limits': {'median_mean_abs_encoded': 0.02, 'median_avg': 0.01, 'same_frame_dt_s': 0.017, 'min_same_frame_pairs': 5, 'status': 'informational engineering bounds, not a product contract'}}

@@ -1,0 +1,23 @@
+# OC-003-F standalone tests (bare compiler, no openFrameworks): palette analyzer + CPU RAW acquisition + palette sink.
+# Same convention as Makefile.tests (kept separate so the existing target list is untouched).
+#   make -C test -f Makefile.oc003f test OUT=/some/build/dir        (from sketches/experience_runtime/; OUT defaults to the test directory)
+CXX ?= c++
+CXXFLAGS = -std=c++17 -Wall -Wextra -O1
+OUT ?= .
+INC = -I../src -I../../../shared/src/hud-runtime
+
+$(OUT)/palette_analyzer_tests: palette_analyzer_tests.cpp ../src/PaletteAnalyzer.h
+	$(CXX) $(CXXFLAGS) $(INC) palette_analyzer_tests.cpp -o $@
+
+$(OUT)/cpu_raw_acquisition_tests: cpu_raw_acquisition_tests.cpp ../src/CpuRawAcquisition.h ../src/SceneColorSeries.h ../src/PredominantColor.h ../src/RawVideoGate.h
+	$(CXX) $(CXXFLAGS) $(INC) cpu_raw_acquisition_tests.cpp -o $@
+
+$(OUT)/palette_sink_tests: palette_sink_tests.cpp ../src/PaletteSink.h ../src/PaletteAnalyzer.h ../src/SceneColorSeries.h
+	$(CXX) $(CXXFLAGS) $(INC) palette_sink_tests.cpp -o $@
+
+test: $(OUT)/palette_analyzer_tests $(OUT)/cpu_raw_acquisition_tests $(OUT)/palette_sink_tests
+	$(OUT)/palette_analyzer_tests
+	$(OUT)/cpu_raw_acquisition_tests
+	$(OUT)/palette_sink_tests
+
+.PHONY: test

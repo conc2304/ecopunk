@@ -1,3 +1,5 @@
+#include <array>
+#include <initializer_list>
 // OC-003A: unit tests for the predominant-colour diagnostic algorithms (OF-free).
 // Build/run:  c++ -std=c++17 -Wall -Wextra -I../src predominant_color_tests.cpp -o predominant_color_tests && ./predominant_color_tests
 #include "PredominantColor.h"
@@ -101,6 +103,36 @@ int main() {
 	{ // empty input never produces a measurement
 		Histogram h; accumulate(nullptr, 0, 4, tu, h);
 		CHECK(!dominant(h).valid && !vibrant(h, tu).valid, "empty input is invalid");
+	}
+	{ // OC-003 production Tracker: composes the tested functions; owns the temporal state
+		auto frame = [&](std::initializer_list<std::array<float, 4>> blocks) { // {count, r, g, b}
+			std::vector<float> p;
+			for (const auto& b : blocks) put(p, static_cast<int>(b[0]), b[1], b[2], b[3]);
+			return p;
+		};
+		Tracker tr;
+		auto f1 = frame({{300, 0.02f, 0.02f, 0.02f}, {100, 0.9f, 0.1f, 0.1f}}); // dark background + red feature
+		Result r1 = tr.step(f1.data(), f1.size() / 4, 4);
+		CHECK(r1.dom.valid && r1.vib.valid, "dominant and vibrant both valid on a frame with a saturated feature");
+		CHECK(r1.vib.rgb.r > 0.5f && r1.vib.rgb.g < 0.2f, "vibrant is the red feature, not the dark background");
+		CHECK(r1.dom.rgb.r < 0.1f, "dominant is the populated dark background");
+		CHECK(near(r1.dom.rgb.r, dominant(tr.histogram()).rgb.r, 1e-6f), "first sample equals the raw selection (no EMA lag at the baseline)");
+		auto f2 = frame({{300, 0.02f, 0.02f, 0.02f}, {100, 0.1f, 0.1f, 0.9f}});  // feature turns blue
+		Result r2 = tr.step(f2.data(), f2.size() / 4, 4);
+		CHECK(r2.vib.valid && r2.vib.rgb.r > 0.0f && r2.vib.rgb.b > 0.0f, "vibrant EMA blends toward the new feature (alpha 0.4), hysteresis permitting");
+		auto g = frame({{400, 0.3f, 0.3f, 0.3f}}); // grey: dominant yes, vibrant NO
+		Result r3 = tr.step(g.data(), g.size() / 4, 4);
+		CHECK(r3.dom.valid && !r3.vib.valid, "VIB invalid while DOM stays valid");
+		CHECK(r3.vib.rgb.r == 0.0f && r3.vib.rgb.g == 0.0f && r3.vib.rgb.b == 0.0f, "an invalid vibrant carries no colour (not the last valid one)");
+		Result r4 = tr.step(f1.data(), f1.size() / 4, 4);
+		CHECK(r4.vib.valid && near(r4.vib.rgb.r, dominant(tr.histogram()).valid ? vibrant(tr.histogram(), Tuning{}).rgb.r : 0.0f, 1e-5f),
+			"after an invalid observation vibrant restarts from the raw cluster colour (no smoothing across the gap)");
+		tr.reset();
+		Result r5 = tr.step(f2.data(), f2.size() / 4, 4);
+		CHECK(near(r5.vib.rgb.b, vibrant(tr.histogram(), Tuning{}).rgb.b, 1e-6f) && r5.vib.rgb.r < 0.2f, "reset() (generation / gap) leaves no state from the previous frames");
+		std::vector<float> none;
+		Result r6 = tr.step(none.data(), 0, 4);
+		CHECK(!r6.dom.valid && !r6.vib.valid, "empty input is invalid for both");
 	}
 	std::printf("%d/%d passed\n", T - F, T);
 	return F == 0 ? 0 : 1;
