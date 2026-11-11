@@ -118,15 +118,12 @@ void CrtInteractiveHarness::buildScript() {
 		check("Left Left wraps 2/8 -> 1/8 -> 8/8", P() == "8/8", P());
 		capture("07_palette_8of8_longest");
 	}});
-	script_.push_back({"Down at last row (clamp)", key(OF_KEY_DOWN), 4, [this] {
-		check("Down on PALETTE stays on PALETTE (clamp)", runtime_.hudBridgeForTesting().interactiveRow() == 1);
-	}});
 	script_.push_back({"m while active (no key theft)", [this] { modeBefore_ = modeIndex(); runtime_.keyPressed('m'); }, 8, [this] {
 		check("'m' still steps composition while the region is active", modeIndex() == (modeBefore_ + 1) % 4, "before=" + ofToString(modeBefore_) + " after=" + ofToString(modeIndex()));
 		check("region remains active after a global key", phaseName() == "active");
 	}});
-	script_.push_back({"Enter -> exit", key(OF_KEY_RETURN), 8, [this, S, P] {
-		check("Enter leaves editing; region stays FOCUSED", phaseName() == "focused" && focused() == "interactive.region", phaseName());
+	script_.push_back({"Down on the LAST row -> exit", key(OF_KEY_DOWN), 8, [this, S, P] {
+		check("Down on the last row (PALETTE) leaves editing; region stays FOCUSED", phaseName() == "focused" && focused() == "interactive.region", phaseName());
 		check("applied values are kept on exit (no revert)", S() == "6/6" && P() == "8/8", S() + " " + P());
 		capture("08_exit_focused");
 	}});

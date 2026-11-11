@@ -180,8 +180,12 @@ void LabelWidget::draw(const ofRectangle& boundsIn, const HudWidgetColors& color
 		const auto* posRole = input.findRole("suffix");
 		const std::string posText = (posRole && posRole->shouldRender) ? posRole->formattedText : std::string();
 		const float posW = posText.empty() ? 0.0f : hudTextWidth(posText, textCache_.truncateToWidth(posText, bounds.width).widthLocal);
-		if (!input.captionText.empty()) {
-			const auto& cap = textCache_.truncateToWidth(input.captionText, gw * kCaptionCols);
+		// A "caption" source role (when present and rendering) overrides the static caption: a row whose
+		// label is data (e.g. a per-mode control name) instead of a fixed vocabulary string.
+		const auto* capRole = input.findRole("caption");
+		const std::string captionS = (capRole && capRole->shouldRender && !capRole->formattedText.empty()) ? capRole->formattedText : input.captionText;
+		if (!captionS.empty()) {
+			const auto& cap = textCache_.truncateToWidth(captionS, gw * kCaptionCols);
 			ofSetColor(scaledAlpha(colors.caption, opacity));
 			drawText(cap.text, left, baselineS);
 		}

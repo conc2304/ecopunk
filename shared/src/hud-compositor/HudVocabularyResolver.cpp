@@ -151,6 +151,7 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 
 		// -- CRT Phosphor (selector rows; ids mirror crt::Selection's stable ids) ----
 		{"scene.crt.state.online", "ONLINE"},
+		{"scene.fx.state.online", "ONLINE"},
 		{"scene.crt.row.pixels.label", "PIXELS"},
 		{"scene.crt.row.palette.label", "PALETTE"},
 		{"scene.crt.metric.structure.original_phosphor", "ORIGINAL PHOSPHOR"},

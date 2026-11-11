@@ -20,7 +20,7 @@ bool CrtSelectorHarness::isRequested() {
 CrtSelectorHarness::CrtSelectorHarness(ExperienceRuntime& runtime) : runtime_(runtime) {
 	std::filesystem::create_directories(ofToDataPath(kCaptureDir, true));
 	const auto ids = runtime_.sceneManagerForTesting().registeredSceneIdsForTesting();
-	check("production roster ends with crt-phosphor (6 scenes)", ids.size() == 6 && ids.back() == kCrtId, "count=" + ofToString(ids.size()));
+	check("production roster: crt-phosphor is the 6th of 7 scenes (gallery last)", ids.size() == 7 && ids[5] == kCrtId, "count=" + ofToString(ids.size()));
 }
 
 void CrtSelectorHarness::check(const std::string& name, bool passed, const std::string& detail) {

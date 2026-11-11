@@ -140,7 +140,7 @@ public:
 	void setInteractiveOptionAxes(int n) { interactiveAxisCount_ = n; }
 	bool interactiveRegionAvailable() const {
 		const auto* d = renderer_.interactiveRegion();
-		return d != nullptr && interactiveAxisCount_ >= d->rowCount && visible_ && renderer_.interactiveRegionPresent();
+		return d != nullptr && visible_ && renderer_.interactiveRegionPresent() && interactiveAxisCount_ >= renderer_.interactiveRowCount();
 	}
 	bool interactiveActive() const { return region_.active(); }
 	int interactiveRow() const { return region_.row(); }
@@ -148,6 +148,7 @@ public:
 	bool enterInteractiveForFocus(); // false unless focus is on the available region
 	bool exitInteractive() { return region_.exit(); }
 	bool interactiveSelectRow(int delta) { return region_.selectRow(delta); }
+	bool interactiveDownOrExit() { return region_.moveDownOrExit(); } // true if it left editing
 	bool interactiveAdvanceRowOrExit() { return region_.advanceRowOrExit(); }
 	hudpresent::HudInteractionPhase interactionPhase() const { return renderer_.interactionPhase(); }
 	const hudpresent::HudWireframeRenderer& rendererForTesting() const { return renderer_; }

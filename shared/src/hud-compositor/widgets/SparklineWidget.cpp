@@ -301,7 +301,9 @@ void SparklineWidget::drawOrbit(const ofRectangle& bounds, const HudWidgetColors
 		if (focused || editing) {
 			ofNoFill();
 			ofSetLineWidth(editing ? 2.0f : 1.6f);
-			ofSetColor(editing ? colors.warning : colors.accent);
+			ofColor frameCol = editing ? colors.warning : colors.accent;
+			if (!editing) frameCol.a = static_cast<unsigned char>(float(frameCol.a) * d.focusPulse + 0.5f); // subtle focus pulse
+			ofSetColor(frameCol);
 			ofDrawRectangle(0.5f, 0.5f, bounds.width - 1.0f, bounds.height - 1.0f);
 			ofSetLineWidth(1.0f);
 			const char* tag = editing ? "EDITING" : "ENTER=EDIT";

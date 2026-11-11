@@ -180,7 +180,11 @@ void ofApp::setup() {
 
 	// EXPERIENCE_RUNTIME_CRT_SCENE starts a normal run in CRT Phosphor (same opt-in
 	// pattern as the other scenes; the scene itself is in the Production roster).
-	bool wantCrtScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !wantQuadrantScene
+	// EXPERIENCE_RUNTIME_FX_SCENE starts a normal run in the Shared Effects Gallery (same opt-in pattern).
+	const bool wantFxScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !wantQuadrantScene
+		&& !switchHarnessRequested && !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& std::getenv("EXPERIENCE_RUNTIME_FX_SCENE") != nullptr;
+	bool wantCrtScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !wantQuadrantScene && !wantFxScene
 		&& !switchHarnessRequested && !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
 		&& std::getenv("EXPERIENCE_RUNTIME_CRT_SCENE") != nullptr;
 
@@ -214,6 +218,8 @@ void ofApp::setup() {
 			runtime.installFragmentProductionScene();
 		} else if (wantQuadrantScene && (roster == Roster::Full || roster == Roster::Production)) {
 			runtime.installQuadrantProductionScene();
+		} else if (wantFxScene && roster == Roster::Production) {
+			runtime.installSharedEffectsGalleryProductionScene();
 		} else if (wantCrtScene && roster == Roster::Production) {
 			runtime.installCrtPhosphorProductionScene();
 		} else {
@@ -249,6 +255,7 @@ void ofApp::setup() {
 		runtime.setTypographyPresetEnabled(!anyHarnessForSkins || (typoEnv != nullptr && std::string(typoEnv) == "on")); // "on" = apply the preset under a harness
 	}
 	runtime.setup();
+	if (FxGalleryHarness::isRequested()) fxGalleryHarness = std::make_unique<FxGalleryHarness>(runtime);
 	if (CrtInteractiveHarness::isRequested()) crtInteractiveHarness = std::make_unique<CrtInteractiveHarness>(runtime);
 	if (CrtSelectorHarness::isRequested()) crtSelectorHarness = std::make_unique<CrtSelectorHarness>(runtime); // normal-run Production roster + opt-in env
 	if (framePhaseProbe) framePhaseProbe->afterRuntimeSetup(); // limiter/vsync controls apply after the runtime's own baseline
@@ -373,6 +380,7 @@ void ofApp::update() {
 	if (threeSceneHarness) {
 		threeSceneHarness->step(ofGetLastFrameTime());
 	}
+	if (fxGalleryHarness) fxGalleryHarness->step(ofGetLastFrameTime());
 	if (crtInteractiveHarness) crtInteractiveHarness->step(ofGetLastFrameTime());
 	if (crtSelectorHarness) crtSelectorHarness->step(ofGetLastFrameTime());
 	if (modeHarness) {

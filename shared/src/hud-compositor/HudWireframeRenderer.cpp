@@ -125,6 +125,10 @@ const std::unordered_set<std::string>& visibilityAwareRegions() {
 } // namespace
 
 bool HudWireframeRenderer::bindingOccupiesSlot(const HudCompiledBinding& compiled) const {
+	// An AVAILABLE interactive selector group owns its region: other bindings hosted there (e.g. the universal
+	// effect chips / health badge) neither occupy a slice nor draw, so every row keeps a full slice and the
+	// row cursor always lines up with the rows. (The scene's mode/effect name stays in universal.media_title.)
+	if (interactive_ && interactivePresent_ && compiled.binding.regionId == interactive_->regionId && compiled.binding.variantId != "selector") return false;
 	if (visibilityAwareRegions().count(compiled.binding.regionId) == 0) return true;
 	if (!compiled.valid) return true; // studio placeholder for an invalid binding
 	const auto it = widgetInputs_.find(compiled.binding.bindingId);
@@ -141,6 +145,12 @@ int HudWireframeRenderer::regionSlotCount(const std::string& regionId) const {
 	return it == counts.end() ? 0 : it->second;
 }
 
+bool HudWireframeRenderer::nestedFocusActive() const {
+	if (!focusedControl_) return false;
+	const auto* region = regions_.find(*focusedControl_);
+	return region == nullptr || region->role != HudRegionRole::Controls; // interactive.region / orbit.a / orbit.b are not catalog nav controls
+}
+
 HudWireframeRenderer::HudWireframeRenderer() : compiler_(regions_, vocabulary_) {
 	realResolver_.setVocabulary(&vocabulary_);
 	resolveInteractionStyleFromColors();
@@ -155,6 +165,7 @@ void HudWireframeRenderer::resolveInteractionStyleFromColors() {
 // whether the declared region is actually rendering. Update path / setter only — never draw().
 void HudWireframeRenderer::refreshInteractionInputs() {
 	interactivePresent_ = false;
+	interactiveRows_ = 0;
 	if (!interactive_) return;
 	int row = 0;
 	for (const auto& cb : compiled_.bindings) {
@@ -167,7 +178,8 @@ void HudWireframeRenderer::refreshInteractionInputs() {
 		it->second.selectorState = interactionPhase_ == HudInteractionPhase::Active ? (row == interactionRow_ ? 2 : 1) : 0;
 		++row;
 	}
-	interactivePresent_ = interactive_->rowCount > 0 && row >= interactive_->rowCount;
+	interactiveRows_ = std::min(row, interactive_->rowCount); // declaration = maximum; fewer rows may render
+	interactivePresent_ = interactiveRows_ >= 1;
 }
 
 // Generic interactive-region affordance, drawn inside the region's own bounds (the canonical
@@ -181,7 +193,9 @@ void HudWireframeRenderer::drawInteractionAffordance() const {
 	if (b.width <= 0.0f || b.height <= 0.0f) return;
 	const auto g = HudInteractionStyle::geometry();
 	const HudInteractionStyle& st = interactionStyle_;
-	auto col = [](const HudRgba8& c) { return ofColor(c.r, c.g, c.b, c.a); };
+	// Slow, low-amplitude, time-based pulse on the focus/edit highlight alpha only (no geometry change).
+	const float pulse = (ph == HudInteractionPhase::Idle) ? 1.0f : focusPulse(elapsedSeconds_);
+	auto col = [pulse](const HudRgba8& c) { return ofColor(c.r, c.g, c.b, scaleAlpha(c.a, pulse)); };
 	ofPushStyle();
 	ofEnableAlphaBlending();
 	ofNoFill();
@@ -214,7 +228,7 @@ void HudWireframeRenderer::drawInteractionAffordance() const {
 		corners(ofRectangle(b.x + h, b.y + h, b.width - 2.0f * h, b.height - 2.0f * h), g.focusArm, g.focusCornerStroke);
 	} else { // Active
 		markerCol = st.active;
-		const int rows = std::max(1, interactive_->rowCount);
+		const int rows = std::max(1, interactiveRows_);
 		const float rowH = b.height / float(rows);
 		const int sel = std::clamp(interactionRow_, 0, rows - 1);
 		ofFill();
@@ -486,6 +500,7 @@ void HudWireframeRenderer::update(float dt, const HudFrameData& frame) {
 	haveLastGeneration_ = haveLastGeneration_ || (semantic != nullptr);
 
 	frameLoading_ = frame.scene.health == SceneHealth::Loading;
+	orbitDraw_.focusPulse = focusPulse(elapsedSeconds_); // OC-005 observation focus frame pulses like every focused region
 	updateOrbit(frame);
 	visualActivity_.update(frame.sceneVisualActivity.get(), dt); // OC-004: resets on invalid/stale/transition/generation change
 	for (const auto& compiled : compiled_.bindings) {
@@ -928,6 +943,8 @@ void HudWireframeRenderer::draw() const {
 	if (hasButtonFaces()) {
 		ofPushStyle();
 		ofEnableBlendMode(OF_BLENDMODE_ALPHA);
+		const float navK = navigationEmphasis(); // 0.5 while an interactive region owns focus (hierarchy cue only)
+		const int navA = static_cast<int>(255.0f * navK + 0.5f);
 		for (const auto& reg : regions_.all()) {
 			if (reg.role != HudRegionRole::Controls) continue;
 			if (!controlEnabled(reg.regionId).has_value()) continue; // hidden/unsupported controls keep the baked housing
@@ -936,12 +953,12 @@ void HudWireframeRenderer::draw() const {
 			const bool focusedHere = focusedControl_ && *focusedControl_ == reg.regionId;
 			const ofTexture* base = (focusedHere && buttonFocusedTexture_) ? buttonFocusedTexture_ : buttonIdleTexture_;
 			if (base) {
-				ofSetColor(255, 255, 255, 255);
+				ofSetColor(255, 255, 255, navA);
 				base->draw(float(face.x), float(face.y), float(face.width), float(face.height));
 			}
 			const float active = buttonActiveOpacity(reg.regionId);
 			if (active > 0.0f) {
-				ofSetColor(255, 255, 255, static_cast<int>(255.0f * active + 0.5f));
+				ofSetColor(255, 255, 255, static_cast<int>(255.0f * active * navK + 0.5f));
 				buttonActiveTexture_->draw(float(face.x), float(face.y), float(face.width), float(face.height));
 			}
 		}
@@ -1021,7 +1038,22 @@ void HudWireframeRenderer::draw() const {
 				&& reactive::pressedArtworkOpacity(true, true, true, activationAccepted_, activationStart_, elapsedSeconds_, kActivationFlashSeconds) > 0.0f)
 				widgetColors.iconOpacity = 1.0f;
 		}
-		const HudWidgetColors& colors = widgetColors; // day/night palette from the skin schedule
+		// Nested focus: universal navigation labels/icons render at 50 % (multiplies, so a control that is
+		// already disabled/dimmed stays proportionally dimmer). Not a capability change.
+		HudWidgetColors navColors;
+		const HudWidgetColors* colorsPtr = &widgetColors;
+		{
+			const auto* reg = regions_.find(regionId);
+			const float k = navigationEmphasis();
+			if (k < 1.0f && reg != nullptr && reg->role == HudRegionRole::Controls) {
+				navColors = widgetColors;
+				navColors.buttonText.a = scaleAlpha(navColors.buttonText.a, k);
+				navColors.buttonShadow.a = scaleAlpha(navColors.buttonShadow.a, k);
+				navColors.iconOpacity *= k;
+				colorsPtr = &navColors;
+			}
+		}
+		const HudWidgetColors& colors = *colorsPtr; // day/night palette from the skin schedule
 
 		uint64_t widgetStart = ofGetElapsedTimeMicros();
 		if (labelTypography_) devTextRegion() = compiled.binding.regionId;

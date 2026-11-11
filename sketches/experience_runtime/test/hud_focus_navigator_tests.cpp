@@ -2,6 +2,10 @@
 
 #include "../src/HudFocusNavigator.h"
 #include "../src/HudRegionInteraction.h"
+#include "../src/SceneFxModel.h"
+#include "../../../shared/src/hud-compositor/HudFocusEmphasis.h"
+
+#include <cmath>
 
 #include <iostream>
 #include <map>
@@ -299,6 +303,129 @@ void test_interactive_focus_stop_is_single_and_hidden_when_unavailable() {
 	HUD_CHECK(nav.focused() != kStop);                                    // absent from traversal
 }
 
+// ---- Shared Effects Gallery: descriptor / controller ----
+
+scenefx::ModeDescriptor fxMode(const std::string& id, std::vector<scenefx::ControlDescriptor> controls) {
+	scenefx::ModeDescriptor m; m.effectId = id; m.displayName = id; m.controls = std::move(controls); return m;
+}
+std::vector<scenefx::ModeDescriptor> sampleRoster() {
+	using namespace scenefx;
+	return {
+		fxMode("zero", {}),
+		fxMode("one", {numeric("a", "AMOUNT", "alpha", 0.0, 1.0, 0.1, 0.0)}),
+		fxMode("two", {numeric("px", "CELL", "cellSize", 6.0, 24.0, 2.0, 6.0, true, "PX"),
+		               choice("col", "COLOR", "asciiColorMode", {Choice{"SAMPLED", {0, 0, 0}}, Choice{"B&W", {1, 0, 0}}, Choice{"MONO", {2, 0, 0}}}, 0)}),
+	};
+}
+
+void test_fx_rejects_more_than_two_controls() {
+	using namespace scenefx;
+	auto roster = sampleRoster();
+	roster[2].controls.push_back(numeric("c", "X", "p", 0, 1, 0.1, 0));
+	HUD_CHECK(!validate(roster).empty());
+	ModeController bad(roster);
+	HUD_CHECK(!bad.ok() && bad.modeCount() == 0);
+	ModeController good(sampleRoster());
+	HUD_CHECK(good.ok() && good.modeCount() == 3);
+}
+
+void test_fx_numeric_and_enum_steps() {
+	using namespace scenefx;
+	ModeController c(sampleRoster());
+	c.stepMode(+1); // "one": AMOUNT 0..1 step 0.1, default 0
+	HUD_CHECK(c.controlCount() == 1 && c.formattedValue(0) == "0.0");
+	HUD_CHECK(!c.stepControl(0, -1) && c.formattedValue(0) == "0.0");       // clamps at min
+	for (int i = 0; i < 3; ++i) c.stepControl(0, +1);
+	HUD_CHECK(std::fabs(c.rawValue(0) - 0.3) < 1e-9 && c.formattedValue(0) == "0.3"); // no accumulated float error
+	c.stepControl(0, -1);
+	HUD_CHECK(c.formattedValue(0) == "0.2");                                  // decrement
+	for (int i = 0; i < 20; ++i) c.stepControl(0, +1);
+	HUD_CHECK(c.formattedValue(0) == "1.0" && !c.stepControl(0, +1));         // clamps at max
+	c.stepMode(+1); // "two"
+	HUD_CHECK(c.controlCount() == 2);
+	HUD_CHECK(c.formattedValue(0) == "6 PX");                                  // integral control stays integral
+	c.stepControl(0, +1);
+	HUD_CHECK(c.formattedValue(0) == "8 PX" && c.rawValue(0) == 8.0);
+	HUD_CHECK(c.formattedValue(1) == "SAMPLED" && c.positionText(1) == "1/3"); // human-readable, never an integer
+	c.stepControl(1, +1);
+	HUD_CHECK(c.formattedValue(1) == "B&W" && c.paramValue(1)[0] == 1.0f);
+	c.stepControl(1, +1); c.stepControl(1, +1);
+	HUD_CHECK(c.formattedValue(1) == "SAMPLED");                               // enum wraps forward
+	c.stepControl(1, -1);
+	HUD_CHECK(c.formattedValue(1) == "MONO");                                  // enum wraps backward
+	HUD_CHECK(!c.stepControl(2, +1) && !c.stepControl(-1, +1) && !c.stepControl(0, 0)); // invalid axis/step refused
+}
+
+void test_fx_enum_clamp_policy() {
+	using namespace scenefx;
+	auto m = fxMode("e", {choice("c", "C", "p", {Choice{"A", {0, 0, 0}}, Choice{"B", {1, 0, 0}}})});
+	m.controls[0].wrap = false;
+	ModeController c({m});
+	HUD_CHECK(!c.stepControl(0, -1) && c.formattedValue(0) == "A");
+	c.stepControl(0, +1);
+	HUD_CHECK(!c.stepControl(0, +1) && c.formattedValue(0) == "B");           // clamped, no wrap
+}
+
+void test_fx_mode_switching() {
+	using namespace scenefx;
+	ModeController c(sampleRoster());
+	HUD_CHECK(c.mode().effectId == "zero" && c.controlCount() == 0);
+	c.stepMode(+1); HUD_CHECK(c.mode().effectId == "one" && c.controlCount() == 1);
+	c.stepControl(0, +1); c.stepControl(0, +1); // AMOUNT 0.2
+	c.stepMode(+1); HUD_CHECK(c.mode().effectId == "two" && c.controlCount() == 2);
+	c.stepMode(+1); HUD_CHECK(c.mode().effectId == "zero" && c.modeIndex() == 0); // wraps last -> first
+	c.stepMode(-1); HUD_CHECK(c.mode().effectId == "two");
+	c.stepMode(+1); c.stepMode(+1);
+	HUD_CHECK(c.mode().effectId == "one" && c.formattedValue(0) == "0.2");     // values persist per mode
+	c.resetAll();
+	HUD_CHECK(c.modeIndex() == 0 && c.mode().effectId == "zero");
+	c.stepMode(+1);
+	HUD_CHECK(c.formattedValue(0) == "0.0");                                   // reset restores defaults
+}
+
+// ---- Parameter navigation (same state machine for CRT and the gallery) ----
+
+void checkNavigation(int rows) {
+	HudRegionInteraction r(rows);
+	HUD_CHECK(r.enter() && r.active() && r.row() == 0);
+	for (int i = 0; i < rows - 1; ++i) { HUD_CHECK(!r.moveDownOrExit() && r.active() && r.row() == i + 1); } // Down walks the rows
+	HUD_CHECK(r.row() == rows - 1);
+	for (int i = rows - 1; i > 0; --i) { HUD_CHECK(r.selectRow(-1) && r.row() == i - 1); }                    // Up walks back
+	HUD_CHECK(!r.selectRow(-1) && r.row() == 0 && r.active());                                                // Up on the first row stays
+	for (int i = 0; i < rows - 1; ++i) r.moveDownOrExit();
+	HUD_CHECK(r.moveDownOrExit() && !r.active());                                                             // Down on the LAST row exits
+}
+
+void test_navigation_two_rows_gallery_and_crt() { checkNavigation(2); }
+void test_navigation_one_row_gallery_and_crt() { checkNavigation(1); }
+
+void test_navigation_zero_rows_never_traps() {
+	HudRegionInteraction r(0);
+	HUD_CHECK(!r.enter() && !r.active());                    // nothing to edit -> cannot be entered
+	HudRegionInteraction g(2);
+	g.enter(); g.moveDownOrExit();                           // on row 1 of 2
+	g.configure(1);                                          // mode change: next effect has ONE control
+	HUD_CHECK(g.active() && g.row() == 0);                   // stale row index repaired, never kept against a one-item list
+	g.configure(0);                                          // next effect has NO controls
+	HUD_CHECK(!g.active() && g.row() == 0 && !g.enter());    // exits, no trap
+}
+
+// ---- HUD focus presentation ----
+
+void test_focus_emphasis() {
+	using namespace hudpresent;
+	HUD_CHECK(navEmphasis(true) == 0.5f && navEmphasis(false) == 1.0f);       // nested focus dims nav to 50 %, restore -> 100 %
+	HUD_CHECK(scaleAlpha(220, navEmphasis(true)) == 110);
+	HUD_CHECK(scaleAlpha(40, navEmphasis(true)) == 20 && scaleAlpha(40, 0.5f) < scaleAlpha(220, 0.5f)); // multiplies: an already-dim (disabled) control stays dimmer
+	HUD_CHECK(scaleAlpha(255, navEmphasis(false)) == 255);
+	float lo = 9.f, hi = -9.f;
+	for (int i = 0; i < 2000; ++i) { const float p = focusPulse(i * 0.01f); lo = std::min(lo, p); hi = std::max(hi, p); }
+	HUD_CHECK(lo >= 1.0f - kFocusPulseDepth - 1e-4f && hi <= 1.0f + 1e-4f && hi - lo > 0.25f); // subtle, bounded, actually pulses
+	HUD_CHECK(std::fabs(focusPulse(1.234f) - focusPulse(1.234f)) < 1e-9f);                      // pure function of time (frame-rate independent)
+	const float period = 1.0f / kFocusPulseHz;
+	HUD_CHECK(std::fabs(focusPulse(0.37f) - focusPulse(0.37f + period)) < 1e-3f);
+}
+
 int main() {
 	test_no_focus_before_first_input();
 	test_first_step_engages_on_first_enabled();
@@ -318,6 +445,14 @@ int main() {
 	test_region_interaction_state_machine();
 	test_region_interaction_encoder_never_traps();
 	test_interactive_focus_stop_is_single_and_hidden_when_unavailable();
+	test_fx_rejects_more_than_two_controls();
+	test_fx_numeric_and_enum_steps();
+	test_fx_enum_clamp_policy();
+	test_fx_mode_switching();
+	test_navigation_two_rows_gallery_and_crt();
+	test_navigation_one_row_gallery_and_crt();
+	test_navigation_zero_rows_never_traps();
+	test_focus_emphasis();
 
 	std::cout << (g_total - g_failures) << "/" << g_total << " checks passed.\n";
 	if (g_failures > 0) {

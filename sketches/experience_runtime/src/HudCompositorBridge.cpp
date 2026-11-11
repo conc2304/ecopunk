@@ -34,7 +34,7 @@ void HudCompositorBridge::refreshInteraction() {
 	const auto* decl = renderer_.interactiveRegion();
 	const bool available = decl != nullptr && interactiveRegionAvailable();
 	const bool focusHere = focus_.focused() && isInteractiveFocusId(*focus_.focused());
-	if (decl) region_.configure(decl->rowCount);
+	if (decl) region_.configure(renderer_.interactiveRowCount()); // rows follow what is rendering (mode with fewer controls)
 	// The region's focus is scene-specific context: once it is unavailable (scene switched away, option
 	// port gone) the navigator's usual "restore the intended control" must NOT bring focus back to it later.
 	if (!available && focus_.intended() && isInteractiveFocusId(*focus_.intended())) focus_.confirmFocus();

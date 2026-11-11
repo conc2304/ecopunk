@@ -15,6 +15,7 @@
 #include "ModeNavigationHarness.h"
 #include "CrtSelectorHarness.h"
 #include "CrtInteractiveHarness.h"
+#include "FxGalleryHarness.h"
 #include "InstallationHarness.h"
 #include "ExperienceV03Harness.h"
 #include "PresentationHarness.h"
@@ -81,6 +82,7 @@ private:
 	std::unique_ptr<TemporalWarmHarness> temporalWarmHarness; // Temporal first-activation stall
 	std::unique_ptr<ThreeSceneCircuitHarness> threeSceneHarness; // RT-005 three-scene circuits
 	std::unique_ptr<ModeNavigationHarness> modeHarness; // Scene & Pattern Navigation, full roster
+	std::unique_ptr<FxGalleryHarness> fxGalleryHarness; // Shared Effects Gallery + interactive HUD behaviour (opt-in env)
 	std::unique_ptr<CrtInteractiveHarness> crtInteractiveHarness; // generic interactive region on CRT (opt-in env)
 	std::unique_ptr<CrtSelectorHarness> crtSelectorHarness; // CRT three-selector rows (production roster; opt-in env)
 	std::unique_ptr<InstallationHarness> installationHarness; // Installation Controls & ENERGY, full roster

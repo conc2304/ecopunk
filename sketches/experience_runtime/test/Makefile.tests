@@ -206,7 +206,7 @@ $(SYSTEM_VITALS_BIN): $(SYSTEM_VITALS_SRC) ../src/SystemVitals.h
 $(WALL_CLOCK_BIN): $(WALL_CLOCK_SRC) ../../../shared/src/hud-runtime/WallClockSampler.h ../../../shared/src/hud-runtime/WallClockStatus.h ../../../shared/src/hud-compositor/HudClockFormat.h
 	$(CXX) $(WALL_CLOCK_CXXFLAGS) $(WALL_CLOCK_SRC) -o $(WALL_CLOCK_BIN)
 
-$(FOCUS_BIN): $(FOCUS_SRC) ../src/HudFocusNavigator.h
+$(FOCUS_BIN): $(FOCUS_SRC) ../src/HudFocusNavigator.h ../src/HudRegionInteraction.h ../src/SceneFxModel.h ../../../shared/src/hud-compositor/HudFocusEmphasis.h
 	$(CXX) $(CXXFLAGS) $(FOCUS_SRC) -o $(FOCUS_BIN)
 
 

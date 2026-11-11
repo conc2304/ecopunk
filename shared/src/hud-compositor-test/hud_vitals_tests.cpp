@@ -475,7 +475,7 @@ void testCrtSelectorRows() {
 	};
 	CHECK(slots("crt", frameWith(true, true, false)) == 2, "CRT: PIXELS + PALETTE take two slices (chips hidden); MODE is not repeated here");
 	CHECK(slots("crt", frameWith(true, false, false)) == 2, "CRT: the rows do not depend on the mode status (MODE lives in media_title)");
-	CHECK(slots("crt", frameWith(true, true, true)) == 3, "CRT: with an effects snapshot the chips + two rows fit (cap 4)");
+	CHECK(slots("crt", frameWith(true, true, true)) == 2, "CRT: the available interactive group owns its region - chips/health do not take a slice, rows keep full slices");
 	CHECK(slots("crt", frameWith(false, true, false)) == 0, "CRT: no semantic payload -> both rows hide, nothing reserved");
 	CHECK(slots("crt", frameWith(false, false, false)) == 0, "CRT: unavailable scene -> nothing reserved (neutral, non-interactive)");
 
@@ -494,12 +494,15 @@ void testCrtSelectorRows() {
 	{ // declarative opt-in: exactly one interactive SelectorGroup, and only CRT declares one
 		const auto* crtProfile = registry.flexibleProfileForScene("crt-phosphor");
 		CHECK(crtProfile && crtProfile->interactiveRegions.size() == 1, "CRT: declares exactly one interactive region");
+		const auto* fxProfile = registry.flexibleProfileForScene("shared-effects-gallery");
+		CHECK(fxProfile && fxProfile->interactiveRegions.size() == 1 && fxProfile->interactiveRegions[0].rowCount == 2 && fxProfile->interactiveRegions[0].regionId == "universal.effect_summary",
+			"Gallery: declares exactly one interactive SelectorGroup (max 2 rows) in the same region as CRT");
 		if (crtProfile && !crtProfile->interactiveRegions.empty()) {
 			const auto& d = crtProfile->interactiveRegions[0];
 			CHECK(d.regionId == "universal.effect_summary" && d.kind == HudInteractionKind::SelectorGroup && d.rowCount == 2, "CRT: interactive region is effect_summary, SelectorGroup, 2 rows");
 		}
 		for (const auto& id : registry.knownSceneIds()) {
-			if (id == "crt-phosphor") continue;
+			if (id == "crt-phosphor" || id == "shared-effects-gallery") continue; // the two scenes that opt in
 			CHECK(registry.flexibleProfileForScene(id)->interactiveRegions.empty(), "passive: scene '" + id + "' declares no interactive region");
 		}
 		CHECK(registry.universalProfile().interactiveRegions.empty(), "passive: the universal profile declares no interactive region");

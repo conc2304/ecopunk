@@ -8,7 +8,8 @@
 // through its own authorised path (ExperienceRuntime's region-option port).
 //
 //   FOCUSED --activate--> ACTIVE (row = last row, default 0)
-//   ACTIVE:  Up/Down   -> selectRow(clamped)     (two rows: Up stays on the first, Down on the last)
+//   ACTIVE:  Up        -> previous row (clamped: Up on the first row stays)
+//            Down      -> next row; Down on the LAST row leaves editing (moveDownOrExit)
 //            Left/Right-> stepValue(delta)       (the CALLER wraps the option value)
 //            activate/back -> exit, region stays focused; applied values are NOT reverted
 //   scene change / region unavailable -> forceExit()  (no stale editing state)
@@ -19,11 +20,14 @@
 
 class HudRegionInteraction {
 public:
-	explicit HudRegionInteraction(int rows = 2) : rows_(rows < 1 ? 1 : rows) {}
+	explicit HudRegionInteraction(int rows = 2) : rows_(rows < 0 ? 0 : rows) {}
 
+	// The row count may change at any time (a scene mode with fewer controls). 0 rows = nothing to
+	// edit: the region cannot be entered and an active session is closed (never a dead-end focus).
 	void configure(int rows) {
-		rows_ = rows < 1 ? 1 : rows;
-		if (row_ >= rows_) row_ = rows_ - 1;
+		rows_ = rows < 0 ? 0 : rows;
+		if (rows_ == 0) { active_ = false; row_ = 0; return; }
+		if (row_ >= rows_) row_ = rows_ - 1; // a stale row index is repaired, never kept against a shorter list
 	}
 
 	bool active() const { return active_; }
@@ -32,7 +36,7 @@ public:
 
 	// Enters editing. The previously selected row is kept (default row 0).
 	bool enter() {
-		if (active_) return false;
+		if (active_ || rows_ < 1) return false;
 		active_ = true;
 		return true;
 	}
@@ -52,6 +56,15 @@ public:
 		const bool moved = clamped != row_;
 		row_ = clamped;
 		return moved;
+	}
+
+	// Down: next row; on the LAST row it LEAVES editing (required: no dead end, also for 1-row groups).
+	// Returns true if it left editing.
+	bool moveDownOrExit() {
+		if (!active_) return false;
+		if (row_ + 1 >= rows_) { active_ = false; return true; }
+		++row_;
+		return false;
 	}
 
 	// Encoder click: next row; after the last row, leave editing.

@@ -351,6 +351,28 @@ ScenePresentationProfile buildCrtProfile() {
 	return p;
 }
 
+// Shared Effects Gallery: up to TWO curated effect controls, in the same interactive selector group
+// (universal.effect_summary) the CRT scene uses. Rows are data-driven: each reads its own caption,
+// value and optional position from scene metrics ("caption" role = dynamic label), and hides when
+// the active mode has no such control. The interactive declaration is the MAXIMUM row count.
+ScenePresentationProfile buildFxGalleryProfile() {
+	ScenePresentationProfile p;
+	p.profileId = "shared-effects-gallery";
+	auto row = [&p](const char* bindingId, const char* label, const char* value, const char* pos) {
+		auto b = makeBinding(bindingId, "universal.effect_summary",
+			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic);
+		b.variantId = "selector";
+		b.addSource({"text", value, true});
+		b.addSource({"suffix", pos, false});
+		b.addSource({"caption", label, false});
+		p.bindings.push_back(b);
+	};
+	row("fx.control.0", "scene.fx.metric.c0_label", "scene.fx.metric.c0_value", "scene.fx.metric.c0_pos");
+	row("fx.control.1", "scene.fx.metric.c1_label", "scene.fx.metric.c1_value", "scene.fx.metric.c1_pos");
+	p.interactiveRegions.push_back({"universal.effect_summary", HudInteractionKind::SelectorGroup, 2});
+	return p;
+}
+
 ScenePresentationProfile buildBlueprintProfile() {
 	ScenePresentationProfile p;
 	p.profileId = "blueprint_emergence";
@@ -378,6 +400,7 @@ HudPresentationProfileRegistry::HudPresentationProfileRegistry() {
 	flexibleProfiles_.push_back(buildQuadrantProfile());
 	flexibleProfiles_.push_back(buildBlueprintProfile());
 	flexibleProfiles_.push_back(buildCrtProfile());
+	flexibleProfiles_.push_back(buildFxGalleryProfile());
 }
 
 const ScenePresentationProfile* HudPresentationProfileRegistry::flexibleProfileForScene(const std::string& sceneId) const {

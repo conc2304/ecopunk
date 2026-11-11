@@ -24,7 +24,8 @@ ExperienceRuntime::ExperienceRuntime()
 	, blueprintScene_(runtimeServices_.video())
 	, fragmentScene_(runtimeServices_.video())
 	, quadrantScene_(runtimeServices_.video())
-	, crtPhosphorScene_(runtimeServices_.video()) {
+	, crtPhosphorScene_(runtimeServices_.video())
+	, sharedEffectsGalleryScene_(runtimeServices_.video()) {
 	regionOptionSink_ = [this](int row, int delta) { return sceneManager_.dispatchSceneOption(row, delta); };
 	// See ExperienceRuntime.h's constructor comment and blobScene_'s own
 	// declaration comment: runtimeServices_.video() is a valid, stable
@@ -57,6 +58,9 @@ void ExperienceRuntime::installProductionScenes(const std::string& startupSceneI
 			// Sixth scene, normal run only (harness rosters unchanged). No canonical
 			// effect producer -> effects = nullopt; timer-driven Shared Video cadence.
 			sceneManager_.registerProductionScene(&crtPhosphorScene_);
+			// Seventh scene: Shared Effects Gallery. Canonical effect activity = the active mode's effect.
+			sceneManager_.registerProductionScene(
+				&sharedEffectsGalleryScene_, [this] { return sharedEffectsGalleryScene_.currentEffectActivitySnapshot(); });
 		}
 		productionScenesInstalled_ = true;
 	}
@@ -1605,7 +1609,12 @@ void ExperienceRuntime::stepInteractiveOption(int delta) {
 bool ExperienceRuntime::handleInteractiveKey(int key) {
 	switch (key) {
 		case OF_KEY_UP:    hudCompositorBridge_.interactiveSelectRow(-1); return true;
-		case OF_KEY_DOWN:  hudCompositorBridge_.interactiveSelectRow(+1); return true;
+		case OF_KEY_DOWN: // Down on the LAST row leaves editing (no dead end); the region stays focused
+			if (hudCompositorBridge_.interactiveDownOrExit()) {
+				interactiveClosedAt_ = steadySeconds();
+				ofLogNotice("HudInteractive") << "done (Down on the last row; applied values kept)";
+			}
+			return true;
 		case OF_KEY_LEFT:  stepInteractiveOption(-1); return true;
 		case OF_KEY_RIGHT: stepInteractiveOption(+1); return true;
 		case OF_KEY_RETURN:

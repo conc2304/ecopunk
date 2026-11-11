@@ -8,6 +8,7 @@
 #include "FragmentProductionScene.h"
 #include "QuadrantProductionScene.h"
 #include "CrtPhosphorScene.h"
+#include "SharedEffectsGalleryScene.h"
 #include "HudCompositorBridge.h"
 #include "HudFrameData.h"
 #include "ExperienceSettingsPage.h"
@@ -120,7 +121,7 @@ public:
 	//                  TwoSceneAcceptanceHarness and RT-003's
 	//                  SceneSwitchHarness were accepted against (both assert
 	//                  exactly that registry and step '['/']' assuming it).
-	//   Production   — [Blob, Temporal, Blueprint, Fragment, Quadrant, CrtPhosphor]:
+	//   Production   — [Blob, Temporal, Blueprint, Fragment, Quadrant, CrtPhosphor, SharedEffectsGallery]:
 	//                  the NORMAL (non-harness) run only. Every accepted harness keeps
 	//                  the ring it was accepted against (Full stays five scenes).
 	enum class ProductionRoster { BlobTemporal, ThreeScene, Full, Production };
@@ -148,6 +149,12 @@ public:
 		installProductionScenes(CrtPhosphorScene::kSceneId, ProductionRoster::Production);
 	}
 	CrtPhosphorScene& crtPhosphorSceneForTesting() { return crtPhosphorScene_; }
+	// Shared Effects Gallery, seventh scene of the normal-run (Production) roster, appended after CRT
+	// Phosphor. Starting here is opt-in (EXPERIENCE_RUNTIME_FX_SCENE).
+	void installSharedEffectsGalleryProductionScene() {
+		installProductionScenes(SharedEffectsGalleryScene::kSceneId, ProductionRoster::Production);
+	}
+	SharedEffectsGalleryScene& sharedEffectsGallerySceneForTesting() { return sharedEffectsGalleryScene_; }
 
 	BlueprintProductionScene& blueprintSceneForTesting() { return blueprintScene_; }
 	// Read-only: the one canonical VideoPlaybackService (resume-window verification).
@@ -500,6 +507,7 @@ private:
 	// CRT Phosphor: sixth scene of the Production roster, same construction-order
 	// rule (declared after runtimeServices_); set up lazily on first switch.
 	CrtPhosphorScene crtPhosphorScene_;
+	SharedEffectsGalleryScene sharedEffectsGalleryScene_;
 
 	bool productionScenesInstalled_ = false;
 

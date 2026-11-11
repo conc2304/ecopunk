@@ -32,6 +32,7 @@ struct OrbitDrawData {
 	// OC-005: HUD-owned observation configuration + editor state (presentation state, never telemetry).
 	// Observation A draws in the upper region, B in the lower; the draw path reads it only.
 	OrbitConfigEditor ui;
+	float focusPulse = 1.0f; // 0.7..1.0 alpha factor for the focused (not editing) frame; set by the renderer each update
 	bool focusA = false, focusB = false; // HUD focus on an observation (set by the renderer's setFocusedControl)
 	float upperW = 0, upperH = 0, lowerH = 0;
 	uint64_t linesBuiltAtRebuild = 0;

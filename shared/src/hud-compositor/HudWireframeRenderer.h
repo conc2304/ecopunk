@@ -46,6 +46,7 @@
 #include "widgets/HudWidgetBase.h"
 #include "widgets/HudWidgetRegistry.h"
 
+#include "HudFocusEmphasis.h"
 #include "HudInteractionStyle.h"
 #include "ofRectangle.h"
 
@@ -248,6 +249,9 @@ public:
 	// True while every declared row is actually rendering (data present) — otherwise the region is
 	// unavailable and must not hold focus or capture input.
 	bool interactiveRegionPresent() const { return interactivePresent_; }
+	// Rows currently rendering in the declared region (a scene may show fewer than the declaration's
+	// maximum, e.g. a mode with one control). 0 = unavailable.
+	int interactiveRowCount() const { return interactiveRows_; }
 	void setInteraction(HudInteractionPhase phase, int selectedRow) {
 		interactionPhase_ = phase;
 		interactionRow_ = selectedRow;
@@ -256,6 +260,10 @@ public:
 	HudInteractionPhase interactionPhase() const { return interactionPhase_; }
 	int interactionRow() const { return interactionRow_; }
 	const HudInteractionStyle& interactionStyle() const { return interactionStyle_; }
+	// Focus hierarchy: true while an interactive (non-navigation) region owns focus.
+	bool nestedFocusActive() const;
+	// Navigation-button emphasis this frame: 0.5 while nestedFocusActive(), else 1.0.
+	float navigationEmphasis() const { return navEmphasis(nestedFocusActive()); }
 	// One short activation flash on the focused control (accepted = accent,
 	// refused = warning), fading over kActivationFlashSeconds.
 	// The interval starts at the NEXT update() — the frame that first shows
@@ -387,6 +395,7 @@ private:
 	HudWidgetColors colors_;
 	std::optional<HudInteractiveRegionDecl> interactive_; // current scene's declaration (set in setScene)
 	bool interactivePresent_ = false;
+	int interactiveRows_ = 0;
 	HudInteractionPhase interactionPhase_ = HudInteractionPhase::Passive;
 	int interactionRow_ = 0;
 	HudInteractionStyle interactionStyle_;
