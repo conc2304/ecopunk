@@ -11,7 +11,9 @@
 #include "VideoPlaybackService.h"
 #include "glm/vec2.hpp"
 #include <array>
+#include <functional>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace hud {
@@ -67,6 +69,16 @@ class BEComposition : public CompositionBase {
 		// PLACEMENT/DENSITY — during DISSOLVE a mode change is already under
 		// way (onDissolveComplete() enters the next mode).
 		bool requestNextMode();
+
+		// ── Editorial-collage grammar support (BlueprintSceneCore-driven) ──
+		// While collage mode is on, the collage owns all imagery: no video
+		// slots / HUD widgets spawn, the cycle is pinned to GHOST_LAYERS (the
+		// mode with a timer-driven PLACEMENT->DENSITY->DISSOLVE arc), and
+		// DISSOLVE can be held open until the collage choreography is done.
+		// All three are off by default, so the classic behaviour is untouched.
+		void setSpawningSuspended(bool suspended) { spawningSuspended = suspended; }
+		void setForcedCycleMode(std::optional<CycleMode> mode) { forcedMode = mode; }
+		void setDissolveGate(std::function<bool()> gate) { dissolveGate = std::move(gate); }
 		float getDividerX() const { return divider.pivot.x; }
 
 		// Canvas-edge endpoints of the divider at its current angle/pivot —
@@ -165,6 +177,7 @@ class BEComposition : public CompositionBase {
 			}
 		};
 
+		CycleMode pickNextMode() const { return forcedMode ? *forcedMode : selectNextMode(); }
 		void enterMode(CycleMode mode);
 		void updateGhostDecay(float dt);
 		void updateDividerAnimation(float dt);
@@ -261,6 +274,9 @@ class BEComposition : public CompositionBase {
 		DividerRotationAnim rotAnim;
 		std::vector<glm::vec2> seenIntersections;   // intersections counted this rotation
 		float timeInMode                   = 0.0f;
+		bool  spawningSuspended            = false;
+		std::optional<CycleMode> forcedMode;
+		std::function<bool()> dissolveGate;
 		float modeTransitionTarget         = 0.0f;  // PERPETUAL: seconds until transition armed
 		bool  perpetualTransitionArmed     = false;
 		int   placementsSinceSeedRefresh   = 0;

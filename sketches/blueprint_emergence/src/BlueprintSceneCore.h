@@ -23,6 +23,7 @@
 // ============================================================================
 
 #include "AnnotationRenderer.h"
+#include "BECollage.h"
 #include "BEComposition.h"
 #include "ErosionFBO.h"
 #include "GridState.h"
@@ -52,6 +53,9 @@ public:
 		// natural cycle end or restartCycle() (RESEED / standalone 'r') —
 		// advances, exactly as the standalone startCycle() path does.
 		bool advanceMediaPerCycle = true;
+		// Start in the EDITORIAL_COLLAGE visual grammar (off by default, so
+		// existing hosts are unchanged). Switchable at runtime.
+		bool editorialCollage = false;
 	};
 
 	void setup(VideoPlaybackService* video, const Config& config);
@@ -86,6 +90,19 @@ public:
 	// the exact event that drives the per-cycle media advance.
 	int cycleStartCount() const { return cycleStartCount_; }
 
+	// ── EDITORIAL_COLLAGE grammar ─────────────────────────────────────────
+	// A composition grammar inside this scene (not a separate scene): same
+	// phase arc, same cycle/seed lifecycle, same shared video texture.
+	// Switching restarts the current cycle (media is kept).
+	void setEditorialCollage(bool on);
+	bool editorialCollage() const { return editorialCollage_; }
+	// Display name for status paths that want one; empty when classic.
+	const char* visualGrammarName() const { return editorialCollage_ ? collage_.displayName() : ""; }
+	BECollage& collage() { return collage_; }
+	const BECollage& collage() const { return collage_; }
+	// Dev/capture: show one frozen, fully-built plate for (seed, template).
+	void debugShowCollage(uint32_t seed, int templateIndex, bool densityReached);
+
 	const BEComposition& composition() const { return composition_; }
 	const GridSystem& grid() const { return grid_; }
 
@@ -100,6 +117,8 @@ private:
 	GridSystem grid_;
 	AnnotationRenderer annotations_;
 	BEComposition composition_;
+	BECollage collage_;
+	bool editorialCollage_ = false;
 	LFOBank lfoBank_;
 	TriggerBus triggerBus_;
 	GridState gridState_;

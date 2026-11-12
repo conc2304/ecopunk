@@ -7,6 +7,7 @@
 #include "hud/HudElements.h"
 
 #include <cmath>
+#include <optional>
 
 void BlueprintSceneCore::setup(VideoPlaybackService* video, const Config& config) {
 	config_ = config;
@@ -54,6 +55,9 @@ void BlueprintSceneCore::setup(VideoPlaybackService* video, const Config& config
 	triggerBus_.setCooldown(static_cast<int>(BETrigger::CIRCLE_PLACED), 0.0f);
 	triggerBus_.setCooldown(static_cast<int>(BETrigger::CYCLE_START), 0.0f);
 
+	collage_.setup(cw, ch, CODE_FONT_PATH, 13);
+	composition_.setDissolveGate([this]() { return !editorialCollage_ || collage_.dissolveFinished(); });
+
 	composition_.setupBE(&grid_, video_, cw, ch);
 	composition_.setLFOBank(&lfoBank_);
 	composition_.setTriggerBus(&triggerBus_); // also registers BEComposition's own listeners
@@ -78,6 +82,11 @@ void BlueprintSceneCore::setup(VideoPlaybackService* video, const Config& config
 		if (config_.advanceMediaPerCycle && !skipAdvance && video_ != nullptr && !video_->advanceAtBoundary()) {
 			ofLogWarning("BlueprintSceneCore") << "onCycleStart: VideoPlaybackService::advanceAtBoundary() failed (media unavailable?)";
 		}
+		if (editorialCollage_) {
+			// Fresh plate per cycle start (natural cycle end or ghost mini-cycle).
+			collage_.beginLayout(static_cast<uint32_t>(composition_.getCycleSeed()) * 1664525u
+				+ static_cast<uint32_t>(cycleStartCount_) * 1013904223u);
+		}
 		annotations_.reset();
 		erosionFBO_.clear();
 		gridPulseBoost_ = 0.0f;
@@ -91,10 +100,45 @@ void BlueprintSceneCore::setup(VideoPlaybackService* video, const Config& config
 		ofLogNotice("BlueprintSceneCore") << "phase -> " << phaseNames[static_cast<int>(newPhase)]
 										  << " at t=" << ofGetElapsedTimef();
 		gridPulseBoost_ = 0.8f;
+		if (editorialCollage_) {
+			using P = CompositionBase::CyclePhase;
+			if (newPhase == P::DENSITY) collage_.setPhase(CollagePhase::Density);
+			else if (newPhase == P::DISSOLVE) collage_.setPhase(CollagePhase::Dissolve);
+			else collage_.setPhase(CollagePhase::Placement);
+		}
 		triggerBus_.fireImmediate(static_cast<int>(BETrigger::PHASE_TRANSITION));
 	});
 
 	didSetup_ = true;
+	if (config_.editorialCollage) setEditorialCollage(true); // not active yet: no cycle restart
+}
+
+void BlueprintSceneCore::setEditorialCollage(bool on) {
+	if (on == editorialCollage_) return;
+	editorialCollage_ = on;
+	collage_.lock(false);
+	composition_.setSpawningSuspended(on);
+	composition_.setForcedCycleMode(on ? std::optional<CycleMode>(CycleMode::GHOST_LAYERS) : std::nullopt);
+	if (didSetup_ && active_) {
+		skipNextCycleMediaAdvance_ = true; // a grammar switch keeps the current media
+		if (!on) {
+			// Leaving the collage lands deterministically on GHOST_LAYERS (first classic
+			// mode in the NEXT MODE order), then releases the pin.
+			composition_.setForcedCycleMode(CycleMode::GHOST_LAYERS);
+			restartCycle();
+			composition_.setForcedCycleMode(std::nullopt);
+		} else {
+			restartCycle();
+		}
+	}
+}
+
+void BlueprintSceneCore::debugShowCollage(uint32_t seed, int templateIndex, bool densityReached) {
+	if (!editorialCollage_) setEditorialCollage(true);
+	collage_.forceTemplate(templateIndex);
+	collage_.lock(false);
+	collage_.beginLayout(seed, true);
+	collage_.debugSetTimeline(60.0f, densityReached ? 30.0f : -1.0f);
 }
 
 void BlueprintSceneCore::activate() {
@@ -111,6 +155,19 @@ void BlueprintSceneCore::restartCycle() {
 }
 
 bool BlueprintSceneCore::requestNextMode() {
+	if (editorialCollage_) {
+		// Mode order: GHOST_LAYERS -> PERPETUAL -> EDITORIAL_COLLAGE -> GHOST_LAYERS.
+		// Collage is the last step, so NEXT MODE leaves it. Refused during DISSOLVE
+		// like classic; never advances the shared media.
+		if (composition_.getPhase() == CompositionBase::CyclePhase::DISSOLVE) return false;
+		setEditorialCollage(false);
+		return true;
+	}
+	if (composition_.getCurrentMode() == CycleMode::PERPETUAL && didSetup_ && active_) {
+		if (composition_.getPhase() == CompositionBase::CyclePhase::DISSOLVE) return false;
+		setEditorialCollage(true);
+		return true;
+	}
 	const bool previousSkip = skipNextCycleMediaAdvance_;
 	const int cycleStartsBefore = cycleStartCount_;
 	skipNextCycleMediaAdvance_ = true; // a manual mode change keeps the current media
@@ -152,6 +209,12 @@ void BlueprintSceneCore::update(float dt) {
 	lfoBank_.update(dt);
 	composition_.update(dt); // drives GridState decay, trigger condition checks, LFO desat nudges
 	triggerBus_.update(dt); // ticks cooldown timers
+	if (editorialCollage_) {
+		// The collage follows the composition's phase arc; the classic
+		// annotation / motion layers are not drawn, so don't pay for them.
+		collage_.update(dt);
+		return;
+	}
 	annotations_.update(dt);
 
 	triggerBus_.setConditionActive(static_cast<int>(BETrigger::MEASUREMENT_HUB),
@@ -185,6 +248,12 @@ void BlueprintSceneCore::update(float dt) {
 
 void BlueprintSceneCore::draw() {
 	ofPushStyle();
+
+	if (editorialCollage_) {
+		collage_.draw(video_ != nullptr ? video_->currentTexture() : nullptr);
+		ofPopStyle();
+		return;
+	}
 
 	// The whole scene draws into ErosionFBO's capture buffer, which is then
 	// blended against its own decaying history and presented — recent draws

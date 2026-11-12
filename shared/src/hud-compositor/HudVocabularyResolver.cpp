@@ -122,6 +122,7 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"backdrop_effect", "BACKDROP EFFECT"},
 		{"ghost_layers", "GHOST LAYERS"},
 		{"perpetual", "PERPETUAL"},
+		{"editorial_collage", "EDITORIAL COLLAGE"},
 		{"natural_background", "NATURAL BACKGROUND"},
 		{"desaturated_background", "DESATURATED BACKGROUND"},
 		{"no_background", "NO BACKGROUND"},

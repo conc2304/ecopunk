@@ -40,6 +40,29 @@ private:
 
 	bool showOccupancyDebug = false;
 
+	// Dev-only: BE_COLLAGE_CAPTURE_DIR=<dir> renders a fixed list of collage
+	// seeds (frozen, fully built) to PNGs, then exits. See ofApp.cpp.
+	struct CaptureJob {
+		uint32_t seed;
+		int templateIndex;
+		bool density;
+		std::string name;
+	};
+	std::string captureDir;
+	std::vector<CaptureJob> captureJobs;
+	size_t captureIndex = 0;
+	int captureWait = 0;
+	void runCaptureStep();
+	// Dev-only: BE_COLLAGE_LIVE_DIR=<dir> runs the real (unlocked) collage
+	// lifecycle and saves a PNG every few seconds, so phase hand-offs can be seen.
+	std::string liveDir;
+	ofTexture uvChartTex;
+	std::string uvChartPath;
+	int uvChartFrames = 0;
+	float liveElapsed = 0.0f, liveNextShot = 0.0f;
+	int liveShotIndex = 0;
+	float liveInterval = 5.0f, liveStopAt = -1.0f, lastEventLogT = -1.0f;
+
 	// HUD Glitch Overlay System — standalone, isolated module (see
 	// shared/src/hud_overlay/README.md). Toggled with 'o'; while active it
 	// fully replaces this sketch's draw with the overlay alone over a

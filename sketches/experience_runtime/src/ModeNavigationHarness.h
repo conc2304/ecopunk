@@ -33,6 +33,9 @@ private:
 	bool idleOn(const std::string& sceneId) const;
 	int modeIndex() const;  // -1 when the active scene publishes no mode
 	int modeCount() const;
+	// Blueprint cycles ghost_layers -> perpetual -> editorial_collage.
+	int navIndex();
+	int navNextIndex(int before);
 	std::string modeId() const;
 	std::string focused() const;
 	std::string mediaId() const;

@@ -98,7 +98,7 @@ void BEComposition::onCycleStart() {
 
 	// Pick initial mode and set divider at a random column-boundary position.
 	// Skip BLANK — composition starts mid-thought with no grow animation.
-	currentMode = selectNextMode();
+	currentMode = pickNextMode();
 	divider.pivot.x = selectNewDividerX();
 	divider.pivot.y = static_cast<float>(canvasH) * 0.5f;
 	divider.angle = 0.0f;
@@ -226,7 +226,7 @@ void BEComposition::onUpdate(float dt) {
 // PLACEMENT_INTERVAL_* CompositionBase used to use for organic growth — see
 // usesAutomaticPlacementTimer() (false for this composition).
 void BEComposition::updateSlots(float dt) {
-	bool acceptingNewSpawns = (getPhase() == CyclePhase::PLACEMENT || getPhase() == CyclePhase::DENSITY);
+	bool acceptingNewSpawns = !spawningSuspended && (getPhase() == CyclePhase::PLACEMENT || getPhase() == CyclePhase::DENSITY);
 
 	for (int i = 0; i < NUM_SLOTS; i++) {
 		SlotState & slot = slots[i];
@@ -304,7 +304,7 @@ void BEComposition::updateSlots(float dt) {
 				// event once the minimum mode duration has elapsed.
 				if (currentMode == CycleMode::PERPETUAL && perpetualTransitionArmed) {
 					perpetualTransitionArmed = false;
-					enterMode(selectNextMode());
+					enterMode(pickNextMode());
 					return; // slots just reset; stop iterating
 				}
 			}
@@ -318,7 +318,7 @@ void BEComposition::updateSlots(float dt) {
 // unoccupied grid space (via the same GridSystem occupancy fragments use)
 // instead of a video fragment. Max one active at a time.
 void BEComposition::updateHudWidget(float dt) {
-	bool acceptingNewSpawns = (getPhase() == CyclePhase::PLACEMENT || getPhase() == CyclePhase::DENSITY);
+	bool acceptingNewSpawns = !spawningSuspended && (getPhase() == CyclePhase::PLACEMENT || getPhase() == CyclePhase::DENSITY);
 
 	if (hudWidget) {
 		// Push live values before the widget updates so they're current this frame.
@@ -1064,6 +1064,7 @@ void BEComposition::enterMode(CycleMode mode) {
 }
 
 bool BEComposition::requestNextMode() {
+	if (forcedMode) return false; // mode is pinned (e.g. editorial collage)
 	if (getPhase() != CyclePhase::PLACEMENT && getPhase() != CyclePhase::DENSITY) return false;
 	enterMode(currentMode == CycleMode::GHOST_LAYERS ? CycleMode::PERPETUAL : CycleMode::GHOST_LAYERS);
 	return true;
@@ -1072,7 +1073,10 @@ bool BEComposition::requestNextMode() {
 bool BEComposition::onDissolveComplete() {
 	// Called by CompositionBase when the DISSOLVE phase finishes.
 	// We take over and enter the next mode instead of RESET_HOLD.
-	enterMode(selectNextMode());
+	// Returning false without changing mode just re-polls next frame, which is
+	// how an external dissolve choreography (editorial collage) holds the phase.
+	if (dissolveGate && !dissolveGate()) return false;
+	enterMode(pickNextMode());
 	return false; // prevent CompositionBase from entering RESET_HOLD
 }
 

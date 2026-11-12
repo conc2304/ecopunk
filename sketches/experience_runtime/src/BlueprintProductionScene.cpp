@@ -1,5 +1,6 @@
 #include "BlueprintProductionScene.h"
 
+#include <algorithm>
 #include "BESettings.h"
 #include "BlueprintSemanticMapping.h"
 #include "Rt004StallProbe.h" // RT-004 diagnostic probe (env-gated, no behavior change)
@@ -29,6 +30,11 @@ void BlueprintProductionScene::setup(const SceneServices& services) {
 	config.canvasW = kNativeWidth;
 	config.canvasH = kNativeHeight;
 	config.advanceMediaPerCycle = kMediaAdvancesAtCycleBoundary; // runtime suspends auto-advance while live
+	// EDITORIAL_COLLAGE is the third entry of this scene's mode selection
+	// (ghost_layers -> perpetual -> editorial_collage via NEXT MODE). Off at
+	// startup; scene id, HUD status schema and shared video/effect authority are
+	// unchanged.
+	config.editorialCollage = false;
 	{ RT004_SCOPE("Blueprint.setup.core"); core_.setup(&video_, config); }
 	didSetup_ = true;
 }
@@ -95,7 +101,8 @@ SceneHudStatus BlueprintProductionScene::hudStatus() const {
 
 	// activeEffects: left empty — no canonical effect-activity owner, and
 	// per-fragment shader names are artwork internals, not curated labels.
-	status.activeItemCount = static_cast<int>(core_.composition().getFragments().size());
+	status.activeItemCount = core_.editorialCollage() ? core_.collage().fragmentStats().visible
+													  : static_cast<int>(core_.composition().getFragments().size());
 	status.paused = false;
 
 	// Semantic data only once there is real media to build fragments from.
@@ -103,6 +110,9 @@ SceneHudStatus BlueprintProductionScene::hudStatus() const {
 		status.semantic = buildSemanticData();
 	}
 
+	// Under EDITORIAL_COLLAGE the composition is pinned to GHOST_LAYERS, so the
+	// frozen two-mode vocabulary below stays valid; NEXT MODE then steps the
+	// plate template (see BlueprintSceneCore::requestNextMode()).
 	// Scene & Pattern Navigation: BEComposition's two CycleModes. Each cycle
 	// still draws its mode at random (selectNextMode()); NEXT MODE
 	// (BEComposition::requestNextMode()) switches the running cycle's mode
@@ -111,10 +121,15 @@ SceneHudStatus BlueprintProductionScene::hudStatus() const {
 	if (core_.didSetup() && core_.isActive()) {
 		const CycleMode current = core_.composition().getCurrentMode();
 		SceneModeStatus mode;
-		mode.modeId = cycleModeSemanticId(current);
+		if (core_.editorialCollage()) {
+			mode.modeId = "editorial_collage";
+			mode.index = 2;
+		} else {
+			mode.modeId = cycleModeSemanticId(current);
+			mode.index = current == CycleMode::GHOST_LAYERS ? 0 : 1; // CycleMode declaration order
+		}
 		mode.displayName = mode.modeId;
-		mode.index = current == CycleMode::GHOST_LAYERS ? 0 : 1; // CycleMode declaration order
-		mode.count = 2;
+		mode.count = 3;
 		status.modeName = mode.displayName;
 		status.mode = mode;
 	}
@@ -134,6 +149,15 @@ SceneSemanticData BlueprintProductionScene::buildSemanticData() const {
 	in.zoneACount = state.zoneACount;
 	in.zoneBCount = state.zoneBCount;
 	in.maxFragments = MAX_FRAGMENTS;
+	if (core_.editorialCollage()) {
+		// The composition owns no fragments in this grammar; the same slots are
+		// fed from the visible collage fragments (left/right halves = zones).
+		const auto st = core_.collage().fragmentStats();
+		in.fragmentCount = st.visible;
+		in.zoneACount = st.left;
+		in.zoneBCount = st.right;
+		in.maxFragments = std::max(1, st.total);
+	}
 	in.activeSeconds = activeSeconds_;
 	in.generation = generation_;
 	return blueprintsemantics::compute(in);

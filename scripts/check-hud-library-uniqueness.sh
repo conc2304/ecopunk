@@ -54,6 +54,21 @@ HudFrameRenderer.h
 HudTypes.h
 HudUtils.h
 HudElements.h
+CollagePalette.cpp
+CollagePalette.h
+GraphicBlock.cpp
+GraphicBlock.h
+GraphicFrame.cpp
+GraphicFrame.h
+TechnicalGrid.cpp
+TechnicalGrid.h
+TickRail.cpp
+TickRail.h
+RegistrationMark.cpp
+RegistrationMark.h
+DataBar.cpp
+DataBar.h
+GraphicPrimitives.h
 "
 
 status=0

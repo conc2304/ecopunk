@@ -69,6 +69,14 @@ int ModeNavigationHarness::modeIndex() const {
 	return m ? m->index : -1;
 }
 
+int ModeNavigationHarness::navIndex() {
+	return modeIndex();
+}
+
+int ModeNavigationHarness::navNextIndex(int before) {
+	return (before + 1) % 3; // ghost_layers -> perpetual -> editorial_collage -> ghost_layers
+}
+
 int ModeNavigationHarness::modeCount() const {
 	const auto& m = runtime_.currentHudFrameData().scene.mode;
 	return m ? m->count : 0;
@@ -136,7 +144,7 @@ void ModeNavigationHarness::buildScript() {
 		return false;
 	};
 	auto pressM = [this]() {
-		indexBefore_ = modeIndex();
+		indexBefore_ = navIndex();
 		runtime_.keyPressed('m');
 	};
 
@@ -192,7 +200,7 @@ void ModeNavigationHarness::buildScript() {
 			capture("05_temporal_blob_grid");
 		}},
 		{"focus mode panel", focusModePanel, [this] {
-			indexBefore_ = modeIndex();
+			indexBefore_ = navIndex();
 			serialBefore_ = runtime_.lastFocusActivationForTesting().serial;
 			runtime_.keyPressed(OF_KEY_RETURN);
 		}},
@@ -247,7 +255,7 @@ void ModeNavigationHarness::buildScript() {
 		{"blueprint live", [this] { return idleOn(kBlueprintId) && framesInStep_ >= kSettleFrames && modeIndex() >= 0; },
 			[this, panelEnabled, pressM] {
 				check("Blueprint: scene position 3/5", position() == "3/5", position());
-				check("Blueprint: 2 cycle modes shown", modeCount() == 2 && (modeId() == "ghost_layers" || modeId() == "perpetual"),
+				check("Blueprint: 3 modes shown", modeCount() == 3 && (modeId() == "ghost_layers" || modeId() == "perpetual" || modeId() == "editorial_collage"),
 					modeId());
 				const auto enabled = panelEnabled();
 				check("Blueprint: NEXT MODE advertised and enabled", enabled.has_value() && *enabled);
@@ -258,20 +266,20 @@ void ModeNavigationHarness::buildScript() {
 				pressM();
 			}},
 		{"blueprint mode toggled", framesAtLeast(3), [this, pressM] {
-			check("Blueprint: 'm' switches to the other cycle mode", modeIndex() == 1 - indexBefore_, modeId());
+			check("Blueprint: 'm' advances to the next mode", navIndex() == navNextIndex(indexBefore_), modeId());
 			check("Blueprint: manual mode change keeps the shared media", mediaId() == mediaBefore_, mediaBefore_ + " -> " + mediaId());
 		}},
 		{"blueprint mode held", framesAtLeast(60), [this, pressM] {
-			check("Blueprint: manual mode holds (no immediate revert)", modeIndex() == 1 - indexBefore_, modeId());
+			check("Blueprint: manual mode holds (no immediate revert)", navIndex() == navNextIndex(indexBefore_), modeId());
 			capture("07b_blueprint_mode_after_next");
 			pressM();
 		}},
 		{"blueprint mode wrapped", framesAtLeast(3), [this] {
-			check("Blueprint: second 'm' wraps back (GHOST_LAYERS <-> PERPETUAL)", modeIndex() == 1 - indexBefore_, modeId());
+			check("Blueprint: second 'm' steps again (3-step cycle)", navIndex() == navNextIndex(indexBefore_), modeId());
 			check("Blueprint: still the same shared media", mediaId() == mediaBefore_, mediaId());
 		}},
 		{"blueprint focus mode panel", focusModePanel, [this] {
-			indexBefore_ = modeIndex();
+			indexBefore_ = navIndex();
 			serialBefore_ = runtime_.lastFocusActivationForTesting().serial;
 			runtime_.keyPressed(OF_KEY_RETURN);
 		}},
@@ -280,7 +288,7 @@ void ModeNavigationHarness::buildScript() {
 			check("Blueprint: Enter on the mode panel dispatches SceneCommand::NextMode, accepted",
 				rec.serial == serialBefore_ + 1 && rec.region == kModeControl && rec.command == "SceneCommand::NextMode"
 					&& rec.accepted && !rec.refused, rec.command);
-			check("Blueprint: focus path switched the mode", modeIndex() == 1 - indexBefore_, modeId());
+			check("Blueprint: focus path switched the mode", navIndex() == navNextIndex(indexBefore_), modeId());
 			capture("08_blueprint_next_mode_focus_activation");
 		}},
 		{"blueprint regenerate", framesAtLeast(30), [this] {
@@ -292,7 +300,7 @@ void ModeNavigationHarness::buildScript() {
 		}},
 		{"blueprint after regenerate", framesAtLeast(3), [this] {
 			check("Blueprint: after Regenerate the HUD reports a valid (randomly re-rolled) mode",
-				modeCount() == 2 && (modeId() == "ghost_layers" || modeId() == "perpetual"), modeId());
+				modeCount() == 3 && (modeId() == "ghost_layers" || modeId() == "perpetual" || modeId() == "editorial_collage"), modeId());
 			runtime_.keyPressed(']');
 		}},
 		{"blueprint->fragment loading", [this] { return loading(); }, [this] {
@@ -386,13 +394,13 @@ void ModeNavigationHarness::buildScript() {
 			[this, panelEnabled, pressM] {
 				const auto enabled = panelEnabled();
 				check("Blueprint revisit: fresh cycle reports a valid mode, NEXT MODE enabled",
-					modeCount() == 2 && (modeId() == "ghost_layers" || modeId() == "perpetual") && enabled.has_value() && *enabled,
+					modeCount() == 3 && (modeId() == "ghost_layers" || modeId() == "perpetual" || modeId() == "editorial_collage") && enabled.has_value() && *enabled,
 					modeId());
 				capture("16_blueprint_revisit");
 				pressM();
 			}},
 		{"blueprint revisit toggled", framesAtLeast(3), [this] {
-			check("Blueprint revisit: NEXT MODE works on the new cycle", modeIndex() == 1 - indexBefore_, modeId());
+			check("Blueprint revisit: NEXT MODE works on the new cycle", navIndex() == navNextIndex(indexBefore_), modeId());
 		}},
 	};
 }
