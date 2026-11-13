@@ -184,7 +184,23 @@ void ofApp::setup() {
 	const bool wantFxScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !wantQuadrantScene
 		&& !switchHarnessRequested && !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
 		&& std::getenv("EXPERIENCE_RUNTIME_FX_SCENE") != nullptr;
-	bool wantCrtScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !wantQuadrantScene && !wantFxScene
+	// EXPERIENCE_RUNTIME_PHOSPHOR_CONTOURS_SCENE starts a normal run in Phosphor Contours (the scene itself is the eighth Production-roster entry).
+	const bool wantPhcScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !wantQuadrantScene && !wantFxScene
+		&& !switchHarnessRequested && !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& std::getenv("EXPERIENCE_RUNTIME_PHOSPHOR_CONTOURS_SCENE") != nullptr;
+	// EXPERIENCE_RUNTIME_RAW_VIDEO_SCENE starts a normal run in Raw Video (the scene itself is the ninth Production-roster entry).
+	const bool wantRawScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !wantQuadrantScene && !wantFxScene && !wantPhcScene
+		&& !switchHarnessRequested && !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& std::getenv("EXPERIENCE_RUNTIME_RAW_VIDEO_SCENE") != nullptr;
+	// EXPERIENCE_RUNTIME_SHRED_SCENE starts a normal run in Shred Reconstruction (the scene itself is the tenth Production-roster entry).
+	const bool wantShredScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !wantQuadrantScene && !wantFxScene && !wantPhcScene && !wantRawScene
+		&& !switchHarnessRequested && !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& std::getenv("EXPERIENCE_RUNTIME_SHRED_SCENE") != nullptr;
+	// EXPERIENCE_RUNTIME_MOSAIC_SCENE starts a normal run in Mosaic Assembly (startup selection only; the scene is always registered).
+	const bool wantMosaicScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !wantQuadrantScene && !wantFxScene && !wantPhcScene && !wantRawScene && !wantShredScene
+		&& !switchHarnessRequested && !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
+		&& std::getenv("EXPERIENCE_RUNTIME_MOSAIC_SCENE") != nullptr;
+	bool wantCrtScene = !wantTemporalScene && !wantBlueprintScene && !wantFragmentScene && !wantQuadrantScene && !wantFxScene && !wantPhcScene && !wantRawScene && !wantShredScene && !wantMosaicScene
 		&& !switchHarnessRequested && !acceptanceRequested && !blobLifecycleRequested && !blobSoakRequested
 		&& std::getenv("EXPERIENCE_RUNTIME_CRT_SCENE") != nullptr;
 
@@ -220,6 +236,14 @@ void ofApp::setup() {
 			runtime.installQuadrantProductionScene();
 		} else if (wantFxScene && roster == Roster::Production) {
 			runtime.installSharedEffectsGalleryProductionScene();
+		} else if (wantPhcScene && roster == Roster::Production) {
+			runtime.installPhosphorContoursProductionScene();
+		} else if (wantMosaicScene && roster == Roster::Production) {
+			runtime.installMosaicAssemblyProductionScene();
+		} else if (wantShredScene && roster == Roster::Production) {
+			runtime.installShredReconstructionProductionScene();
+		} else if (wantRawScene && roster == Roster::Production) {
+			runtime.installRawVideoProductionScene();
 		} else if (wantCrtScene && roster == Roster::Production) {
 			runtime.installCrtPhosphorProductionScene();
 		} else {
@@ -257,6 +281,7 @@ void ofApp::setup() {
 	runtime.setup();
 	if (FxGalleryHarness::isRequested()) fxGalleryHarness = std::make_unique<FxGalleryHarness>(runtime);
 	if (CrtInteractiveHarness::isRequested()) crtInteractiveHarness = std::make_unique<CrtInteractiveHarness>(runtime);
+	if (PhosphorContoursHarness::isRequested()) phcHarness = std::make_unique<PhosphorContoursHarness>(runtime);
 	if (CrtSelectorHarness::isRequested()) crtSelectorHarness = std::make_unique<CrtSelectorHarness>(runtime); // normal-run Production roster + opt-in env
 	if (framePhaseProbe) framePhaseProbe->afterRuntimeSetup(); // limiter/vsync controls apply after the runtime's own baseline
 
@@ -383,6 +408,7 @@ void ofApp::update() {
 	if (fxGalleryHarness) fxGalleryHarness->step(ofGetLastFrameTime());
 	if (crtInteractiveHarness) crtInteractiveHarness->step(ofGetLastFrameTime());
 	if (crtSelectorHarness) crtSelectorHarness->step(ofGetLastFrameTime());
+	if (phcHarness) phcHarness->step(ofGetLastFrameTime());
 	if (modeHarness) {
 		modeHarness->step(ofGetLastFrameTime());
 	}

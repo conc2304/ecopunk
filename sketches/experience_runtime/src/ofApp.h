@@ -14,6 +14,7 @@
 #include "BlueprintHudHarness.h"
 #include "ModeNavigationHarness.h"
 #include "CrtSelectorHarness.h"
+#include "PhosphorContoursHarness.h"
 #include "CrtInteractiveHarness.h"
 #include "FxGalleryHarness.h"
 #include "InstallationHarness.h"
@@ -84,6 +85,7 @@ private:
 	std::unique_ptr<ModeNavigationHarness> modeHarness; // Scene & Pattern Navigation, full roster
 	std::unique_ptr<FxGalleryHarness> fxGalleryHarness; // Shared Effects Gallery + interactive HUD behaviour (opt-in env)
 	std::unique_ptr<CrtInteractiveHarness> crtInteractiveHarness; // generic interactive region on CRT (opt-in env)
+	std::unique_ptr<PhosphorContoursHarness> phcHarness; // opt-in Phosphor Contours scene
 	std::unique_ptr<CrtSelectorHarness> crtSelectorHarness; // CRT three-selector rows (production roster; opt-in env)
 	std::unique_ptr<InstallationHarness> installationHarness; // Installation Controls & ENERGY, full roster
 	std::unique_ptr<ExperienceV03Harness> v03Harness; // HUD & Scene Experience v0.3, full roster

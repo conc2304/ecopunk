@@ -8,6 +8,10 @@
 #include "FragmentProductionScene.h"
 #include "QuadrantProductionScene.h"
 #include "CrtPhosphorScene.h"
+#include "PhosphorContoursScene.h"
+#include "RawVideoScene.h"
+#include "ShredReconstructionScene.h"
+#include "MosaicAssemblyScene.h"
 #include "SharedEffectsGalleryScene.h"
 #include "HudCompositorBridge.h"
 #include "HudFrameData.h"
@@ -156,6 +160,28 @@ public:
 		installProductionScenes(SharedEffectsGalleryScene::kSceneId, ProductionRoster::Production);
 	}
 	SharedEffectsGalleryScene& sharedEffectsGallerySceneForTesting() { return sharedEffectsGalleryScene_; }
+	// Phosphor Contours: eighth scene of the normal-run (Production) roster, after the Shared Effects Gallery
+	// (registered without any flag). Starting here is opt-in (EXPERIENCE_RUNTIME_PHOSPHOR_CONTOURS_SCENE).
+	void installPhosphorContoursProductionScene() {
+		installProductionScenes(PhosphorContoursScene::kSceneId, ProductionRoster::Production);
+	}
+	PhosphorContoursScene& phosphorContoursSceneForTesting() { return phosphorContoursScene_; }
+	// Raw Video: ALWAYS the last scene of the normal-run (Production) roster (registered without
+	// any flag). Starting here is opt-in (EXPERIENCE_RUNTIME_RAW_VIDEO_SCENE).
+	void installRawVideoProductionScene() {
+		installProductionScenes(RawVideoScene::kSceneId, ProductionRoster::Production);
+	}
+	RawVideoScene& rawVideoSceneForTesting() { return rawVideoScene_; }
+	// Tenth scene: Shred Reconstruction (14-mode fragment collage). Starting here is opt-in
+	// (EXPERIENCE_RUNTIME_SHRED_SCENE); it is registered last in the Production roster so the existing ring order is unchanged.
+	void installShredReconstructionProductionScene() {
+		installProductionScenes(ShredReconstructionScene::kSceneId, ProductionRoster::Production);
+	}
+	ShredReconstructionScene& shredSceneForTesting() { return shredReconstructionScene_; }
+	// Mosaic Assembly: registered unconditionally in the Production roster (after Shred). EXPERIENCE_RUNTIME_MOSAIC_SCENE
+	// only chooses it as the STARTUP scene, exactly like the other scenes' opt-in startup selectors; it gates nothing.
+	void installMosaicAssemblyProductionScene() { installProductionScenes(MosaicAssemblyScene::kSceneId, ProductionRoster::Production); }
+	MosaicAssemblyScene& mosaicSceneForTesting() { return mosaicAssemblyScene_; }
 
 	BlueprintProductionScene& blueprintSceneForTesting() { return blueprintScene_; }
 	// Read-only: the one canonical VideoPlaybackService (resume-window verification).
@@ -514,6 +540,10 @@ private:
 	// CRT Phosphor: sixth scene of the Production roster, same construction-order
 	// rule (declared after runtimeServices_); set up lazily on first switch.
 	CrtPhosphorScene crtPhosphorScene_;
+	PhosphorContoursScene phosphorContoursScene_;
+	RawVideoScene rawVideoScene_;
+	ShredReconstructionScene shredReconstructionScene_;
+	MosaicAssemblyScene mosaicAssemblyScene_;
 	SharedEffectsGalleryScene sharedEffectsGalleryScene_;
 
 	bool productionScenesInstalled_ = false;

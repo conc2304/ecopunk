@@ -373,6 +373,87 @@ ScenePresentationProfile buildFxGalleryProfile() {
 	return p;
 }
 
+// Phosphor Contours: two selector rows (DENSITY / DECAY) in the same interactive selector group, data-driven
+// exactly like the Shared Effects Gallery (caption, value and position all come from scene metrics).
+ScenePresentationProfile buildContoursProfile() {
+	ScenePresentationProfile p;
+	p.profileId = "phosphor-contours";
+	auto row = [&p](const char* bindingId, const char* label, const char* value, const char* pos) {
+		auto b = makeBinding(bindingId, "universal.effect_summary",
+			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic);
+		b.variantId = "selector";
+		b.addSource({"text", value, true});
+		b.addSource({"suffix", pos, false});
+		b.addSource({"caption", label, false});
+		p.bindings.push_back(b);
+	};
+	row("contours.control.0", "scene.contours.metric.c0_label", "scene.contours.metric.c0_value", "scene.contours.metric.c0_pos");
+	row("contours.control.1", "scene.contours.metric.c1_label", "scene.contours.metric.c1_value", "scene.contours.metric.c1_pos");
+	p.interactiveRegions.push_back({"universal.effect_summary", HudInteractionKind::SelectorGroup, 2});
+	return p;
+}
+
+// Raw Video: three selector rows (BRIGHTNESS / CONTRAST / SATURATION) in the same interactive selector group,
+// data-driven exactly like Contours (caption, value and position all come from scene metrics).
+ScenePresentationProfile buildRawVideoProfile() {
+	ScenePresentationProfile p;
+	p.profileId = "raw-video";
+	auto row = [&p](const char* bindingId, const char* label, const char* value, const char* pos) {
+		auto b = makeBinding(bindingId, "universal.effect_summary",
+			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic);
+		b.variantId = "selector";
+		b.addSource({"text", value, true});
+		b.addSource({"suffix", pos, false});
+		b.addSource({"caption", label, false});
+		p.bindings.push_back(b);
+	};
+	row("raw.control.0", "scene.raw.metric.c0_label", "scene.raw.metric.c0_value", "scene.raw.metric.c0_pos");
+	row("raw.control.1", "scene.raw.metric.c1_label", "scene.raw.metric.c1_value", "scene.raw.metric.c1_pos");
+	row("raw.control.2", "scene.raw.metric.c2_label", "scene.raw.metric.c2_value", "scene.raw.metric.c2_pos");
+	p.interactiveRegions.push_back({"universal.effect_summary", HudInteractionKind::SelectorGroup, 3});
+	return p;
+}
+
+// Shred Reconstruction: two selector rows = the ACTIVE mode's two dials, in the same interactive selector group,
+// data-driven exactly like Contours / FX Gallery (caption, value and position all come from scene metrics).
+ScenePresentationProfile buildShredProfile() {
+	ScenePresentationProfile p;
+	p.profileId = "shred-reconstruction";
+	auto row = [&p](const char* bindingId, const char* label, const char* value, const char* pos) {
+		auto b = makeBinding(bindingId, "universal.effect_summary",
+			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic);
+		b.variantId = "selector";
+		b.addSource({"text", value, true});
+		b.addSource({"suffix", pos, false});
+		b.addSource({"caption", label, false});
+		p.bindings.push_back(b);
+	};
+	row("shred.control.0", "scene.shred.metric.c0_label", "scene.shred.metric.c0_value", "scene.shred.metric.c0_pos");
+	row("shred.control.1", "scene.shred.metric.c1_label", "scene.shred.metric.c1_value", "scene.shred.metric.c1_pos");
+	p.interactiveRegions.push_back({"universal.effect_summary", HudInteractionKind::SelectorGroup, 2});
+	return p;
+}
+
+// Mosaic Assembly: two selector rows = the ACTIVE mode's two dials, same interactive selector group and data-driven
+// metric binding as Shred Reconstruction / Contours / FX Gallery. No new geometry or scene-specific shared-HUD branch.
+ScenePresentationProfile buildMosaicProfile() {
+	ScenePresentationProfile p;
+	p.profileId = "mosaic-assembly";
+	auto row = [&p](const char* bindingId, const char* label, const char* value, const char* pos) {
+		auto b = makeBinding(bindingId, "universal.effect_summary",
+			HudWidgetType::Label, HudMissingPolicy::Hide, HudFormatKind::Automatic);
+		b.variantId = "selector";
+		b.addSource({"text", value, true});
+		b.addSource({"suffix", pos, false});
+		b.addSource({"caption", label, false});
+		p.bindings.push_back(b);
+	};
+	row("mosaic.control.0", "scene.mosaic.metric.c0_label", "scene.mosaic.metric.c0_value", "scene.mosaic.metric.c0_pos");
+	row("mosaic.control.1", "scene.mosaic.metric.c1_label", "scene.mosaic.metric.c1_value", "scene.mosaic.metric.c1_pos");
+	p.interactiveRegions.push_back({"universal.effect_summary", HudInteractionKind::SelectorGroup, 2});
+	return p;
+}
+
 ScenePresentationProfile buildBlueprintProfile() {
 	ScenePresentationProfile p;
 	p.profileId = "blueprint_emergence";
@@ -401,6 +482,10 @@ HudPresentationProfileRegistry::HudPresentationProfileRegistry() {
 	flexibleProfiles_.push_back(buildBlueprintProfile());
 	flexibleProfiles_.push_back(buildCrtProfile());
 	flexibleProfiles_.push_back(buildFxGalleryProfile());
+	flexibleProfiles_.push_back(buildContoursProfile());
+	flexibleProfiles_.push_back(buildRawVideoProfile());
+	flexibleProfiles_.push_back(buildShredProfile());
+	flexibleProfiles_.push_back(buildMosaicProfile());
 }
 
 const ScenePresentationProfile* HudPresentationProfileRegistry::flexibleProfileForScene(const std::string& sceneId) const {

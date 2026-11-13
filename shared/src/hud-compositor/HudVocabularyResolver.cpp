@@ -123,9 +123,14 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		{"ghost_layers", "GHOST LAYERS"},
 		{"perpetual", "PERPETUAL"},
 		{"editorial_collage", "EDITORIAL COLLAGE"},
+		{"strata", "STRATA"},
+		{"contact_sheet", "CONTACT SHEET"},
+		{"exploded_view", "EXPLODED VIEW"},
+		{"section_cut", "SECTION CUT"},
 		{"natural_background", "NATURAL BACKGROUND"},
 		{"desaturated_background", "DESATURATED BACKGROUND"},
 		{"no_background", "NO BACKGROUND"},
+		{"analysis_overlay", "ANALYSIS OVERLAY"},
 
 		// -- Fragment state IDs (§18.4) -----------------------------------
 		{"scene.fragment.state.drifting", "DRIFTING"},
@@ -153,6 +158,8 @@ std::unordered_map<std::string, std::string> buildCanonicalDefaults() {
 		// -- CRT Phosphor (selector rows; ids mirror crt::Selection's stable ids) ----
 		{"scene.crt.state.online", "ONLINE"},
 		{"scene.fx.state.online", "ONLINE"},
+		{"scene.contours.state.online", "ONLINE"},
+		{"scene.raw.state.online", "ONLINE"},
 		{"scene.crt.row.pixels.label", "PIXELS"},
 		{"scene.crt.row.palette.label", "PALETTE"},
 		{"scene.crt.metric.structure.original_phosphor", "ORIGINAL PHOSPHOR"},

@@ -78,7 +78,7 @@ void FxGalleryHarness::buildScript() {
 	script_.push_back({"wait for scene", [] {}, 200, [this] {
 		check("gallery scene is active and settled", idleOn(kFxId), runtime_.currentHudFrameData().scene.sceneId);
 		const auto ids = runtime_.sceneManagerForTesting().registeredSceneIdsForTesting();
-		check("gallery is the 7th (last) production scene; no debugger scene added", ids.size() == 7 && ids.back() == kFxId, ofToString(ids.size()));
+		check("gallery is the 7th production scene (contours 8th); no debugger scene added", ids.size() >= 8 && ids[6] == kFxId, ofToString(ids.size()));
 		roster_ = scene().controllerForTesting().modeCount();
 		check("roster is non-empty and every mode maps to a canonical effect", roster_ >= 10 && scene().controllerForTesting().ok(), "modes=" + ofToString(roster_));
 		check("canonical media status is authoritative (media name present)", runtime_.currentHudFrameData().scene.mediaName.has_value());

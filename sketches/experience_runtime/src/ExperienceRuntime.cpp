@@ -25,6 +25,10 @@ ExperienceRuntime::ExperienceRuntime()
 	, fragmentScene_(runtimeServices_.video())
 	, quadrantScene_(runtimeServices_.video())
 	, crtPhosphorScene_(runtimeServices_.video())
+	, phosphorContoursScene_(runtimeServices_.video())
+	, rawVideoScene_(runtimeServices_.video())
+	, shredReconstructionScene_(runtimeServices_.video())
+	, mosaicAssemblyScene_(runtimeServices_.video())
 	, sharedEffectsGalleryScene_(runtimeServices_.video()) {
 	regionOptionSink_ = [this](int row, int delta) { return sceneManager_.dispatchSceneOption(row, delta); };
 	// See ExperienceRuntime.h's constructor comment and blobScene_'s own
@@ -37,7 +41,7 @@ ExperienceRuntime::ExperienceRuntime()
 
 void ExperienceRuntime::installProductionScenes(const std::string& startupSceneId, ProductionRoster roster) {
 	if (!productionScenesInstalled_) {
-		// Fixed registry order = NextScene ring order: Blob, Temporal, Blueprint, Fragment, Quadrant, (Production roster only) CrtPhosphor.
+		// Fixed registry order = NextScene ring order: Blob, Temporal, Blueprint, Fragment, Quadrant, (Production roster only) CrtPhosphor, SharedEffectsGallery, PhosphorContours, ShredReconstruction, RawVideo (always last).
 		sceneManager_.registerProductionScene(&blobScene_); // no canonical effect producer -> effects = nullopt
 		sceneManager_.registerProductionScene(
 			&temporalScene_, [this] { return temporalScene_.currentEffectActivitySnapshot(); });
@@ -61,6 +65,23 @@ void ExperienceRuntime::installProductionScenes(const std::string& startupSceneI
 			// Seventh scene: Shared Effects Gallery. Canonical effect activity = the active mode's effect.
 			sceneManager_.registerProductionScene(
 				&sharedEffectsGalleryScene_, [this] { return sharedEffectsGalleryScene_.currentEffectActivitySnapshot(); });
+			// Eighth scene: Phosphor Contours (approved into the default Production roster by the user). No canonical
+			// effect producer -> effects = nullopt; timer-driven Shared Video cadence.
+			sceneManager_.registerProductionScene(&phosphorContoursScene_);
+			// Shred Reconstruction. Canonical effect activity = the (<=2) visible non-default effects; timer-driven
+			// Shared Video cadence.
+			sceneManager_.registerProductionScene(
+				&shredReconstructionScene_, [this] { return shredReconstructionScene_.currentEffectActivitySnapshot(); });
+			// Mosaic Assembly (registered unconditionally). No canonical effect producer (no non-default effects) -> effects
+			// = nullopt; timer-driven Shared Video cadence. Sits above Raw Video, which stays last in the ring.
+			sceneManager_.registerProductionScene(&mosaicAssemblyScene_);
+
+			// ---- RAW VIDEO MUST STAY THE LAST SCENE OF THE PRODUCTION ROSTER ----------------------------------
+			// Registration order is the NextScene ring order, and product direction is that Raw Video always comes
+			// last (the ring still wraps: NEXT from it returns to Blob). Add any NEW scene ABOVE this line, never
+			// after it. Enforced by the "raw-video is the last scene" check in PhosphorContoursHarness.
+			// No canonical effect producer -> effects = nullopt; timer-driven Shared Video cadence.
+			sceneManager_.registerProductionScene(&rawVideoScene_);
 		}
 		productionScenesInstalled_ = true;
 	}

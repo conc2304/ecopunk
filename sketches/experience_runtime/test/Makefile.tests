@@ -69,6 +69,10 @@ BLOB_SEMANTIC_BIN = blob_semantic_mapping_tests
 BLOB_EFFECT_POLICY_SRC = blob_effect_policy_tests.cpp ../src/BlobEffectPolicy.cpp
 BLOB_EFFECT_POLICY_BIN = blob_effect_policy_tests
 
+# Specimen Track Analysis Overlay director (../src/BlobAnalysisDirector.h/.cpp) — OF-free.
+BLOB_ANALYSIS_DIRECTOR_SRC = blob_analysis_director_tests.cpp ../src/BlobAnalysisDirector.cpp
+BLOB_ANALYSIS_DIRECTOR_BIN = blob_analysis_director_tests
+
 # Blob Experiment 2 capacity plan (../src/BlobCapacityPlan.h/.cpp) — OF-free.
 BLOB_CAPACITY_PLAN_SRC = blob_capacity_plan_tests.cpp ../src/BlobCapacityPlan.cpp
 BLOB_CAPACITY_PLAN_BIN = blob_capacity_plan_tests
@@ -130,6 +134,15 @@ SKIN_LOADER_BIN = hud_skin_loader_tests
 # Playable HUD Menu v0.1: HudFocusNavigator (OF-free, no -I needed).
 FOCUS_SRC = hud_focus_navigator_tests.cpp ../src/HudFocusNavigator.cpp
 FOCUS_BIN = hud_focus_navigator_tests
+
+# Phosphor Contours: OF-free preset model + shader-math mirrors (header-only; glm vec3 only).
+PHC_CXXFLAGS = $(CXXFLAGS) -I../../../../../../libs/glm/include
+PHC_SRC = phosphor_contours_tests.cpp
+PHC_BIN = phosphor_contours_tests
+
+# Raw Video: OF-free dial model (header-only).
+RAW_VIDEO_SRC = raw_video_adjust_tests.cpp
+RAW_VIDEO_BIN = raw_video_adjust_tests
 
 # HUD Clock v0.1: WallClockSampler (OF-free, header-only) end to end through
 # the HUD's pure HudClockFormat.h. Uses real OS zoneinfo via explicit TZ.
@@ -210,6 +223,12 @@ $(SYSTEM_VITALS_BIN): $(SYSTEM_VITALS_SRC) ../src/SystemVitals.h
 $(WALL_CLOCK_BIN): $(WALL_CLOCK_SRC) ../../../shared/src/hud-runtime/WallClockSampler.h ../../../shared/src/hud-runtime/WallClockStatus.h ../../../shared/src/hud-compositor/HudClockFormat.h
 	$(CXX) $(WALL_CLOCK_CXXFLAGS) $(WALL_CLOCK_SRC) -o $(WALL_CLOCK_BIN)
 
+$(PHC_BIN): $(PHC_SRC) ../../../shared/src/phosphor-contours/PhosphorContoursParams.h
+	$(CXX) $(PHC_CXXFLAGS) $(PHC_SRC) -o $(PHC_BIN)
+
+$(RAW_VIDEO_BIN): $(RAW_VIDEO_SRC) ../src/RawVideoAdjust.h
+	$(CXX) $(CXXFLAGS) $(RAW_VIDEO_SRC) -o $(RAW_VIDEO_BIN)
+
 $(FOCUS_BIN): $(FOCUS_SRC) ../src/HudFocusNavigator.h ../src/HudRegionInteraction.h ../src/SceneFxModel.h ../src/RawRevealController.h ../../../shared/src/hud-compositor/HudFocusEmphasis.h
 	$(CXX) $(CXXFLAGS) $(FOCUS_SRC) -o $(FOCUS_BIN)
 
@@ -273,7 +292,19 @@ clip-activity: $(CLIP_ACTIVITY_BIN)
 $(CLIP_ACTIVITY_BIN): $(CLIP_ACTIVITY_SRC) ../src/ClipActivity.h ../src/SceneVisualActivityTracker.h ../src/SceneActivityCore.h ../../../shared/src/hud-runtime/SceneVisualActivitySnapshot.h
 	$(CXX) $(CXXFLAGS) -I../src -I../../../shared/src/hud-runtime $(CLIP_ACTIVITY_SRC) -o $(CLIP_ACTIVITY_BIN)
 
-test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(SYSTEM_VITALS_BIN) $(INSTALLATION_BIN) $(SETTINGS_PAGE_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN) $(SCENE_COLOR_BIN) $(SCENE_COLOR_GATE_BIN) $(VISUAL_ACTIVITY_BIN) $(CLIP_ACTIVITY_BIN)
+# Shred Reconstruction / Mosaic Assembly engines: OF-free headers, bare-compiler tests (no GL, no video).
+SHRED_ENGINE_BIN = shred_engine_tests
+$(SHRED_ENGINE_BIN): shred_engine_tests.cpp ../src/ShredEngine.h
+	$(CXX) $(CXXFLAGS) -O1 shred_engine_tests.cpp -o $(SHRED_ENGINE_BIN)
+MOSAIC_ENGINE_BIN = mosaic_engine_tests
+$(MOSAIC_ENGINE_BIN): mosaic_engine_tests.cpp ../src/MosaicEngine.h ../src/MosaicShape.h
+	$(CXX) $(CXXFLAGS) -O1 mosaic_engine_tests.cpp -o $(MOSAIC_ENGINE_BIN)
+
+test: $(SHRED_ENGINE_BIN) $(MOSAIC_ENGINE_BIN) $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_ANALYSIS_DIRECTOR_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(SYSTEM_VITALS_BIN) $(INSTALLATION_BIN) $(SETTINGS_PAGE_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN) $(SCENE_COLOR_BIN) $(SCENE_COLOR_GATE_BIN) $(VISUAL_ACTIVITY_BIN) $(CLIP_ACTIVITY_BIN) $(PHC_BIN) $(RAW_VIDEO_BIN)
+	./$(SHRED_ENGINE_BIN)
+	./$(MOSAIC_ENGINE_BIN)
+	./$(PHC_BIN)
+	./$(RAW_VIDEO_BIN)
 	./$(SCENE_COLOR_BIN)
 	./$(SCENE_COLOR_GATE_BIN)
 	./$(VISUAL_ACTIVITY_BIN)
@@ -281,6 +312,7 @@ test: $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY
 	./$(SESSION2_BIN)
 	./$(BLOB_SEMANTIC_BIN)
 	./$(BLOB_EFFECT_POLICY_BIN)
+	./$(BLOB_ANALYSIS_DIRECTOR_BIN)
 	./$(BLOB_CAPACITY_PLAN_BIN)
 	./$(BLOB_EFFECT_BUDGET_BIN)
 	./$(BLOB_DETECTION_PROFILE_BIN)
@@ -337,6 +369,9 @@ $(BLOB_SEMANTIC_BIN): $(BLOB_SEMANTIC_SRC) ../src/BlobSemanticMapping.h
 $(BLOB_EFFECT_POLICY_BIN): $(BLOB_EFFECT_POLICY_SRC) ../src/BlobEffectPolicy.h
 	$(CXX) $(CXXFLAGS) $(BLOB_EFFECT_POLICY_SRC) -o $(BLOB_EFFECT_POLICY_BIN)
 
+$(BLOB_ANALYSIS_DIRECTOR_BIN): $(BLOB_ANALYSIS_DIRECTOR_SRC) ../src/BlobAnalysisDirector.h
+	$(CXX) $(CXXFLAGS) $(BLOB_ANALYSIS_DIRECTOR_SRC) -o $(BLOB_ANALYSIS_DIRECTOR_BIN)
+
 $(BLOB_CAPACITY_PLAN_BIN): $(BLOB_CAPACITY_PLAN_SRC) ../src/BlobCapacityPlan.h
 	$(CXX) $(CXXFLAGS) $(BLOB_CAPACITY_PLAN_SRC) -o $(BLOB_CAPACITY_PLAN_BIN)
 
@@ -353,4 +388,4 @@ $(SCENE_SWITCH_BIN): $(SCENE_SWITCH_SRC) ../src/SceneSwitchController.h
 	$(CXX) $(CXXFLAGS) $(SCENE_SWITCH_SRC) -o $(SCENE_SWITCH_BIN)
 
 clean:
-	rm -f $(SETTINGS_PAGE_BIN) $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(SYSTEM_VITALS_BIN) $(INSTALLATION_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN)
+	rm -f $(SETTINGS_PAGE_BIN) $(LIFECYCLE_BIN) $(SESSION2_BIN) $(BLOB_SEMANTIC_BIN) $(BLOB_EFFECT_POLICY_BIN) $(BLOB_ANALYSIS_DIRECTOR_BIN) $(BLOB_CAPACITY_PLAN_BIN) $(BLOB_EFFECT_BUDGET_BIN) $(BLOB_DETECTION_PROFILE_BIN) $(TEMPORAL_SEMANTIC_BIN) $(BLUEPRINT_SEMANTIC_BIN) $(FRAGMENT_SEMANTIC_BIN) $(QUADRANT_SEMANTIC_BIN) $(SCENE_SWITCH_BIN) $(SKIN_LOADER_BIN) $(FOCUS_BIN) $(WALL_CLOCK_BIN) $(SYSTEM_VITALS_BIN) $(INSTALLATION_BIN) $(PRESENTATION_BIN) $(SCHEDULE_BIN)
