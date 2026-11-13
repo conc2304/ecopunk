@@ -31,7 +31,7 @@ void BlueprintProductionScene::setup(const SceneServices& services) {
 	config.canvasH = kNativeHeight;
 	config.advanceMediaPerCycle = kMediaAdvancesAtCycleBoundary; // runtime suspends auto-advance while live
 	// EDITORIAL_COLLAGE is the third entry of this scene's mode selection
-	// (ghost_layers -> perpetual -> editorial_collage via NEXT MODE). Off at
+	// (ghost_layers -> editorial_collage -> strata -> contact_sheet -> exploded_view -> section_cut via NEXT MODE). Off at
 	// startup; scene id, HUD status schema and shared video/effect authority are
 	// unchanged.
 	config.editorialCollage = false;
@@ -101,8 +101,12 @@ SceneHudStatus BlueprintProductionScene::hudStatus() const {
 
 	// activeEffects: left empty — no canonical effect-activity owner, and
 	// per-fragment shader names are artwork internals, not curated labels.
-	status.activeItemCount = core_.editorialCollage() ? core_.collage().fragmentStats().visible
-													  : static_cast<int>(core_.composition().getFragments().size());
+	if (core_.editorialCollage())
+		status.activeItemCount = core_.collage().fragmentStats().visible;
+	else if (core_.altGrammar() != nullptr)
+		status.activeItemCount = core_.altGrammar()->stats().visible;
+	else
+		status.activeItemCount = static_cast<int>(core_.composition().getFragments().size());
 	status.paused = false;
 
 	// Semantic data only once there is real media to build fragments from.
@@ -121,15 +125,12 @@ SceneHudStatus BlueprintProductionScene::hudStatus() const {
 	if (core_.didSetup() && core_.isActive()) {
 		const CycleMode current = core_.composition().getCurrentMode();
 		SceneModeStatus mode;
-		if (core_.editorialCollage()) {
-			mode.modeId = "editorial_collage";
-			mode.index = 2;
-		} else {
-			mode.modeId = cycleModeSemanticId(current);
-			mode.index = current == CycleMode::GHOST_LAYERS ? 0 : 1; // CycleMode declaration order
-		}
+		// Grammar order == NEXT MODE order (BlueprintSceneCore::Grammar).
+		mode.modeId = BlueprintSceneCore::grammarId(core_.grammar());
+		mode.index = static_cast<int>(core_.grammar());
+		if (core_.grammar() == BlueprintSceneCore::Grammar::Classic) mode.modeId = cycleModeSemanticId(current);
 		mode.displayName = mode.modeId;
-		mode.count = 3;
+		mode.count = BlueprintSceneCore::GRAMMAR_COUNT;
 		status.modeName = mode.displayName;
 		status.mode = mode;
 	}
@@ -153,6 +154,13 @@ SceneSemanticData BlueprintProductionScene::buildSemanticData() const {
 		// The composition owns no fragments in this grammar; the same slots are
 		// fed from the visible collage fragments (left/right halves = zones).
 		const auto st = core_.collage().fragmentStats();
+		in.fragmentCount = st.visible;
+		in.zoneACount = st.left;
+		in.zoneBCount = st.right;
+		in.maxFragments = std::max(1, st.total);
+	} else if (core_.altGrammar() != nullptr) {
+		// Same slots fed from the grammar's visible parts (left/right halves = zones).
+		const auto st = core_.altGrammar()->stats();
 		in.fragmentCount = st.visible;
 		in.zoneACount = st.left;
 		in.zoneBCount = st.right;
@@ -193,7 +201,7 @@ SceneCapabilities BlueprintProductionScene::capabilities() const {
 	regenCmd.prominent = false;
 	caps.commands.push_back(regenCmd);
 
-	// NextMode: manual GHOST_LAYERS <-> PERPETUAL (separate from Regenerate,
+	// NextMode: manual ghost_layers -> editorial_collage -> strata (separate from Regenerate,
 	// which restarts the whole cycle and re-rolls the mode at random).
 	SceneCommandDescriptor modeCmd;
 	modeCmd.command = SceneCommand::NextMode;
@@ -221,7 +229,7 @@ bool BlueprintProductionScene::executeCommand(SceneCommand command) {
 			core_.restartCycle();
 			return true;
 		case SceneCommand::NextMode:
-			// GHOST_LAYERS <-> PERPETUAL; refused during DISSOLVE (the
+			// ghost_layers -> editorial_collage -> strata; refused during DISSOLVE (the
 			// composition's own mode change). Never advances shared media.
 			if (!core_.isActive()) return false;
 			return core_.requestNextMode();

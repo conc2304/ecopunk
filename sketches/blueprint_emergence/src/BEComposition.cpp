@@ -1064,10 +1064,9 @@ void BEComposition::enterMode(CycleMode mode) {
 }
 
 bool BEComposition::requestNextMode() {
-	if (forcedMode) return false; // mode is pinned (e.g. editorial collage)
-	if (getPhase() != CyclePhase::PLACEMENT && getPhase() != CyclePhase::DENSITY) return false;
-	enterMode(currentMode == CycleMode::GHOST_LAYERS ? CycleMode::PERPETUAL : CycleMode::GHOST_LAYERS);
-	return true;
+	// The classic composition has a single mode now (GHOST_LAYERS); NEXT MODE
+	// steps between grammars in BlueprintSceneCore instead.
+	return false;
 }
 
 bool BEComposition::onDissolveComplete() {

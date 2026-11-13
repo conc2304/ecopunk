@@ -56,6 +56,12 @@ void BlueprintSceneCore::setup(VideoPlaybackService* video, const Config& config
 	triggerBus_.setCooldown(static_cast<int>(BETrigger::CYCLE_START), 0.0f);
 
 	collage_.setup(cw, ch, CODE_FONT_PATH, 13);
+	strata_g_.setup(cw, ch, CODE_FONT_PATH, 13);
+	contact_g_.setup(cw, ch, CODE_FONT_PATH, 13);
+	exploded_g_.setup(cw, ch, CODE_FONT_PATH, 13);
+	section_g_.setup(cw, ch, CODE_FONT_PATH, 13);
+	for (BEGrammar * g : { static_cast<BEGrammar *>(&strata_g_), static_cast<BEGrammar *>(&contact_g_), static_cast<BEGrammar *>(&exploded_g_), static_cast<BEGrammar *>(&section_g_) })
+		g->setShaderLibrary(&shaderLib_);
 	composition_.setDissolveGate([this]() { return !editorialCollage_ || collage_.dissolveFinished(); });
 
 	composition_.setupBE(&grid_, video_, cw, ch);
@@ -87,6 +93,10 @@ void BlueprintSceneCore::setup(VideoPlaybackService* video, const Config& config
 			collage_.beginLayout(static_cast<uint32_t>(composition_.getCycleSeed()) * 1664525u
 				+ static_cast<uint32_t>(cycleStartCount_) * 1013904223u);
 		}
+		if (alt_ != nullptr) {
+			alt_->beginLayout(static_cast<uint32_t>(composition_.getCycleSeed()) * 2654435761u
+				+ static_cast<uint32_t>(cycleStartCount_) * 40503u);
+		}
 		annotations_.reset();
 		erosionFBO_.clear();
 		gridPulseBoost_ = 0.0f;
@@ -115,8 +125,41 @@ void BlueprintSceneCore::setup(VideoPlaybackService* video, const Config& config
 
 void BlueprintSceneCore::setEditorialCollage(bool on) {
 	if (on == editorialCollage_) return;
-	editorialCollage_ = on;
+	setGrammar(on ? Grammar::Collage : Grammar::Classic);
+}
+
+const char* BlueprintSceneCore::grammarId(Grammar g) {
+	switch (g) {
+		case Grammar::Collage: return "editorial_collage";
+		case Grammar::Strata: return "strata";
+		case Grammar::ContactSheet: return "contact_sheet";
+		case Grammar::ExplodedView: return "exploded_view";
+		case Grammar::SectionCut: return "section_cut";
+		default: return "ghost_layers";
+	}
+}
+
+void BlueprintSceneCore::setGrammar(Grammar g) {
+	if (g == grammar_) return;
+	applyGrammar(g);
+}
+
+// Every non-classic grammar pins the composition to GHOST_LAYERS with
+// spawning suspended. Returning to Classic lands deterministically on
+// GHOST_LAYERS (first classic mode in the NEXT MODE order).
+void BlueprintSceneCore::applyGrammar(Grammar g) {
+	grammar_ = g;
+	editorialCollage_ = (g == Grammar::Collage);
+	switch (g) {
+		case Grammar::Strata: alt_ = &strata_g_; break;
+		case Grammar::ContactSheet: alt_ = &contact_g_; break;
+		case Grammar::ExplodedView: alt_ = &exploded_g_; break;
+		case Grammar::SectionCut: alt_ = &section_g_; break;
+		default: alt_ = nullptr; break;
+	}
+	const bool on = (g != Grammar::Classic);
 	collage_.lock(false);
+	if (alt_ != nullptr) alt_->reset(); // rebuilt by the cycle-start callback
 	composition_.setSpawningSuspended(on);
 	composition_.setForcedCycleMode(on ? std::optional<CycleMode>(CycleMode::GHOST_LAYERS) : std::nullopt);
 	if (didSetup_ && active_) {
@@ -155,25 +198,12 @@ void BlueprintSceneCore::restartCycle() {
 }
 
 bool BlueprintSceneCore::requestNextMode() {
-	if (editorialCollage_) {
-		// Mode order: GHOST_LAYERS -> PERPETUAL -> EDITORIAL_COLLAGE -> GHOST_LAYERS.
-		// Collage is the last step, so NEXT MODE leaves it. Refused during DISSOLVE
-		// like classic; never advances the shared media.
-		if (composition_.getPhase() == CompositionBase::CyclePhase::DISSOLVE) return false;
-		setEditorialCollage(false);
-		return true;
-	}
-	if (composition_.getCurrentMode() == CycleMode::PERPETUAL && didSetup_ && active_) {
-		if (composition_.getPhase() == CompositionBase::CyclePhase::DISSOLVE) return false;
-		setEditorialCollage(true);
-		return true;
-	}
-	const bool previousSkip = skipNextCycleMediaAdvance_;
-	const int cycleStartsBefore = cycleStartCount_;
-	skipNextCycleMediaAdvance_ = true; // a manual mode change keeps the current media
-	const bool changed = composition_.requestNextMode();
-	if (cycleStartCount_ == cycleStartsBefore) skipNextCycleMediaAdvance_ = previousSkip; // callback not fired (PERPETUAL entry / refused)
-	return changed;
+	// Cycles through every grammar in enum order. Refused during DISSOLVE (the
+	// composition's own transition); never advances the shared media.
+	if (!didSetup_ || !active_) return false;
+	if (composition_.getPhase() == CompositionBase::CyclePhase::DISSOLVE) return false;
+	setGrammar(static_cast<Grammar>((static_cast<int>(grammar_) + 1) % GRAMMAR_COUNT));
+	return true;
 }
 
 void BlueprintSceneCore::wireTriggerResponses() {
@@ -215,6 +245,10 @@ void BlueprintSceneCore::update(float dt) {
 		collage_.update(dt);
 		return;
 	}
+	if (alt_ != nullptr) {
+		alt_->update(dt);
+		return;
+	}
 	annotations_.update(dt);
 
 	triggerBus_.setConditionActive(static_cast<int>(BETrigger::MEASUREMENT_HUB),
@@ -251,6 +285,11 @@ void BlueprintSceneCore::draw() {
 
 	if (editorialCollage_) {
 		collage_.draw(video_ != nullptr ? video_->currentTexture() : nullptr);
+		ofPopStyle();
+		return;
+	}
+	if (alt_ != nullptr) {
+		alt_->draw(video_ != nullptr ? video_->currentTexture() : nullptr);
 		ofPopStyle();
 		return;
 	}

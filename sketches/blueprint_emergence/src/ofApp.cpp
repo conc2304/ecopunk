@@ -87,6 +87,12 @@ void ofApp::setup() {
 		scene.setEditorialCollage(true);
 	}
 
+	// Dev-only: start in STRATA for capture/inspection (the runtime reaches it via NEXT MODE).
+	if (std::getenv("BE_STRATA")) scene.setStrata(true);
+	if (std::getenv("BE_CONTACT")) scene.setContactSheet(true);
+	if (std::getenv("BE_EXPLODED")) scene.setExplodedView(true);
+	if (std::getenv("BE_SECTION")) scene.setSectionCut(true);
+
 	hudOverlay.setup(sceneConfig.canvasW, sceneConfig.canvasH);
 	hudOverlayPanel.setup();
 }
@@ -245,6 +251,16 @@ void ofApp::keyPressed(int key) {
 	} else if (key == 'c') {
 		scene.setEditorialCollage(!scene.editorialCollage());
 		ofLogNotice("ofApp") << "editorialCollage = " << scene.editorialCollage();
+	} else if (key == 'b') {
+		scene.setExplodedView(scene.grammar() != BlueprintSceneCore::Grammar::ExplodedView);
+	} else if (key == 'n') {
+		scene.setSectionCut(scene.grammar() != BlueprintSceneCore::Grammar::SectionCut);
+	} else if (key == 'v') {
+		scene.setContactSheet(!scene.contactSheet());
+		ofLogNotice("ofApp") << "contactSheet = " << scene.contactSheet();
+	} else if (key == 'x') {
+		scene.setStrata(!scene.strata());
+		ofLogNotice("ofApp") << "strata = " << scene.strata();
 	} else if (key == 'p') {
 		static int profileIdx = 1;
 		static const char* names[] = { "quiet", "balanced", "kinetic" };

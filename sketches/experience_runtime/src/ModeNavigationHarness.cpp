@@ -64,6 +64,13 @@ bool ModeNavigationHarness::idleOn(const std::string& sceneId) const {
 		&& f.scene.sceneId == sceneId;
 }
 
+namespace {
+bool isBlueprintMode(const std::string& id) {
+	return id == "ghost_layers" || id == "editorial_collage" || id == "strata" || id == "contact_sheet"
+		|| id == "exploded_view" || id == "section_cut";
+}
+}
+
 int ModeNavigationHarness::modeIndex() const {
 	const auto& m = runtime_.currentHudFrameData().scene.mode;
 	return m ? m->index : -1;
@@ -74,7 +81,7 @@ int ModeNavigationHarness::navIndex() {
 }
 
 int ModeNavigationHarness::navNextIndex(int before) {
-	return (before + 1) % 3; // ghost_layers -> perpetual -> editorial_collage -> ghost_layers
+	return (before + 1) % 6; // ghost_layers -> editorial_collage -> strata -> contact_sheet -> exploded_view -> section_cut -> ghost_layers
 }
 
 int ModeNavigationHarness::modeCount() const {
@@ -149,14 +156,14 @@ void ModeNavigationHarness::buildScript() {
 	};
 
 	script_ = {
-		// -- Blob (1/5): three background modes, 'm' key, wraparound --------
+		// -- Blob (1/5): four modes (3 backgrounds + Analysis Overlay), 'm' key, wraparound --------
 		{"blob live", [this] { return idleOn(kBlobId) && framesInStep_ >= kSettleFrames && modeIndex() >= 0; },
 			[this, panelEnabled, pressM] {
 				check("Blob: scene position 1/5 from SceneManager's registry", position() == "1/5", position());
-				check("Blob: 3 modes, starts on Desaturated Background (production model)",
-					modeCount() == 3 && modeId() == "desaturated_background", modeId());
+				check("Blob: 4 modes, starts on Desaturated Background (production model)",
+					modeCount() == 4 && modeId() == "desaturated_background", modeId());
 				const auto enabled = panelEnabled();
-				check("Blob: NEXT MODE enabled (advertised, 3 modes)", enabled.has_value() && *enabled);
+				check("Blob: NEXT MODE enabled (advertised, 4 modes)", enabled.has_value() && *enabled);
 				capture("01_blob_desaturated_background");
 				pressM();
 			}},
@@ -165,8 +172,20 @@ void ModeNavigationHarness::buildScript() {
 			capture("02_blob_no_background");
 			pressM();
 		}},
+		{"blob analysis overlay", framesAtLeast(3), [this, pressM] {
+			check("Blob: 'm' -> Analysis Overlay (3 -> 4)", modeIndex() == 3 && modeId() == "analysis_overlay", modeId());
+			capture("02b_blob_analysis_overlay");
+		}},
+		// Later frames of the same mode: with
+		// EXPERIENCE_RUNTIME_BLOB_ANALYSIS_TIMESCALE set these land on
+		// different compositions/looks; without it they are just later frames.
+		{"blob analysis later A", framesAtLeast(180), [this] { capture("02c_blob_analysis_overlay_later_a"); }},
+		{"blob analysis later B", framesAtLeast(180), [this, pressM] {
+			capture("02d_blob_analysis_overlay_later_b");
+			pressM();
+		}},
 		{"blob natural (wrapped)", framesAtLeast(3), [this] {
-			check("Blob: 'm' wraps 3 -> 1, Natural Background", modeIndex() == 0 && modeId() == "natural_background", modeId());
+			check("Blob: 'm' wraps 4 -> 1, Natural Background", modeIndex() == 0 && modeId() == "natural_background", modeId());
 			capture("03_blob_natural_background_wrapped");
 			runtime_.keyPressed(']');
 		}},
@@ -251,11 +270,11 @@ void ModeNavigationHarness::buildScript() {
 			capture("07a_loading_focus_fallback");
 		}},
 
-		// -- Blueprint (3/5): two cycle modes, manual NEXT MODE ----------------
+		// -- Blueprint (3/5): six modes, manual NEXT MODE ----------------
 		{"blueprint live", [this] { return idleOn(kBlueprintId) && framesInStep_ >= kSettleFrames && modeIndex() >= 0; },
 			[this, panelEnabled, pressM] {
 				check("Blueprint: scene position 3/5", position() == "3/5", position());
-				check("Blueprint: 3 modes shown", modeCount() == 3 && (modeId() == "ghost_layers" || modeId() == "perpetual" || modeId() == "editorial_collage"),
+				check("Blueprint: 6 modes shown", modeCount() == 6 && isBlueprintMode(modeId()),
 					modeId());
 				const auto enabled = panelEnabled();
 				check("Blueprint: NEXT MODE advertised and enabled", enabled.has_value() && *enabled);
@@ -275,7 +294,7 @@ void ModeNavigationHarness::buildScript() {
 			pressM();
 		}},
 		{"blueprint mode wrapped", framesAtLeast(3), [this] {
-			check("Blueprint: second 'm' steps again (3-step cycle)", navIndex() == navNextIndex(indexBefore_), modeId());
+			check("Blueprint: second 'm' steps again (6-step cycle)", navIndex() == navNextIndex(indexBefore_), modeId());
 			check("Blueprint: still the same shared media", mediaId() == mediaBefore_, mediaId());
 		}},
 		{"blueprint focus mode panel", focusModePanel, [this] {
@@ -300,7 +319,7 @@ void ModeNavigationHarness::buildScript() {
 		}},
 		{"blueprint after regenerate", framesAtLeast(3), [this] {
 			check("Blueprint: after Regenerate the HUD reports a valid (randomly re-rolled) mode",
-				modeCount() == 3 && (modeId() == "ghost_layers" || modeId() == "perpetual" || modeId() == "editorial_collage"), modeId());
+				modeCount() == 6 && isBlueprintMode(modeId()), modeId());
 			runtime_.keyPressed(']');
 		}},
 		{"blueprint->fragment loading", [this] { return loading(); }, [this] {
@@ -394,7 +413,7 @@ void ModeNavigationHarness::buildScript() {
 			[this, panelEnabled, pressM] {
 				const auto enabled = panelEnabled();
 				check("Blueprint revisit: fresh cycle reports a valid mode, NEXT MODE enabled",
-					modeCount() == 3 && (modeId() == "ghost_layers" || modeId() == "perpetual" || modeId() == "editorial_collage") && enabled.has_value() && *enabled,
+					modeCount() == 6 && isBlueprintMode(modeId()) && enabled.has_value() && *enabled,
 					modeId());
 				capture("16_blueprint_revisit");
 				pressM();

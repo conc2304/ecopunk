@@ -24,6 +24,11 @@
 
 #include "AnnotationRenderer.h"
 #include "BECollage.h"
+#include "BEContactSheet.h"
+#include "BEExplodedView.h"
+#include "BEGrammar.h"
+#include "BESectionCut.h"
+#include "BEStrata.h"
 #include "BEComposition.h"
 #include "ErosionFBO.h"
 #include "GridState.h"
@@ -97,17 +102,38 @@ public:
 	void setEditorialCollage(bool on);
 	bool editorialCollage() const { return editorialCollage_; }
 	// Display name for status paths that want one; empty when classic.
-	const char* visualGrammarName() const { return editorialCollage_ ? collage_.displayName() : ""; }
+	const char* visualGrammarName() const { return editorialCollage_ ? collage_.displayName() : (alt_ != nullptr ? alt_->displayName() : ""); }
 	BECollage& collage() { return collage_; }
 	const BECollage& collage() const { return collage_; }
+
 	// Dev/capture: show one frozen, fully-built plate for (seed, template).
 	void debugShowCollage(uint32_t seed, int templateIndex, bool densityReached);
+
+	// ── Grammar selection (NEXT MODE order) ───────────────────────────────
+	// ghost_layers -> editorial_collage -> strata -> contact_sheet ->
+	// exploded_view -> section_cut -> ghost_layers. Everything except the
+	// classic composition pins it to GHOST_LAYERS with spawning suspended.
+	enum class Grammar { Classic, Collage, Strata, ContactSheet, ExplodedView, SectionCut, COUNT };
+	static constexpr int GRAMMAR_COUNT = static_cast<int>(Grammar::COUNT);
+	static const char* grammarId(Grammar g);
+	void setGrammar(Grammar g);
+	Grammar grammar() const { return grammar_; }
+	// The active self-contained grammar (STRATA/CONTACT/EXPLODED/SECTION), or null.
+	const BEGrammar* altGrammar() const { return alt_; }
+
+	void setStrata(bool on) { setGrammar(on ? Grammar::Strata : (grammar_ == Grammar::Strata ? Grammar::Classic : grammar_)); }
+	bool strata() const { return grammar_ == Grammar::Strata; }
+	void setContactSheet(bool on) { setGrammar(on ? Grammar::ContactSheet : (grammar_ == Grammar::ContactSheet ? Grammar::Classic : grammar_)); }
+	bool contactSheet() const { return grammar_ == Grammar::ContactSheet; }
+	void setExplodedView(bool on) { setGrammar(on ? Grammar::ExplodedView : (grammar_ == Grammar::ExplodedView ? Grammar::Classic : grammar_)); }
+	void setSectionCut(bool on) { setGrammar(on ? Grammar::SectionCut : (grammar_ == Grammar::SectionCut ? Grammar::Classic : grammar_)); }
 
 	const BEComposition& composition() const { return composition_; }
 	const GridSystem& grid() const { return grid_; }
 
 private:
 	void wireTriggerResponses();
+	void applyGrammar(Grammar g);
 	void drawScene();
 	std::vector<std::string> loadCodeFragments() const;
 
@@ -119,6 +145,12 @@ private:
 	BEComposition composition_;
 	BECollage collage_;
 	bool editorialCollage_ = false;
+	BEStrata strata_g_;
+	BEContactSheet contact_g_;
+	BEExplodedView exploded_g_;
+	BESectionCut section_g_;
+	Grammar grammar_ = Grammar::Classic;
+	BEGrammar* alt_ = nullptr;
 	LFOBank lfoBank_;
 	TriggerBus triggerBus_;
 	GridState gridState_;

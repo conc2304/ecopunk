@@ -131,7 +131,7 @@ class BEComposition : public CompositionBase {
 			int fragmentIndex = -1;
 		};
 
-		static constexpr int NUM_SLOTS = 4;
+		static constexpr int NUM_SLOTS = 6;
 
 		struct Candidate {
 			ofRectangle bounds;
