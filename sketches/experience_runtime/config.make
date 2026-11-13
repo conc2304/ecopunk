@@ -223,7 +223,7 @@ PROJECT_CFLAGS += $(addprefix -I,$(wildcard ../../shared/src/hud/*/))
 # quadrant-crosshair/src/MotionExtraction.h).
 PROJECT_CFLAGS += -DFT_PRODUCTION_RUNTIME -DQC_PRODUCTION_RUNTIME \
 	-I../../shared/src/hud -I../../shared/src/hud_overlay -I../../shared/src/hud_overlay/organisms \
-	-I../fragment-trail/src -I../quadrant-crosshair/src -I../../shared/src/crt-phosphor
+	-I../fragment-trail/src -I../quadrant-crosshair/src -I../../shared/src/crt-phosphor -I../../shared/src/phosphor-contours
 
 # Production-parity closure: Temporal's TFParameterPanel (tuned defaults,
 # evolution/waypoint drift, preset timeline) is compiled in with its ofxPanel
