@@ -18,11 +18,13 @@ struct BlobBackgroundMode {
 	const char * id;
 	const char * name;
 	int backgroundDrawMode; // BlobSceneCore::BackgroundConfig::mode
+	bool analysis;          // Analysis Overlay: blobanalysis::Director drives background, caps, palette
 };
 constexpr BlobBackgroundMode kBackgroundModes[] = {
-	{"natural_background", "Natural Background", 1},         // unshaded cover-fit video
-	{"desaturated_background", "Desaturated Background", 2}, // background effect (production model)
-	{"no_background", "No Background", 0},                   // canvas left cleared; regions only
+	{"natural_background", "Natural Background", 1, false},         // unshaded cover-fit video
+	{"desaturated_background", "Desaturated Background", 2, false}, // background effect (production model)
+	{"no_background", "No Background", 0, false},                   // canvas left cleared; regions only
+	{"analysis_overlay", "Analysis Overlay", 2, true},              // evolving instrument overlay (BlobAnalysisDirector)
 };
 constexpr int kBackgroundModeCount = static_cast<int>(sizeof(kBackgroundModes) / sizeof(kBackgroundModes[0]));
 } // namespace
@@ -71,6 +73,19 @@ void BlobProductionScene::setup(const SceneServices & services) {
 			ofLogWarning("BlobEffectBudget") << "weights override entry ignored (not in the budget table): " << e;
 		}
 	}
+	// The table Analysis Overlay's palette epochs are layered over, and the
+	// one it restores when the mode is left.
+	baseBudgetTable_ = budget_.table();
+	baseMaxFragments_ = core_.regionParams().maxActiveFragments;
+	// Dev/preview only: speed up Analysis Overlay's evolution clock (e.g. 10
+	// = ten times faster) to review a full cycle quickly. Never set in production.
+	if (const char * scale = std::getenv("EXPERIENCE_RUNTIME_BLOB_ANALYSIS_TIMESCALE")) {
+		float v = static_cast<float>(std::atof(scale));
+		if (v > 0.0f && v <= 60.0f) {
+			analysisTimeScale_ = v;
+			ofLogNotice("BlobAnalysis") << "EXPERIENCE_RUNTIME_BLOB_ANALYSIS_TIMESCALE=" << v << " (preview speed)";
+		}
+	}
 	core_.regionController().effectAssigner = [this](int id) {
 		if (capacityBench_ && capacityBench_->plan().mode != blobcapacity::AssignmentMode::Budget) {
 			return capacityBench_->plan().effectForId(id);
@@ -114,6 +129,12 @@ void BlobProductionScene::activate() {
 	core_.activate(); // also clears transient detector/tracker/fragment state — see BlobSceneCore::activate()
 	activeSeconds_ = 0.0f;
 	generation_++;
+	if (analysisModeActive()) {
+		// Fresh sparse cycle on every (re)activation, like the tracks it annotates.
+		director_.reset();
+		overlay_.reset();
+		applyAnalysisState();
+	}
 }
 
 void BlobProductionScene::deactivate() {
@@ -157,7 +178,86 @@ void BlobProductionScene::update(float dt) {
 
 	ofRectangle destRect(0, 0, static_cast<float>(kNativeWidth), static_cast<float>(kNativeHeight));
 	RT004_SCOPE("Blob.core.update");
+	if (analysisModeActive()) {
+		// Decide this frame's composition/look/growth BEFORE core update so the
+		// region cap and background settings apply to this frame's work.
+		director_.update(dt * analysisTimeScale_);
+		applyAnalysisState();
+	}
 	lastUpdateTimings_ = core_.update(dt, destRect);
+	if (analysisModeActive()) {
+		float srcW = 0.0f, srcH = 0.0f;
+		if (core_.sourceSize(srcW, srcH)) {
+			overlay_.update(dt, core_.activeRegions(), srcW, srcH, destRect);
+		}
+	}
+}
+
+bool BlobProductionScene::analysisModeActive() const {
+	return kBackgroundModes[backgroundModeIndex_].analysis;
+}
+
+void BlobProductionScene::applyAnalysisState() {
+	const blobanalysis::State & s = director_.state();
+	const blobanalysis::Changes changes = director_.takeChanges();
+
+	BlobSceneCore::BackgroundConfig & background = core_.backgroundConfig();
+	background.mode = s.backgroundMode;
+	background.dim = s.backgroundDim;
+	if (background.mode == 2) {
+		background.effectName = s.backgroundEffect;
+	}
+
+	core_.regionParams().maxActiveFragments = s.maxFragments;
+
+	if (changes.paletteChanged) {
+		// New palette epoch: affects only fragments created from now on —
+		// live fragments keep the treatment (and cost) they were charged,
+		// exactly like a media-change generation (BlobEffectPolicy.h).
+		std::vector<std::string> ignored;
+		budget_.setTable(blobbudget::withWeights(baseBudgetTable_, blobanalysis::palette(s.paletteIndex).weightsSpec, &ignored));
+		ofLogNotice("BlobAnalysis") << "palette epoch -> " << blobanalysis::palette(s.paletteIndex).id;
+	}
+	if (changes.compositionChanged) {
+		ofLogNotice("BlobAnalysis") << "composition -> " << blobanalysis::composition(s.compositionIndex).id
+			<< " (cycle " << s.cycle + 1 << " stage " << s.stage + 1 << ", cap " << s.maxFragments << ")";
+	}
+	if (changes.lookChanged) {
+		ofLogNotice("BlobAnalysis") << "look -> " << blobanalysis::look(s.lookIndex).id;
+	}
+	if (changes.cycleChanged) {
+		ofLogNotice("BlobAnalysis") << "cycle collapsed -> cycle " << s.cycle + 1;
+	}
+}
+
+void BlobProductionScene::leaveAnalysisState() {
+	// Hand every knob the analysis mode touched back to the production values.
+	BlobSceneCore::BackgroundConfig & background = core_.backgroundConfig();
+	background.dim = 0.0f;
+	background.effectName = blobeffects::backgroundEffectId();
+	core_.regionParams().maxActiveFragments = baseMaxFragments_;
+	budget_.setTable(baseBudgetTable_);
+	overlay_.reset();
+}
+
+void BlobProductionScene::drawAnalysisOverlay(const ofRectangle & destRect) {
+	if (!analysisModeActive() || !core_.isActive()) {
+		return;
+	}
+	const blobanalysis::State & s = director_.state();
+	BlobAnalysisOverlay::Readout ro;
+	ro.tracks = core_.trackCount();
+	ro.fragments = core_.activeFragmentCount();
+	ro.maxFragments = s.maxFragments;
+	ro.coverage = core_.occupiedAreaFraction();
+	ro.compositionName = blobanalysis::composition(s.compositionIndex).name;
+	ro.paletteName = ofToUpper(blobanalysis::palette(s.paletteIndex).id);
+	ro.lookName = ofToUpper(blobanalysis::look(s.lookIndex).id);
+	ro.cycle = s.cycle;
+	ro.stage = s.stage;
+	ro.stageCount = director_.config().stageCount;
+	ro.growth = s.growth;
+	overlay_.draw(s, ro, destRect);
 }
 
 void BlobProductionScene::drawToCurrentTarget() {
@@ -171,6 +271,7 @@ void BlobProductionScene::drawToCurrentTarget() {
 	RT004_SCOPE("Blob.core.draw");
 	if (!renderProfileEnabled_ && !capacityBench_) {
 		core_.draw(destRect);
+		drawAnalysisOverlay(destRect);
 		return;
 	}
 	core_.regionController().renderer().resetStageTimings();
@@ -178,6 +279,7 @@ void BlobProductionScene::drawToCurrentTarget() {
 	uint64_t t0 = ofGetElapsedTimeMicros();
 	core_.draw(destRect);
 	float drawMs = static_cast<float>(ofGetElapsedTimeMicros() - t0) / 1000.0f;
+	drawAnalysisOverlay(destRect);
 	if (renderProfileEnabled_) {
 		recordRenderProfileFrame(drawMs);
 	}
@@ -415,9 +517,17 @@ SceneHudStatus BlobProductionScene::hudStatus() const {
 }
 
 void BlobProductionScene::applyBackgroundMode() {
+	// Always start from production values; entering Analysis Overlay then
+	// layers its director on top, and leaving it never leaks dim/caps/palette.
+	leaveAnalysisState();
 	BlobSceneCore::BackgroundConfig & background = core_.backgroundConfig();
 	background.mode = kBackgroundModes[backgroundModeIndex_].backgroundDrawMode;
 	if (background.mode == 2) background.effectName = blobeffects::backgroundEffectId();
+	if (analysisModeActive()) {
+		director_.reset();
+		overlay_.reset();
+		applyAnalysisState();
+	}
 	ofLogNotice("BlobProductionScene") << "mode -> " << kBackgroundModes[backgroundModeIndex_].name;
 }
 

@@ -54,6 +54,16 @@ bool BlobSceneCore::hasVideoFrame() const {
 	return video_ != nullptr && video_->currentTexture() != nullptr;
 }
 
+bool BlobSceneCore::sourceSize(float & width, float & height) const {
+	const ofTexture * tex = video_ != nullptr ? video_->currentTexture() : nullptr;
+	if (tex == nullptr || !tex->isAllocated()) {
+		return false;
+	}
+	width = tex->getWidth();
+	height = tex->getHeight();
+	return width > 0.0f && height > 0.0f;
+}
+
 float BlobSceneCore::occupiedAreaFraction() const {
 	float total = 0.0f;
 	for (const VideoRegion & r : tracker_.getActiveRegions()) {
@@ -136,6 +146,7 @@ void BlobSceneCore::drawBackground(const ofTexture & srcTex, const ofRectangle &
 		ofSetColor(255);
 		srcTex.drawSubsection(destRect.x, destRect.y, destRect.width, destRect.height,
 			cropSrc.x, cropSrc.y, cropSrc.width, cropSrc.height);
+		applyBackgroundDim(destRect);
 		return;
 	}
 
@@ -152,4 +163,16 @@ void BlobSceneCore::drawBackground(const ofTexture & srcTex, const ofRectangle &
 	req.effectAmount = backgroundConfig_.effectAmount;
 
 	backgroundEffectRenderer_.render(req, shaderLib_);
+	applyBackgroundDim(destRect);
+}
+
+void BlobSceneCore::applyBackgroundDim(const ofRectangle & destRect) {
+	if (backgroundConfig_.dim <= 0.001f) {
+		return;
+	}
+	ofPushStyle();
+	ofEnableAlphaBlending();
+	ofSetColor(0, 0, 0, static_cast<int>(ofClamp(backgroundConfig_.dim, 0.0f, 1.0f) * 255.0f));
+	ofDrawRectangle(destRect);
+	ofPopStyle();
 }

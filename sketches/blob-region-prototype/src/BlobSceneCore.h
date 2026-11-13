@@ -47,6 +47,11 @@ public:
 		int mode = 1; // 0 = off (canvas left as caller cleared it), 1 = normal (unshaded cover-fit), 2 = effect
 		std::string effectName = "desaturate";
 		float effectAmount = 1.0f;
+		// 0 = untouched, 1 = black. A black rect at this alpha is drawn over
+		// the background (modes 1 and 2) BEFORE region fragments, so
+		// fragments and anything drawn after stay at full brightness. Used by
+		// Specimen Track's Analysis Overlay mode; default 0 is a no-op.
+		float dim = 0.0f;
 	};
 
 	// Per-update-call timing breakdown, preserved for the standalone
@@ -130,6 +135,11 @@ public:
 	// count), not a pixel-exact occupied-area measurement — cheap and
 	// honest about what it is, not a new analysis pass.
 	float occupiedAreaFraction() const;
+	// This frame's tracked regions (normalized source space) — the same
+	// list the region controller is fed. Read-only, for overlay drawing.
+	const std::vector<VideoRegion> & activeRegions() const { return tracker_.getActiveRegions(); }
+	// Native size of the current video texture; false if none yet.
+	bool sourceSize(float & width, float & height) const;
 
 	// Experiment-only region source override (Blob Experiment 2 capacity
 	// bench): when non-null, VideoRegionController is fed these regions
@@ -150,6 +160,7 @@ public:
 
 private:
 	void drawBackground(const ofTexture & srcTex, const ofRectangle & destRect);
+	void applyBackgroundDim(const ofRectangle & destRect);
 
 	VideoPlaybackService * video_ = nullptr; // not owned, see setup()
 

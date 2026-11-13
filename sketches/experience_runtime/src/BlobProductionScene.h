@@ -1,5 +1,7 @@
 #pragma once
 
+#include "BlobAnalysisDirector.h"
+#include "BlobAnalysisOverlay.h"
 #include "BlobDetectionProfileStore.h"
 #include "BlobEffectBudget.h"
 #include "BlobEffectCapacityBench.h"
@@ -191,6 +193,20 @@ private:
 	// production visual model. Persists across activations.
 	int backgroundModeIndex_ = 1;
 	void applyBackgroundMode();
+
+	// Analysis Overlay mode (4th mode): an evolving instrument layer.
+	// director_ decides compositions / background looks / growth / effect
+	// palette epochs over time; overlay_ draws the annotations. Both are
+	// inert (never updated or drawn) in the other three modes.
+	bool analysisModeActive() const;
+	void applyAnalysisState();                       // director_ -> core_/budget_ (+ change logging)
+	void leaveAnalysisState();                       // restore production background/cap/palette
+	void drawAnalysisOverlay(const ofRectangle & destRect);
+	blobanalysis::Director director_;
+	BlobAnalysisOverlay overlay_;
+	std::vector<blobbudget::Treatment> baseBudgetTable_; // production table (incl. env weights override)
+	int baseMaxFragments_ = 10;                          // production VideoRegionController cap
+	float analysisTimeScale_ = 1.0f;                     // dev preview only, see setup()
 
 	// Blob First Production Acceptance narrow patch: closes the "hidden
 	// Reset" gap flagged by acceptance review — executeCommand() previously
